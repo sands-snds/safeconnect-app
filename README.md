@@ -110,7 +110,6 @@ The **SafeConnect** project directory is organized as follows:
 
 ## CONTRIBUTORS
 - **Shiela Mae Caratao**
-- **Aian Janzy Cuento**
 
  
 
