@@ -1,0 +1,2404 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    color: #333;
+    overflow-x: hidden;
+}
+
+.navbar {
+    background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
+    padding: 1rem 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    position: sticky;  /* ADD THIS */
+    top: 0;           /* ADD THIS */
+    z-index: 1050;    /* ADD THIS */
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: white !important;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+}
+
+.brand-icon {
+    width: 42px;
+    height: 42px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.brand-icon i {
+    font-size: 1.25rem;
+}
+
+.brand-text {
+    font-weight: 600;
+    font-size: 1.15rem;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.nav-link-item {
+    color: white;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    opacity: 0.95;
+}
+
+.nav-link-item:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.nav-link-item i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    font-size: 1.15rem;
+    line-height: 1;
+    height: 1.2em;
+    margin-right: 0.5em;
+}
+
+.user-menu-wrapper {
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.user-menu {
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.user-menu i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    font-size: 1.15rem;
+    line-height: 1;
+    height: 1.2em;
+    margin-right: 0.3em;
+}
+
+.user-menu:hover {
+    opacity: 0.8;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 1rem);
+    right: 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.user-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    color: #333;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #6B2C3E;
+}
+
+.dropdown-item i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    font-size: 1.15rem;
+    line-height: 1;
+    height: 1.2em;
+    margin-right: 0.5em;
+    opacity: 0.7;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #e9ecef;
+    margin: 0.5rem 0;
+}
+
+header {
+    position: relative;
+
+    background: 
+        linear-gradient(rgba(140, 27, 27, 0.82), rgba(140, 27, 27, 0.82)),
+        url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?fit=crop&w=1350&q=80');
+    background-blend-mode: multiply;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.hero-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    position: relative;
+}
+
+.badge-pill {
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge-pill i {
+    font-size: 1rem;
+}
+
+.hero-title {
+    font-size: 5rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 8px;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 4px 12px rgba(0, 0, 0, 0.4);
+    letter-spacing: 7px;
+    margin-top: 100px;
+    margin-bottom: 25px;
+    text-shadow: 0 2px 8px #7e1313a0;
+}
+
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: white;
+    max-width: 800px;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+    opacity: 0.95;
+    font-weight: 400;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.5rem;
+    line-height: 1.5;
+    text-shadow: 0 2px 8px #7e1313a0;
+    text-align: center;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+}
+
+.btn-donate {
+    background-color: #DC3545;
+    color: white;
+    padding: 1rem 2.5rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    border: 2px solid #DC3545;
+    cursor: pointer;
+}
+
+.btn-donate:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
+}
+
+.btn-donate i {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.btn-help {
+    background-color: transparent;
+    color: white;
+    padding: 1rem 2.5rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    border: 2px solid white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-help:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-help i {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.carousel-indicators-custom {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.indicator {
+    width: 10px;
+    height: 10px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.indicator.active {
+    background-color: white;
+    width: 32px;
+    border-radius: 5px;
+}
+
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.5rem;
+}
+
+.nav-arrow:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.nav-arrow-left {
+    left: 2rem;
+}
+
+.nav-arrow-right {
+    right: 2rem;
+}
+
+.emergency-banner {
+    background-color: #DC3545;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.emergency-banner i {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+}
+
+.center-container {
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.report-emergency-section {
+    padding: 4rem 3rem;
+    background: white;
+    position: relative;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-icon {
+    display: inline-flex;
+    width: 65px;
+    height: 65px;
+    background: #e63b3b;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.section-icon i {
+    color: white;
+    font-size: 2.2rem;
+}
+
+.section-header h2 {
+    font-size: 2.2rem;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+}
+
+.section-header p {
+    font-size: 1rem;
+    color: #ffffff;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.emergency-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.emergency-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.emergency-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.card-icon i {
+    color: white;
+    font-size: 1.8rem;
+}
+
+.card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.card-title-row h3 {
+    font-size: 1.2rem;
+    color: #222;
+    font-weight: 700;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge.critical {
+    background: #fee;
+    color: #e63b3b;
+}
+
+.badge.high {
+    background: #fff4e6;
+    color: #f59e0b;
+}
+
+.badge.urgent {
+    background: #f3e8ff;
+    color: #9747ff;
+}
+
+.badge.variable {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.card-desc {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.learn-btn, .report-btn {
+    flex: 1;
+    padding: 0.7rem;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: opacity 0.3s;
+    font-size: 0.85rem;
+}
+
+.learn-btn {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.report-btn {
+    background: #e63b3b;
+    color: white;
+}
+
+.report-btn i {
+    font-size: 1rem;
+}
+
+.learn-btn:hover, .report-btn:hover {
+    opacity: 0.9;
+}
+
+.emergency-card.flood:hover {
+    background: #eaf4ff;
+}
+
+.emergency-card.fire:hover {
+    background: #fff0e6;
+}
+
+.emergency-card.earthquake:hover {
+    background: #fffbe6;
+}
+
+.emergency-card.landslide:hover {
+    background: #e6fff2;
+}
+
+.emergency-card.accident:hover {
+    background: #f3eaff;
+}
+
+.emergency-card.other:hover {
+    background: #ececf0;
+}
+
+.request-assistance-section {
+    padding: 4rem 3rem;
+    background: white;
+}
+
+.assist-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.assist-icon-top {
+    display: inline-flex;
+    width: 65px;
+    height: 65px;
+    background: #8b2020;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.assist-icon-top i {
+    color: white;
+    font-size: 2.2rem;
+}
+
+.assist-header h2 {
+    font-size: 2.2rem;
+    color: #8b2020;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+}
+
+.assist-header p {
+    font-size: 1rem;
+    color: #555;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.assist-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.assist-card {
+    background: #fefefe;
+    border-radius: 12px;
+    padding: 1.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.assist-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.assist-card.rescue:hover {
+    background: #eaf4ff;
+}
+
+.assist-card.food-water:hover {
+    background: #d8f6fa;
+}
+
+.assist-card.medical:hover {
+    background: #ffeaea;
+}
+
+.assist-card.shelter:hover {
+    background: #e8fff1;
+}
+
+.assist-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.assist-icon i {
+    color: white;
+    font-size: 1.8rem;
+}
+
+.assist-card h3 {
+    font-size: 1.15rem;
+    color: #222;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+}
+
+.assist-desc {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+}
+
+.assist-list {
+    list-style: none;
+    margin-bottom: 1.5rem;
+    padding: 0;
+}
+
+.assist-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #555;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.assist-list .check {
+    color: #24b564;
+    font-size: 1rem;
+}
+
+.assist-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+}
+
+.assist-status i {
+    font-size: 1rem;
+}
+
+.assist-status.available {
+    background: #e8f5e9;
+    color: #24b564;
+}
+
+.assist-status.priority {
+    background: #ffebee;
+    color: #e63b3b;
+}
+
+.assist-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background: #e63b3b;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background 0.3s;
+    font-size: 0.9rem;
+}
+
+.assist-btn:hover {
+    background: #d32f2f;
+}
+
+.assist-btn i {
+    font-size: 1.1rem;
+}
+
+.report-emergency-section .emergency-card,
+.request-assistance-section .assist-card {
+    transition:
+        transform 0.4s cubic-bezier(.25,.8,.25,1),
+        box-shadow 0.4s cubic-bezier(.25,.8,.25,1),
+        background 0.4s;
+    will-change: transform, box-shadow, background;
+}
+
+.report-emergency-section .emergency-card:hover,
+.request-assistance-section .assist-card:hover {
+    transform: translateY(-12px) scale(1.04) rotate(-1deg);
+    box-shadow: 0 12px 32px rgba(230, 59, 59, 0.12), 0 4px 24px rgba(0,0,0,0.09);
+    background: linear-gradient(120deg, #fff 82%, #ffeaea 100%);
+    z-index: 2;
+}
+
+.report-emergency-section .emergency-card:hover .card-icon,
+.request-assistance-section .assist-card:hover .assist-icon {
+    box-shadow: 0 0 0 8px rgba(230,59,59,0.08), 0 0 2px 2px rgba(230,59,59,0.15);
+    transition: box-shadow 0.3s;
+    transform: scale(1.15) rotate(-2deg);
+}
+
+.report-emergency-section .emergency-card .card-actions button,
+.request-assistance-section .assist-card .assist-list li {
+    transition: transform 0.35s cubic-bezier(.25,.8,.25,1), opacity 0.3s;
+}
+
+.report-emergency-section .emergency-card:hover .card-actions button,
+.request-assistance-section .assist-card:hover .assist-list li {
+    transform: translateX(8px) scale(1.03);
+    opacity: 1;
+}
+
+.report-emergency-section .emergency-card:hover h3,
+.request-assistance-section .assist-card:hover h3 {
+    color: #e63b3b;
+    text-decoration: underline wavy #e63b3b 2px;
+    transition: color 0.3s, text-decoration 0.3s;
+}
+
+.new-footer-section {
+    background: #1f2937;
+    color: #e5e7eb;
+    padding: 3rem 0 1.5rem;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.footer-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 3rem;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+    gap: 3rem;
+    margin-bottom: 2.5rem;
+}
+
+.footer-logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.footer-logo-circle {
+    width: 36px;
+    height: 36px;
+    background: #e63b3b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer-logo-circle i {
+    color: white;
+    font-size: 1.3rem;
+}
+
+.footer-brand-text {
+    font-family: 'Pacifico', cursive;
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 400;
+}
+
+.footer-description {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #d1d5db;
+    margin: 0;
+}
+
+.footer-column-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e63b3b;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+}
+
+.footer-links-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links-list li {
+    margin-bottom: 0.6rem;
+}
+
+.footer-links-list a {
+    color: #d1d5db;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.footer-links-list a:hover {
+    color: #e63b3b;
+}
+
+.footer-links-list a i {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.footer-contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.contact-item {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: #d1d5db;
+    line-height: 1.5;
+}
+
+.contact-item i {
+    color: #e63b3b;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.contact-item strong {
+    color: white;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.footer-bottom {
+    padding-top: 1.5rem;
+    border-top: 1px solid #4b5563;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.footer-copyright a,
+.footer-powered a {
+    color: #9ca3af;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-copyright a:hover,
+.footer-powered a:hover {
+    color: #e63b3b;
+}
+
+.footer-powered a {
+    text-decoration: underline;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+}
+
+.modal-icon {
+    width: 45px;
+    height: 45px;
+    background: #e63b3b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.modal-icon i {
+    color: white;
+    font-size: 1.8rem;
+}
+
+.modal-icon-assist {
+    width: 45px;
+    height: 45px;
+    background: #e63b3b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.modal-icon-assist i {
+    color: white;
+    font-size: 1.8rem;
+}
+
+.modal-header h2 {
+    font-size: 1.4rem;
+    color: #1f2937;
+    font-weight: 700;
+    margin: 0;
+    flex: 1;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #6b7280;
+    transition: color 0.3s;
+    margin-left: auto;
+}
+
+.modal-close:hover {
+    color: #1f2937;
+}
+
+.modal-close i {
+    font-size: 1.5rem;
+}
+
+.modal-form {
+    padding: 2rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.required {
+    color: #e63b3b;
+}
+
+.form-group input[type="text"],
+.form-group input[type="tel"],
+.form-group input[type="email"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: 'Montserrat', sans-serif;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #e63b3b;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #9ca3af;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.form-group input[type="file"] {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-cancel,
+.btn-submit {
+    flex: 1;
+    padding: 0.85rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-cancel {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #4b5563;
+}
+
+.btn-submit {
+    background: #e63b3b;
+    color: white;
+}
+
+.btn-submit:hover {
+    background: #d32f2f;
+}
+
+.btn-submit i {
+    font-size: 1.1rem;
+}
+
+@media (max-width: 1200px) {
+    .emergency-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .assist-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .nav-links {
+        gap: 1.5rem;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+        letter-spacing: 4px;
+    }
+    .cta-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    .emergency-cards,
+    .assist-cards {
+        grid-template-columns: 1fr;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+    .emergency-banner {
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+    }
+    .nav-links {
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    .modal-container {
+        max-width: 95%;
+    }
+    .modal-form {
+        padding: 1.5rem;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    .modal-header {
+        padding: 1.25rem 1.5rem;
+    }
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+    .modal-actions {
+        flex-direction: column;
+    }
+    .footer-container {
+        padding: 0 2rem;
+    }
+    .footer-bottom {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    .nav-arrow {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-content {
+        margin: 1rem;
+        padding: 6rem 1rem 3rem 1rem;
+    }
+    .hero-title {
+        font-size: 2rem;
+        letter-spacing: 2px;
+    }
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+    .report-emergency-section,
+    .request-assistance-section {
+        padding: 2rem 1rem;
+    }
+    .section-header h2 {
+        font-size: 1.8rem;
+    }
+    .emergency-banner {
+        padding: 1rem;
+    }
+    .nav-links {
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .nav-links a {
+        font-size: 0.85rem;
+    }
+}
+@media (max-width: 360px), (max-width: 330px) {
+    html, body {
+        font-size: 14px;
+    }
+    .hero-content {
+        padding: 4rem 0.3rem 2rem 0.3rem;
+    }
+    .hero-title {
+        font-size: 1.2rem;
+        letter-spacing: 1px;
+        margin-top: 40px;
+        margin-bottom: 10px;
+    }
+    .hero-subtitle {
+        font-size: 0.7rem;
+        line-height: 1.35;
+        padding: 0 2px;
+    }
+    .badge-pill {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.7rem;
+    }
+    .cta-buttons {
+        gap: 0.5rem;
+    }
+    .btn-donate, .btn-help {
+        padding: 0.7rem 1rem;
+        font-size: 0.82rem;
+        border-radius: 9px;
+    }
+    .carousel-indicators-custom {
+        gap: 0.2rem;
+    }
+    .indicator {
+        width: 6px;
+        height: 6px;
+    }
+    .indicator.active {
+        width: 18px;
+        border-radius: 3px;
+    }
+    .nav-arrow {
+        width: 26px;
+        height: 26px;
+        font-size: 1rem;
+        left: 0.7rem;
+        right: 0.7rem;
+    }
+    .emergency-banner {
+        font-size: 0.7rem;
+        padding: 0.5rem 0.5rem;
+    }
+    .section-header h2,
+    .assist-header h2 {
+        font-size: 1.2rem;
+    }
+    .report-emergency-section,
+    .request-assistance-section {
+        padding: 1rem 2px;
+    }
+    .emergency-card,
+    .assist-card {
+        padding: 0.9rem 0.5rem;
+        border-radius: 7px;
+    }
+    .assist-card h3 {
+        font-size: 1rem;
+    }
+    .assist-desc, .card-desc {
+        font-size: 0.75rem;
+    }
+    .assist-btn, .report-btn {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+    .assist-list li, .card-actions {
+        font-size: 0.75rem;
+    }
+    .modal-container {
+        max-width: 99vw;
+        min-width: 0;
+        padding: 0 2px;
+        border-radius: 6px;
+    }
+    .modal-header, .modal-form {
+        padding: 1rem 0.5rem;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+    }
+    .form-row,
+    .modal-actions {
+        gap: 0.4rem;
+    }
+    .btn-cancel,
+    .btn-submit {
+        font-size: 0.75rem;
+        border-radius: 13px;
+        padding: 0.6rem 0.5rem;
+    }
+    .footer-container,
+    .footer-grid {
+        padding: 0 0.4rem;
+        gap: 0.5rem;
+    }
+    .footer-logo-circle {
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+    }
+    .footer-brand-text {
+        font-size: 1rem;
+    }
+    .footer-description, .footer-links-list a, .footer-column-title, .contact-item {
+        font-size: 0.7rem;
+    }
+    .footer-bottom {
+        font-size: 0.7rem;
+        padding-top: 0.4rem;
+        gap: 0.2rem;
+    }
+}
+/* ========================================
+   MOBILE RESPONSIVE STYLES - iPhone SE & Up
+   Additional styles for existing CSS
+   ======================================== */
+
+/* Tablet Styles (768px - 1024px) */
+@media (max-width: 1024px) {
+  .resident-navbar-custom .navbar-brand-custom {
+    font-size: 1.15rem;
+    padding: 0.75rem 1.25rem;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .resident-nav-item-custom {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
+    letter-spacing: 5px;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
+}
+
+/* Mobile Landscape & Tablet Portrait (577px - 768px) */
+@media (max-width: 768px) {
+  .resident-navbar-custom {
+    min-height: 65px;
+  }
+  
+  .resident-navbar-custom .navbar-content-wrapper {
+    flex-wrap: wrap;
+  }
+  
+  .resident-navbar-custom .navbar-brand-custom {
+    padding: 0.75rem 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .resident-nav-links-custom {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 0 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .resident-nav-links-custom::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .resident-nav-item-custom {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  
+  .resident-user-menu {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .resident-user-dropdown {
+    min-width: 180px;
+  }
+  
+  .hero-title {
+    font-size: 2.8rem;
+    letter-spacing: 4px;
+    margin-top: 60px;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+  
+  .cta-buttons {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .btn-donate, .btn-help {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .emergency-banner {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .nav-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  
+  .nav-arrow-left {
+    left: 1rem;
+  }
+  
+  .nav-arrow-right {
+    right: 1rem;
+  }
+}
+
+/* Mobile Portrait (481px - 576px) */
+@media (max-width: 576px) {
+  .resident-navbar-custom {
+    min-height: 60px;
+  }
+  
+  .resident-navbar-custom .navbar-brand-custom {
+    padding: 0.65rem 0.75rem;
+    font-size: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom i {
+    font-size: 1rem;
+  }
+  
+  .resident-nav-item-custom {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.8rem;
+    gap: 0.4rem;
+  }
+  
+  .resident-nav-item-custom i {
+    font-size: 1rem;
+  }
+  
+  .resident-user-menu {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.8rem;
+  }
+  
+  header {
+    min-height: 500px;
+    padding: 0;
+  }
+  
+  .hero-content {
+    padding: 3rem 1.5rem;
+  }
+  
+  .badge-pill {
+    padding: 0.4rem 1rem;
+    font-size: 0.75rem;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hero-title {
+    font-size: 2.2rem;
+    letter-spacing: 3px;
+    margin-top: 40px;
+    margin-bottom: 1rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+  }
+  
+  .cta-buttons {
+    gap: 0.75rem;
+    max-width: 100%;
+  }
+  
+  .btn-donate, .btn-help {
+    padding: 0.85rem 1.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .carousel-indicators-custom {
+    gap: 0.5rem;
+  }
+  
+  .indicator {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .indicator.active {
+    width: 24px;
+  }
+  
+  .nav-arrow {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+  
+  .nav-arrow-left {
+    left: 0.75rem;
+  }
+  
+  .nav-arrow-right {
+    right: 0.75rem;
+  }
+  
+  .emergency-banner {
+    font-size: 0.8rem;
+    padding: 0.65rem 0.75rem;
+  }
+  
+  .emergency-banner i {
+    font-size: 1rem;
+  }
+  
+  .report-emergency-section,
+  .request-assistance-section {
+    padding: 3rem 1.5rem;
+  }
+  
+  .section-header,
+  .assist-header {
+    margin-bottom: 2rem;
+  }
+  
+  .section-icon,
+  .assist-icon-top {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .section-icon i,
+  .assist-icon-top i {
+    font-size: 1.8rem;
+  }
+  
+  .section-header h2,
+  .assist-header h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .section-header p,
+  .assist-header p {
+    font-size: 0.9rem;
+  }
+  
+  .emergency-cards,
+  .assist-cards {
+    gap: 1.25rem;
+  }
+  
+  .emergency-card,
+  .assist-card {
+    padding: 1.5rem;
+  }
+  
+  .card-icon,
+  .assist-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .card-icon i,
+  .assist-icon i {
+    font-size: 1.5rem;
+  }
+  
+  .card-title-row h3,
+  .assist-card h3 {
+    font-size: 1.1rem;
+  }
+  
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+  }
+  
+  .card-desc,
+  .assist-desc {
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .assist-list li {
+    font-size: 0.8rem;
+  }
+  
+  .assist-status {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+  
+  .report-btn,
+  .assist-btn {
+    font-size: 0.8rem;
+    padding: 0.65rem;
+  }
+}
+
+/* iPhone SE & Small Mobile (375px - 480px) */
+@media (max-width: 480px) {
+  .resident-navbar-custom {
+    min-height: 56px;
+  }
+  
+  .resident-navbar-custom .navbar-brand-custom {
+    padding: 0.6rem 0.65rem;
+    font-size: 0.95rem;
+    gap: 0.4rem;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom i {
+    font-size: 0.95rem;
+  }
+  
+  .resident-nav-item-custom {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.75rem;
+    gap: 0.35rem;
+  }
+  
+  .resident-nav-item-custom i {
+    font-size: 0.95rem;
+  }
+  
+  .resident-nav-item-custom span {
+    display: none;
+  }
+  
+  .resident-nav-item-custom.active::after {
+    content: attr(data-label);
+    display: inline;
+    margin-left: 0.3rem;
+    font-size: 0.7rem;
+  }
+  
+  .resident-user-menu {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .resident-user-menu span {
+    display: none;
+  }
+  
+  header {
+    min-height: 450px;
+  }
+  
+  .hero-content {
+    padding: 2.5rem 1rem;
+  }
+  
+  .badge-pill {
+    padding: 0.35rem 0.85rem;
+    font-size: 0.7rem;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .badge-pill i {
+    font-size: 0.85rem;
+  }
+  
+  .hero-title {
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    margin-top: 30px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 1.75rem;
+    padding: 0 0.5rem;
+  }
+  
+  .cta-buttons {
+    gap: 0.65rem;
+    width: 100%;
+  }
+  
+  .btn-donate, .btn-help {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
+  
+  .btn-donate i, .btn-help i {
+    font-size: 1rem;
+  }
+  
+  .carousel-indicators-custom {
+    gap: 0.4rem;
+  }
+  
+  .indicator {
+    width: 7px;
+    height: 7px;
+  }
+  
+  .indicator.active {
+    width: 20px;
+  }
+  
+  .nav-arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+  }
+  
+  .nav-arrow-left {
+    left: 0.5rem;
+  }
+  
+  .nav-arrow-right {
+    right: 0.5rem;
+  }
+  
+  .emergency-banner {
+    font-size: 0.75rem;
+    padding: 0.6rem;
+    gap: 0.5rem;
+  }
+  
+  .emergency-banner i {
+    font-size: 0.95rem;
+    margin-right: 0.35rem;
+  }
+  
+  .report-emergency-section,
+  .request-assistance-section {
+    padding: 2.5rem 1rem;
+  }
+  
+  .section-header,
+  .assist-header {
+    margin-bottom: 1.75rem;
+  }
+  
+  .section-icon,
+  .assist-icon-top {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .section-icon i,
+  .assist-icon-top i {
+    font-size: 1.6rem;
+  }
+  
+  .section-header h2,
+  .assist-header h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .section-header p,
+  .assist-header p {
+    font-size: 0.85rem;
+    padding: 0 0.5rem;
+  }
+  
+  .emergency-cards,
+  .assist-cards {
+    gap: 1rem;
+  }
+  
+  .emergency-card,
+  .assist-card {
+    padding: 1.25rem;
+    border-radius: 10px;
+  }
+  
+  .card-icon,
+  .assist-icon {
+    width: 45px;
+    height: 45px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .card-icon i,
+  .assist-icon i {
+    font-size: 1.4rem;
+  }
+  
+  .card-title-row h3,
+  .assist-card h3 {
+    font-size: 1rem;
+  }
+  
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.55rem;
+  }
+  
+  .card-desc,
+  .assist-desc {
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .assist-list {
+    margin-bottom: 1rem;
+  }
+  
+  .assist-list li {
+    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .assist-list .check {
+    font-size: 0.9rem;
+  }
+  
+  .assist-status {
+    font-size: 0.7rem;
+    padding: 0.45rem;
+    margin-bottom: 1rem;
+  }
+  
+  .report-btn,
+  .assist-btn {
+    font-size: 0.75rem;
+    padding: 0.6rem;
+    border-radius: 10px;
+  }
+  
+  .report-btn i,
+  .assist-btn i {
+    font-size: 0.95rem;
+  }
+}
+
+/* iPhone SE Specific (375px) */
+@media (max-width: 375px) {
+  html, body {
+    font-size: 15px;
+  }
+  
+  .resident-navbar-custom {
+    min-height: 54px;
+  }
+  
+  .resident-navbar-custom .navbar-brand-custom {
+    padding: 0.55rem 0.6rem;
+    font-size: 0.9rem;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom i {
+    font-size: 0.9rem;
+  }
+  
+  .resident-nav-item-custom {
+    padding: 0.55rem 0.7rem;
+    font-size: 0.7rem;
+  }
+  
+  .resident-nav-item-custom i {
+    font-size: 0.9rem;
+  }
+  
+  .resident-user-menu {
+    padding: 0.55rem 0.7rem;
+    font-size: 0.7rem;
+  }
+  
+  .resident-user-dropdown {
+    min-width: 160px;
+    right: 0.25rem;
+  }
+  
+  .resident-dropdown-item {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.8rem;
+  }
+  
+  header {
+    min-height: 420px;
+  }
+  
+  .hero-content {
+    padding: 2rem 0.85rem;
+  }
+  
+  .badge-pill {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.65rem;
+    margin-bottom: 1rem;
+  }
+  
+  .hero-title {
+    font-size: 1.6rem;
+    letter-spacing: 1.5px;
+    margin-top: 25px;
+    margin-bottom: 0.65rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    margin-bottom: 1.5rem;
+    padding: 0 0.25rem;
+  }
+  
+  .cta-buttons {
+    gap: 0.6rem;
+  }
+  
+  .btn-donate, .btn-help {
+    padding: 0.7rem 1.3rem;
+    font-size: 0.8rem;
+    border-radius: 9px;
+  }
+  
+  .carousel-indicators-custom {
+    gap: 0.35rem;
+  }
+  
+  .indicator {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .indicator.active {
+    width: 18px;
+  }
+  
+  .nav-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+  }
+  
+  .emergency-banner {
+    font-size: 0.7rem;
+    padding: 0.55rem;
+  }
+  
+  .report-emergency-section,
+  .request-assistance-section {
+    padding: 2rem 0.85rem;
+  }
+  
+  .section-icon,
+  .assist-icon-top {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .section-icon i,
+  .assist-icon-top i {
+    font-size: 1.5rem;
+  }
+  
+  .section-header h2,
+  .assist-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .section-header p,
+  .assist-header p {
+    font-size: 0.8rem;
+  }
+  
+  .emergency-cards,
+  .assist-cards {
+    gap: 0.9rem;
+  }
+  
+  .emergency-card,
+  .assist-card {
+    padding: 1.15rem;
+  }
+  
+  .card-icon,
+  .assist-icon {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .card-icon i,
+  .assist-icon i {
+    font-size: 1.3rem;
+  }
+  
+  .card-title-row h3,
+  .assist-card h3 {
+    font-size: 0.95rem;
+  }
+  
+  .card-desc,
+  .assist-desc {
+    font-size: 0.75rem;
+  }
+  
+  .assist-list li {
+    font-size: 0.7rem;
+  }
+  
+  .report-btn,
+  .assist-btn {
+    font-size: 0.7rem;
+    padding: 0.55rem;
+  }
+}
+
+/* Very Small Devices (< 360px) */
+@media (max-width: 360px) {
+  html, body {
+    font-size: 14px;
+  }
+  
+  .resident-navbar-custom {
+    min-height: 52px;
+  }
+  
+  .resident-navbar-custom .navbar-brand-custom {
+    padding: 0.5rem 0.55rem;
+    font-size: 0.85rem;
+  }
+  
+  .resident-navbar-custom .brand-icon-custom {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .resident-nav-item-custom,
+  .resident-user-menu {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.65rem;
+  }
+  
+  .hero-title {
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    margin-top: 20px;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .btn-donate, .btn-help {
+    padding: 0.65rem 1.2rem;
+    font-size: 0.75rem;
+  }
+  
+  .section-header h2,
+  .assist-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .emergency-card,
+  .assist-card {
+    padding: 1rem;
+  }
+  
+  .card-title-row h3,
+  .assist-card h3 {
+    font-size: 0.9rem;
+  }
+}
+
+/* Modal Responsive Styles */
+@media (max-width: 576px) {
+  .modal-container {
+    max-width: 95%;
+    border-radius: 10px;
+  }
+  
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .modal-icon,
+  .modal-icon-assist {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .modal-icon i,
+  .modal-icon-assist i {
+    font-size: 1.6rem;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .modal-form {
+    padding: 1.5rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    padding: 0.65rem;
+    font-size: 0.85rem;
+    border-radius: 7px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+  
+  .btn-cancel,
+  .btn-submit {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .modal-container {
+    max-width: 98%;
+    border-radius: 8px;
+  }
+  
+  .modal-header {
+    padding: 1rem 1.25rem;
+  }
+  
+  .modal-icon,
+  .modal-icon-assist {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .modal-icon i,
+  .modal-icon-assist i {
+    font-size: 1.4rem;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.1rem;
+  }
+  
+  .modal-form {
+    padding: 1.25rem;
+  }
+  
+  .form-group label {
+    font-size: 0.8rem;
+  }
+  
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .btn-cancel,
+  .btn-submit {
+    padding: 0.7rem;
+    font-size: 0.85rem;
+    border-radius: 20px;
+  }
+}
+
+/* Footer Responsive */
+@media (max-width: 576px) {
+  .footer-container {
+    padding: 0 1.5rem;
+  }
+  
+  .footer-logo-circle {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .footer-logo-circle i {
+    font-size: 1.1rem;
+  }
+  
+  .footer-brand-text {
+    font-size: 1.2rem;
+  }
+  
+  .footer-description {
+    font-size: 0.8rem;
+  }
+  
+  .footer-column-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .footer-links-list a,
+  .contact-item {
+    font-size: 0.8rem;
+  }
+  
+  .footer-bottom {
+    font-size: 0.75rem;
+    padding-top: 1rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .footer-container {
+    padding: 0 1rem;
+  }
+  
+  .footer-logo-circle {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .footer-logo-circle i {
+    font-size: 1rem;
+  }
+  
+  .footer-brand-text {
+    font-size: 1.1rem;
+  }
+  
+  .footer-description,
+  .footer-links-list a,
+  .contact-item {
+    font-size: 0.75rem;
+  }
+  
+  .footer-column-title {
+    font-size: 0.85rem;
+  }
+  
+  .footer-bottom {
+    font-size: 0.7rem;
+  }
+}
+
+/* Utility Classes for Mobile */
+@media (max-width: 576px) {
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  .show-mobile {
+    display: block !important;
+  }
+}
+
+/* Smooth Scroll for All Devices */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent Horizontal Scroll */
+body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* Touch Optimization */
+@media (hover: none) and (pointer: coarse) {
+  .resident-nav-item-custom,
+  .resident-user-menu,
+  .btn-donate,
+  .btn-help,
+  .report-btn,
+  .assist-btn {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    touch-action: manipulation;
+  }
+}
+
+/* Safe Area for Notch Devices */
+@supports (padding: max(0px)) {
+  .resident-navbar-custom {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  .hero-content {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}

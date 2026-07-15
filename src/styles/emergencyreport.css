@@ -1,0 +1,192 @@
+.emergency-report-section {
+  padding-top: 30px;
+}
+
+.emergency-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 2.5vw, 30px);
+  max-width: 1140px;
+  margin: 0 auto 100px auto; /* <-- added bottom space */
+  padding: 0 20px;
+}
+
+.emergency-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  min-height: 450px;
+  border: 1px solid #f0e6e6;
+  box-shadow: 0 4px 14px rgba(20,20,30,.06);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.emergency-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 22px 40px rgba(127,29,29,.16);
+}
+
+.card-media {
+  position: relative;
+  height: 300px;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  transition: transform .4s ease;
+  overflow: hidden;
+}
+
+.emergency-card:hover .card-media {
+  transform: scale(1.03);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: clamp(11px,1vw,12.5px);
+  font-weight: 700;
+  letter-spacing: .02em;
+  padding: 6px 12px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  text-transform: uppercase;
+}
+
+.badge.critical{
+  background: rgba(255,255,255,.15);
+  color:#fecaca;
+  border:1px solid rgba(255,255,255,.25);
+}
+
+.badge.high{
+  background: rgba(255,255,255,.15);
+  color:#fed7aa;
+  border:1px solid rgba(255,255,255,.25);
+}
+
+.badge.medium{
+  background: rgba(255,255,255,.15);
+  color:#fde68a;
+  border:1px solid rgba(255,255,255,.25);
+}
+
+.card-body {
+  flex: 1;
+  padding: 18px 20px 8px;
+}
+
+.card-body h3 {
+  font-size: clamp(16px,1.3vw,19px);
+  font-weight: 800;
+  margin: 0 0 8px;
+  color:#14171f;
+  line-height:1.2;
+}
+
+.card-desc {
+  font-size: clamp(12.5px,1vw,13.5px);
+  line-height:1.5;
+  color:#6b7280;
+  margin:0;
+}
+
+.card-actions {
+  padding: 15px 20px 20px;
+}
+
+.report-btn {
+  width:100%;
+  border:none;
+  color:#fff;
+  font-weight:700;
+  font-size:clamp(13px,1.05vw,14.5px);
+  padding:12px 18px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  background:linear-gradient(135deg,#dc2626,#b91c1c);
+  box-shadow:0 6px 16px rgba(220,38,38,.3);
+  transition:all .2s ease;
+}
+
+.report-btn:hover{
+  filter:brightness(1.08);
+  box-shadow:0 10px 22px rgba(220,38,38,.4);
+}
+
+.report-btn:active{
+  transform:scale(.97);
+}
+
+/* Tablet */
+@media (max-width:992px){
+
+  .emergency-cards{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .card-media{
+    height:240px;
+  }
+
+  .emergency-card{
+    min-height:420px;
+  }
+}
+
+/* Mobile */
+@media (max-width:768px){
+
+  .emergency-cards{
+    grid-template-columns:1fr;
+    padding:0 16px;
+    margin-bottom:80px;
+  }
+
+  .emergency-card{
+    width:100%;
+    min-height:auto;
+  }
+
+  .card-media{
+    height:220px;
+  }
+
+  .card-body{
+    padding:16px;
+  }
+
+  .card-actions{
+    padding:16px;
+  }
+
+  .report-btn{
+    padding:11px;
+  }
+}
+
+/* Small phones */
+@media (max-width:480px){
+
+  .card-media{
+    height:180px;
+  }
+
+  .card-body h3{
+    font-size:16px;
+  }
+
+  .card-desc{
+    font-size:13px;
+  }
+}
