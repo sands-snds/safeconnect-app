@@ -26,7 +26,6 @@ import AdminLogsTable from '../components/admin/Admintables/AdminLogsTable';
 import AnnouncementsTable from '../components/admin/Admintables/AnnouncementsTable';
 import PettyCrimeReportsTable from '../components/admin/Admintables/PettyCrimeReportsTable';
 
-import SignInModal from '../components/SignInModal'; 
 import FormModal from '../components/admin/AdminModals/FormModal';
 import CreateAnnouncementView from '../components/admin/CreateAnnouncementView';
 
