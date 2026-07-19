@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import ListView from "../../shared/ListView";
 
 import AssistanceRequestDetails from "./AssistanceRequestDetails";
-import StatusSelect from "../shared/StatusSelect";
+import StatusSelect from "../../shared/StatusSelect";
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -121,7 +121,6 @@ const AssistanceRequestsTable = ({
 
   return (
     <ListView
-      title="ASSISTANCE REQUESTS"
       data={data}
       filterType="assistance"
       filters={filters}

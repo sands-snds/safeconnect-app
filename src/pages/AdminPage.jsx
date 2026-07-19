@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/admin.css';
-import { getSeverityColor } from "../components/admin/dashboard/chartConstants";
+import { getSeverityColor } from "../components/admin/shared/chartUtils";
 
-import AdminDashboard from '../components/admin/AdminDashboard';
+import Dashboard from '../components/admin/dashboard/Dashboard';
 import AdminLayout from "../components/admin/layout/AdminLayout";
-import UsersPage from "../components/admin/pages/UsersPage";
+import UsersPage from "../components/admin/users/UsersPage";
 import LogsPage from "../components/admin/logs/LogsPage";
-import ReportsPage from "../components/admin/pages/ReportsPage";
+import ReportsPage from "../components/admin/reports/ReportsPage";
 import AnnouncementsPage from "../components/admin/announcements/AnnouncementsPage";
 import useAdminData from "../components/admin/hooks/useAdminData";
 import useAdminAuth from "../components/admin/hooks/useAdminAuth";
 import useAdminNavigation from "../components/admin/hooks/useAdminNavigation";
 import FormModal from '../components/admin/AdminModals/FormModal';
+import SignInModal from '../components/admin/AdminModals/SignInModal';
 
 const AdminPage = () => {
   const {
@@ -65,6 +66,37 @@ const AdminPage = () => {
     announcements: { status: 'All Items', search: '' },
     pettyCrime: { status: 'All Items', search: '' }
   });
+
+  const PAGE_TITLES = {
+  dashboard: "Dashboard",
+  "emergency-reports": "Emergency Reports",
+  "assistance-requests": "Assistance Requests",
+  "petty-crime-reports": "Petty Crime Reports",
+  "announcement-page": "Announcements",
+  "create-announcement": "Create Announcement",
+  "registered-users": "Registered Users",
+  "sign-in-logs": "Sign-in Logs",
+  "admin-logs": "Admin Logs"
+};
+
+  const alerts = [];
+    const emergencyPending =
+        emergencyReports.filter(r => r.status !== "Resolved").length;
+
+    if (emergencyPending > 0)
+        alerts.push(`🚨 ${emergencyPending} Emergency Reports Pending`);
+
+    const assistancePending =
+        assistanceRequests.filter(r => r.status !== "Approved").length;
+
+    if (assistancePending > 0)
+        alerts.push(`🤝 ${assistancePending} Assistance Requests Pending`);
+
+    const crimePending =
+        pettyCrimeReports.filter(r => r.status !== "Resolved").length;
+
+    if (crimePending > 0)
+        alerts.push(`🚔 ${crimePending} Crime Reports Pending`);
   
   useEffect(() => {
     if (!showSigninModal && sessionStorage.getItem('adminAuthenticated') === 'true' && !isAuthenticated) {
@@ -126,7 +158,7 @@ const AdminPage = () => {
     switch (activeView) {
       case 'dashboard':
         return (
-          <AdminDashboard
+          <Dashboard
             emergencyReports={emergencyReports}
             assistanceRequests={assistanceRequests}
             registeredUsers={registeredUsers}
@@ -137,6 +169,7 @@ const AdminPage = () => {
             onShowSignInModal={() => setShowSignInModal(true)}
             onStatCardClick={handleStatCardClick}
             getSeverityColor={getSeverityColor}
+            onNavigate={handleNavigation}
           />
         );
       case "emergency-reports":
@@ -207,7 +240,7 @@ const AdminPage = () => {
           );
       default:
         return (
-          <AdminDashboard
+          <Dashboard
             emergencyReports={emergencyReports}
             assistanceRequests={assistanceRequests}
             registeredUsers={registeredUsers}
@@ -218,6 +251,7 @@ const AdminPage = () => {
             onShowSignInModal={() => setShowSignInModal(true)}
             onStatCardClick={handleStatCardClick}
             getSeverityColor={getSeverityColor}
+            onNavigate={handleNavigation}
           />
         );
     }
@@ -225,22 +259,34 @@ const AdminPage = () => {
   return (
       <>
           <AdminLayout
-              activeView={activeView}
-              onNavigate={handleNavigation}
-              onLogout={handleLogout}
+            activeView={activeView}
+            pageTitle={PAGE_TITLES[activeView] || "Dashboard"}
+            alerts={alerts}
 
-              showMobileMenu={showMobileMenu}
-              onCloseMobileMenu={closeMobileMenu}
-              onToggleMobileMenu={toggleMobileMenu}
+            onNavigate={handleNavigation}
+            onLogout={handleLogout}
 
-              onRefresh={handleRefresh}
-              isRefreshing={isRefreshing}
-              lastUpdate={lastUpdate}
+            showMobileMenu={showMobileMenu}
+            onCloseMobileMenu={closeMobileMenu}
+            onToggleMobileMenu={toggleMobileMenu}
+
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
+            lastUpdate={lastUpdate}
           >
               {isAuthenticated
                   ? renderActiveView()
                   : null}
           </AdminLayout>
+
+          {showSigninModal && (
+              <SignInModal
+                  onSuccess={() => {
+                      setIsAuthenticated(true);
+                      setShowSignInModal(false);
+                  }}
+              />
+          )}
 
           {showModal && (
               <FormModal
@@ -250,8 +296,8 @@ const AdminPage = () => {
                           : "Assistance Request"
                   }`}
                   onClose={() => setShowModal(null)}
-                  onSubmit={(e) => {
-                      handleFormSubmit(e, showModal);
+                  onSubmit={async (e) => {
+                      await handleFormSubmit(e, showModal);
                       setShowModal(null);
                   }}
                   type={showModal}

@@ -1,143 +1,218 @@
-import React from 'react';
+import React from "react";
 
-const AdminSidebar = ({ 
-  activeView, 
-  onNavigate, 
-  onLogout, 
-  showMobileMenu, 
-  onCloseMobileMenu 
+const AdminSidebar = ({
+  activeView,
+  onNavigate,
+  onLogout,
+  showMobileMenu,
+  onCloseMobileMenu
 }) => {
-  const menuItems = [
-    'dashboard',
-    'emergency-reports', 
-    'assistance-requests', 
-    'petty-crime-reports',
-    'create-announcement',
-    'announcement-page',
-    'registered-users', 
-    'sign-in-logs',
-    'admin-logs'
+  const menuSections = [
+    {
+      title: "GENERAL",
+      items: [
+        {
+          id: "dashboard",
+          icon: "🏠",
+          label: "Dashboard"
+        }
+      ]
+    },
+    {
+      title: "REPORTS",
+      items: [
+        {
+          id: "emergency-reports",
+          icon: "🚨",
+          label: "Emergency Reports"
+        },
+        {
+          id: "assistance-requests",
+          icon: "🤝",
+          label: "Assistance Requests"
+        },
+        {
+          id: "petty-crime-reports",
+          icon: "🚔",
+          label: "Petty Crime Reports"
+        }
+      ]
+    },
+    {
+      title: "CONTENT",
+      items: [
+        {
+          id: "create-announcement",
+          icon: "➕",
+          label: "Create Announcement"
+        },
+        {
+          id: "announcement-page",
+          icon: "📢",
+          label: "Announcements"
+        }
+      ]
+    },
+    {
+      title: "SYSTEM",
+      items: [
+        {
+          id: "registered-users",
+          icon: "👥",
+          label: "Users"
+        },
+        {
+          id: "sign-in-logs",
+          icon: "🔑",
+          label: "Sign-in Logs"
+        },
+        {
+          id: "admin-logs",
+          icon: "📜",
+          label: "Admin Logs"
+        }
+      ]
+    }
   ];
 
-  const handleItemClick = (view) => {
-    onNavigate(view);
-    onCloseMobileMenu();
-  };
+  const SidebarContent = () => (
+    <>
+      {/* Logo */}
+      <div
+        style={{
+          padding: "22px 20px",
+          borderBottom: "1px solid rgba(255,255,255,.12)"
+        }}
+      >
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "1.7rem",
+            fontWeight: "700"
+          }}
+        >
+          SafeConnect
+        </h1>
+
+        <p
+          style={{
+            marginTop: 4,
+            fontSize: "12px",
+            opacity: 0.75
+          }}
+        >
+          Administration
+        </p>
+      </div>
+
+      {/* Menu */}
+      <div
+        style={{
+          padding: "14px"
+        }}
+      >
+        {menuSections.map((section) => (
+          <div
+            key={section.title}
+            style={{ marginBottom: "18px" }}
+          >
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                opacity: ".65",
+                letterSpacing: "1px",
+                marginBottom: "10px",
+                padding: "0 10px"
+              }}
+            >
+              {section.title}
+            </div>
+
+            {section.items.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => {
+                  onNavigate(item.id);
+                  onCloseMobileMenu();
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "11px 12px",
+                  marginBottom: "4px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: ".2s",
+                  fontSize: "14px",
+                  fontWeight:
+                    activeView === item.id ? 600 : 400,
+                  background:
+                    activeView === item.id
+                      ? "rgba(255,255,255,.15)"
+                      : "transparent"
+                }}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {/* Divider */}
+        <div
+          style={{
+            borderTop:
+              "1px solid rgba(255,255,255,.12)",
+            margin: "8px 0 12px"
+          }}
+        />
+
+        {/* Logout */}
+        <div
+          onClick={onLogout}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "11px 12px",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "14px",
+            transition: ".2s"
+          }}
+        >
+          <span>🚪</span>
+          <span>Logout</span>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop */}
       <div className="desktop-sidebar">
-        <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <h1 className="font-bold" style={{ fontSize: '2rem' }}>SafeConnect</h1>
-          <p className="text-xs opacity-70 mt-1">Admin Dashboard</p>
-        </div>
-        
-        <div style={{ flex: 1, padding: '12px' }}>
-          {menuItems.map(view => (
-            <div
-              key={view}
-              onClick={() => onNavigate(view)}
-              style={{
-                padding: '12px 16px',
-                marginBottom: '4px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                background: activeView === view ? 'rgba(255,255,255,0.15)' : 'transparent',
-                transition: 'background 0.2s',
-                fontSize: '14px'
-              }}
-            >
-              {view.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-            </div>
-          ))}
-        </div>
-        
-        <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <button 
-            onClick={onLogout}
-            style={{
-              width: '100%',
-              padding: '10px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              background: 'transparent',
-              border: 'none',
-              color: 'white',
-              textAlign: 'left',
-              transition: 'background 0.2s',
-              fontSize: '14px'
-            }}
-            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.15)'}
-            onMouseLeave={(e) => e.target.style.background = 'transparent'}
-          >
-            Log Out
-          </button>
-        </div>
+        <SidebarContent />
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Overlay */}
       {showMobileMenu && (
-        <div 
+        <div
           className="mobile-menu-overlay"
           onClick={onCloseMobileMenu}
         />
       )}
 
-      {/* Mobile Menu Drawer */}
-      <div 
-        className={`mobile-menu-drawer ${showMobileMenu ? 'open' : ''}`}
+      {/* Mobile Drawer */}
+      <div
+        className={`mobile-menu-drawer ${
+          showMobileMenu ? "open" : ""
+        }`}
       >
-        <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 className="font-bold text-xl">SafeConnect</h1>
-            <p className="text-xs opacity-70">Admin Dashboard</p>
-          </div>
-          <button 
-            onClick={onCloseMobileMenu}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              color: 'white', 
-              fontSize: '24px', 
-              cursor: 'pointer',
-              padding: '4px'
-            }}
-          >
-            ×
-          </button>
-        </div>
-        
-        <div style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
-          {menuItems.map(view => (
-            <div
-              key={view}
-              onClick={() => handleItemClick(view)}
-              style={{
-                padding: '14px 16px',
-                marginBottom: '4px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                background: activeView === view ? 'rgba(255,255,255,0.15)' : 'transparent',
-                transition: 'background 0.2s',
-                fontSize: '15px',
-                fontWeight: activeView === view ? '600' : '400'
-              }}
-            >
-              {view.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-            </div>
-          ))}
-        </div>
-        
-        <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <button 
-            onClick={onLogout}
-            className="button button-secondary"
-            style={{ width: '100%', background: 'rgba(255,255,255,0.1)', color: 'white' }}
-          >
-            Log Out
-          </button>
-        </div>
+        <SidebarContent />
       </div>
     </>
   );

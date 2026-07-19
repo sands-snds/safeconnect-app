@@ -10,13 +10,11 @@ export default function Dashboard(props) {
 
     return (
         <>
-            <h1 className="font-bold text-2xl mb-5">
-                DASHBOARD
-            </h1>
             <DashboardSummary
                 emergencyReports={props.emergencyReports}
                 assistanceRequests={props.assistanceRequests}
                 pettyCrimeReports={props.pettyCrimeReports}
+                onNavigate={props.onNavigate}
             />
 
             <AdminStats {...props} />
@@ -26,20 +24,10 @@ export default function Dashboard(props) {
                 assistanceRequests={props.assistanceRequests}
             />
 
-            <DashboardAlerts
-                emergencyReports={props.emergencyReports}
-                assistanceRequests={props.assistanceRequests}
-                pettyCrimeReports={props.pettyCrimeReports}
-            />
-
             <DashboardRecentReports
                 emergencyReports={props.emergencyReports}
                 assistanceRequests={props.assistanceRequests}
                 pettyCrimeReports={props.pettyCrimeReports}
-            />
-
-            <DashboardQuickActions
-                onNavigate={props.onStatCardClick}
             />
 
         </>

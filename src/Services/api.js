@@ -1,13 +1,21 @@
-const API_BASE = "http://localhost/safeconnect-app/backend";
+// NOTE: this used to point at PHP scripts (emergency.php?action=list, etc.)
+// from the old backend. Since the backend is now Node/Express + MySQL, this
+// has been switched to plain REST-style routes instead of the old
+// "one php file + ?action=" pattern. The exact paths below are my best
+// guess at a clean REST layout — double check them against your real
+// Express route definitions and adjust API_BASE / API_ENDPOINTS as needed.
 
-export const SHEETDB_APIS = {
-  emergencyReports: `${API_BASE}/emergency.php`,
-  assistanceRequests: `${API_BASE}/assistance.php`,
-  registeredUsers: `${API_BASE}/auth.php`,
-  signInLogs: `${API_BASE}/logs.php`,
-  adminLogs: `${API_BASE}/logs.php`,
-  announcements: `${API_BASE}/announcements.php`,
-  pettyCrimes: `${API_BASE}/pettycrime.php`
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
+
+export const API_ENDPOINTS = {
+  emergencyReports: `${API_BASE}/emergency-reports`,
+  assistanceRequests: `${API_BASE}/assistance-requests`,
+  registeredUsers: `${API_BASE}/users`,
+  signInLogs: `${API_BASE}/logs/signin`,
+  adminLogs: `${API_BASE}/logs/admin`,
+  announcements: `${API_BASE}/announcements`,
+  pettyCrimes: `${API_BASE}/petty-crimes`,
+  auth: `${API_BASE}/auth`
 };
 
 // ========================================
@@ -20,25 +28,28 @@ const CACHE_DURATION = 0;
 let isFetching = false;
 let fetchPromise = null;
 
-const fetchWithCache = async (url, retries = 3) => {
+const fetchWithCache = async (url, options = {}, retries = 3) => {
   const now = Date.now();
-  const cached = requestCache.get(url);
+  const cacheKey = url;
+  const cached = requestCache.get(cacheKey);
 
-  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-    console.log('📦 Using cached data for:', url);
-    return cached.data;
+  if (!options.method || options.method === "GET") {
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      console.log('📦 Using cached data for:', url);
+      return cached.data;
+    }
   }
 
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, options);
       if (response.status === 429) {
         await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
         continue;
       }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      requestCache.set(url, { data, timestamp: now });
+      requestCache.set(cacheKey, { data, timestamp: now });
       return data;
     } catch (error) {
       if (i === retries - 1) throw error;
@@ -52,7 +63,7 @@ const fetchWithCache = async (url, retries = 3) => {
 
 export const signupUser = async (fullName, email, password) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.registeredUsers}?action=signup`, {
+    const response = await fetch(`${API_ENDPOINTS.auth}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fullName, email, password })
@@ -68,7 +79,7 @@ export const signupUser = async (fullName, email, password) => {
 
 export const signinUser = async (email, password) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.registeredUsers}?action=signin`, {
+    const response = await fetch(`${API_ENDPOINTS.auth}/signin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -88,8 +99,7 @@ export const signinUser = async (email, password) => {
 
 export const fetchEmergencyReports = async () => {
   try {
-    const url = `${SHEETDB_APIS.emergencyReports}?action=list`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.emergencyReports);
 
     return data.map(item => ({
       id: parseInt(item.id) || 0,
@@ -116,8 +126,7 @@ export const fetchEmergencyReports = async () => {
 
 export const fetchAssistanceRequests = async () => {
   try {
-    const url = `${SHEETDB_APIS.assistanceRequests}?action=list`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.assistanceRequests);
 
     return data.map(item => ({
       id: parseInt(item.id) || 0,
@@ -145,8 +154,7 @@ export const fetchAssistanceRequests = async () => {
 
 export const fetchRegisteredUsers = async () => {
   try {
-    const url = `${SHEETDB_APIS.registeredUsers}?action=users`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.registeredUsers);
 
     return data.map((item, index) => ({
       id: item.id || index + 1,
@@ -169,8 +177,7 @@ export const fetchRegisteredUsers = async () => {
 
 export const fetchSignInLogs = async () => {
   try {
-    const url = `${SHEETDB_APIS.signInLogs}?action=signin`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.signInLogs);
 
     return data.map((item, index) => ({
       id: item.id || index + 1,
@@ -193,8 +200,7 @@ export const fetchSignInLogs = async () => {
 
 export const fetchAdminLogs = async () => {
   try {
-    const url = `${SHEETDB_APIS.adminLogs}?action=admin`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.adminLogs);
 
     return data.map((item, index) => ({
       id: item.id || index + 1,
@@ -216,8 +222,7 @@ export const fetchAdminLogs = async () => {
 
 export const fetchAnnouncements = async () => {
   try {
-    const url = `${SHEETDB_APIS.announcements}?action=list`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.announcements);
 
     return data.map(item => ({
       id: parseInt(item.id) || 0,
@@ -239,8 +244,8 @@ export const fetchAnnouncements = async () => {
 
 export const createAnnouncement = async (announcement) => {
   try {
-    // Always send as multipart form data — announcements.php accepts this whether
-    // or not an image is attached, and it's required when one is.
+    // Always send as multipart form data — the announcements route accepts this
+    // whether or not an image is attached, and it's required when one is.
     const formData = new FormData();
     formData.append('title', announcement.title);
     formData.append('category', announcement.category);
@@ -253,13 +258,13 @@ export const createAnnouncement = async (announcement) => {
       formData.append('image', announcement.imageFile);
     }
 
-    const response = await fetch(`${SHEETDB_APIS.announcements}?action=create`, {
+    const response = await fetch(API_ENDPOINTS.announcements, {
       method: 'POST',
       body: formData
     });
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.announcements}?action=list`);
+    requestCache.delete(API_ENDPOINTS.announcements);
     return result;
   } catch (error) {
     console.error('Error creating announcement:', error);
@@ -267,9 +272,39 @@ export const createAnnouncement = async (announcement) => {
   }
 };
 
+export const updateAnnouncement = async (id, announcement) => {
+  try {
+    const formData = new FormData();
+    formData.append('title', announcement.title);
+    formData.append('category', announcement.category);
+    formData.append('message', announcement.message);
+    formData.append('date', announcement.date);
+    if (announcement.sourceUrl) {
+      formData.append('source_url', announcement.sourceUrl);
+    }
+    if (announcement.imageFile) {
+      formData.append('image', announcement.imageFile);
+    } else if (announcement.removeImage) {
+      formData.append('remove_image', '1');
+    }
+
+    const response = await fetch(`${API_ENDPOINTS.announcements}/${id}`, {
+      method: 'PUT',
+      body: formData
+    });
+
+    const result = await response.json();
+    requestCache.delete(API_ENDPOINTS.announcements);
+    return result;
+  } catch (error) {
+    console.error('Error updating announcement:', error);
+    return { success: false, message: 'Could not reach the server. Please try again.' };
+  }
+};
+
 export const fetchLinkPreview = async (url) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.announcements}?action=link-preview&url=${encodeURIComponent(url)}`);
+    const response = await fetch(`${API_ENDPOINTS.announcements}/link-preview?url=${encodeURIComponent(url)}`);
     const result = await response.json();
     if (!response.ok) {
       return { success: false, message: result.message || 'Could not read that link.' };
@@ -283,14 +318,14 @@ export const fetchLinkPreview = async (url) => {
 
 export const deleteAnnouncement = async (id) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.announcements}?action=delete&id=${id}`, {
+    const response = await fetch(`${API_ENDPOINTS.announcements}/${id}`, {
       method: 'DELETE'
     });
 
     if (!response.ok) throw new Error('Failed to delete announcement');
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.announcements}?action=list`);
+    requestCache.delete(API_ENDPOINTS.announcements);
     return result.success;
   } catch (error) {
     console.error('Error deleting announcement:', error);
@@ -304,8 +339,7 @@ export const deleteAnnouncement = async (id) => {
 
 export const fetchPettyCrimes = async () => {
   try {
-    const url = `${SHEETDB_APIS.pettyCrimes}?action=list`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.pettyCrimes);
 
     return data.map(item => ({
       id: parseInt(item.id) || 0,
@@ -326,14 +360,14 @@ export const fetchPettyCrimes = async () => {
 
 export const createPettyCrimeReport = async (report) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.pettyCrimes}?action=create`, {
+    const response = await fetch(API_ENDPOINTS.pettyCrimes, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(report)
     });
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.pettyCrimes}?action=list`);
+    requestCache.delete(API_ENDPOINTS.pettyCrimes);
     return result;
   } catch (error) {
     console.error('Error submitting petty crime report:', error);
@@ -342,7 +376,7 @@ export const createPettyCrimeReport = async (report) => {
 };
 
 export const updatePettyCrimeStatus = async (id, newStatus) => {
-  return await updateStatus(SHEETDB_APIS.pettyCrimes, id, newStatus);
+  return await updateStatus(API_ENDPOINTS.pettyCrimes, id, newStatus);
 };
 
 // ========================================
@@ -351,14 +385,14 @@ export const updatePettyCrimeStatus = async (id, newStatus) => {
 
 export const createEmergencyReport = async (report) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.emergencyReports}?action=create`, {
+    const response = await fetch(API_ENDPOINTS.emergencyReports, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(report)
     });
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.emergencyReports}?action=list`);
+    requestCache.delete(API_ENDPOINTS.emergencyReports);
     return result;
   } catch (error) {
     console.error('Error submitting emergency report:', error);
@@ -368,14 +402,14 @@ export const createEmergencyReport = async (report) => {
 
 export const createAssistanceRequest = async (request) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.assistanceRequests}?action=create`, {
+    const response = await fetch(API_ENDPOINTS.assistanceRequests, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request)
     });
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.assistanceRequests}?action=list`);
+    requestCache.delete(API_ENDPOINTS.assistanceRequests);
     return result;
   } catch (error) {
     console.error('Error submitting assistance request:', error);
@@ -431,10 +465,10 @@ export const fetchAllData = async () => {
 
 export const updateStatus = async (apiUrl, id, newStatus) => {
   try {
-    const response = await fetch(`${apiUrl}?action=update-status`, {
-      method: 'POST',
+    const response = await fetch(`${apiUrl}/${id}/status`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status: newStatus })
+      body: JSON.stringify({ status: newStatus })
     });
 
     if (!response.ok) throw new Error('Failed to update status');
@@ -449,13 +483,13 @@ export const updateStatus = async (apiUrl, id, newStatus) => {
 };
 
 export const updateEmergencyStatus = async (id, newStatus) => {
-  return await updateStatus(SHEETDB_APIS.emergencyReports, id, newStatus);
+  return await updateStatus(API_ENDPOINTS.emergencyReports, id, newStatus);
 };
 
 export const updateAssistanceStatus = async (id, newStatus) => {
-  return await updateStatus(SHEETDB_APIS.assistanceRequests, id, newStatus);
+  return await updateStatus(API_ENDPOINTS.assistanceRequests, id, newStatus);
 };
 
 export const updateUserStatus = async (id, newStatus) => {
-  return await updateStatus(SHEETDB_APIS.registeredUsers, id, newStatus);
+  return await updateStatus(API_ENDPOINTS.registeredUsers, id, newStatus);
 };

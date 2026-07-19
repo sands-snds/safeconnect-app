@@ -7,8 +7,10 @@ const AdminLayout = ({
     children,
 
     activeView,
-    onNavigate,
+    pageTitle,
+    alerts,
 
+    onNavigate,
     onLogout,
 
     showMobileMenu,
@@ -19,10 +21,13 @@ const AdminLayout = ({
     isRefreshing,
     lastUpdate
 }) => {
+
     return (
         <div className="admin-container">
 
             <AdminHeader
+                title={pageTitle}
+                alerts={alerts}
                 onToggleMobileMenu={onToggleMobileMenu}
                 onRefresh={onRefresh}
                 isRefreshing={isRefreshing}
@@ -43,9 +48,9 @@ const AdminLayout = ({
                     onCloseMobileMenu={onCloseMobileMenu}
                 />
 
-                <div className="main-content">
+                <main className="main-content">
                     {children}
-                </div>
+                </main>
 
             </div>
 

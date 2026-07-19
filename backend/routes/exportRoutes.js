@@ -17,11 +17,9 @@ router.get(
     exportController.exportReportsPDF
 );
 
-//router.get(
-//    "/excel/reports",
-//    verifyToken,
-//    verifyAdmin,
-//    exportController.exportReportsExcel
-//);
+router.get(
+    "/excel/reports",
+    exportController.exportReportsExcel
+);
 
 module.exports = router;
