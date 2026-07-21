@@ -24,7 +24,6 @@ const SignInLogsTable = ({
 
   return (
     <ListView
-      title="SIGN IN LOGS"
       data={data}
       filterType="signins"
       filters={filters}

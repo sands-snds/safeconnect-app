@@ -9,6 +9,16 @@ const SORT_OPTIONS = [
   { value: "oldest", label: "Oldest - Newest" },
 ];
 
+const STATUS_OPTIONS = [
+  "General",
+  "Announcement",
+  "Emergency Alert",
+  "Weather Advisory",
+  "Community Update",
+  "Community Event",
+  "Evacuation"
+];
+
 const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +69,18 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
       });
     }
 
+    // "All Items" is the placeholder/default option - treat it (and an
+    // empty value) as "no filter applied".
+    const statusFilter = (currentFilters.status || "").trim();
+
+    if (statusFilter && statusFilter.toLowerCase() !== "all items") {
+      result = result.filter(
+        (item) =>
+          (item.category || "").trim().toLowerCase() ===
+          statusFilter.toLowerCase()
+      );
+    }
+
     result.sort((a, b) => {
       const dateA = new Date(a.date).getTime() || 0;
       const dateB = new Date(b.date).getTime() || 0;
@@ -72,7 +94,7 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
     });
 
     return result;
-  }, [data, currentFilters.search, sortOrder]);
+  }, [data, currentFilters.search, currentFilters.status, sortOrder]);
 
   const totalPages = Math.max(1, Math.ceil(processedData.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -266,7 +288,6 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
         <div>Loading announcements...</div>
       ) : (
         <ListView
-          title="ANNOUNCEMENTS"
           data={pagedData}
           filterType="announcements"
           filters={filters}
@@ -280,7 +301,10 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
             "ACTIONS",
           ]}
           renderRow={renderRow}
-          statusOptions={["All Items"]}
+          statusOptions={[
+            "Select Category",
+            ...STATUS_OPTIONS
+          ]}
           sortOptions={SORT_OPTIONS}
           sortValue={sortOrder}
           onSortChange={setSortOrder}

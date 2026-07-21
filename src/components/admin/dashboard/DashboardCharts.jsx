@@ -1,23 +1,40 @@
 import PieChartCard from "./PieChartCard";
 import { STATUS_COLORS, SEVERITY_COLORS, buildPieData } from "../shared/chartUtils";
-export default function DashboardCharts({
-    emergencyReports,
-    assistanceRequests
 
+export default function DashboardCharts({
+    emergencyReports = [],
+    assistanceRequests = [],
+    pettyCrimeReports = []
 }) {
     return (
         <div
             style={{
                 display: "grid",
                 gridTemplateColumns:
-                    "repeat(auto-fit,minmax(300px,1fr))",
+                    window.innerWidth < 768
+                        ? "1fr"
+                        : "repeat(2, 1fr)",
                 gap: "20px",
-                marginTop: "24px"
+                marginTop: "24px",
+                alignItems: "stretch"
             }}
         >
 
             <PieChartCard
-                title="Incidents by Status"
+                title="Petty Crimes by Status"
+                data={(() => {
+                    const chartData = buildPieData(
+                        pettyCrimeReports,
+                        "status"
+                    );
+                    return chartData;
+                })()}
+                colorMap={STATUS_COLORS}
+            />
+
+
+            <PieChartCard
+                title="Emergency Reports by Status"
                 data={buildPieData(
                     emergencyReports,
                     "status"
@@ -25,14 +42,16 @@ export default function DashboardCharts({
                 colorMap={STATUS_COLORS}
             />
 
+{/*
             <PieChartCard
-                title="Incidents by Severity"
+                title="Reports by Severity"
                 data={buildPieData(
                     emergencyReports,
                     "severity"
                 )}
                 colorMap={SEVERITY_COLORS}
             />
+*/}
 
             <PieChartCard
                 title="Assistance Requests by Status"
@@ -42,7 +61,7 @@ export default function DashboardCharts({
                 )}
                 colorMap={STATUS_COLORS}
             />
-        </div>
 
+        </div>
     );
 }

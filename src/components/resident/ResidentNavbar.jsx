@@ -2,33 +2,72 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 // Adjust this path if it errors — should point to your Services/api.js
 import { fetchAnnouncements } from '../../Services/api';
+import MyReportsPage from './MyReportsPage';
+import SettingsPage from './SettingsPage';
+import NewsOverlay from "./navbar/NewsOverlay";
+import NotificationPanel from "./navbar/NotificationPanel";
+import UserDropdown from "./navbar/UserDropdown";
+import DesktopNavbar from "./navbar/DesktopNavbar";
+import MobileNavbar from "./navbar/MobileNavbar";
+import useAnnouncements from "../../hooks/useAnnouncements";
+import useNotifications from "../../hooks/useNotifications";
+import "./navbar/NavbarStyles.css";
 
-const SAMPLE_NOTIFICATIONS = [
-  {
-    id: 1,
-    icon: 'bi-exclamation-triangle-fill',
-    title: 'Flood advisory issued',
-    message: 'Heavy rainfall expected in Barangay Santa Fe over the next 24 hours.',
-    time: '10 min ago',
-    unread: true
-  },
-  {
-    id: 2,
-    icon: 'bi-check-circle-fill',
-    title: 'Assistance request completed',
-    message: 'Your recent assistance request has been marked as resolved.',
-    time: '2 hours ago',
-    unread: true
-  },
-  {
-    id: 3,
-    icon: 'bi-megaphone-fill',
-    title: 'Community drill scheduled',
-    message: 'An evacuation drill is scheduled this Saturday at 9:00 AM.',
-    time: 'Yesterday',
-    unread: false
+// How often to poll for new announcements while the app is open (ms)
+const POLL_INTERVAL_MS = 60 * 1000; // 1 minute
+
+// localStorage keys used to persist which announcements this resident has
+// already seen, so unread state survives refreshes/logins.
+const READ_IDS_KEY = 'sf_readAnnouncementIds';
+const BASELINE_SET_KEY = 'sf_notifBaselineSet';
+
+// --- Weather (Open-Meteo, free, no API key required) ---
+// Coordinates for Dasmariñas, Cavite (Barangay Santa Fe's area)
+const WEATHER_LAT = 14.3294;
+const WEATHER_LON = 120.9367;
+const WEATHER_CACHE_KEY = 'sf_weatherCache'; // stores { date: 'YYYY-MM-DD', data: {...} }
+const WEATHER_DISMISSED_KEY = 'sf_weatherNoticeDismissed'; // stores the date it was last dismissed on
+const RAIN_ALERT_THRESHOLD = 40; // % chance of rain that triggers the "possible rain" notice
+
+const getTodayKey = () => new Date().toISOString().split('T')[0];
+
+// The weather notice re-appears each new day, but stays dismissed for the
+// rest of today once the resident clicks it.
+const loadWeatherDismissed = () => {
+  try {
+    return localStorage.getItem(WEATHER_DISMISSED_KEY) === getTodayKey();
+  } catch {
+    return false;
   }
-];
+};
+
+// Minimal WMO weather code -> label/icon mapping
+const describeWeatherCode = (code) => {
+  if ([0].includes(code)) return { label: 'Clear sky', icon: 'bi-sun-fill' };
+  if ([1, 2, 3].includes(code)) return { label: 'Partly cloudy', icon: 'bi-cloud-sun-fill' };
+  if ([45, 48].includes(code)) return { label: 'Foggy', icon: 'bi-cloud-fog2-fill' };
+  if ([51, 53, 55, 56, 57].includes(code)) return { label: 'Drizzle', icon: 'bi-cloud-drizzle-fill' };
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { label: 'Rain', icon: 'bi-cloud-rain-fill' };
+  if ([95, 96, 99].includes(code)) return { label: 'Thunderstorm', icon: 'bi-cloud-lightning-rain-fill' };
+  return { label: 'Weather update', icon: 'bi-cloud-fill' };
+};
+
+const loadReadIds = () => {
+  try {
+    const raw = localStorage.getItem(READ_IDS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+};
+
+const saveReadIds = (set) => {
+  try {
+    localStorage.setItem(READ_IDS_KEY, JSON.stringify(Array.from(set)));
+  } catch {
+    // Ignore storage errors (e.g. private browsing quota)
+  }
+};
 
 // Matches the look of the old sample data: "Sunday, July 5, 2026"
 const formatNewsDate = (dateStr) => {
@@ -38,25 +77,115 @@ const formatNewsDate = (dateStr) => {
   return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 };
 
+// Short relative time for the notification list: "10 min ago", "Yesterday", etc.
+const formatRelativeTime = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+
+  if (diffMin < 1) return 'Just now';
+  if (diffMin < 60) return `${diffMin} min ago`;
+
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+
+  return formatNewsDate(dateStr);
+};
+
+// Picks an icon based on the announcement's category
+const getCategoryIcon = (category) => {
+  const map = {
+    'Emergency Alert': 'bi-exclamation-triangle-fill',
+    'Weather Advisory': 'bi-cloud-rain-fill',
+    'Evacuation': 'bi-signpost-split-fill',
+    'Community Event': 'bi-calendar-event-fill',
+    'Community Update': 'bi-info-circle-fill',
+    'Announcement': 'bi-megaphone-fill',
+    'General': 'bi-megaphone-fill'
+  };
+  return map[category] || 'bi-megaphone-fill';
+};
+
+// Reads the logged-in resident's account info, saved at sign-in.
+// Falls back gracefully if it's missing (e.g. older sessions from before
+// this was added) so the navbar never breaks.
+const loadCurrentUser = () => {
+  try {
+    const raw = sessionStorage.getItem('currentUser');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveCurrentUser = (user) => {
+  try {
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
+  } catch {
+    // Ignore storage errors
+  }
+};
+
 function ResidentNavbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showNewsPage, setShowNewsPage] = useState(false);
-  const [notifications, setNotifications] = useState(SAMPLE_NOTIFICATIONS);
+  const [showReportsPage, setShowReportsPage] = useState(false);
+  const [showSettingsPage, setShowSettingsPage] = useState(false);
   const [username, setUsername] = useState('User');
-  const [news, setNews] = useState([]);
-  const [newsLoading, setNewsLoading] = useState(false);
-  const [newsError, setNewsError] = useState('');
+  const [currentUser, setCurrentUser] = useState(() => loadCurrentUser());
+
+  // Single shared source of truth for announcements — powers both the
+  // notification bell and the full-screen News page.
+  const [readIds, setReadIds] = useState(() => loadReadIds());
+
+  // Daily weather snapshot (Open-Meteo), cached per calendar day
+  const [weather, setWeather] = useState(null);
+  const [weatherDismissed, setWeatherDismissed] = useState(() => loadWeatherDismissed());
 
   const dropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
-  const notificationsRef = useRef(null);
+  const notificationsRef = useRef(null); // desktop bell + panel
+  const mobileNotificationsRef = useRef(null); // mobile bell + panel
   const navigate = useNavigate();
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const unreadCount = announcements.filter(a => !readIds.has(a.id)).length;
+
+  const {
+      announcements,
+      announcementsLoading,
+      announcementsError,
+      reloadAnnouncements
+  } = useAnnouncements();
+
+
+  // Most recent announcements shown in the dropdown, flagged with unread state
+  const notifications = announcements.slice(0, 8).map(a => ({
+    ...a,
+    unread: !readIds.has(a.id)
+  }));
+
+  const showRainNotice = weather && weather.rainChance >= RAIN_ALERT_THRESHOLD && !weatherDismissed;
+  const totalBadgeCount = unreadCount + (showRainNotice ? 1 : 0);
 
   useEffect(() => {
+    // Prefer the full account record saved at sign-in (has id, username,
+    // email, photo, etc). Fall back to the legacy name-only value so
+    // existing sessions from before this change still show something.
+    const user = loadCurrentUser();
+    if (user) {
+      setCurrentUser(user);
+      setUsername(user.username || user.fullName || 'User');
+      return;
+    }
     const storedName = localStorage.getItem('residentName');
     if (storedName) {
       setUsername(storedName);
@@ -64,9 +193,63 @@ function ResidentNavbar() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = showNewsPage ? 'hidden' : 'auto';
+    document.body.style.overflow = (showNewsPage || showReportsPage || showSettingsPage) ? 'hidden' : 'auto';
     return () => { document.body.style.overflow = 'auto'; };
-  }, [showNewsPage]);
+  }, [showNewsPage, showReportsPage, showSettingsPage]);
+
+  // Load announcements + weather on mount, then keep polling so the bell
+  // updates automatically whenever the admin posts something new (weather
+  // itself only actually re-fetches once the calendar day rolls over, since
+  // it's cached — see loadWeather below).
+  useEffect(() => {
+    reloadAnnouncements();
+    loadWeather();
+    const interval = setInterval(() => {
+      reloadAnnouncements();
+      loadWeather();
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+  // Fetches today's forecast for Dasmariñas from Open-Meteo (no API key
+  // needed) and caches it in localStorage so it only re-fetches once the
+  // date changes — giving a forecast that updates automatically every day.
+  const loadWeather = async () => {
+    try {
+      const cachedRaw = localStorage.getItem(WEATHER_CACHE_KEY);
+      const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
+      const today = getTodayKey();
+
+      if (cached && cached.date === today) {
+        setWeather(cached.data);
+        return;
+      }
+
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&daily=precipitation_probability_max,weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FManila`
+      );
+      const json = await res.json();
+
+      const rainChance = json.daily.precipitation_probability_max[0];
+      const code = json.daily.weathercode[0];
+      const tMax = Math.round(json.daily.temperature_2m_max[0]);
+      const tMin = Math.round(json.daily.temperature_2m_min[0]);
+
+      const data = { date: today, rainChance, code, tMax, tMin };
+      localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ date: today, data }));
+      setWeather(data);
+
+      // A new day's forecast means any prior dismissal no longer applies
+      if (localStorage.getItem(WEATHER_DISMISSED_KEY) !== today) {
+        setWeatherDismissed(false);
+      }
+    } catch (err) {
+      // Weather is a nice-to-have, not core functionality — fail quietly
+      console.error('Weather fetch failed:', err);
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -80,7 +263,11 @@ function ResidentNavbar() {
       ) {
         setShowMobileMenu(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+      const outsideDesktopPanel =
+        !notificationsRef.current || !notificationsRef.current.contains(event.target);
+      const outsideMobilePanel =
+        !mobileNotificationsRef.current || !mobileNotificationsRef.current.contains(event.target);
+      if (outsideDesktopPanel && outsideMobilePanel) {
         setShowNotifications(false);
       }
     }
@@ -101,6 +288,10 @@ function ResidentNavbar() {
     e.stopPropagation();
     setShowNotifications(!showNotifications);
     setShowDropdown(false);
+    if (!showNotifications) {
+      // Refresh right as the panel opens so it's never stale
+      reloadAnnouncements();
+    }
   };
 
   const openNewsPage = () => {
@@ -108,19 +299,98 @@ function ResidentNavbar() {
     setShowMobileMenu(false);
     setShowDropdown(false);
     setShowNotifications(false);
-
-    setNewsLoading(true);
-    setNewsError('');
-    fetchAnnouncements()
-      .then(setNews)
-      .catch(() => setNewsError('Could not load news right now. Please try again later.'))
-      .finally(() => setNewsLoading(false));
+    reloadAnnouncements();
   };
 
   const closeNewsPage = () => setShowNewsPage(false);
 
+  // "My Reports" — shows everything this resident has submitted
+  const openReportsPage = () => {
+    setShowReportsPage(true);
+    setShowMobileMenu(false);
+    setShowDropdown(false);
+    setShowNotifications(false);
+  };
+
+  const closeReportsPage = () => setShowReportsPage(false);
+
+  // Settings — profile photo, username, password
+  const openSettingsPage = () => {
+    setShowSettingsPage(true);
+    setShowMobileMenu(false);
+    setShowDropdown(false);
+    setShowNotifications(false);
+  };
+
+  const closeSettingsPage = () => setShowSettingsPage(false);
+
+  // Bubble profile changes (new username / new photo) from the Settings
+  // page back up so the navbar and session storage stay in sync everywhere.
+  const handleProfileUpdate = (updates) => {
+    setCurrentUser((prev) => {
+      const next = { ...(prev || {}), ...updates };
+      saveCurrentUser(next);
+      return next;
+    });
+    if (updates.username) {
+      setUsername(updates.username);
+      // Keep the legacy localStorage value in sync too, since other parts
+      // of the app may still read it directly.
+      try {
+        localStorage.setItem('residentName', updates.username);
+      } catch {
+        // Ignore storage errors
+      }
+    }
+  };
+
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    const allIds = announcements.map((a) => a.id);
+    const newSet = new Set([...readIds, ...allIds]);
+    setReadIds(newSet);
+    saveReadIds(newSet);
+  };
+
+  const markOneAsRead = (id) => {
+    if (readIds.has(id)) return;
+    const newSet = new Set(readIds);
+    newSet.add(id);
+    setReadIds(newSet);
+    saveReadIds(newSet);
+  };
+
+  // Clicking a notification: mark it read, open the News page, and scroll
+  // straight to that article.
+  const handleNotificationClick = (id) => {
+    markOneAsRead(id);
+    setShowNotifications(false);
+    setShowMobileMenu(false);
+    setShowNewsPage(true);
+
+    setTimeout(() => {
+      const el = document.getElementById(`news-item-${id}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  };
+
+  // Clicking the weather notice: mark it dismissed for today, open the News
+  // page, and scroll to the weather card — same pattern as a regular
+  // announcement click.
+  const handleWeatherNotificationClick = () => {
+    try {
+      localStorage.setItem(WEATHER_DISMISSED_KEY, getTodayKey());
+    } catch {
+      // Ignore storage errors
+    }
+    setWeatherDismissed(true);
+    setShowNotifications(false);
+    setShowMobileMenu(false);
+    setShowNewsPage(true);
+
+    setTimeout(() => {
+      const el = document.getElementById('news-item-weather');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
   };
 
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);
@@ -369,6 +639,13 @@ function ResidentNavbar() {
           transform: translateY(0);
         }
 
+        @media (max-width: 480px) {
+          .mobile-header-actions .panel-dropdown {
+            width: calc(100vw - 2rem);
+            right: -0.5rem;
+          }
+        }
+
         .panel-header {
           display: flex;
           align-items: center;
@@ -391,6 +668,13 @@ function ResidentNavbar() {
           font-size: 0.75rem;
           font-weight: 600;
           cursor: pointer;
+        }
+
+        .notification-empty {
+          padding: 24px 18px;
+          text-align: center;
+          color: #9ca3af;
+          font-size: 0.85rem;
         }
 
         .notification-item {
@@ -430,6 +714,7 @@ function ResidentNavbar() {
 
         .notification-text {
           flex: 1;
+          min-width: 0;
         }
 
         .notification-text .n-title {
@@ -444,6 +729,10 @@ function ResidentNavbar() {
           color: #6b7280;
           margin: 0 0 4px;
           line-height: 1.4;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .notification-text .n-time {
@@ -548,91 +837,8 @@ function ResidentNavbar() {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.news-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
-}
-
-.news-card-media {
-  width: 100%;
-  height: clamp(280px, 45vw, 480px);
-  background-size: cover;
-  background-position: center;
-  background-color: #e5d9dc;
-  flex-shrink: 0;
-}
-
-.news-card-content {
-  padding: clamp(1.5rem, 3vw, 2.5rem);
-}
-
-.news-card-category {
-  display: inline-block;
-  background: rgba(107, 44, 62, 0.1);
-  color: #6B2C3E;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 5px 14px;
-  border-radius: 999px;
-  margin-bottom: 0.8rem;
-}
-
-.news-card-date {
-  font-size: 0.85rem;
-  color: #9ca3af;
-  margin-bottom: 0.5rem;
-}
-
-.news-card-content h3 {
-  font-size: clamp(1.3rem, 2.2vw, 1.75rem);
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 0.75rem;
-  line-height: 1.3;
-}
-
-.news-card-content p {
-  font-size: clamp(0.95rem, 1.1vw, 1.05rem);
-  color: #6b7280;
-  line-height: 1.65;
-  margin: 0 0 1rem;
-}
-
-.news-card-source-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #6B2C3E;
-  text-decoration: none;
-}
-
-.news-card-source-link:hover {
-  text-decoration: underline;
-}
-
-.news-list {
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-}
-
-.news-card {
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, outline 0.25s ease;
+  scroll-margin-top: 1.5rem;
 }
 
 .news-card:hover {
@@ -819,6 +1025,7 @@ function ResidentNavbar() {
           display: none;
           align-items: center;
           gap: 4px;
+          position: relative;
         }
 
         @media (max-width: 768px) {
@@ -957,209 +1164,144 @@ function ResidentNavbar() {
       
       <nav className="resident-navbar">
         <div className="container-fluid px-3 px-sm-4">
-          <div className="navbar-container">
-            <button className="navbar-brand" onClick={handleHomeClick}>
-              <div className="brand-icon">
-                <i className="bi bi-heart-fill"></i>
-              </div>
-              <span>Safe Connect</span>
-            </button>
-            
-            {/* Desktop Navigation */}
-            <div className="resident-nav-links">
-              <button className="resident-nav-item active" onClick={handleHomeClick}>
-                <i className="bi bi-house-door-fill"></i>
-                <span>Home</span>
-              </button>
-              
-              <button className="resident-nav-item" onClick={(e) => handleNavClick(e, 'emergency-report')}>
-                <i className="bi bi-exclamation-triangle-fill"></i>
-                <span>Emergency</span>
-              </button>
-
-              {/* NEWS — now opens full-screen page */}
-              <button className="resident-nav-item" onClick={openNewsPage}>
-                <i className="bi bi-newspaper"></i>
-                <span>News</span>
-              </button>
-
-              {/* NOTIFICATIONS */}
-              <div className="icon-btn-wrapper" ref={notificationsRef}>
-                <button className="icon-btn" onClick={toggleNotifications} aria-label="Notifications">
-                  <i className="bi bi-bell-fill"></i>
-                  {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
-                </button>
-                <div className={`panel-dropdown ${showNotifications ? 'show' : ''}`}>
-                  <div className="panel-header">
-                    <h4>Notifications</h4>
-                    {unreadCount > 0 && (
-                      <button onClick={markAllAsRead}>Mark all as read</button>
-                    )}
-                  </div>
-                  {notifications.map((n) => (
-                    <div key={n.id} className={`notification-item ${n.unread ? 'unread' : ''}`}>
-                      <div className="notification-icon">
-                        <i className={`bi ${n.icon}`}></i>
-                      </div>
-                      <div className="notification-text">
-                        <p className="n-title">{n.title}</p>
-                        <p className="n-message">{n.message}</p>
-                        <span className="n-time">{n.time}</span>
-                      </div>
-                      {n.unread && <span className="unread-dot"></span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="resident-user-menu-wrapper" ref={dropdownRef}>
-                <div className="resident-user-menu" onClick={toggleDropdown}>
-                  <i className="bi bi-person-circle"></i>
-                  <span>{username}</span>
-                  <i className="bi bi-chevron-down" style={{ fontSize: '0.8rem' }}></i>
-                </div>
-                <div className={`resident-user-dropdown ${showDropdown ? 'show' : ''}`}>
-                  <button className="resident-dropdown-item" onClick={() => handleNavigation('/')}>
-                    <i className="bi bi-box-arrow-right"></i>
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile header actions (bell shown even when collapsed) */}
-            <div className="mobile-header-actions">
-              <div className="icon-btn-wrapper">
+            <div className="navbar-container">
+                {/* Brand */}
                 <button
-                  className="icon-btn"
-                  onClick={toggleMobileMenu}
-                  aria-label="Notifications"
+                    className="navbar-brand"
+                    onClick={handleHomeClick}
                 >
-                  <i className="bi bi-bell-fill"></i>
-                  {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
-                </button>
-              </div>
-            </div>
-            
-            {/* Mobile Menu Toggle */}
-            <button 
-              className="mobile-menu-toggle"
-              onClick={toggleMobileMenu}
-              aria-label="Toggle menu"
-            >
-              <i className="bi bi-list"></i>
-            </button>
-            
-            {/* Mobile Navigation Menu */}
-            <div 
-              className={`mobile-nav-overlay ${showMobileMenu ? 'show' : ''}`}
-              onClick={() => setShowMobileMenu(false)}
-            />
-            
-            <div 
-              ref={mobileMenuRef}
-              className={`mobile-nav-menu ${showMobileMenu ? 'show' : ''}`}
-            >
-              <button 
-                className="mobile-close-button"
-                onClick={() => setShowMobileMenu(false)}
-                aria-label="Close menu"
-              >
-                ×
-              </button>
-              
-              <button className="mobile-nav-item active" onClick={handleHomeClick}>
-                <i className="bi bi-house-door-fill"></i>
-                <span>Home</span>
-              </button>
-              
-              <button className="mobile-nav-item" onClick={(e) => handleNavClick(e, 'emergency-report')}>
-                <i className="bi bi-exclamation-triangle-fill"></i>
-                <span>Emergency</span>
-              </button>
-              
-              <button className="mobile-nav-item" onClick={(e) => handleNavClick(e, 'assistance-request')}>
-                <i className="bi bi-life-preserver"></i>
-                <span>Assistance</span>
-              </button>
-
-              <button className="mobile-nav-item" onClick={openNewsPage}>
-                <i className="bi bi-newspaper"></i>
-                <span>News</span>
-              </button>
-
-              <button className="mobile-nav-item" onClick={() => { setShowMobileMenu(false); setShowNotifications(true); }}>
-                <i className="bi bi-bell-fill"></i>
-                <span>Notifications</span>
-                {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
-              </button>
-              
-              <div className="mobile-user-section">
-                <div className="mobile-user-header">{username.toUpperCase()}</div>
-                <div className="mobile-nav-item" onClick={() => handleNavigation('/')}>
-                  <i className="bi bi-box-arrow-right"></i>
-                  <span>Logout</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* FULL-SCREEN NEWS PAGE */}
-      <div className={`news-fullscreen ${showNewsPage ? 'show' : ''}`}>
-        <div className="news-fullscreen-header">
-          <h2>
-            <i className="bi bi-newspaper"></i> Latest News
-          </h2>
-          <button className="news-close-btn" onClick={closeNewsPage} aria-label="Close news">
-            <i className="bi bi-x-lg"></i>
-          </button>
-        </div>
-
-        <div className="news-fullscreen-body">
-          {newsLoading && <div className="news-state-message">Loading news...</div>}
-          {!newsLoading && newsError && <div className="news-state-message">{newsError}</div>}
-          {!newsLoading && !newsError && news.length === 0 && (
-            <div className="news-state-message">No announcements yet. Check back soon.</div>
-          )}
-
-          {!newsLoading && !newsError && news.length > 0 && (
-            <div className="news-list">
-              {news.map((item) => {
-                const photo = item.imageUrl || item.sourceImage;
-                return (
-                  <div key={item.id} className="news-card">
-                    <div
-                      className="news-card-media"
-                      style={{
-                        backgroundImage: photo ? `url(${photo})` : undefined
-                      }}
-                    />
-                    <div className="news-card-content">
-                      <span className="news-card-category">{item.category}</span>
-                      <div className="news-card-date">{formatNewsDate(item.date)}</div>
-                      <h3>{item.title}</h3>
-                      <p>{item.message}</p>
-                      {item.sourceUrl && (
-                        <a
-                          href={item.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="news-card-source-link"
-                        >
-                          <i className="bi bi-box-arrow-up-right"></i>
-                          Read full article{item.sourceSite ? ` on ${item.sourceSite}` : ''}
-                        </a>
-                      )}
+                    <div className="brand-icon">
+                        <i className="bi bi-heart-fill"></i>
                     </div>
-                  </div>
-                );
-              })}
+                    <span>Safe Connect</span>
+                </button>
+
+                {/* Desktop Navigation */}
+                <DesktopNavbar
+                    username={username}
+
+                    dropdownRef={dropdownRef}
+                    notificationsRef={notificationsRef}
+
+                    showDropdown={showDropdown}
+                    showNotifications={showNotifications}
+
+                    notifications={notifications}
+                    announcements={announcements}
+
+                    announcementsLoading={announcementsLoading}
+                    announcementsError={announcementsError}
+
+                    unreadCount={unreadCount}
+                    totalBadgeCount={totalBadgeCount}
+
+                    weather={weather}
+                    showRainNotice={showRainNotice}
+
+                    markAllAsRead={markAllAsRead}
+
+                    toggleDropdown={toggleDropdown}
+                    toggleNotifications={toggleNotifications}
+
+                    handleNotificationClick={handleNotificationClick}
+                    handleWeatherNotificationClick={handleWeatherNotificationClick}
+
+                    formatRelativeTime={formatRelativeTime}
+                    describeWeatherCode={describeWeatherCode}
+                    getCategoryIcon={getCategoryIcon}
+
+                    handleHomeClick={handleHomeClick}
+                    handleNavClick={handleNavClick}
+
+                    openNewsPage={openNewsPage}
+                    openReportsPage={openReportsPage}
+                    openSettingsPage={openSettingsPage}
+
+                    handleNavigation={handleNavigation}
+                />
+
+                {/* Mobile Navigation */}
+                <MobileNavbar
+                    username={username}
+
+                    mobileMenuRef={mobileMenuRef}
+                    mobileNotificationsRef={mobileNotificationsRef}
+
+                    showMobileMenu={showMobileMenu}
+                    showNotifications={showNotifications}
+
+                    totalBadgeCount={totalBadgeCount}
+
+                    notifications={notifications}
+                    announcements={announcements}
+
+                    announcementsLoading={announcementsLoading}
+                    announcementsError={announcementsError}
+
+                    unreadCount={unreadCount}
+
+                    weather={weather}
+                    showRainNotice={showRainNotice}
+
+                    toggleNotifications={toggleNotifications}
+
+                    markAllAsRead={markAllAsRead}
+
+                    handleNotificationClick={handleNotificationClick}
+                    handleWeatherNotificationClick={handleWeatherNotificationClick}
+
+                    formatRelativeTime={formatRelativeTime}
+                    describeWeatherCode={describeWeatherCode}
+                    getCategoryIcon={getCategoryIcon}
+
+                    toggleMobileMenu={toggleMobileMenu}
+
+                    setShowMobileMenu={setShowMobileMenu}
+                    setShowNotifications={setShowNotifications}
+
+                    handleHomeClick={handleHomeClick}
+                    handleNavClick={handleNavClick}
+
+                    openNewsPage={openNewsPage}
+                    openReportsPage={openReportsPage}
+                    openSettingsPage={openSettingsPage}
+
+                    handleNavigation={handleNavigation}
+                />
             </div>
-          )}
         </div>
-      </div>
+    </nav>
+
+      <NewsOverlay
+        isOpen={showNewsPage}
+        onClose={closeNewsPage}
+
+        weather={weather}
+        announcements={announcements}
+
+        announcementsLoading={announcementsLoading}
+        announcementsError={announcementsError}
+
+        formatNewsDate={formatNewsDate}
+        describeWeatherCode={describeWeatherCode}
+
+        RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
+    />
+
+      {/* FULL-SCREEN MY REPORTS PAGE */}
+      <MyReportsPage
+        isOpen={showReportsPage}
+        onClose={closeReportsPage}
+        userId={currentUser?.id}
+      />
+
+      {/* FULL-SCREEN SETTINGS PAGE */}
+      <SettingsPage
+        isOpen={showSettingsPage}
+        onClose={closeSettingsPage}
+        user={currentUser}
+        onProfileUpdate={handleProfileUpdate}
+      />
     </>
   );
 }

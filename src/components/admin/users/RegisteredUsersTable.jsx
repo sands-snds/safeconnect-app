@@ -32,14 +32,13 @@ const RegisteredUsersTable = ({
 
   return (
     <ListView
-      title="REGISTERED USERS"
       data={data}
       filterType="users"
       filters={filters}
       setFilters={setFilters}
       headers={['USER','DATE REGISTERED','STATUS']}
       renderRow={renderRow}
-      statusOptions={['All Items', 'Active', 'Inactive', 'Suspended']}
+      statusOptions={['Select', 'Active', 'Inactive', 'Suspended']}
     />
     
   );

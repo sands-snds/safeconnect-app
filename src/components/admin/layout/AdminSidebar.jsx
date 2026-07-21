@@ -13,7 +13,6 @@ const AdminSidebar = ({
       items: [
         {
           id: "dashboard",
-          icon: "🏠",
           label: "Dashboard"
         }
       ]
@@ -23,17 +22,14 @@ const AdminSidebar = ({
       items: [
         {
           id: "emergency-reports",
-          icon: "🚨",
           label: "Emergency Reports"
         },
         {
           id: "assistance-requests",
-          icon: "🤝",
           label: "Assistance Requests"
         },
         {
           id: "petty-crime-reports",
-          icon: "🚔",
           label: "Petty Crime Reports"
         }
       ]
@@ -43,12 +39,10 @@ const AdminSidebar = ({
       items: [
         {
           id: "create-announcement",
-          icon: "➕",
           label: "Create Announcement"
         },
         {
           id: "announcement-page",
-          icon: "📢",
           label: "Announcements"
         }
       ]
@@ -58,17 +52,14 @@ const AdminSidebar = ({
       items: [
         {
           id: "registered-users",
-          icon: "👥",
           label: "Users"
         },
         {
           id: "sign-in-logs",
-          icon: "🔑",
           label: "Sign-in Logs"
         },
         {
           id: "admin-logs",
-          icon: "📜",
           label: "Admin Logs"
         }
       ]
@@ -184,7 +175,6 @@ const AdminSidebar = ({
             transition: ".2s"
           }}
         >
-          <span>🚪</span>
           <span>Logout</span>
         </div>
       </div>

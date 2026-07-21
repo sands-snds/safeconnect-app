@@ -118,7 +118,6 @@ const PettyCrimeReportsTable = ({
 
   return (
     <ListView
-      title="PETTY CRIME REPORTS"
       data={data}
       filterType="pettyCrime"
       filters={filters}
@@ -133,7 +132,7 @@ const PettyCrimeReportsTable = ({
       ]}
       renderRow={renderRow}
       statusOptions={[
-        "All Items",
+        "Select",
         ...STATUS_OPTIONS
       ]}
     />

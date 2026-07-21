@@ -135,7 +135,7 @@ const AssistanceRequestsTable = ({
       ]}
       renderRow={renderRow}
       statusOptions={[
-        "All Items",
+        "Select",
         ...STATUS_OPTIONS
       ]}
     />

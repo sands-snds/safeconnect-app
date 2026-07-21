@@ -25,15 +25,6 @@ const AdminLayout = ({
     return (
         <div className="admin-container">
 
-            <AdminHeader
-                title={pageTitle}
-                alerts={alerts}
-                onToggleMobileMenu={onToggleMobileMenu}
-                onRefresh={onRefresh}
-                isRefreshing={isRefreshing}
-                lastUpdate={lastUpdate}
-            />
-
             <div
                 style={{
                     display: "flex",
@@ -49,7 +40,22 @@ const AdminLayout = ({
                 />
 
                 <main className="main-content">
-                    {children}
+                    <AdminHeader
+                        title={pageTitle}
+                        alerts={alerts}
+                        onToggleMobileMenu={onToggleMobileMenu}
+                        onRefresh={onRefresh}
+                        isRefreshing={isRefreshing}
+                        lastUpdate={lastUpdate}
+                    />
+
+                    <div
+                        style={{
+                            padding: "24px 32px"
+                        }}
+                    >
+                        {children}
+                    </div>
                 </main>
 
             </div>

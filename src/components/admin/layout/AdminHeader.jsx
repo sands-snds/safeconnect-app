@@ -8,8 +8,8 @@ const AdminHeader = ({
     lastUpdate
 }) => {
 
-    const [showNotifications, setShowNotifications] =
-        useState(false);
+const [showNotifications, setShowNotifications] = useState(false);
+const [hasUnread, setHasUnread] = useState(true);
 
     return (
         <div
@@ -68,8 +68,13 @@ const AdminHeader = ({
                     {isRefreshing ? "…" : "↻"}
                 </button>
 
-                <button onClick={() =>
-                        setShowNotifications(!showNotifications) }
+                <button onClick={() => { 
+                    setShowNotifications(!showNotifications);
+
+                    if (!showNotifications) {
+                        setHasUnread(false);
+                    }}
+                    }
                     style={{
                         border: "1px solid #e5e7eb",
                         background: "#fff",
@@ -81,7 +86,7 @@ const AdminHeader = ({
                         fontSize: "18px"
                     }} > 🔔
 
-                    {alerts.length > 0 && (
+                    {alerts.length > 0 && hasUnread && (
                         <span
                             style={{
                                 position: "absolute",

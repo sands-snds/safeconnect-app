@@ -126,7 +126,6 @@ const EmergencyReportsTable = ({
 
   return (
     <ListView
-      title="EMERGENCY REPORTS"
       data={data}
       filterType="emergency"
       filters={filters}
@@ -142,7 +141,7 @@ const EmergencyReportsTable = ({
       ]}
       renderRow={renderRow}
       statusOptions={[
-        "All Items",
+        "Select",
         ...STATUS_OPTIONS
       ]}
     />

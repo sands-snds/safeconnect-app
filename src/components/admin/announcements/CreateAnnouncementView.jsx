@@ -8,7 +8,8 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Announcement");
   const [message, setMessage] = useState("");
-  const [date, setDate] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(today);
   const [imageFile, setImageFile] = useState(null);
   const [imageError, setImageError] = useState("");
   const [existingImageUrl, setExistingImageUrl] = useState("");
@@ -103,7 +104,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
     setTitle("");
     setCategory("Announcement");
     setMessage("");
-    setDate("");
+    setDate(new Date().toISOString().split("T")[0]);
     setImageFile(null);
     setExistingImageUrl("");
     setRemoveImage(false);
@@ -155,10 +156,6 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
 
   return (
     <div>
-      <h1 className="font-bold text-2xl mb-5">
-        {isEditMode ? "EDIT ANNOUNCEMENT" : "CREATE ANNOUNCEMENT"}
-      </h1>
-
       <div className="section" style={{ padding: "24px" }}>
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
@@ -176,10 +173,42 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
 
             <div className="form-field">
               <label className="form-label">Category *</label>
+
               <select
                 className="form-select"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  const newCategory = e.target.value;
+
+                  const hasContent =
+                    title.trim() ||
+                    message.trim() ||
+                    imageFile ||
+                    sourceUrl.trim();
+
+                  if (hasContent) {
+                    const confirmed = window.confirm(
+                      "Changing the category will clear all the information you've entered. Continue?"
+                    );
+
+                    if (!confirmed) {
+                      return;
+                    }
+
+                    // Reset form
+                    setTitle("");
+                    setMessage("");
+                    setImageFile(null);
+                    setImageError("");
+                    setSourceUrl("");
+                    setLinkPreview(null);
+
+                    // Keep today's date
+                    setDate(new Date().toISOString().split("T")[0]);
+                  }
+
+                  setCategory(newCategory);
+                }}
               >
                 {ANNOUNCEMENT_CATEGORIES.map((option) => (
                   <option key={option}>{option}</option>
@@ -188,13 +217,28 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
             </div>
 
             <div className="form-field">
-              <label className="form-label">Date *</label>
+              <label className="form-label">Date Posted</label>
+
               <input
-                type="date"
+                type="text"
                 className="form-input"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                value={new Date(date).toLocaleDateString("en-US")}
+                readOnly
+                style={{
+                  background: "#f9fafb",
+                  cursor: "not-allowed"
+                }}
               />
+
+              <small
+                style={{
+                  color: "#6b7280",
+                  display: "block",
+                  marginTop: "6px"
+                }}
+              >
+                Automatically uses today's date.
+              </small>
             </div>
           </div>
 

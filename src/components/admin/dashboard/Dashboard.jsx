@@ -1,37 +1,64 @@
+import React from "react";
+
 import AdminStats from "../layout/AdminStats";
-
-import DashboardCharts from "./DashboardCharts";
-import DashboardAlerts from "./DashboardAlerts";
-import DashboardRecentReports from "./DashboardRecentReports";
-import DashboardQuickActions from "./DashboardQuickActions";
 import DashboardSummary from "./DashboardSummary";
+import DashboardCharts from "./DashboardCharts";
+import DashboardRecentReports from "./DashboardRecentReports";
 
-export default function Dashboard(props) {
-
+export default function Dashboard({
+    emergencyReports,
+    assistanceRequests,
+    pettyCrimeReports,
+    registeredUsers,
+    signInLogs,
+    adminLogs,
+    announcements,
+    onStatCardClick,
+    onCreateAnnouncement,
+    onNavigate
+}) {
     return (
         <>
             <DashboardSummary
-                emergencyReports={props.emergencyReports}
-                assistanceRequests={props.assistanceRequests}
-                pettyCrimeReports={props.pettyCrimeReports}
-                onNavigate={props.onNavigate}
+                emergencyReports={emergencyReports}
+                assistanceRequests={assistanceRequests}
+                pettyCrimeReports={pettyCrimeReports}
+                onNavigate={onNavigate}
             />
 
-            <AdminStats {...props} />
+            <AdminStats
+                emergencyReports={emergencyReports}
+                assistanceRequests={assistanceRequests}
+                registeredUsers={registeredUsers}
+                signInLogs={signInLogs}
+                adminLogs={adminLogs}
+                announcements={announcements}
+                pettyCrimeReports={pettyCrimeReports}
+                onStatCardClick={onStatCardClick}
+            />
 
             <DashboardCharts
-                emergencyReports={props.emergencyReports}
-                assistanceRequests={props.assistanceRequests}
+                emergencyReports={emergencyReports}
+                assistanceRequests={assistanceRequests}
+                pettyCrimeReports={pettyCrimeReports}
             />
-
+{/* 
             <DashboardRecentReports
-                emergencyReports={props.emergencyReports}
-                assistanceRequests={props.assistanceRequests}
-                pettyCrimeReports={props.pettyCrimeReports}
+                emergencyReports={emergencyReports}
+                assistanceRequests={assistanceRequests}
+                pettyCrimeReports={pettyCrimeReports}
             />
-
+ */}
+            {onCreateAnnouncement && (
+                <button
+                    type="button"
+                    className="fab-create-announcement"
+                    onClick={onCreateAnnouncement}
+                >
+                    <i className="bi bi-plus-lg"></i>
+                    <span>Create Announcement</span>
+                </button>
+            )}
         </>
-
     );
-
 }
