@@ -60,17 +60,17 @@ function ResidentPage() {
       style={{ position: 'relative', minHeight: '100vh' }}
     >
       <ResidentNavbar />
+      
+        <section id="home">
+          <ResidentHero 
+            onReportEmergency={openEmergencyModal}
+            onRequestHelp={openAssistanceModal}
+          />
+        </section>
 
-      <section id="home">
-        <ResidentHero 
-          onReportEmergency={openEmergencyModal}
-          onRequestHelp={openAssistanceModal}
-        />
-      </section>
-
-      <section id="emergency-report">
-        <EmergencyReportSection onReportClick={openEmergencyModal} />
-      </section>
+        <section id="emergency-report">
+          <EmergencyReportSection onReportClick={openEmergencyModal} />
+        </section>
 
       <Footer />
 

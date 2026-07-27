@@ -18,6 +18,8 @@ export const API_ENDPOINTS = {
   auth: `${API_BASE}/auth`
 };
 
+export const SHEETDB_APIS = API_ENDPOINTS;
+
 // ========================================
 // RATE LIMITING & CACHING
 // ========================================
@@ -375,6 +377,43 @@ export const createPettyCrimeReport = async (report) => {
   }
 };
 
+export const updatePettyCrimeReport = async (id, data) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.pettyCrimes}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update petty crime report",
+    };
+  }
+};
+
+export const deletePettyCrimeReport = async (id) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.pettyCrimes}/${id}`, {
+      method: "DELETE",
+    });
+
+    const result = await response.json();
+
+    requestCache.delete(API_ENDPOINTS.pettyCrimes);
+
+    return result.success;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
 export const updatePettyCrimeStatus = async (id, newStatus) => {
   return await updateStatus(API_ENDPOINTS.pettyCrimes, id, newStatus);
 };
@@ -400,6 +439,43 @@ export const createEmergencyReport = async (report) => {
   }
 };
 
+export const updateEmergencyReport = async (id, data) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.emergencyReports}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update emergency report",
+    };
+  }
+};
+
+export const deleteEmergencyReport = async (id) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.emergencyReports}/${id}`, {
+      method: "DELETE",
+    });
+
+    const result = await response.json();
+
+    requestCache.delete(API_ENDPOINTS.emergencyReports);
+
+    return result.success;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
 export const createAssistanceRequest = async (request) => {
   try {
     const response = await fetch(API_ENDPOINTS.assistanceRequests, {
@@ -414,6 +490,43 @@ export const createAssistanceRequest = async (request) => {
   } catch (error) {
     console.error('Error submitting assistance request:', error);
     return { success: false, message: 'Could not reach the server. Please try again.' };
+  }
+};
+
+export const updateAssistanceRequest = async (id, data) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.assistanceRequests}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update assistance request",
+    };
+  }
+};
+
+export const deleteAssistanceRequest = async (id) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.assistanceRequests}/${id}`, {
+      method: "DELETE",
+    });
+
+    const result = await response.json();
+
+    requestCache.delete(API_ENDPOINTS.assistanceRequests);
+
+    return result.success;
+  } catch (error) {
+    console.error(error);
+    return false;
   }
 };
 
@@ -492,4 +605,111 @@ export const updateAssistanceStatus = async (id, newStatus) => {
 
 export const updateUserStatus = async (id, newStatus) => {
   return await updateStatus(API_ENDPOINTS.registeredUsers, id, newStatus);
+};
+
+/*=========================================
+User Reports | Profile | Settings
+==========================================*/
+
+export const fetchMyReports = async (userId) => {
+  try {
+    const response = await fetch(
+      `${API_BASE}/reports/user/${userId}`
+    );
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
+export const fetchUserProfile = async (userId) => {
+  try {
+    const response = await fetch(
+      `${API_ENDPOINTS.registeredUsers}/${userId}`
+    );
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
+export const uploadProfilePhoto = async (userId, imageFile) => {
+  try {
+    const formData = new FormData();
+
+    formData.append("photo", imageFile);
+
+    const response = await fetch(
+      `${API_ENDPOINTS.registeredUsers}/${userId}/photo`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+
+    return {
+      success: false,
+    };
+  }
+};
+
+export const updateUsername = async (userId, username) => {
+  try {
+    const response = await fetch(
+      `${API_ENDPOINTS.registeredUsers}/${userId}/username`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username }),
+      }
+    );
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+
+    return {
+      success: false,
+    };
+  }
+};
+
+export const changePassword = async (
+    userId,
+    currentPassword,
+    newPassword
+) => {
+    try {
+        const response = await fetch(
+            `${API_ENDPOINTS.registeredUsers}/${userId}/password`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                }),
+            }
+        );
+
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+
+        return {
+            success: false,
+        };
+    }
 };
