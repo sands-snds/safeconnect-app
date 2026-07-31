@@ -27,7 +27,8 @@ function ResidentHero() {
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
-                minHeight: "100vh",
+                minHeight: "80vh",
+                height: "9vh",
                 width: "100%",
               }}
             >
@@ -42,9 +43,12 @@ function ResidentHero() {
                 }}
               >
                 <div className="container hero-content text-center text-lg-start">
-                  <h1 className="hero-title" style={{ marginTop: 0 }}>
-                    SAFE CONNECT
-                  </h1>
+                  <h3 className="hero-title" style={{ marginTop: 0 }}>
+                    Barangay Sta. Fe
+                  </h3>
+                  <h3 className="hero-title" style={{ marginTop: -40 }}>
+                    Safe Connect
+                  </h3>
 
                   <p className="hero-subtitle">
                     Be part of our emergency response network and stand ready
@@ -53,23 +57,23 @@ function ResidentHero() {
                     Your action can bring hope in times of crisis.
                   </p>
                 </div>
-
-                {/* Emergency Banner */}
-                <div className="emergency-banner text-center text-lg-start">
-                  <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
-                    <i className="bi bi-telephone-forward-fill me-2"></i>
-                    <span>Emergency Hotline: 911</span>
-                  </div>
-
-                  <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
-                    <i className="bi bi-clock-fill me-2"></i>
-                    Available 24/7 for immediate emergencies
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Emergency Banner */}
+      <div className="emergency-banner text-center text-lg-start">
+        <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
+          <i className="bi bi-telephone-forward-fill me-2"></i>
+          <span>Emergency Hotline: 911</span>
+        </div>
+
+        <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
+          <i className="bi bi-clock-fill me-2"></i>
+          Available 24/7 for immediate emergencies
+        </div>
       </div>
 
       {/* Previous Button */}

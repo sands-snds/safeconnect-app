@@ -12,7 +12,7 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<ResidentPage />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/admin" element={<AdminPage />} />
           
           <Route path="/resident" element={<ResidentPage />} />

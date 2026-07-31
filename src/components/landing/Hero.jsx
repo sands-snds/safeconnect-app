@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-const API_BASE = "http://localhost/safeconnect-app/backend";
-const API_URL = `${API_BASE}/auth.php`;
+const API_BASE =
+    process.env.REACT_APP_API_BASE ||
+    "http://localhost:5000/api";
 
 // Only letters and spaces allowed in name fields
 const NAME_ALLOWED_REGEX = /[^a-zA-Z\s]/g;

@@ -8,6 +8,7 @@ import UsersPage from "../components/admin/users/UsersPage";
 import LogsPage from "../components/admin/logs/LogsPage";
 import ReportsPage from "../components/admin/reports/ReportsPage";
 import AnnouncementsPage from "../components/admin/announcements/AnnouncementsPage";
+import PettyCrimePage from '../components/admin/reports/pettyCrime';
 import useAdminData from "../components/admin/hooks/useAdminData";
 import useAdminAuth from "../components/admin/hooks/useAdminAuth";
 import useAdminNavigation from "../components/admin/hooks/useAdminNavigation";
@@ -37,6 +38,7 @@ const AdminPage = () => {
     pettyCrimeReports,
 
     loadAllData,
+    refreshAllData,   
     loadAnnouncements,
     handleRefresh,
     updateStatus,
@@ -115,19 +117,28 @@ const AdminPage = () => {
     };
   }, [showMobileMenu]);
 
-  useEffect(() => {
-  if (!isAuthenticated) return;
+useEffect(() => {
+    if (!isAuthenticated) return;
 
-  loadAllData();
+    // Initial load only
+    loadAllData();
+}, [isAuthenticated]);
 
-  const interval = setInterval(() => {
-    if (activeView !== "create-announcement") {
-      loadAllData();
-    }
-  }, 30000);
+useEffect(() => {
+    if (!isAuthenticated) return;
 
-  return () => clearInterval(interval);
-}, [isAuthenticated, activeView]);
+    const interval = setInterval(() => {
+        // Don't refresh while creating/editing announcements
+        if (
+            activeView !== "create-announcement" &&
+            activeView !== "announcement-page"
+        ) {
+            refreshAllData();
+        }
+    }, 30000);
+
+    return () => clearInterval(interval);
+}, [isAuthenticated, activeView, refreshAllData]);
 
   if (!isAuthenticated && !showSigninModal) {
     return null;
@@ -239,6 +250,7 @@ const AdminPage = () => {
               />
           );
       default:
+
         return (
           <Dashboard
             emergencyReports={emergencyReports}
