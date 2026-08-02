@@ -1,7 +1,5 @@
 const PettyCrime = require("../models/PettyCrime");
 const PettyCrimeService = require("../services/pettyCrimeService");
-const Notification = require("../models/Notification");
-const { validateStatusTransition } = require("../utils/statusWorkflow");
 
 exports.createReport = async (req, res) => {
     try {
@@ -45,30 +43,7 @@ exports.updateReport = async (req, res) => {
 
 exports.updateStatus = async (req, res) => {
     try {
-        const report = await PettyCrime.findById(req.params.id);
-        if (!report) {
-            return res.status(404).json({ success: false, message: "Report not found." });
-        }
-
-        let replyMessage;
-        try {
-            replyMessage = validateStatusTransition(report.status, req.body.status);
-        } catch (validationError) {
-            return res.status(400).json({ success: false, message: validationError.message });
-        }
-
         const affected = await PettyCrime.updateStatus(req.params.id, req.body.status);
-
-        if (report.reporter_id && replyMessage) {
-            await Notification.create({
-                userId: report.reporter_id,
-                title: `Update on your petty crime report`,
-                message: replyMessage,
-                notificationType: "petty_crime_status",
-                referenceId: report.id
-            });
-        }
-
         res.json({ success: affected > 0 });
     } catch (err) {
         console.error(err);

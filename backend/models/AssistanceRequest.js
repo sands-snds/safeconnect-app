@@ -19,13 +19,12 @@ class AssistanceRequest {
                 current_location,
                 latitude,
                 longitude,
-                number_of_people_needing_help,
                 urgency_level,
                 describe_your_situation,
                 special_needs,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 request.reportReference,
@@ -37,11 +36,10 @@ class AssistanceRequest {
                 request.location,
                 request.latitude || null,
                 request.longitude || null,
-                request.peopleAffected || 1,
                 request.urgency,
                 request.situation,
                 request.specialNeeds || null,
-                "Received"
+                "Pending"
             ]
         );
         return result.insertId;

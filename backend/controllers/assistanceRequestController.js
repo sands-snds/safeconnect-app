@@ -1,7 +1,5 @@
 const AssistanceRequest = require("../models/AssistanceRequest");
 const AssistanceRequestService = require("../services/assistanceRequestService");
-const Notification = require("../models/Notification");
-const { validateStatusTransition } = require("../utils/statusWorkflow");
 
 exports.createRequest = async (req, res) => {
     try {
@@ -45,30 +43,7 @@ exports.updateRequest = async (req, res) => {
 
 exports.updateStatus = async (req, res) => {
     try {
-        const request = await AssistanceRequest.findById(req.params.id);
-        if (!request) {
-            return res.status(404).json({ success: false, message: "Request not found." });
-        }
-
-        let replyMessage;
-        try {
-            replyMessage = validateStatusTransition(request.status, req.body.status);
-        } catch (validationError) {
-            return res.status(400).json({ success: false, message: validationError.message });
-        }
-
         const affected = await AssistanceRequest.updateStatus(req.params.id, req.body.status);
-
-        if (request.reporter_id && replyMessage) {
-            await Notification.create({
-                userId: request.reporter_id,
-                title: `Update on your assistance request`,
-                message: replyMessage,
-                notificationType: "assistance_status",
-                referenceId: request.id
-            });
-        }
-
         res.json({ success: affected > 0 });
     } catch (err) {
         console.error(err);
