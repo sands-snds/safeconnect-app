@@ -12,6 +12,7 @@ import "../styles/residentemergencymodal.css";
 function ResidentPage() {
   const [emergencyModal, setEmergencyModal] = useState({ show: false, type: '' });
   const [assistanceModal, setAssistanceModal] = useState({ show: false, type: '' });
+  const [assistancePrefillLocation, setAssistancePrefillLocation] = useState(null); 
 
   useEffect(() => {
     const backdrops = document.querySelectorAll('.modal-backdrop');
@@ -44,14 +45,16 @@ function ResidentPage() {
     setEmergencyModal({ show: false, type: '' });
   };
 
-  const openAssistanceModal = (type) => {
+  const openAssistanceModal = (type, prefillLocation = null) => {
     if (process.env.NODE_ENV === 'development') console.log('Opening assistance modal:', type);
+    setAssistancePrefillLocation(prefillLocation);
     setAssistanceModal({ show: true, type });
   };
 
   const closeAssistanceModal = () => {
     if (process.env.NODE_ENV === 'development') console.log('Closing assistance modal');
     setAssistanceModal({ show: false, type: '' });
+    setAssistancePrefillLocation(null);
   };
 
   return (
@@ -60,17 +63,17 @@ function ResidentPage() {
       style={{ position: 'relative', minHeight: '100vh' }}
     >
       <ResidentNavbar />
+      
+        <section id="home">
+          <ResidentHero 
+            onReportEmergency={openEmergencyModal}
+            onRequestHelp={openAssistanceModal}
+          />
+        </section>
 
-      <section id="home">
-        <ResidentHero 
-          onReportEmergency={openEmergencyModal}
-          onRequestHelp={openAssistanceModal}
-        />
-      </section>
-
-      <section id="emergency-report">
-        <EmergencyReportSection onReportClick={openEmergencyModal} />
-      </section>
+        <section id="emergency-report">
+          <EmergencyReportSection onReportClick={openEmergencyModal} />
+        </section>
 
       <Footer />
 
@@ -78,12 +81,14 @@ function ResidentPage() {
         show={emergencyModal.show}
         type={emergencyModal.type}
         onClose={closeEmergencyModal}
+        onRequestAssistance={(location) => openAssistanceModal('', location)}
       />
 
       <ResidentAssistanceModal 
         show={assistanceModal.show}
         type={assistanceModal.type}
         onClose={closeAssistanceModal}
+        prefillLocation={assistancePrefillLocation}
       />
     </div>
   );

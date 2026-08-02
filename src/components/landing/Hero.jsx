@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-
-const API_BASE = "http://localhost/safeconnect-app/backend";
-const API_URL = `${API_BASE}/auth.php`;
+import { signinUser, signupUser, setAuthToken } from '../../Services/api';
 
 // Only letters and spaces allowed in name fields
 const NAME_ALLOWED_REGEX = /[^a-zA-Z\s]/g;
@@ -78,17 +76,14 @@ function Hero() {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch(`${API_URL}?action=signin`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const result = await response.json();
+            const result = await signinUser(email, password);
 
             if (!result.success) {
                 setError(result.message || 'Invalid email or password.');
                 return;
             }
+
+            setAuthToken(result.token);
 
             // Backend already logs the login (admin_logs / signin_logs) — no separate log call needed.
             if (result.isAdmin) {
@@ -148,18 +143,10 @@ function Hero() {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch(`${API_URL}?action=signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    fullName,
-                    username: signUpUsername,
-                    contact: `+63${signUpContact}`,
-                    email: signUpEmail,
-                    password: signUpPassword
-                })
+            const result = await signupUser(fullName, signUpEmail, signUpPassword, {
+                username: signUpUsername,
+                contact: `+63${signUpContact}`
             });
-            const result = await response.json();
 
             if (!result.success) {
                 setError(result.message || 'Failed to create account. Please try again.');

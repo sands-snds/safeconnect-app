@@ -1,13 +1,64 @@
-const API_BASE = "http://localhost/safeconnect-app/backend";
+// REST client for the Node/Express + MySQL backend. Endpoint paths below
+// match the Express routes in backend/routes/*.js exactly:
+//   /api/emergency-reports, /api/assistance-requests, /api/petty-crimes,
+//   /api/users, /api/logs/*, /api/announcements, /api/auth, /api/reports.
 
-export const SHEETDB_APIS = {
-  emergencyReports: `${API_BASE}/emergency.php`,
-  assistanceRequests: `${API_BASE}/assistance.php`,
-  registeredUsers: `${API_BASE}/auth.php`,
-  signInLogs: `${API_BASE}/logs.php`,
-  adminLogs: `${API_BASE}/logs.php`,
-  announcements: `${API_BASE}/announcements.php`,
-  pettyCrimes: `${API_BASE}/pettycrime.php`
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
+
+// The backend returns uploaded images as relative paths (e.g. "/uploads/x.jpg")
+// via multer. Since the frontend and backend run on different origins/ports,
+// those need to be resolved to a full URL before being used in <img src>.
+const ASSET_BASE = API_BASE.replace(/\/api\/?$/, "");
+const resolveAssetUrl = (path) => {
+  if (!path) return path;
+  if (/^https?:\/\//i.test(path) || path.startsWith("data:")) return path;
+  return `${ASSET_BASE}${path}`;
+};
+
+// mysql2 returns DATE columns as full ISO datetime strings
+// (e.g. "2026-08-01T00:00:00.000Z"), which MySQL itself won't accept back
+// on an UPDATE. Normalize to plain YYYY-MM-DD for display and round-tripping.
+const toDateOnly = (value) => {
+  if (!value) return value;
+  const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : value;
+};
+
+export const API_ENDPOINTS = {
+  emergencyReports: `${API_BASE}/emergency-reports`,
+  assistanceRequests: `${API_BASE}/assistance-requests`,
+  registeredUsers: `${API_BASE}/users`,
+  signInLogs: `${API_BASE}/logs/signin`,
+  adminLogs: `${API_BASE}/logs/admin`,
+  announcements: `${API_BASE}/announcements`,
+  pettyCrimes: `${API_BASE}/petty-crimes`,
+  auth: `${API_BASE}/auth`
+};
+
+export const SHEETDB_APIS = API_ENDPOINTS;
+
+// ========================================
+// AUTH TOKEN STORAGE
+// ========================================
+// The backend issues a JWT on successful signin (see authController.signin).
+// It's stored here so every subsequent protected request can attach it.
+
+const TOKEN_KEY = "authToken";
+
+export const setAuthToken = (token) => {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+};
+
+export const getAuthToken = () => localStorage.getItem(TOKEN_KEY);
+
+export const clearAuthToken = () => localStorage.removeItem(TOKEN_KEY);
+
+// Merges an Authorization header onto whatever headers were passed in.
+// Safe to call even when there's no token (protected routes will then
+// correctly respond with 401, same as if the header were simply absent).
+const authHeaders = (extra = {}) => {
+  const token = getAuthToken();
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
 };
 
 // ========================================
@@ -20,25 +71,33 @@ const CACHE_DURATION = 0;
 let isFetching = false;
 let fetchPromise = null;
 
-const fetchWithCache = async (url, retries = 3) => {
+const fetchWithCache = async (url, options = {}, retries = 3) => {
   const now = Date.now();
-  const cached = requestCache.get(url);
+  const cacheKey = url;
+  const cached = requestCache.get(cacheKey);
 
-  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-    console.log('📦 Using cached data for:', url);
-    return cached.data;
+  const mergedOptions = {
+    ...options,
+    headers: authHeaders(options.headers || {})
+  };
+
+  if (!mergedOptions.method || mergedOptions.method === "GET") {
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      console.log('📦 Using cached data for:', url);
+      return cached.data;
+    }
   }
 
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, mergedOptions);
       if (response.status === 429) {
         await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
         continue;
       }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      requestCache.set(url, { data, timestamp: now });
+      requestCache.set(cacheKey, { data, timestamp: now });
       return data;
     } catch (error) {
       if (i === retries - 1) throw error;
@@ -50,12 +109,12 @@ const fetchWithCache = async (url, retries = 3) => {
 // AUTH: SIGN UP / SIGN IN
 // ========================================
 
-export const signupUser = async (fullName, email, password) => {
+export const signupUser = async (fullName, email, password, extra = {}) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.registeredUsers}?action=signup`, {
+    const response = await fetch(`${API_ENDPOINTS.auth}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fullName, email, password })
+      body: JSON.stringify({ fullName, email, password, ...extra })
     });
 
     const result = await response.json();
@@ -66,16 +125,19 @@ export const signupUser = async (fullName, email, password) => {
   }
 };
 
+// On success this returns a JWT in `result.token`. Callers are responsible
+// for persisting it via setAuthToken(result.token) so later requests are
+// authenticated.
 export const signinUser = async (email, password) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.registeredUsers}?action=signin`, {
+    const response = await fetch(`${API_ENDPOINTS.auth}/signin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
 
     const result = await response.json();
-    return result; // { success, isAdmin, user?, message }
+    return result; // { success, isAdmin, token, user?, message }
   } catch (error) {
     console.error('❌ Error signing in:', error);
     return { success: false, message: 'Could not reach the server. Please check your connection and try again.' };
@@ -88,11 +150,11 @@ export const signinUser = async (email, password) => {
 
 export const fetchEmergencyReports = async () => {
   try {
-    const url = `${SHEETDB_APIS.emergencyReports}?action=list`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.emergencyReports);
 
     return data.map(item => ({
       id: parseInt(item.id) || 0,
+      reference: item.report_reference || '',
       reporter: item.reporter_name || '',
       phone: item.contact_number || '',
       emergency: item.emergency_type || '',
@@ -102,7 +164,9 @@ export const fetchEmergencyReports = async () => {
       status: item.status || 'Received',
       description: item.incident_details || '',
       peopleAffected: item.number_of_people_affected || '0',
-      photoUrl: item.photo_url || ''
+      specialNeeds: item.special_needs || '',
+      photoUrl: item.photo_url || '',
+      mediaType: item.media_type || ''
     }));
   } catch (error) {
     console.error('Error fetching emergency reports:', error);
@@ -116,11 +180,11 @@ export const fetchEmergencyReports = async () => {
 
 export const fetchAssistanceRequests = async () => {
   try {
-    const url = `${SHEETDB_APIS.assistanceRequests}?action=list`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.assistanceRequests);
 
     return data.map(item => ({
       id: parseInt(item.id) || 0,
+      reference: item.report_reference || '',
       requester: item.full_name || '',
       phone: item.contact_number || '',
       email: item.email_address || '',
@@ -145,8 +209,7 @@ export const fetchAssistanceRequests = async () => {
 
 export const fetchRegisteredUsers = async () => {
   try {
-    const url = `${SHEETDB_APIS.registeredUsers}?action=users`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.registeredUsers);
 
     return data.map((item, index) => ({
       id: item.id || index + 1,
@@ -154,6 +217,7 @@ export const fetchRegisteredUsers = async () => {
       username: item.username || '',
       contact: item.contact_number || '',
       email: item.email_address || '',
+      role: item.role || 'resident',
       dateRegistered: item.created_at || new Date().toLocaleDateString(),
       status: item.status || 'Active'
     }));
@@ -169,8 +233,7 @@ export const fetchRegisteredUsers = async () => {
 
 export const fetchSignInLogs = async () => {
   try {
-    const url = `${SHEETDB_APIS.signInLogs}?action=signin`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.signInLogs);
 
     return data.map((item, index) => ({
       id: item.id || index + 1,
@@ -193,8 +256,7 @@ export const fetchSignInLogs = async () => {
 
 export const fetchAdminLogs = async () => {
   try {
-    const url = `${SHEETDB_APIS.adminLogs}?action=admin`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.adminLogs);
 
     return data.map((item, index) => ({
       id: item.id || index + 1,
@@ -213,19 +275,20 @@ export const fetchAdminLogs = async () => {
 // ========================================
 // ANNOUNCEMENTS
 // ========================================
+// GET is public (no auth needed); create/update/delete/link-preview are
+// admin-only and require a token, attached automatically below.
 
 export const fetchAnnouncements = async () => {
   try {
-    const url = `${SHEETDB_APIS.announcements}?action=list`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.announcements);
 
     return data.map(item => ({
       id: parseInt(item.id) || 0,
       title: item.title || '',
       category: item.category || '',
       message: item.message || '',
-      date: item.date_posted || '',
-      imageUrl: item.image_path || null,
+      date: toDateOnly(item.date_posted) || '',
+      imageUrl: resolveAssetUrl(item.image_path) || null,
       sourceUrl: item.source_url || null,
       sourceTitle: item.source_title || null,
       sourceImage: item.source_image || null,
@@ -239,8 +302,6 @@ export const fetchAnnouncements = async () => {
 
 export const createAnnouncement = async (announcement) => {
   try {
-    // Always send as multipart form data — announcements.php accepts this whether
-    // or not an image is attached, and it's required when one is.
     const formData = new FormData();
     formData.append('title', announcement.title);
     formData.append('category', announcement.category);
@@ -253,13 +314,14 @@ export const createAnnouncement = async (announcement) => {
       formData.append('image', announcement.imageFile);
     }
 
-    const response = await fetch(`${SHEETDB_APIS.announcements}?action=create`, {
+    const response = await fetch(API_ENDPOINTS.announcements, {
       method: 'POST',
+      headers: authHeaders(),
       body: formData
     });
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.announcements}?action=list`);
+    requestCache.delete(API_ENDPOINTS.announcements);
     return result;
   } catch (error) {
     console.error('Error creating announcement:', error);
@@ -267,9 +329,43 @@ export const createAnnouncement = async (announcement) => {
   }
 };
 
+export const updateAnnouncement = async (id, announcement) => {
+  try {
+    const formData = new FormData();
+    formData.append('title', announcement.title);
+    formData.append('category', announcement.category);
+    formData.append('message', announcement.message);
+    formData.append('date', announcement.date);
+    if (announcement.sourceUrl) {
+      formData.append('source_url', announcement.sourceUrl);
+    }
+    if (announcement.imageFile) {
+      formData.append('image', announcement.imageFile);
+    } else if (announcement.removeImage) {
+      formData.append('remove_image', '1');
+    }
+
+    const response = await fetch(`${API_ENDPOINTS.announcements}/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: formData
+    });
+
+    const result = await response.json();
+    requestCache.delete(API_ENDPOINTS.announcements);
+    return result;
+  } catch (error) {
+    console.error('Error updating announcement:', error);
+    return { success: false, message: 'Could not reach the server. Please try again.' };
+  }
+};
+
 export const fetchLinkPreview = async (url) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.announcements}?action=link-preview&url=${encodeURIComponent(url)}`);
+    const response = await fetch(
+      `${API_ENDPOINTS.announcements}/link-preview?url=${encodeURIComponent(url)}`,
+      { headers: authHeaders() }
+    );
     const result = await response.json();
     if (!response.ok) {
       return { success: false, message: result.message || 'Could not read that link.' };
@@ -283,14 +379,15 @@ export const fetchLinkPreview = async (url) => {
 
 export const deleteAnnouncement = async (id) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.announcements}?action=delete&id=${id}`, {
-      method: 'DELETE'
+    const response = await fetch(`${API_ENDPOINTS.announcements}/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
     });
 
     if (!response.ok) throw new Error('Failed to delete announcement');
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.announcements}?action=list`);
+    requestCache.delete(API_ENDPOINTS.announcements);
     return result.success;
   } catch (error) {
     console.error('Error deleting announcement:', error);
@@ -304,11 +401,11 @@ export const deleteAnnouncement = async (id) => {
 
 export const fetchPettyCrimes = async () => {
   try {
-    const url = `${SHEETDB_APIS.pettyCrimes}?action=list`;
-    const data = await fetchWithCache(url);
+    const data = await fetchWithCache(API_ENDPOINTS.pettyCrimes);
 
     return data.map(item => ({
       id: parseInt(item.id) || 0,
+      reference: item.report_reference || '',
       crimeType: item.crime_type || '',
       reporter: item.reporter_name || '',
       phone: item.contact_number || '',
@@ -326,14 +423,14 @@ export const fetchPettyCrimes = async () => {
 
 export const createPettyCrimeReport = async (report) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.pettyCrimes}?action=create`, {
+    const response = await fetch(API_ENDPOINTS.pettyCrimes, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(report)
     });
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.pettyCrimes}?action=list`);
+    requestCache.delete(API_ENDPOINTS.pettyCrimes);
     return result;
   } catch (error) {
     console.error('Error submitting petty crime report:', error);
@@ -341,8 +438,45 @@ export const createPettyCrimeReport = async (report) => {
   }
 };
 
+export const updatePettyCrimeReport = async (data) => {
+  try {
+    const { id, ...body } = data;
+    const response = await fetch(`${API_ENDPOINTS.pettyCrimes}/${id}`, {
+      method: "PUT",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(body),
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update petty crime report",
+    };
+  }
+};
+
+export const deletePettyCrimeReport = async (id) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.pettyCrimes}/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    const result = await response.json();
+
+    requestCache.delete(API_ENDPOINTS.pettyCrimes);
+
+    return result.success;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
 export const updatePettyCrimeStatus = async (id, newStatus) => {
-  return await updateStatus(SHEETDB_APIS.pettyCrimes, id, newStatus);
+  return await updateStatus(API_ENDPOINTS.pettyCrimes, id, newStatus);
 };
 
 // ========================================
@@ -351,14 +485,14 @@ export const updatePettyCrimeStatus = async (id, newStatus) => {
 
 export const createEmergencyReport = async (report) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.emergencyReports}?action=create`, {
+    const response = await fetch(API_ENDPOINTS.emergencyReports, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(report)
     });
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.emergencyReports}?action=list`);
+    requestCache.delete(API_ENDPOINTS.emergencyReports);
     return result;
   } catch (error) {
     console.error('Error submitting emergency report:', error);
@@ -366,20 +500,94 @@ export const createEmergencyReport = async (report) => {
   }
 };
 
+export const updateEmergencyReport = async (data) => {
+  try {
+    const { id, ...body } = data;
+    const response = await fetch(`${API_ENDPOINTS.emergencyReports}/${id}`, {
+      method: "PUT",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(body),
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update emergency report",
+    };
+  }
+};
+
+export const deleteEmergencyReport = async (id) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.emergencyReports}/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    const result = await response.json();
+
+    requestCache.delete(API_ENDPOINTS.emergencyReports);
+
+    return result.success;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
 export const createAssistanceRequest = async (request) => {
   try {
-    const response = await fetch(`${SHEETDB_APIS.assistanceRequests}?action=create`, {
+    const response = await fetch(API_ENDPOINTS.assistanceRequests, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(request)
     });
 
     const result = await response.json();
-    requestCache.delete(`${SHEETDB_APIS.assistanceRequests}?action=list`);
+    requestCache.delete(API_ENDPOINTS.assistanceRequests);
     return result;
   } catch (error) {
     console.error('Error submitting assistance request:', error);
     return { success: false, message: 'Could not reach the server. Please try again.' };
+  }
+};
+
+export const updateAssistanceRequest = async (data) => {
+  try {
+    const { id, ...body } = data;
+    const response = await fetch(`${API_ENDPOINTS.assistanceRequests}/${id}`, {
+      method: "PUT",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(body),
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update assistance request",
+    };
+  }
+};
+
+export const deleteAssistanceRequest = async (id) => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.assistanceRequests}/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    const result = await response.json();
+
+    requestCache.delete(API_ENDPOINTS.assistanceRequests);
+
+    return result.success;
+  } catch (error) {
+    console.error(error);
+    return false;
   }
 };
 
@@ -431,10 +639,10 @@ export const fetchAllData = async () => {
 
 export const updateStatus = async (apiUrl, id, newStatus) => {
   try {
-    const response = await fetch(`${apiUrl}?action=update-status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status: newStatus })
+    const response = await fetch(`${apiUrl}/${id}/status`, {
+      method: 'PATCH',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ status: newStatus })
     });
 
     if (!response.ok) throw new Error('Failed to update status');
@@ -449,13 +657,194 @@ export const updateStatus = async (apiUrl, id, newStatus) => {
 };
 
 export const updateEmergencyStatus = async (id, newStatus) => {
-  return await updateStatus(SHEETDB_APIS.emergencyReports, id, newStatus);
+  return await updateStatus(API_ENDPOINTS.emergencyReports, id, newStatus);
 };
 
 export const updateAssistanceStatus = async (id, newStatus) => {
-  return await updateStatus(SHEETDB_APIS.assistanceRequests, id, newStatus);
+  return await updateStatus(API_ENDPOINTS.assistanceRequests, id, newStatus);
 };
 
 export const updateUserStatus = async (id, newStatus) => {
-  return await updateStatus(SHEETDB_APIS.registeredUsers, id, newStatus);
+  return await updateStatus(API_ENDPOINTS.registeredUsers, id, newStatus);
+};
+
+/*=========================================
+User Reports | Profile | Settings
+==========================================*/
+
+export const fetchMyReports = async (userId) => {
+  try {
+    const response = await fetch(
+      `${API_BASE}/reports/user/${userId}`,
+      { headers: authHeaders() }
+    );
+
+    const data = await response.json();
+    if (!Array.isArray(data)) return [];
+
+    const TYPE_LABELS = {
+      emergency: 'Emergency',
+      assistance: 'Assistance',
+      petty_crime: 'Petty Crime'
+    };
+
+    return data.map((item) => {
+      const type = TYPE_LABELS[item.reportType] || item.reportType;
+
+      const base = {
+        id: item.id,
+        type,
+        reference: item.report_reference || '',
+        status: item.status || '',
+        location: item.location || item.current_location || '',
+        latitude: item.latitude,
+        longitude: item.longitude
+      };
+
+      if (item.reportType === 'emergency') {
+        return {
+          ...base,
+          title: item.emergency_type || '',
+          description: item.incident_details || '',
+          date: item.time || '',
+          peopleAffected: item.number_of_people_affected,
+          specialNeeds: item.special_needs || '',
+          photoUrl: item.photo_url || ''
+        };
+      }
+
+      if (item.reportType === 'assistance') {
+        return {
+          ...base,
+          title: item.request_assistance_type || '',
+          description: item.describe_your_situation || '',
+          date: item.timestamp || '',
+          peopleAffected: item.number_of_people_needing_help,
+          specialNeeds: item.special_needs || '',
+          urgency: item.urgency_level || ''
+        };
+      }
+
+      // petty_crime
+      return {
+        ...base,
+        title: item.crime_type || '',
+        description: item.description || '',
+        date: item.timestamp || '',
+        suspectInfo: item.suspect_info || ''
+      };
+    });
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
+export const fetchUserProfile = async (userId) => {
+  try {
+    const response = await fetch(
+      `${API_ENDPOINTS.registeredUsers}/${userId}`,
+      { headers: authHeaders() }
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data || data.success === false) {
+      return { success: false, message: data?.message || 'Failed to load profile.' };
+    }
+
+    return {
+      success: true,
+      user: {
+        id: data.id,
+        fullName: data.full_name,
+        username: data.username,
+        contact: data.contact_number,
+        email: data.email_address,
+        role: data.role,
+        status: data.status,
+        photoUrl: resolveAssetUrl(data.photo_url) || null
+      }
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'Could not reach the server.' };
+  }
+};
+
+export const uploadProfilePhoto = async (userId, imageFile) => {
+  try {
+    const formData = new FormData();
+
+    formData.append("photo", imageFile);
+
+    const response = await fetch(
+      `${API_ENDPOINTS.registeredUsers}/${userId}/photo`,
+      {
+        method: "POST",
+        headers: authHeaders(),
+        body: formData,
+      }
+    );
+
+    const result = await response.json();
+    if (result.photoUrl) {
+      result.photoUrl = resolveAssetUrl(result.photoUrl);
+    }
+    return result;
+  } catch (error) {
+    console.error(error);
+
+    return {
+      success: false,
+    };
+  }
+};
+
+export const updateUsername = async (userId, username) => {
+  try {
+    const response = await fetch(
+      `${API_ENDPOINTS.registeredUsers}/${userId}/username`,
+      {
+        method: "PATCH",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ username }),
+      }
+    );
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+
+    return {
+      success: false,
+    };
+  }
+};
+
+export const changePassword = async (
+    userId,
+    currentPassword,
+    newPassword
+) => {
+    try {
+        const response = await fetch(
+            `${API_ENDPOINTS.registeredUsers}/${userId}/password`,
+            {
+                method: "PATCH",
+                headers: authHeaders({ "Content-Type": "application/json" }),
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                }),
+            }
+        );
+
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+
+        return {
+            success: false,
+        };
+    }
 };

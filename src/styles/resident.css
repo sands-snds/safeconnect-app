@@ -224,16 +224,17 @@ header {
 }
 
 .hero-title {
-    font-size: 5rem;
+    font-size: 4rem;
     font-weight: 800;
     color: white;
-    letter-spacing: 8px;
+    letter-spacing: 6px;
     margin-bottom: 1.5rem;
     text-shadow: 2px 4px 12px rgba(0, 0, 0, 0.4);
     letter-spacing: 7px;
     margin-top: 100px;
     margin-bottom: 25px;
     text-shadow: 0 2px 8px #7e1313a0;
+    transform: translateY(-40px);
 }
 
 .hero-subtitle {
@@ -251,6 +252,7 @@ header {
     line-height: 1.5;
     text-shadow: 0 2px 8px #7e1313a0;
     text-align: center;
+    transform: translateY(-40px);
 }
 
 .cta-buttons {
