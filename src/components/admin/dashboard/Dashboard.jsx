@@ -39,20 +39,10 @@ export default function Dashboard({
                 onStatCardClick={onStatCardClick}
             />
 
-            <DashboardAlerts
-                emergencyReports={emergencyReports}
-                assistanceRequests={assistanceRequests}
-                pettyCrimeReports={pettyCrimeReports}
-            />
-
             <DashboardCharts
                 emergencyReports={emergencyReports}
                 assistanceRequests={assistanceRequests}
                 pettyCrimeReports={pettyCrimeReports}
-            />
-
-            <DashboardQuickActions
-                onNavigate={onNavigate}
             />
 
             <DashboardRecentReports
