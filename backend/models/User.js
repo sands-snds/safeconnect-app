@@ -37,19 +37,75 @@ class User {
 
         const [result] = await db.query(
             `INSERT INTO registered_users
-            (full_name, username, contact_number, email_address, password)
-            VALUES (?, ?, ?, ?, ?)`,
+            (full_name, username, contact_number, email_address, password, role)
+            VALUES (?, ?, ?, ?, ?, ?)`,
             [
                 user.fullName,
-                user.username,
-                user.contact,
+                user.username || null,
+                user.contact || null,
                 user.email,
                 user.password,
-                user.role
+                user.role || "resident"
             ]
         );
 
         return result.insertId;
+    }
+
+/* =========================================================
+                    Find by ID
+============================================================*/
+
+    static async findById(id) {
+        const [rows] = await db.query(
+            `
+            SELECT
+                id, full_name, username, contact_number,
+                email_address, role, status, photo_url, created_at
+            FROM registered_users
+            WHERE id = ?
+            `,
+            [id]
+        );
+        return rows[0];
+    }
+
+    // Includes the password hash — only for internal use (e.g. verifying
+    // the current password before a change), never returned to the client.
+    static async findByIdWithPassword(id) {
+        const [rows] = await db.query(
+            `SELECT * FROM registered_users WHERE id = ?`,
+            [id]
+        );
+        return rows[0];
+    }
+
+/* =========================================================
+                    Profile Self-Service
+============================================================*/
+
+    static async updatePhoto(id, photoUrl) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET photo_url = ? WHERE id = ?`,
+            [photoUrl, id]
+        );
+        return result.affectedRows;
+    }
+
+    static async updateUsername(id, username) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET username = ? WHERE id = ?`,
+            [username, id]
+        );
+        return result.affectedRows;
+    }
+
+    static async updatePassword(id, hashedPassword) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET password = ? WHERE id = ?`,
+            [hashedPassword, id]
+        );
+        return result.affectedRows;
     }
 
 /* =========================================================
@@ -64,6 +120,17 @@ class User {
             [fullName, email, status]
         );
 
+    }
+
+/* =========================================================
+                    Log Admin Signin
+============================================================*/
+
+    static async logAdminSignin(email) {
+        await db.query(
+            `INSERT INTO admin_logs (email_address) VALUES (?)`,
+            [email]
+        );
     }
 
 /* =========================================================
@@ -103,19 +170,6 @@ class User {
             [status, id]
         );
         return result.affectedRows;
-
-        const allowedStatuses = [
-            "Active",
-            "Inactive",
-            "Suspended"
-        ];
-
-        if (!allowedStatuses.includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid status."
-            });
-        }
     }
 
 }

@@ -1,22 +1,13 @@
+// Cross-resource report routes. Type-specific CRUD lives in
+// emergencyReportRoutes.js, assistanceRequestRoutes.js, and
+// pettyCrimeRoutes.js — this file only handles the aggregate
+// "my reports" view used by MyReportsPage.jsx.
 const express = require("express");
-
 const router = express.Router();
 
-const reportController = require("../controllers/reportController");
+const myReportsController = require("../controllers/myReportsController");
+const { verifyToken } = require("../middleware/authMiddleware");
 
-const {
-    verifyToken,
-    verifyAdmin
-} = require("../middleware/authMiddleware");
-
-router.post("/", verifyToken, reportController.createReport);
-
-router.get("/", verifyToken, verifyAdmin, reportController.getReports);
-
-router.get("/statistics", verifyToken, verifyAdmin, reportController.getStatistics);
-
-router.get("/:id", verifyToken, reportController.getReport);
-
-router.put("/:id/status", verifyToken, verifyAdmin, reportController.updateStatus);
+router.get("/user/:userId", verifyToken, myReportsController.getMyReports);
 
 module.exports = router;

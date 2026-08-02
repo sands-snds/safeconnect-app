@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const { generateToken } = require("../utils/jwt");
 
 
 /* =========================================================
@@ -121,9 +122,16 @@ exports.signin = async (req, res) => {
             "Success"
         );
 
+        if (user.role === "admin") {
+            await User.logAdminSignin(email);
+        }
+
+        const token = generateToken(user);
+
         return res.json({
             success: true,
             isAdmin: user.role === "admin",
+            token,
             user: {
                 id: user.id,
                 fullName: user.full_name,

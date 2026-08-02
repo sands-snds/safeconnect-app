@@ -1,3 +1,6 @@
+// Emergency Reports model (table: emergency_reports).
+// Field names here match what ResidentEmergencyModal.jsx actually sends
+// via createEmergencyReport()/updateEmergencyReport() in Services/api.js.
 const db = require("../config/db");
 
 class Report {
@@ -11,93 +14,139 @@ class Report {
                 report_reference,
                 reporter_id,
                 emergency_type,
+                severity,
+                reporter_name,
+                contact_number,
                 location,
-                incident_details,
                 latitude,
                 longitude,
+                incident_details,
+                number_of_people_affected,
+                special_needs,
                 photo_url,
+                media_type,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
-                report.reference,
-                report.reporterId,
+                report.reportReference,
+                report.reporterId || null,
                 report.emergencyType,
+                report.severity,
+                report.reporterName,
+                report.contactNumber,
                 report.location,
+                report.latitude || null,
+                report.longitude || null,
                 report.details,
-                report.latitude,
-                report.longitude,
-                report.photoUrl,
-                "Pending"
+                report.peopleAffected || 0,
+                report.specialNeeds || null,
+                report.photoUrl || null,
+                report.mediaType || null,
+                "Received"
             ]
         );
         return result.insertId;
     }
 
-    // Get all reports
+    // Get all emergency reports (with optional filters)
     static async findAll(filters = {}) {
-        let sql = `
-            SELECT
-                er.*,
-                ru.full_name AS reporter
-            FROM emergency_reports er
-            JOIN registered_users ru
-                ON ru.id = er.reporter_id
-            WHERE 1=1
-        `;
+        let sql = `SELECT * FROM emergency_reports WHERE 1=1`;
 
         const values = [];
         if (filters.status) {
-            sql += " AND er.status=?";
+            sql += " AND status=?";
             values.push(filters.status);
         }
 
         if (filters.type) {
-            sql += " AND er.emergency_type=?";
+            sql += " AND emergency_type=?";
             values.push(filters.type);
         }
 
         if (filters.from) {
-            sql += " AND DATE(er.created_at)>=?";
+            sql += " AND DATE(time)>=?";
             values.push(filters.from);
         }
 
         if (filters.to) {
-            sql += " AND DATE(er.created_at)<=?";
+            sql += " AND DATE(time)<=?";
             values.push(filters.to);
         }
 
-        sql += " ORDER BY er.created_at DESC";
+        sql += " ORDER BY time DESC";
         const [rows] = await db.query(sql, values);
+        return rows;
+    }
+
+    // Get all reports submitted by a specific resident
+    static async findByReporter(reporterId) {
+        const [rows] = await db.query(
+            `SELECT * FROM emergency_reports WHERE reporter_id = ? ORDER BY time DESC`,
+            [reporterId]
+        );
         return rows;
     }
 
     // Get one report
     static async findById(id) {
-        const [rows] = await db.query(`
-            SELECT
-                er.*,
-                ru.full_name,
-                ru.contact_number,
-                ru.email_address
-            FROM emergency_reports er
-            JOIN registered_users ru
-                ON er.reporter_id = ru.id
-            WHERE er.id = ?
-        `, [id]);
+        const [rows] = await db.query(
+            `SELECT * FROM emergency_reports WHERE id = ?`,
+            [id]
+        );
         return rows[0];
+    }
+
+    // Update editable fields of a report (used when a resident edits their own report)
+    static async update(id, report) {
+        const [result] = await db.query(
+            `
+            UPDATE emergency_reports
+            SET
+                emergency_type = ?,
+                severity = ?,
+                location = ?,
+                latitude = ?,
+                longitude = ?,
+                incident_details = ?,
+                number_of_people_affected = ?,
+                special_needs = ?,
+                photo_url = COALESCE(?, photo_url),
+                media_type = COALESCE(?, media_type)
+            WHERE id = ?
+            `,
+            [
+                report.emergencyType,
+                report.severity,
+                report.location,
+                report.latitude || null,
+                report.longitude || null,
+                report.details,
+                report.peopleAffected || 0,
+                report.specialNeeds || null,
+                report.photoUrl || null,
+                report.mediaType || null,
+                id
+            ]
+        );
+        return result.affectedRows;
     }
 
     // Update report status
     static async updateStatus(id, status) {
         const [result] = await db.query(
-            `
-            UPDATE emergency_reports
-            SET status = ?
-            WHERE id = ?
-            `,
+            `UPDATE emergency_reports SET status = ? WHERE id = ?`,
             [status, id]
+        );
+        return result.affectedRows;
+    }
+
+    // Delete a report
+    static async delete(id) {
+        const [result] = await db.query(
+            `DELETE FROM emergency_reports WHERE id = ?`,
+            [id]
         );
         return result.affectedRows;
     }
@@ -105,13 +154,7 @@ class Report {
     // Assign responder/admin
     static async assign(id, assignedTo) {
         const [result] = await db.query(
-            `
-            UPDATE emergency_reports
-            SET
-                assigned_to = ?,
-                assigned_at = NOW()
-            WHERE id = ?
-            `,
+            `UPDATE emergency_reports SET assigned_to = ?, assigned_at = NOW() WHERE id = ?`,
             [assignedTo, id]
         );
         return result.affectedRows;
@@ -122,7 +165,7 @@ class Report {
         const [rows] = await db.query(`
             SELECT
                 COUNT(*) AS totalReports,
-                SUM(status='Pending') AS pending,
+                SUM(status='Received') AS pending,
                 SUM(status='Dispatched') AS dispatched,
                 SUM(status='In Progress') AS inProgress,
                 SUM(status='Resolved') AS resolved,
@@ -131,11 +174,12 @@ class Report {
         `);
         return rows[0];
     }
-    
+
     static async getLatestReference() {
         const [rows] = await db.query(`
             SELECT report_reference
             FROM emergency_reports
+            WHERE report_reference IS NOT NULL
             ORDER BY id DESC
             LIMIT 1
         `);

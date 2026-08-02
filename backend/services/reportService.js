@@ -1,31 +1,39 @@
 const Report = require("../models/Report");
 const NotificationService = require("./notificationService");
+const { generateReference } = require("../utils/reference");
 
+// Emergency Reports service. Field names map 1:1 to what
+// ResidentEmergencyModal.jsx sends via createEmergencyReport().
 class ReportService {
     /* ==========================================
                     CREATE REPORT
     ========================================== */
     static async create(data) {
-        const reference = await this.generateReference();
+        const reference = await generateReference(Report.getLatestReference);
+
         const report = {
-            report_reference: reference,
-            report_type: data.reportType,
-            reporter_id: data.reporterId,
-            category: data.category,
-            title: data.title,
-            details: data.details,
+            reportReference: reference,
+            reporterId: data.userId || null,
+            emergencyType: data.emergencyType,
+            severity: data.severity,
+            reporterName: data.name,
+            contactNumber: data.contact,
             location: data.location,
-            latitude: data.latitude || null,
-            longitude: data.longitude || null,
-            photo_url: data.photoUrl || null,
-            status: "Pending"
+            latitude: data.latitude,
+            longitude: data.longitude,
+            details: data.details,
+            peopleAffected: data.people,
+            specialNeeds: data.special,
+            photoUrl: data.photoUrl,
+            mediaType: data.mediaType
         };
 
         const reportId = await Report.create(report);
+
         await NotificationService.create({
-            title: `New ${data.reportType} Report`,
-            message: `${data.category} reported at ${data.location}`,
-            notificationType: data.reportType,
+            title: "New Emergency Report",
+            message: `${data.emergencyType} reported at ${data.location}`,
+            notificationType: "emergency",
             referenceId: reportId
         });
 
@@ -37,20 +45,23 @@ class ReportService {
     }
 
     /* ==========================================
-                GENERATE REFERENCE NUMBER
+                    UPDATE REPORT
     ========================================== */
+    static async update(id, data) {
+        const affected = await Report.update(id, {
+            emergencyType: data.emergencyType,
+            severity: data.severity,
+            location: data.location,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            details: data.details,
+            peopleAffected: data.people,
+            specialNeeds: data.special,
+            photoUrl: data.photoUrl,
+            mediaType: data.mediaType
+        });
 
-    static async generateReference() {
-        const year = new Date().getFullYear();
-        const latest = await Report.getLatestReference();
-        let nextNumber = 1;
-        if (latest && latest.report_reference) {
-            const parts = latest.report_reference.split("-");
-            if (parts.length === 3) {
-                nextNumber = parseInt(parts[2], 10) + 1;
-            }
-        }
-        return `SC-${year}-${String(nextNumber).padStart(6, "0")}`;
+        return { success: affected > 0 };
     }
 }
 

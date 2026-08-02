@@ -7,6 +7,9 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const logRoutes = require("./routes/logRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const emergencyReportRoutes = require("./routes/emergencyReportRoutes");
+const assistanceRequestRoutes = require("./routes/assistanceRequestRoutes");
+const pettyCrimeRoutes = require("./routes/pettyCrimeRoutes");
 const exportRoutes = require("./routes/exportRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
@@ -20,17 +23,20 @@ const path = require("path");
 
 app.use(cors());
 app.use(express.json());
+app.use(helmet());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/logs", logRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/emergency-reports", emergencyReportRoutes);
+app.use("/api/assistance-requests", assistanceRequestRoutes);
+app.use("/api/petty-crimes", pettyCrimeRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/settings",systemSettingRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use(helmet());
 
 app.use(
     "/uploads",

@@ -29,7 +29,7 @@ const verifyToken = (req, res, next) => {
 
 const verifyAdmin = (req, res, next) => {
 
-    if (req.user.role !== "Admin") {
+    if (!req.user || req.user.role !== "admin") {
 
         return res.status(403).json({
             success: false,
@@ -41,7 +41,31 @@ const verifyAdmin = (req, res, next) => {
     next();
 };
 
+// Allows a resident to manage their own profile (photo/username/password),
+// while still letting an admin manage any account.
+const verifySelfOrAdmin = (req, res, next) => {
+
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: "Access denied. No token provided."
+        });
+    }
+
+    const isSelf = String(req.user.id) === String(req.params.id);
+
+    if (!isSelf && req.user.role !== "admin") {
+        return res.status(403).json({
+            success: false,
+            message: "You can only manage your own account."
+        });
+    }
+
+    next();
+};
+
 module.exports = {
     verifyToken,
-    verifyAdmin
+    verifyAdmin,
+    verifySelfOrAdmin
 };
