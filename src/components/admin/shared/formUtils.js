@@ -44,5 +44,6 @@ export const buildAssistanceRequestFromForm = (formData) => ({
   location: formData.get("location"),
   situation: formData.get("description"),
   urgency: "Medium",
-  special: null
+  special: null,
+  peopleAffected: formData.get("peopleAffected") || 1
 });

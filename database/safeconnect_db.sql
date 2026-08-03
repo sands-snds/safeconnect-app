@@ -179,3 +179,4 @@ VALUES (
   'admin',
   'Active'
 );
+

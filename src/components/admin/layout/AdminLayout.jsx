@@ -19,7 +19,10 @@ const AdminLayout = ({
 
     onRefresh,
     isRefreshing,
-    lastUpdate
+    lastUpdate,
+    notifications,
+    unreadCount,
+    onMarkAllRead
 }) => {
 
     return (
@@ -47,6 +50,9 @@ const AdminLayout = ({
                         onRefresh={onRefresh}
                         isRefreshing={isRefreshing}
                         lastUpdate={lastUpdate}
+                        notifications={notifications}
+                        unreadCount={unreadCount}
+                        onMarkAllRead={onMarkAllRead}
                     />
 
                     <div

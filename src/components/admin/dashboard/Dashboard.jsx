@@ -4,8 +4,8 @@ import AdminStats from "../layout/AdminStats";
 import DashboardSummary from "./DashboardSummary";
 import DashboardCharts from "./DashboardCharts";
 import DashboardRecentReports from "./DashboardRecentReports";
-import DashboardAlerts from "./DashboardAlerts";
-import DashboardQuickActions from "./DashboardQuickActions";
+// DashboardAlerts and DashboardQuickActions are intentionally not rendered here.
+// Kept in the codebase for potential future use -- see components/admin/dashboard/.
 
 export default function Dashboard({
     emergencyReports,

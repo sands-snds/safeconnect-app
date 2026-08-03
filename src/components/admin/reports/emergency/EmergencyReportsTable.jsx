@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import ListView from "../../shared/ListView";
+import ReportCard from "../../shared/ReportCard";
 
 import EmergencyReportDetails from "./EmergencyReportDetails";
 import StatusSelect from "../../shared/StatusSelect";
@@ -26,119 +27,39 @@ const EmergencyReportsTable = ({
     );
   };
 
-  const renderRow = (report) => {
-    const expanded = expandedRowId === report.id;
-
-    return (
-      <React.Fragment key={report.id}>
-        <tr>
-
-          <td className="table-cell">
-            <div className="font-medium text-sm">
-              {report.reporter}
-            </div>
-
-            <div className="text-gray-500 text-xs">
-              {report.phone}
-            </div>
-          </td>
-
-          <td className="table-cell">
-            {report.emergency}
-          </td>
-
-          <td className="table-cell">
-            <span
-              style={{
-                color: getSeverityColor(report.severity),
-                fontWeight: 600
-              }}
-            >
-              {report.severity}
-            </span>
-          </td>
-
-          <td className="table-cell">
-            {report.location}
-          </td>
-
-          <td className="table-cell">
-            {report.date}
-          </td>
-
-          <td className="table-cell">
-
-            <StatusSelect
-              value={report.status}
-              reportId={report.id}
-              reportType="emergency"
-              options={STATUS_OPTIONS}
-              onUpdateStatus={onUpdateStatus}
-            />
-
-          </td>
-
-          <td className="table-cell">
-
-            <button
-              type="button"
-              className="text-xs font-medium"
-              onClick={() => toggleDetails(report.id)}
-              style={{
-                padding: "4px 10px",
-                borderRadius: "6px",
-                border: "1px solid #d1d5db",
-                background: "#f9fafb",
-                cursor: "pointer"
-              }}
-            >
-              {expanded
-                ? "Hide Details"
-                : "View Details"}
-            </button>
-
-          </td>
-
-        </tr>
-
-        {expanded && (
-          <tr>
-
-            <td
-              colSpan={7}
-              style={{
-                background: "#f9fafb",
-                padding: "16px",
-                borderTop: "1px solid #e5e7eb"
-              }}
-            >
-              <EmergencyReportDetails
-                report={report}
-              />
-            </td>
-
-          </tr>
-        )}
-
-      </React.Fragment>
-    );
-  };
+  const renderRow = (report) => (
+    <ReportCard
+      key={report.id}
+      accentColor={getSeverityColor(report.severity)}
+      title={report.emergency}
+      badge={{
+        text: report.severity,
+        bg: "#f3f4f6",
+        color: getSeverityColor(report.severity)
+      }}
+      subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
+      statusControl={
+        <StatusSelect
+          value={report.status}
+          reportId={report.id}
+          reportType="emergency"
+          onUpdateStatus={onUpdateStatus}
+        />
+      }
+      expanded={expandedRowId === report.id}
+      onToggle={() => toggleDetails(report.id)}
+    >
+      <EmergencyReportDetails report={report} />
+    </ReportCard>
+  );
 
   return (
     <ListView
       data={data}
+      layout="cards"
       filterType="emergency"
       filters={filters}
       setFilters={setFilters}
-      headers={[
-        "REPORTER",
-        "TYPE",
-        "SEVERITY",
-        "LOCATION",
-        "DATE",
-        "STATUS",
-        "ACTIONS"
-      ]}
       renderRow={renderRow}
       statusOptions={[
         "Select",

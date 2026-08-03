@@ -1,15 +1,28 @@
 import React, { useState } from "react";
 
+const timeAgo = (isoString) => {
+    if (!isoString) return "";
+    const seconds = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+    if (seconds < 60) return "just now";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+};
+
 const AdminHeader = ({
     title = "Dashboard",
-    alerts = [],
     onRefresh,
     isRefreshing,
-    lastUpdate
+    lastUpdate,
+    notifications = [],
+    unreadCount = 0,
+    onMarkAllRead
 }) => {
 
 const [showNotifications, setShowNotifications] = useState(false);
-const [hasUnread, setHasUnread] = useState(true);
 
     return (
         <div
@@ -25,6 +38,17 @@ const [hasUnread, setHasUnread] = useState(true);
                 zIndex: 50
             }}
         >
+            <style>{`
+                @keyframes adminHeaderSpin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .admin-header-refresh-icon.spinning {
+                    display: inline-block;
+                    animation: adminHeaderSpin 0.8s linear infinite;
+                }
+            `}</style>
+
             {/* Left */}
             <div>
                 <h1 style={{
@@ -55,26 +79,30 @@ const [hasUnread, setHasUnread] = useState(true);
                 }}
             >
 
-                <button onClick={onRefresh} disabled={isRefreshing}
-                    style={{
-                        border: "1px solid #e5e7eb",
-                        background: "#fff",
-                        width: 42,
-                        height: 42,
-                        borderRadius: 10,
-                        cursor: "pointer",
-                        fontSize: "18px"
-                    }} >
-                    {isRefreshing ? "…" : "↻"}
-                </button>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                    <button onClick={onRefresh} disabled={isRefreshing}
+                        title="Refresh data"
+                        style={{
+                            border: "1px solid #e5e7eb",
+                            background: isRefreshing ? "#f3f4f6" : "#fff",
+                            width: 42,
+                            height: 42,
+                            borderRadius: 10,
+                            cursor: isRefreshing ? "wait" : "pointer",
+                            fontSize: "18px"
+                        }} >
+                        <span className={`admin-header-refresh-icon${isRefreshing ? " spinning" : ""}`}>
+                            ↻
+                        </span>
+                    </button>
+                    {lastUpdate && (
+                        <span style={{ fontSize: 10, color: "#9ca3af", whiteSpace: "nowrap" }}>
+                            {isRefreshing ? "Refreshing…" : `Updated ${timeAgo(lastUpdate)}`}
+                        </span>
+                    )}
+                </div>
 
-                <button onClick={() => { 
-                    setShowNotifications(!showNotifications);
-
-                    if (!showNotifications) {
-                        setHasUnread(false);
-                    }}
-                    }
+                <button onClick={() => setShowNotifications(!showNotifications)}
                     style={{
                         border: "1px solid #e5e7eb",
                         background: "#fff",
@@ -86,7 +114,7 @@ const [hasUnread, setHasUnread] = useState(true);
                         fontSize: "18px"
                     }} > 🔔
 
-                    {alerts.length > 0 && hasUnread && (
+                    {unreadCount > 0 && (
                         <span
                             style={{
                                 position: "absolute",
@@ -102,7 +130,7 @@ const [hasUnread, setHasUnread] = useState(true);
                                 alignItems: "center",
                                 justifyContent: "center"
                             }} >
-                            {alerts.length}
+                            {unreadCount > 9 ? "9+" : unreadCount}
                         </span>
                     )}
                 </button>
@@ -133,53 +161,92 @@ const [hasUnread, setHasUnread] = useState(true);
                             position: "absolute",
                             top: 60,
                             right: 0,
-                            width: 300,
+                            width: 340,
+                            maxHeight: 420,
+                            display: "flex",
+                            flexDirection: "column",
                             background: "#fff",
                             border: "1px solid #e5e7eb",
                             borderRadius: 12,
                             boxShadow:
                                 "0 15px 30px rgba(0,0,0,.08)",
-                            padding: 16
+                            overflow: "hidden"
                         }}
                     >
-                        <h3
+                        <div
                             style={{
-                                marginTop: 0
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "14px 16px",
+                                borderBottom: "1px solid #f3f4f6"
                             }}
                         >
-                            Notifications
-                        </h3>
+                            <h3 style={{ margin: 0, fontSize: 15 }}>
+                                Notifications
+                            </h3>
 
-                        {alerts.length === 0 ? (
-                            <p>No pending reports.</p>
-                        ) : (
-                            alerts.map((item, index) => (
-                                <div
-                                    key={index}
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={onMarkAllRead}
                                     style={{
-                                        padding: "10px 0",
-                                        borderBottom:
-                                            "1px solid #f3f4f6"
+                                        border: "none",
+                                        background: "none",
+                                        color: "#6B2C3E",
+                                        fontSize: 12,
+                                        fontWeight: 600,
+                                        cursor: "pointer",
+                                        padding: 0
                                     }}
                                 >
-                                    {item}
-                                </div>
-                            ))
-                        )}
+                                    Mark all as read
+                                </button>
+                            )}
+                        </div>
 
-                        {lastUpdate && (
-
-                            <div
-                                style={{
-                                    marginTop: 15,
-                                    color: "#6b7280",
-                                    fontSize: 12
-                                }}
-                            >
-                                Last updated{" "}
-                                {lastUpdate.toLocaleTimeString()}
-                            </div>
-                        )}
+                        <div style={{ overflowY: "auto" }}>
+                            {notifications.length === 0 ? (
+                                <p style={{ padding: 16, margin: 0, color: "#6b7280", fontSize: 13 }}>
+                                    Nothing yet.
+                                </p>
+                            ) : (
+                                notifications.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        style={{
+                                            padding: "12px 16px",
+                                            borderBottom: "1px solid #f3f4f6",
+                                            background: item.isRead ? "#fff" : "#fdf4f5",
+                                            display: "flex",
+                                            gap: 10,
+                                            alignItems: "flex-start"
+                                        }}
+                                    >
+                                        {!item.isRead && (
+                                            <span style={{
+                                                marginTop: 5,
+                                                width: 7,
+                                                height: 7,
+                                                borderRadius: "50%",
+                                                background: "#dc2626",
+                                                flexShrink: 0
+                                            }} />
+                                        )}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: 13, fontWeight: item.isRead ? 400 : 600, color: "#111827" }}>
+                                                {item.title}
+                                            </div>
+                                            <div style={{ fontSize: 12.5, color: "#4b5563", marginTop: 2 }}>
+                                                {item.message}
+                                            </div>
+                                            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                                                {timeAgo(item.createdAt)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

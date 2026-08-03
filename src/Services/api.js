@@ -32,6 +32,7 @@ export const API_ENDPOINTS = {
   adminLogs: `${API_BASE}/logs/admin`,
   announcements: `${API_BASE}/announcements`,
   pettyCrimes: `${API_BASE}/petty-crimes`,
+  notifications: `${API_BASE}/notifications`,
   auth: `${API_BASE}/auth`
 };
 
@@ -645,9 +646,13 @@ export const updateStatus = async (apiUrl, id, newStatus) => {
       body: JSON.stringify({ status: newStatus })
     });
 
-    if (!response.ok) throw new Error('Failed to update status');
-
     const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      if (result.message) alert(result.message);
+      return false;
+    }
+
     requestCache.delete(apiUrl);
     return result.success;
   } catch (error) {
@@ -666,6 +671,50 @@ export const updateAssistanceStatus = async (id, newStatus) => {
 
 export const updateUserStatus = async (id, newStatus) => {
   return await updateStatus(API_ENDPOINTS.registeredUsers, id, newStatus);
+};
+
+/*=========================================
+Admin Notifications (header bell)
+==========================================*/
+
+export const fetchNotifications = async () => {
+  try {
+    const response = await fetch(API_ENDPOINTS.notifications, {
+      headers: authHeaders()
+    });
+    const result = await response.json();
+    if (!result.success) return { notifications: [], unread: 0 };
+
+    return {
+      notifications: result.data.map(item => ({
+        id: item.id,
+        title: item.title,
+        message: item.message,
+        type: item.notification_type,
+        referenceId: item.reference_id,
+        isRead: Boolean(item.is_read),
+        createdAt: item.created_at
+      })),
+      unread: result.unread
+    };
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    return { notifications: [], unread: 0 };
+  }
+};
+
+export const markAllNotificationsRead = async () => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.notifications}/read-all`, {
+      method: 'PUT',
+      headers: authHeaders()
+    });
+    const result = await response.json();
+    return Boolean(result.success);
+  } catch (error) {
+    console.error('Error marking notifications as read:', error);
+    return false;
+  }
 };
 
 /*=========================================

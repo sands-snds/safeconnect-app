@@ -11,6 +11,8 @@ import {
     createEmergencyReport,
     createAssistanceRequest,
     updateStatus as updateSheetStatus,
+    fetchNotifications,
+    markAllNotificationsRead,
     SHEETDB_APIS
 } from "../../../Services/api";
 
@@ -32,6 +34,8 @@ export default function useAdminData() {
     const [adminLogs, setAdminLogs] = useState([]);
     const [announcements, setAnnouncements] = useState([]);
     const [pettyCrimeReports, setPettyCrimeReports] = useState([]);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const loadEmergencyReports = async () => {
         setEmergencyReports(await fetchEmergencyReports());
@@ -61,6 +65,19 @@ export default function useAdminData() {
         setPettyCrimeReports(await fetchPettyCrimes());
     };
 
+    const loadNotifications = async () => {
+        const { notifications: list, unread } = await fetchNotifications();
+        setNotifications(list);
+        setUnreadCount(unread);
+    };
+
+    const markAllRead = async () => {
+        const success = await markAllNotificationsRead();
+        if (!success) return;
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setUnreadCount(0);
+    };
+
     // Initial page load ONLY
     const loadAllData = async () => {
         setIsLoading(true);
@@ -73,7 +90,8 @@ export default function useAdminData() {
                 loadSignInLogs(),
                 loadAdminLogs(),
                 loadAnnouncements(),
-                loadPettyCrimeReports()
+                loadPettyCrimeReports(),
+                loadNotifications()
             ]);
 
             setLastUpdate(new Date());
@@ -94,7 +112,8 @@ export default function useAdminData() {
                 loadSignInLogs(),
                 loadAdminLogs(),
                 loadAnnouncements(),
-                loadPettyCrimeReports()
+                loadPettyCrimeReports(),
+                loadNotifications()
             ]);
 
             setLastUpdate(new Date());
@@ -211,6 +230,9 @@ export default function useAdminData() {
         adminLogs,
         announcements,
         pettyCrimeReports,
+        notifications,
+        unreadCount,
+        markAllRead,
         loadAllData,
         refreshAllData,
         loadAnnouncements,
