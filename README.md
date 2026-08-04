@@ -61,13 +61,13 @@ cd backend
 npm install
 ```
 
-### 2. Set up the database
+### 2. Set up the database 
 ```bash
 mysql -u root -p < database/safeconnect_db.sql
 ```
 This creates the `safeconnect` database and all tables (see [Database Documentation](#7-database-documentation)).
 
-### 3. Configure environment variables
+### 3. Configure environment variables (not Needed)
 Copy `backend/.env.example` to `backend/.env` and fill in your own values:
 ```
 PORT=5000
