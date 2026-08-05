@@ -28,7 +28,6 @@ const describeWeatherCode = (code) => {
   return { label: 'Weather update', icon: 'bi-cloud-fill' };
 };
 
-// Matches the look of the old sample data: "Sunday, July 5, 2026"
 const formatNewsDate = (dateStr) => {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -36,7 +35,6 @@ const formatNewsDate = (dateStr) => {
   return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 };
 
-// Short relative time for the notification list: "10 min ago", "Yesterday", etc.
 const formatRelativeTime = (dateStr) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
@@ -58,7 +56,6 @@ const formatRelativeTime = (dateStr) => {
   return formatNewsDate(dateStr);
 };
 
-// Picks an icon based on the announcement's category
 const getCategoryIcon = (category) => {
   const map = {
     'Emergency Alert': 'bi-exclamation-triangle-fill',
@@ -79,8 +76,6 @@ function ResidentNavbar() {
   const [showReportsPage, setShowReportsPage] = useState(false);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
 
-
-
   const {
     currentUser,
     username,
@@ -89,39 +84,37 @@ function ResidentNavbar() {
 
   const dropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
-  const notificationsRef = useRef(null); // desktop bell + panel
-  const mobileNotificationsRef = useRef(null); // mobile bell + panel
+  const notificationsRef = useRef(null);
+  const mobileNotificationsRef = useRef(null);
   const navigate = useNavigate();
+
   const {
-      announcements,
-      announcementsLoading,
-      announcementsError,
-      reloadAnnouncements
+    announcements,
+    announcementsLoading,
+    announcementsError,
+    reloadAnnouncements
   } = useAnnouncements();
 
-    const {
-      weather,
-      showRainNotice,
-      loadWeather,
-      dismissWeatherNotice,
-    } = useWeather();
+  const {
+    weather,
+    showRainNotice,
+    loadWeather,
+    dismissWeatherNotice,
+  } = useWeather();
 
   const {
-      showNotifications,
-      setShowNotifications,
-      notifications,
-      unreadCount,
-      totalBadgeCount,
-      markOneAsRead,
-      markAllAsRead
-  } = useNotifications(
-      announcements,
-      showRainNotice
-  );
+    showNotifications,
+    setShowNotifications,
+    notifications,
+    unreadCount,
+    totalBadgeCount,
+    markOneAsRead,
+    markAllAsRead
+  } = useNotifications(announcements, showRainNotice);
 
-const handleProfileUpdate = (updates) => {
+  const handleProfileUpdate = (updates) => {
     updateProfile(updates);
-};
+  };
 
   useEffect(() => {
     document.body.style.overflow = (showNewsPage || showReportsPage || showSettingsPage) ? 'hidden' : 'auto';
@@ -139,19 +132,15 @@ const handleProfileUpdate = (updates) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
-useClickOutside({
-
+  useClickOutside({
     dropdownRef,
     mobileMenuRef,
     notificationsRef,
     mobileNotificationsRef,
-
     setShowDropdown,
     setShowMobileMenu,
     setShowNotifications,
-
-});
+  });
 
   const toggleDropdown = (e) => {
     e.preventDefault();
@@ -166,7 +155,6 @@ useClickOutside({
     setShowNotifications(!showNotifications);
     setShowDropdown(false);
     if (!showNotifications) {
-      // Refresh right as the panel opens so it's never stale
       reloadAnnouncements();
     }
   };
@@ -181,7 +169,6 @@ useClickOutside({
 
   const closeNewsPage = () => setShowNewsPage(false);
 
-  // "My Reports" — shows everything this resident has submitted
   const openReportsPage = () => {
     setShowReportsPage(true);
     setShowMobileMenu(false);
@@ -191,7 +178,6 @@ useClickOutside({
 
   const closeReportsPage = () => setShowReportsPage(false);
 
-  // Settings — profile photo, username, password
   const openSettingsPage = () => {
     setShowSettingsPage(true);
     setShowMobileMenu(false);
@@ -201,35 +187,29 @@ useClickOutside({
 
   const closeSettingsPage = () => setShowSettingsPage(false);
 
-  // Clicking a notification: mark it read, open the News page, and scroll
-  // straight to that article.
   const handleNotificationClick = (id) => {
     markOneAsRead(id);
     setShowNotifications(false);
     setShowMobileMenu(false);
     setShowNewsPage(true);
-
     setTimeout(() => {
       const el = document.getElementById(`news-item-${id}`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 300);
   };
 
-const handleWeatherNotificationClick = () => {
+  const handleWeatherNotificationClick = () => {
     dismissWeatherNotice();
     setShowNotifications(false);
     setShowMobileMenu(false);
     setShowNewsPage(true);
-
     setTimeout(() => {
-        document
-            .getElementById("news-item-weather")
-            ?.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
+      document
+        .getElementById("news-item-weather")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 300);
-};
+  };
+
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);
 
   const handleNavigation = (path) => {
@@ -271,138 +251,131 @@ const handleWeatherNotificationClick = () => {
     <>
       <nav className="resident-navbar">
         <div className="container-fluid px-3 px-sm-4">
-            <div className="navbar-container">
-                {/* Brand */}
-                <button
-                    className="navbar-brand"
-                    onClick={handleHomeClick}
-                >
-                    <div className="brand-icon">
-                        <i className="bi bi-heart-fill"></i>
-                    </div>
-                    <span>Safe Connect</span>
-                </button>
+          <div className="navbar-container">
+            {/* Brand */}
+            <button className="navbar-brand" onClick={handleHomeClick}>
+              <div className="brand-icon">
+                <i className="bi bi-heart-fill"></i>
+              </div>
+              <span>Safe Connect</span>
+            </button>
 
-                {/* Desktop Navigation */}
-                <DesktopNavbar
-                    username={username}
+            {/* Desktop Navigation */}
+            <DesktopNavbar
+              username={username}
+              photoUrl={currentUser?.photoUrl}
 
-                    dropdownRef={dropdownRef}
-                    notificationsRef={notificationsRef}
+              dropdownRef={dropdownRef}
+              notificationsRef={notificationsRef}
 
-                    showDropdown={showDropdown}
-                    showNotifications={showNotifications}
+              showDropdown={showDropdown}
+              showNotifications={showNotifications}
 
-                    notifications={notifications}
-                    announcements={announcements}
+              notifications={notifications}
+              announcements={announcements}
 
-                    announcementsLoading={announcementsLoading}
-                    announcementsError={announcementsError}
+              announcementsLoading={announcementsLoading}
+              announcementsError={announcementsError}
 
-                    unreadCount={unreadCount}
-                    totalBadgeCount={totalBadgeCount}
+              unreadCount={unreadCount}
+              totalBadgeCount={totalBadgeCount}
 
-                    weather={weather}
-                    showRainNotice={showRainNotice}
+              weather={weather}
+              showRainNotice={showRainNotice}
 
-                    markAllAsRead={markAllAsRead}
+              markAllAsRead={markAllAsRead}
 
-                    toggleDropdown={toggleDropdown}
-                    toggleNotifications={toggleNotifications}
+              toggleDropdown={toggleDropdown}
+              toggleNotifications={toggleNotifications}
 
-                    handleNotificationClick={handleNotificationClick}
-                    handleWeatherNotificationClick={handleWeatherNotificationClick}
+              handleNotificationClick={handleNotificationClick}
+              handleWeatherNotificationClick={handleWeatherNotificationClick}
 
-                    formatRelativeTime={formatRelativeTime}
-                    describeWeatherCode={describeWeatherCode}
-                    getCategoryIcon={getCategoryIcon}
+              formatRelativeTime={formatRelativeTime}
+              describeWeatherCode={describeWeatherCode}
+              getCategoryIcon={getCategoryIcon}
 
-                    handleHomeClick={handleHomeClick}
-                    handleNavClick={handleNavClick}
+              handleHomeClick={handleHomeClick}
+              handleNavClick={handleNavClick}
 
-                    openNewsPage={openNewsPage}
-                    openReportsPage={openReportsPage}
-                    openSettingsPage={openSettingsPage}
+              openNewsPage={openNewsPage}
+              openReportsPage={openReportsPage}
+              openSettingsPage={openSettingsPage}
 
-                    handleNavigation={handleNavigation}
-                />
+              handleNavigation={handleNavigation}
+            />
 
-                {/* Mobile Navigation */}
-                <MobileNavbar
-                    username={username}
+            {/* Mobile Navigation */}
+            <MobileNavbar
+              username={username}
+              photoUrl={currentUser?.photoUrl}
 
-                    mobileMenuRef={mobileMenuRef}
-                    mobileNotificationsRef={mobileNotificationsRef}
+              mobileMenuRef={mobileMenuRef}
+              mobileNotificationsRef={mobileNotificationsRef}
 
-                    showMobileMenu={showMobileMenu}
-                    showNotifications={showNotifications}
+              showMobileMenu={showMobileMenu}
+              showNotifications={showNotifications}
 
-                    totalBadgeCount={totalBadgeCount}
+              totalBadgeCount={totalBadgeCount}
 
-                    notifications={notifications}
-                    announcements={announcements}
+              notifications={notifications}
+              announcements={announcements}
 
-                    announcementsLoading={announcementsLoading}
-                    announcementsError={announcementsError}
+              announcementsLoading={announcementsLoading}
+              announcementsError={announcementsError}
 
-                    unreadCount={unreadCount}
+              unreadCount={unreadCount}
 
-                    weather={weather}
-                    showRainNotice={showRainNotice}
+              weather={weather}
+              showRainNotice={showRainNotice}
 
-                    toggleNotifications={toggleNotifications}
+              toggleNotifications={toggleNotifications}
 
-                    markAllAsRead={markAllAsRead}
+              markAllAsRead={markAllAsRead}
 
-                    handleNotificationClick={handleNotificationClick}
-                    handleWeatherNotificationClick={handleWeatherNotificationClick}
+              handleNotificationClick={handleNotificationClick}
+              handleWeatherNotificationClick={handleWeatherNotificationClick}
 
-                    formatRelativeTime={formatRelativeTime}
-                    describeWeatherCode={describeWeatherCode}
-                    getCategoryIcon={getCategoryIcon}
+              formatRelativeTime={formatRelativeTime}
+              describeWeatherCode={describeWeatherCode}
+              getCategoryIcon={getCategoryIcon}
 
-                    toggleMobileMenu={toggleMobileMenu}
+              toggleMobileMenu={toggleMobileMenu}
 
-                    setShowMobileMenu={setShowMobileMenu}
-                    setShowNotifications={setShowNotifications}
+              setShowMobileMenu={setShowMobileMenu}
+              setShowNotifications={setShowNotifications}
 
-                    handleHomeClick={handleHomeClick}
-                    handleNavClick={handleNavClick}
+              handleHomeClick={handleHomeClick}
+              handleNavClick={handleNavClick}
 
-                    openNewsPage={openNewsPage}
-                    openReportsPage={openReportsPage}
-                    openSettingsPage={openSettingsPage}
+              openNewsPage={openNewsPage}
+              openReportsPage={openReportsPage}
+              openSettingsPage={openSettingsPage}
 
-                    handleNavigation={handleNavigation}
-                />
-            </div>
+              handleNavigation={handleNavigation}
+            />
+          </div>
         </div>
-    </nav>
+      </nav>
 
       <NewsOverlay
         isOpen={showNewsPage}
         onClose={closeNewsPage}
-
         weather={weather}
         announcements={announcements}
-
         announcementsLoading={announcementsLoading}
         announcementsError={announcementsError}
-
         formatNewsDate={formatNewsDate}
         describeWeatherCode={describeWeatherCode}
-
         RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
-    />
+      />
 
-      {/* FULL-SCREEN MY REPORTS PAGE */}
       <MyReportsPage
         isOpen={showReportsPage}
         onClose={closeReportsPage}
         userId={currentUser?.id}
       />
 
-      {/* FULL-SCREEN SETTINGS PAGE */}
       <SettingsPage
         isOpen={showSettingsPage}
         onClose={closeSettingsPage}
