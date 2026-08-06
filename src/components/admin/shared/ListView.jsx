@@ -16,6 +16,9 @@ const ListView = ({
   // renderRow() results in a plain stacked list instead -- used by the
   // report tables (emergency/assistance/petty crime).
   layout = 'table',
+  // Only used when layout === 'cards'. Defaults to a stacked list (used by
+  // the report tables); Announcements overrides this with a responsive grid.
+  cardsContainerStyle = { display: 'flex', flexDirection: 'column', gap: '10px' },
   // Optional: only rendered when provided, so tables that don't use them
   // (everything except Announcements, for now) keep working unchanged.
   sortOptions,
@@ -87,7 +90,7 @@ const ListView = ({
 
       {layout === 'cards' ? (
         <div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={cardsContainerStyle}>
             {data.map(item => renderRow(item))}
           </div>
 

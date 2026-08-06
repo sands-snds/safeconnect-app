@@ -38,7 +38,7 @@ const RegisteredUsersTable = ({
       setFilters={setFilters}
       headers={['USER','DATE REGISTERED','STATUS']}
       renderRow={renderRow}
-      statusOptions={['Select', 'Active', 'Inactive', 'Suspended']}
+      statusOptions={['Select', 'Active', 'Pending', 'Suspended', 'Closed']}
     />
     
   );

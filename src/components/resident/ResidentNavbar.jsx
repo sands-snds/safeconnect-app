@@ -67,7 +67,11 @@ const getCategoryIcon = (category) => {
     'Community Event': 'bi-calendar-event-fill',
     'Community Update': 'bi-info-circle-fill',
     'Announcement': 'bi-megaphone-fill',
-    'General': 'bi-megaphone-fill'
+    'General': 'bi-megaphone-fill',
+    // Personal notifications (report status-change replies)
+    'emergency_status': 'bi-exclamation-triangle-fill',
+    'assistance_status': 'bi-hand-index-thumb-fill',
+    'petty_crime_status': 'bi-shield-fill-exclamation'
   };
   return map[category] || 'bi-megaphone-fill';
 };
@@ -113,10 +117,12 @@ function ResidentNavbar() {
       unreadCount,
       totalBadgeCount,
       markOneAsRead,
-      markAllAsRead
+      markAllAsRead,
+      reloadPersonalNotifications
   } = useNotifications(
       announcements,
-      showRainNotice
+      showRainNotice,
+      currentUser?.id
   );
 
 const handleProfileUpdate = (updates) => {
@@ -134,6 +140,7 @@ const handleProfileUpdate = (updates) => {
     const interval = setInterval(() => {
       reloadAnnouncements();
       loadWeather();
+      reloadPersonalNotifications();
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -201,12 +208,19 @@ useClickOutside({
 
   const closeSettingsPage = () => setShowSettingsPage(false);
 
-  // Clicking a notification: mark it read, open the News page, and scroll
-  // straight to that article.
+  // Clicking a notification: mark it read. For announcements, also open the
+  // News page and scroll straight to that article. Personal notifications
+  // (e.g. "your report status changed") don't have a matching news article,
+  // so just mark them read and close the panel.
   const handleNotificationClick = (id) => {
     markOneAsRead(id);
     setShowNotifications(false);
     setShowMobileMenu(false);
+
+    if (typeof id === 'string' && id.startsWith('personal-')) {
+      return;
+    }
+
     setShowNewsPage(true);
 
     setTimeout(() => {

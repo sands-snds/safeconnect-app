@@ -116,6 +116,25 @@ exports.signin = async (req, res) => {
             });
         }
 
+        if (user.status && user.status !== "Active") {
+            await User.logSignin(
+                user.full_name,
+                email,
+                "Failed"
+            );
+
+            const STATUS_MESSAGES = {
+                "Pending": "Your account is still pending approval.",
+                "Suspended": "Your account has been suspended. Please contact an administrator.",
+                "Closed": "This account has been closed."
+            };
+
+            return res.json({
+                success: false,
+                message: STATUS_MESSAGES[user.status] || "Your account cannot sign in right now."
+            });
+        }
+
         await User.logSignin(
             user.full_name,
             email,

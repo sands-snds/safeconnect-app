@@ -122,8 +122,33 @@ export default function useAdminData() {
         }
     };
 
-    const handleRefresh = async () => {
-        await refreshAllData();
+    // View-specific loaders, used by the header reload button so it only
+    // re-fetches what's actually showing on screen instead of everything.
+    const VIEW_LOADERS = {
+        "dashboard": [
+            loadEmergencyReports, loadAssistanceRequests, loadRegisteredUsers,
+            loadSignInLogs, loadAdminLogs, loadAnnouncements, loadPettyCrimeReports
+        ],
+        "emergency-reports": [loadEmergencyReports],
+        "assistance-requests": [loadAssistanceRequests],
+        "petty-crime-reports": [loadPettyCrimeReports],
+        "create-announcement": [loadAnnouncements],
+        "announcement-page": [loadAnnouncements],
+        "registered-users": [loadRegisteredUsers],
+        "sign-in-logs": [loadSignInLogs],
+        "admin-logs": [loadAdminLogs]
+    };
+
+    const handleRefresh = async (activeView) => {
+        setIsRefreshing(true);
+
+        try {
+            const loaders = VIEW_LOADERS[activeView] || Object.values(VIEW_LOADERS)[0];
+            await Promise.all([...loaders.map(fn => fn()), loadNotifications()]);
+            setLastUpdate(new Date());
+        } finally {
+            setIsRefreshing(false);
+        }
     };
 
     const updateStatus = async (id, newStatus, type) => {

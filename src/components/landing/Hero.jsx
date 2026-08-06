@@ -83,7 +83,7 @@ function Hero() {
                 return;
             }
 
-            setAuthToken(result.token);
+            setAuthToken(result.token, result.isAdmin);
 
             // Backend already logs the login (admin_logs / signin_logs) — no separate log call needed.
             if (result.isAdmin) {

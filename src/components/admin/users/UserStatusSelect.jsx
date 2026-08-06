@@ -10,8 +10,9 @@ export default function UserStatusSelect({
             style={{ padding: "4px 8px" }}
         >
             <option value="Active">Active</option>
-            <option value="Disabled">Disabled</option>
-            <option value="Banned">Banned</option>
+            <option value="Pending">Pending</option>
+            <option value="Suspended">Suspended</option>
+            <option value="Closed">Closed</option>
         </select>
     );
 }

@@ -36,6 +36,9 @@ const AdminPage = () => {
     adminLogs,
     announcements,
     pettyCrimeReports,
+    notifications,
+    unreadCount,
+    markAllRead,
 
     loadAllData,
     refreshAllData,   
@@ -282,9 +285,12 @@ useEffect(() => {
             onCloseMobileMenu={closeMobileMenu}
             onToggleMobileMenu={toggleMobileMenu}
 
-            onRefresh={handleRefresh}
+            onRefresh={() => handleRefresh(activeView)}
             isRefreshing={isRefreshing}
             lastUpdate={lastUpdate}
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkAllRead={markAllRead}
           >
               {isAuthenticated
                   ? renderActiveView()

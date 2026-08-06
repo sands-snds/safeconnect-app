@@ -44,15 +44,29 @@ export const SHEETDB_APIS = API_ENDPOINTS;
 // The backend issues a JWT on successful signin (see authController.signin).
 // It's stored here so every subsequent protected request can attach it.
 
-const TOKEN_KEY = "authToken";
+// Admin and resident sessions are kept under separate keys. Previously both
+// used a single "authToken" key, so signing into one role in the same
+// browser silently clobbered the other's token in localStorage -- the admin
+// panel kept rendering (sessionStorage.adminAuthenticated stayed true) but
+// every request suddenly carried a resident's token, causing every
+// admin-only endpoint to reject it as "admin access only".
+const ADMIN_TOKEN_KEY = "adminAuthToken";
+const RESIDENT_TOKEN_KEY = "residentAuthToken";
 
-export const setAuthToken = (token) => {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
+// Reading/clearing happens after navigation into /admin or /resident, so the
+// current path reliably tells us which session is active.
+const activeTokenKey = () => (window.location.pathname.startsWith("/admin") ? ADMIN_TOKEN_KEY : RESIDENT_TOKEN_KEY);
+
+// Writing happens right after sign-in, while still on the landing page ("/")
+// -- before the redirect -- so the path isn't reliable yet. isAdmin (from
+// the signin response) tells us which key to use instead.
+export const setAuthToken = (token, isAdmin = false) => {
+  if (token) localStorage.setItem(isAdmin ? ADMIN_TOKEN_KEY : RESIDENT_TOKEN_KEY, token);
 };
 
-export const getAuthToken = () => localStorage.getItem(TOKEN_KEY);
+export const getAuthToken = () => localStorage.getItem(activeTokenKey());
 
-export const clearAuthToken = () => localStorage.removeItem(TOKEN_KEY);
+export const clearAuthToken = () => localStorage.removeItem(activeTokenKey());
 
 // Merges an Authorization header onto whatever headers were passed in.
 // Safe to call even when there's no token (protected routes will then
@@ -713,6 +727,45 @@ export const markAllNotificationsRead = async () => {
     return Boolean(result.success);
   } catch (error) {
     console.error('Error marking notifications as read:', error);
+    return false;
+  }
+};
+
+// Resident-facing: a signed-in user's own notifications (e.g. the canned
+// reply sent when their report's status changes).
+export const fetchMyNotifications = async () => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.notifications}/mine`, {
+      headers: authHeaders()
+    });
+    const result = await response.json();
+    if (!result.success) return [];
+
+    return result.data.map(item => ({
+      id: item.id,
+      title: item.title,
+      message: item.message,
+      type: item.notification_type,
+      referenceId: item.reference_id,
+      isRead: Boolean(item.is_read),
+      createdAt: item.created_at
+    }));
+  } catch (error) {
+    console.error('Error fetching my notifications:', error);
+    return [];
+  }
+};
+
+export const markAllMyNotificationsRead = async () => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.notifications}/mine/read-all`, {
+      method: 'PUT',
+      headers: authHeaders()
+    });
+    const result = await response.json();
+    return Boolean(result.success);
+  } catch (error) {
+    console.error('Error marking my notifications as read:', error);
     return false;
   }
 };

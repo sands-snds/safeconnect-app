@@ -138,131 +138,124 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
       : text;
   };
 
-  const renderThumbnail = (announcement) => {
-    let image = "";
-
-    if (announcement.imageUrl) {
-    image = announcement.imageUrl;
-    } else if (announcement.sourceImage) {
-      image = announcement.sourceImage;
-    }
-
-    if (!image) {
-      return (
-        <div className="thumb-placeholder">
-          <i className="bi bi-image"></i>
-        </div>
-      );
-    }
-
-    return (
-      <img
-        src={image}
-        alt={announcement.title}
-        className="thumb"
-      />
-    );
+  const CATEGORY_COLORS = {
+    "Emergency Alert": { bg: "#fee2e2", color: "#b91c1c" },
+    "Weather Advisory": { bg: "#dbeafe", color: "#1e40af" },
+    "Evacuation": { bg: "#fef3c7", color: "#92400e" },
+    "Community Event": { bg: "#ede9fe", color: "#6d28d9" },
+    "Community Update": { bg: "#dcfce7", color: "#166534" },
+    "Announcement": { bg: "#f3f4f6", color: "#374151" },
+    "General": { bg: "#f3f4f6", color: "#374151" }
   };
 
-  const renderRow = (announcement) => (
-    <tr key={announcement.id}>
-      <td className="table-cell">
-        {renderThumbnail(announcement)}
-      </td>
+  const renderRow = (announcement) => {
+    const image = announcement.imageUrl || announcement.sourceImage;
+    const categoryStyle = CATEGORY_COLORS[announcement.category] || CATEGORY_COLORS["General"];
 
-      <td className="table-cell">
-        <div
-          className="font-medium text-sm"
-          style={{ fontWeight: 600 }}
-        >
-          {announcement.title}
-        </div>
-
-        {announcement.sourceUrl && (
-          <a
-            href={announcement.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="source-link"
+    return (
+      <div
+        key={announcement.id}
+        style={{
+          background: "#fff",
+          border: "1px solid #e5e7eb",
+          borderRadius: 12,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column"
+        }}
+      >
+        {image ? (
+          <img
+            src={image}
+            alt={announcement.title}
+            style={{ width: "100%", height: 170, objectFit: "cover" }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: 170,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#f3f4f6",
+              color: "#9ca3af",
+              fontSize: 32
+            }}
           >
-            <i className="bi bi-link-45deg"></i>{" "}
-            {announcement.sourceSite || "View article"}
-          </a>
+            <i className="bi bi-image"></i>
+          </div>
         )}
-      </td>
 
-      <td className="table-cell text-sm">
-        {announcement.category}
-      </td>
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                padding: "2px 10px",
+                borderRadius: 20,
+                background: categoryStyle.bg,
+                color: categoryStyle.color
+              }}
+            >
+              {announcement.category}
+            </span>
+            <span style={{ fontSize: 12, color: "#9ca3af" }}>
+              {announcement.date}
+            </span>
+          </div>
 
-      <td className="table-cell text-sm">
-        {truncate(announcement.message)}
-      </td>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#111827", marginBottom: 4 }}>
+            {announcement.title}
+          </div>
 
-      <td className="table-cell text-sm">
-        {announcement.date}
-      </td>
+          <p style={{ fontSize: 13, color: "#4b5563", margin: "0 0 10px", flex: 1 }}>
+            {truncate(announcement.message)}
+          </p>
 
-      <td className="table-cell">
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            className="button button-secondary"
-            style={{
-              padding: "4px 10px",
-              fontSize: "12px",
-            }}
-            onClick={() =>
-              onEdit && onEdit(announcement)
-            }
-          >
-            Edit
-          </button>
+          {announcement.sourceUrl && (
+            <a
+              href={announcement.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="source-link"
+              style={{ marginBottom: 10 }}
+            >
+              <i className="bi bi-link-45deg"></i>{" "}
+              {announcement.sourceSite || "View article"}
+            </a>
+          )}
 
-          <button
-            className="button button-secondary"
-            style={{
-              padding: "4px 10px",
-              fontSize: "12px",
-            }}
-            onClick={() =>
-              handleDelete(announcement.id)
-            }
-          >
-            Delete
-          </button>
+          <div style={{ display: "flex", gap: 8, marginTop: "auto", paddingTop: 10, borderTop: "1px solid #f3f4f6" }}>
+            <button
+              className="button button-secondary"
+              style={{ flex: 1, fontSize: 12.5 }}
+              onClick={() => onEdit && onEdit(announcement)}
+            >
+              <i className="bi bi-pencil-square"></i> Edit
+            </button>
+
+            <button
+              className="button button-secondary"
+              style={{ flex: 1, fontSize: 12.5 }}
+              onClick={() => handleDelete(announcement.id)}
+            >
+              <i className="bi bi-trash"></i> Delete
+            </button>
+          </div>
         </div>
-      </td>
-    </tr>
-  );
+      </div>
+    );
+  };
 
   return (
     <>
       <style>{`
-        .thumb {
-          width: 56px;
-          height: 56px;
-          object-fit: cover;
-          border-radius: 6px;
-          border: 1px solid #e5e7eb;
-        }
-
-        .thumb-placeholder {
-          width: 56px;
-          height: 56px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #f3f4f6;
-          color: #9ca3af;
-          border-radius: 6px;
-          font-size: 1.2rem;
-        }
-
         .source-link {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          margin-top: 4px;
           color: #6B2C3E;
           text-decoration: none;
           font-size: 0.75rem;
@@ -289,17 +282,15 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
       ) : (
         <ListView
           data={pagedData}
+          layout="cards"
+          cardsContainerStyle={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '16px'
+          }}
           filterType="announcements"
           filters={filters}
           setFilters={setFilters}
-          headers={[
-            "PHOTO",
-            "TITLE",
-            "CATEGORY",
-            "MESSAGE",
-            "DATE",
-            "ACTIONS",
-          ]}
           renderRow={renderRow}
           statusOptions={[
             "Select Category",

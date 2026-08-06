@@ -11,6 +11,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
   const today = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(today);
   const [imageFile, setImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
   const [imageError, setImageError] = useState("");
   const [existingImageUrl, setExistingImageUrl] = useState("");
   const [removeImage, setRemoveImage] = useState(false);
@@ -31,6 +32,8 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
       setExistingImageUrl(editingAnnouncement.imageUrl || "");
       setRemoveImage(false);
       setImageFile(null);
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+      setImagePreviewUrl(null);
       setImageError("");
       setPreviewError("");
 
@@ -83,6 +86,8 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
     setPreviewLoading(false);
   };
 
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImageError("");
@@ -91,14 +96,25 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
       setImageFile(null);
       return;
     }
-    if (file.type !== "image/jpeg") {
-      setImageError("Only JPEG images are allowed.");
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setImageError("Only JPEG, PNG, or WEBP images are allowed.");
       e.target.value = "";
       return;
     }
+
+    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    setImagePreviewUrl(URL.createObjectURL(file));
     setImageFile(file);
     setRemoveImage(false);
   };
+
+  useEffect(() => {
+    // Revoke the object URL when it changes or the form unmounts, so we
+    // don't leak memory across repeated image selections.
+    return () => {
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    };
+  }, [imagePreviewUrl]);
 
   const resetForm = () => {
     setTitle("");
@@ -106,6 +122,8 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
     setMessage("");
     setDate(new Date().toISOString().split("T")[0]);
     setImageFile(null);
+    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    setImagePreviewUrl(null);
     setExistingImageUrl("");
     setRemoveImage(false);
     setSourceUrl("");
@@ -256,15 +274,50 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
 
           <div className="form-grid">
             <div className="form-field">
-              <label className="form-label">Upload Image (JPEG only)</label>
+              <label className="form-label">Upload Image (JPEG, PNG, or WEBP)</label>
               <input
                 type="file"
-                accept="image/jpeg"
+                accept="image/jpeg,image/png,image/webp"
                 className="form-input"
                 onChange={handleImageChange}
               />
               {imageError && (
                 <span style={{ color: "red", fontSize: ".8rem" }}>{imageError}</span>
+              )}
+
+              {imagePreviewUrl && (
+                <div style={{ marginTop: "10px" }}>
+                  <div style={{ fontSize: ".75rem", fontWeight: 600, color: "#6b7280", marginBottom: "6px" }}>
+                    PREVIEW
+                  </div>
+                  <div style={{ position: "relative", display: "inline-block" }}>
+                    <img
+                      src={imagePreviewUrl}
+                      alt="Selected preview"
+                      style={{ width: "260px", height: "150px", objectFit: "cover", borderRadius: "10px", border: "1px solid #e5e7eb" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+                        setImagePreviewUrl(null);
+                        setImageFile(null);
+                      }}
+                      title="Remove selected image"
+                      style={{
+                        position: "absolute", top: "8px", right: "8px",
+                        width: "26px", height: "26px", borderRadius: "50%",
+                        border: "none", background: "rgba(17,24,39,0.7)", color: "#fff",
+                        cursor: "pointer", fontSize: "14px", lineHeight: "26px", padding: 0
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div style={{ fontSize: ".75rem", color: "#6b7280", marginTop: "4px" }}>
+                    {imageFile?.name}
+                  </div>
+                </div>
               )}
 
               {isEditMode && existingImageUrl && !imageFile && !removeImage && (

@@ -16,10 +16,20 @@ exports.getUsers = async (req, res) => {
     }
 };
 
+const ALLOWED_STATUSES = ["Active", "Pending", "Suspended", "Closed"];
+
 exports.updateUserStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
+
+        if (!ALLOWED_STATUSES.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Status must be one of: ${ALLOWED_STATUSES.join(", ")}.`
+            });
+        }
+
         await User.updateStatus(id, status);
         return res.json({
             success: true,
