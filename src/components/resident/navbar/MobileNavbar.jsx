@@ -6,6 +6,7 @@ import MobileMenu from "./MobileMenu";
 export default function MobileNavbar({
 
     username,
+    photoUrl,
 
     mobileMenuRef,
     mobileNotificationsRef,
@@ -58,7 +59,6 @@ export default function MobileNavbar({
         <>
 
             {/* Notification Bell */}
-
             <div
                 className="mobile-header-actions"
                 ref={mobileNotificationsRef}
@@ -74,61 +74,29 @@ export default function MobileNavbar({
                         <i className="bi bi-bell-fill"></i>
 
                         {totalBadgeCount > 0 && (
-
                             <span className="notification-badge">
-
-                                {totalBadgeCount > 9
-                                    ? "9+"
-                                    : totalBadgeCount}
-
+                                {totalBadgeCount > 9 ? "9+" : totalBadgeCount}
                             </span>
-
                         )}
 
                     </button>
 
                     <NotificationPanel
-
                         show={showNotifications}
-
                         notifications={notifications}
-
                         announcements={announcements}
-
                         announcementsLoading={announcementsLoading}
-
                         announcementsError={announcementsError}
-
                         unreadCount={unreadCount}
-
                         totalBadgeCount={totalBadgeCount}
-
                         weather={weather}
-
                         showRainNotice={showRainNotice}
-
                         markAllAsRead={markAllAsRead}
-
-                        handleNotificationClick={
-                            handleNotificationClick
-                        }
-
-                        handleWeatherNotificationClick={
-                            handleWeatherNotificationClick
-                        }
-
-                        formatRelativeTime={
-                            formatRelativeTime
-                        }
-
-                        describeWeatherCode={
-                            describeWeatherCode
-                        }
-
-                        getCategoryIcon={
-                            getCategoryIcon
-                        }
-
+                        handleNotificationClick={handleNotificationClick}
+                        handleWeatherNotificationClick={handleWeatherNotificationClick}
+                        formatRelativeTime={formatRelativeTime}
+                        describeWeatherCode={describeWeatherCode}
+                        getCategoryIcon={getCategoryIcon}
                     />
 
                 </div>
@@ -136,63 +104,29 @@ export default function MobileNavbar({
             </div>
 
             {/* Hamburger */}
-
             <button
                 className="mobile-menu-toggle"
                 onClick={toggleMobileMenu}
                 aria-label="Toggle Menu"
             >
-
                 <i className="bi bi-list"></i>
-
             </button>
 
             {/* Mobile Drawer */}
-
             <MobileMenu
-
                 username={username}
-
+                photoUrl={photoUrl}
                 mobileMenuRef={mobileMenuRef}
-
                 showMobileMenu={showMobileMenu}
-
-                setShowMobileMenu={
-                    setShowMobileMenu
-                }
-
-                setShowNotifications={
-                    setShowNotifications
-                }
-
-                totalBadgeCount={
-                    totalBadgeCount
-                }
-
-                handleHomeClick={
-                    handleHomeClick
-                }
-
-                handleNavClick={
-                    handleNavClick
-                }
-
-                openNewsPage={
-                    openNewsPage
-                }
-
-                openReportsPage={
-                    openReportsPage
-                }
-
-                openSettingsPage={
-                    openSettingsPage
-                }
-
-                handleNavigation={
-                    handleNavigation
-                }
-
+                setShowMobileMenu={setShowMobileMenu}
+                setShowNotifications={setShowNotifications}
+                totalBadgeCount={totalBadgeCount}
+                handleHomeClick={handleHomeClick}
+                handleNavClick={handleNavClick}
+                openNewsPage={openNewsPage}
+                openReportsPage={openReportsPage}
+                openSettingsPage={openSettingsPage}
+                handleNavigation={handleNavigation}
             />
 
         </>
