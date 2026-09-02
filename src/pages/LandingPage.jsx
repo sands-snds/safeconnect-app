@@ -11,10 +11,10 @@ function LandingPage() {
     <div className="landing-page">
       <Navbar />
       <Hero />
-      {/*<Services />
+      <Services />
       <Contact />
       <About />
-      <Footer />*/}
+      <Footer />
     </div>
   );
 }

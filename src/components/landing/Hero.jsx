@@ -18,6 +18,210 @@ const PASSWORD_REQUIREMENTS = [
 const getMissingPasswordRequirements = (password) =>
     PASSWORD_REQUIREMENTS.filter((req) => !req.test(password)).map((req) => req.label);
 
+// ---- Emergency contacts (copied from EmergencyReportSection) ----
+const EMERGENCY_CONTACTS = [
+    {
+        id: 'police',
+        label: '911 Emergency',
+        sublabel: 'National Emergency Hotline',
+        number: '911',
+        icon: 'bi-shield-fill-exclamation',
+        color: '#dc2626',
+    },
+    {
+        id: 'dasma-police',
+        label: 'Dasmariñas Police',
+        sublabel: 'Dasmariñas City PNP',
+        number: '+63462420002',
+        icon: 'bi-shield-fill',
+        color: '#1d4ed8',
+    },
+    {
+        id: 'cdrmc',
+        label: 'CDRMC',
+        sublabel: 'Cavite Disaster Risk Management',
+        number: '+63462300345',
+        icon: 'bi-heart-pulse-fill',
+        color: '#059669',
+    },
+    {
+        id: 'barangay',
+        label: 'Barangay Santa Fe',
+        sublabel: 'Barangay Emergency Line',
+        number: '+639929474309',
+        icon: 'bi-house-fill',
+        color: '#7c3aed',
+    },
+];
+
+function EmergencyCallButton() {
+    const [showContacts, setShowContacts] = useState(false);
+
+    const handleCall = (number) => {
+        window.location.href = `tel:${number}`;
+        setShowContacts(false);
+    };
+
+    return (
+        <>
+            {/* Backdrop */}
+            {showContacts && (
+                <div
+                    onClick={() => setShowContacts(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.45)',
+                        zIndex: 1050,
+                        backdropFilter: 'blur(2px)',
+                    }}
+                />
+            )}
+
+            {/* Contact Panel */}
+            {showContacts && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        bottom: '96px',
+                        right: '24px',
+                        zIndex: 1051,
+                        background: '#fff',
+                        borderRadius: '16px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
+                        padding: '16px',
+                        width: '280px',
+                        animation: 'slideUpFade 0.22s ease',
+                    }}
+                >
+                    <div style={{ marginBottom: '12px' }}>
+                        <p style={{
+                            margin: 0,
+                            fontWeight: 700,
+                            fontSize: '14px',
+                            color: '#111',
+                            letterSpacing: '0.01em',
+                        }}>
+                            Emergency Contacts
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#6b7280' }}>
+                            Tap a contact to call immediately
+                        </p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {EMERGENCY_CONTACTS.map((contact) => (
+                            <button
+                                key={contact.id}
+                                onClick={() => handleCall(contact.number)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '10px 12px',
+                                    borderRadius: '10px',
+                                    border: `1.5px solid ${contact.color}22`,
+                                    background: `${contact.color}0d`,
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    transition: 'background 0.15s',
+                                    width: '100%',
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = `${contact.color}22`}
+                                onMouseLeave={e => e.currentTarget.style.background = `${contact.color}0d`}
+                            >
+                                <div style={{
+                                    width: '38px',
+                                    height: '38px',
+                                    borderRadius: '50%',
+                                    background: contact.color,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0,
+                                }}>
+                                    <i className={`bi ${contact.icon}`} style={{ color: '#fff', fontSize: '16px' }} />
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{ margin: 0, fontWeight: 600, fontSize: '13px', color: '#111' }}>
+                                        {contact.label}
+                                    </p>
+                                    <p style={{ margin: 0, fontSize: '11px', color: '#6b7280' }}>
+                                        {contact.sublabel}
+                                    </p>
+                                </div>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    background: contact.color,
+                                    color: '#fff',
+                                    borderRadius: '20px',
+                                    padding: '4px 10px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    flexShrink: 0,
+                                }}>
+                                    <i className="bi bi-telephone-fill" style={{ fontSize: '10px' }} />
+                                    Call
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Floating Button */}
+            <button
+                onClick={() => setShowContacts(v => !v)}
+                aria-label="Emergency Contacts"
+                style={{
+                    position: 'fixed',
+                    bottom: '24px',
+                    right: '24px',
+                    zIndex: 1052,
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: showContacts
+                        ? 'linear-gradient(135deg, #7f1d1d, #dc2626)'
+                        : 'linear-gradient(135deg, #dc2626, #ef4444)',
+                    border: 'none',
+                    boxShadow: showContacts
+                        ? '0 4px 24px rgba(220,38,38,0.5)'
+                        : '0 4px 20px rgba(220,38,38,0.45)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'transform 0.2s, box-shadow 0.2s, background 0.2s',
+                    transform: showContacts ? 'scale(1.08) rotate(15deg)' : 'scale(1)',
+                    animation: showContacts ? 'none' : 'pulse-ring 2s infinite',
+                }}
+                onMouseEnter={e => { if (!showContacts) e.currentTarget.style.transform = 'scale(1.1)'; }}
+                onMouseLeave={e => { if (!showContacts) e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+                <i
+                    className={showContacts ? 'bi bi-x-lg' : 'bi bi-telephone-fill'}
+                    style={{ color: '#fff', fontSize: showContacts ? '20px' : '22px' }}
+                />
+            </button>
+
+            <style>{`
+                @keyframes pulse-ring {
+                    0%   { box-shadow: 0 0 0 0 rgba(220,38,38,0.55), 0 4px 20px rgba(220,38,38,0.45); }
+                    60%  { box-shadow: 0 0 0 14px rgba(220,38,38,0), 0 4px 20px rgba(220,38,38,0.45); }
+                    100% { box-shadow: 0 0 0 0 rgba(220,38,38,0), 0 4px 20px rgba(220,38,38,0.45); }
+                }
+                @keyframes slideUpFade {
+                    from { opacity: 0; transform: translateY(16px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
+        </>
+    );
+}
+
 function Hero() {
     const [showSignInModal, setShowSignInModal] = useState(false);
     const [showSignUpModal, setShowSignUpModal] = useState(false);
@@ -235,13 +439,13 @@ function Hero() {
     return (
         <>
             <div id="home" style={{ minHeight: '100vh', position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <div 
-                    id="homeCarousel" 
+                <div
+                    id="homeCarousel"
                     className="carousel slide"
-                    data-bs-ride="carousel" 
-                    data-bs-interval="4000" 
+                    data-bs-ride="carousel"
+                    data-bs-interval="4000"
                     data-bs-pause="hover"
-                    style={{ 
+                    style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
@@ -255,7 +459,7 @@ function Hero() {
                         <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
                     </div>
 
-                    <div className="carousel-inner" style={{ height: '100%' }}> 
+                    <div className="carousel-inner" style={{ height: '100%' }}>
                         <div className="carousel-item active" style={{ height: '100%' }}>
                             <img src="/images/0c38766bd32b9d2652dd32d72a8739d8.jpg" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Rescue Team in action during emergency" />
                         </div>
@@ -277,8 +481,8 @@ function Hero() {
                     </button>
                 </div>
 
-                <div 
-                    style={{ 
+                <div
+                    style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
@@ -292,22 +496,34 @@ function Hero() {
                 <div className="container" style={{ position: 'relative', zIndex: 2, color: 'white' }}>
                     <div className="row align-items-center">
                         <div className="col-lg-8 mb-4 mb-lg-0 text-center text-lg-start" style={{ paddingLeft: 'clamp(20px, 5vw, 60px)', paddingRight: 'clamp(20px, 5vw, 60px)' }}>
+                            {/* Barangay name above tagline */}
+                            <p style={{
+                                fontSize: 'clamp(0.85rem, 1.5vw, 1rem)',
+                                fontWeight: 600,
+                                letterSpacing: '0.12em',
+                                textTransform: 'uppercase',
+                                color: '#FFC107',
+                                marginBottom: '8px',
+                            }}>
+                                Barangay Santa Fe Safe Connect
+                            </p>
+
                             <h1 className="fw-bold" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: '1.2' }}>
                                 STAY <span style={{ color: '#FFC107' }}>SAFE</span> STAY INFORMED
                             </h1>
                             <p className="mt-3" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)', lineHeight: '1.6' }}>
-                                Be prepared when it matters most. Get real-time updates, request help instantly, 
+                                Be prepared when it matters most. Get real-time updates, request help instantly,
                                 and find safe evacuation centers — all in one place.
                             </p>
                             <div className="d-flex gap-3 flex-wrap mt-4 justify-content-center justify-content-lg-start">
-                                <button 
+                                <button
                                     className="btn btn-danger btn-lg fw-bold shadow"
                                     onClick={handleSignInButtonClick}
-                                    style={{ fontSize: '1.1rem', minWidth: '150px', padding: '0.75rem 2rem',}}
+                                    style={{ fontSize: '1.1rem', minWidth: '150px', padding: '0.75rem 2rem' }}
                                 >
                                     Sign In
                                 </button>
-                                <button 
+                                <button
                                     className="btn btn-outline-light btn-lg fw-bold"
                                     onClick={() => setShowSignUpModal(true)}
                                     style={{ fontSize: '1.1rem', minWidth: '150px', padding: '0.75rem 2rem' }}
@@ -320,19 +536,20 @@ function Hero() {
                 </div>
             </div>
 
+            {/* Sign In Modal */}
             {showSignInModal && (
-                <div 
-                    className="modal fade show d-block" 
-                    style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+                <div
+                    className="modal fade show d-block"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}
                     onClick={closeAllModals}
                 >
-                    <div 
+                    <div
                         className="modal-dialog modal-dialog-centered"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="modal-content">
                             <div className="modal-header" style={{ backgroundColor: '#6B2C3E', color: 'white' }}>
-                                <h5 className="modal-title fw-bold" style={{ color: 'white' }}>Sign In </h5>
+                                <h5 className="modal-title fw-bold" style={{ color: 'white' }}>Sign In</h5>
                                 <button type="button" className="btn-close btn-close-white" onClick={closeAllModals}></button>
                             </div>
                             <div className="modal-body p-4">
@@ -342,13 +559,13 @@ function Hero() {
                                             <div>{error}</div>
                                         </div>
                                     )}
-                                    
+
                                     {successMessage && (
                                         <div className="alert alert-success d-flex align-items-center" role="alert">
                                             <div>{successMessage}</div>
                                         </div>
                                     )}
-                                    
+
                                     <div className="mb-3">
                                         <label htmlFor="loginEmail" className="form-label fw-bold">Email Address</label>
                                         <input
@@ -360,7 +577,7 @@ function Hero() {
                                             onChange={(e) => setSignInEmail(e.target.value)}
                                         />
                                     </div>
-                                    
+
                                     <div className="mb-4">
                                         <label htmlFor="loginPassword" className="form-label fw-bold">Password</label>
                                         <div style={{ position: 'relative' }}>
@@ -379,8 +596,8 @@ function Hero() {
                                             />
                                         </div>
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         onClick={handleSignIn}
                                         className="btn w-100 fw-bold mb-3"
                                         style={{ backgroundColor: '#6B2C3E', color: 'white' }}
@@ -392,7 +609,7 @@ function Hero() {
                                     <div className="text-center">
                                         <p className="mb-0">
                                             Don't have an account?{' '}
-                                            <button 
+                                            <button
                                                 type="button"
                                                 className="btn btn-link p-0 text-decoration-none"
                                                 onClick={switchToSignUp}
@@ -409,52 +626,52 @@ function Hero() {
                 </div>
             )}
 
+            {/* Sign Up Modal */}
             {showSignUpModal && (
-                    <div 
-                        className="modal fade show d-block" 
-                        style={{ 
-                            backgroundColor: 'rgba(0,0,0,0.5)', 
-                            zIndex: 1050 
+                <div
+                    className="modal fade show d-block"
+                    style={{
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        zIndex: 1060,
+                    }}
+                    onClick={closeAllModals}
+                >
+                    <div
+                        className="modal-dialog modal-dialog-centered modal-lg"
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            margin: 'auto',
+                            minHeight: '100vh',
                         }}
-                        onClick={closeAllModals}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <div 
-                            className="modal-dialog modal-dialog-centered modal-lg"
+                        <div
+                            className="modal-content"
                             style={{
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                margin: 'auto',
-                                minHeight: '100vh',
+                                width: '100%',
+                                maxWidth: '900px'
                             }}
-                            onClick={(e) => e.stopPropagation()}
                         >
-                            <div 
-                                className="modal-content"
-                                style={{
-                                    width: '100%',
-                                    maxWidth: '900px'
-                                }}
+                            <div
+                                className="modal-header"
+                                style={{ backgroundColor: '#6B2C3E', color: 'white' }}
                             >
-                                <div 
-                                    className="modal-header" 
-                                    style={{ backgroundColor: '#6B2C3E', color: 'white' }}
+                                <h5
+                                    className="modal-title fw-bold"
+                                    style={{ color: 'white' }}
                                 >
-                                    <h5 
-                                        className="modal-title fw-bold" 
-                                        style={{ color: 'white' }}
-                                    >
-                                        Create Account
-                                    </h5>
+                                    Create Account
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    onClick={closeAllModals}
+                                ></button>
+                            </div>
 
-                                    <button
-                                        type="button"
-                                        className="btn-close btn-close-white"
-                                        onClick={closeAllModals}
-                                    ></button>
-                                </div>
-
-                                <div className="modal-body p-4">
+                            <div className="modal-body p-4">
                                 <div>
                                     {error && (
                                         <div className="alert alert-danger d-flex align-items-center" role="alert">
@@ -538,7 +755,7 @@ function Hero() {
                                             onChange={(e) => setSignUpEmail(e.target.value)}
                                         />
                                     </div>
-                                    
+
                                     <div className="mb-3">
                                         <label htmlFor="registerPassword" className="form-label fw-bold">Password</label>
                                         <div style={{ position: 'relative' }}>
@@ -591,8 +808,8 @@ function Hero() {
                                             />
                                         </div>
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         onClick={handleSignUp}
                                         className="btn w-100 fw-bold mb-3"
                                         style={{ backgroundColor: '#6B2C3E', color: 'white' }}
@@ -604,7 +821,7 @@ function Hero() {
                                     <div className="text-center">
                                         <p className="mb-0">
                                             Already have an account?{' '}
-                                            <button 
+                                            <button
                                                 type="button"
                                                 className="btn btn-link p-0 text-decoration-none"
                                                 onClick={switchToSignIn}
@@ -620,6 +837,9 @@ function Hero() {
                     </div>
                 </div>
             )}
+
+            {/* Floating Emergency Call Button — visible on the landing page */}
+            <EmergencyCallButton />
         </>
     );
 }

@@ -1,110 +1,242 @@
-  import React from 'react';
+import React from 'react';
 
-  function Contact() {
-    const contacts = [  
-      {
-        id: 2,
-        title: 'Rescue',
-        subtitle: 'Emergency Services',
-        icon: 'bi-truck',
-        bgColor: 'bg-danger',
-        description: 'For rescue operations and emergencies.',
-        email: 'rescue@safeconnect.org',
-        phone: '(0987) 456 7394',
-        hours: '24 hours a day, 7 days a week',
-      },
-      {
-        id: 3,
-        title: 'Volunteers',
-        subtitle: 'Support & Assistance',
-        icon: 'bi-hand-thumbs-up',
-        bgColor: 'bg-primary',
-        description: 'For those interested in volunteering.',
-        email: 'volunteers@safeconnect.org',
-        phone: '(0965) 436 4355',
-        hours: 'Monday to Friday',
-      },
-      {
-        id: 4,
-        title: 'Resident',
-        subtitle: 'Community Members',
-        icon: 'bi-people',
-        bgColor: 'bg-success',
-        description: 'For residents seeking assistance.',
-        email: 'residents@safeconnect.org',
-        phone: '(0964) 7384 3829',
-        hours: 'Monday to Friday',
-      },
-      {
-        id: 5,
-        title: 'Donor',
-        subtitle: 'Support & Contributions',
-        icon: 'bi-heart-fill',
-        bgColor: 'bg-warning',
-        description: 'For donors and supporters.',
-        email: 'donors@safeconnect.org',
-        phone: '(0925) 364 5759',
-        hours: 'Monday to Friday',
-      }
-    ];
+const MAROON      = '#6B2C3E';
+const SECTION_PAD = '72px 0';
+const CARD_RADIUS = '14px';
 
-    return (
-      <section id="contact" className="container py-5 mt-5">
-        <h2 className="text-center fw-bold mb-4 text-danger">Contact Us</h2>
-        <p className="text-center lead text-muted mb-5">
-          Get in touch with the right department for your needs. We're here to help.
-        </p>
+const contacts = [
+  {
+    id: 1,
+    title: 'Barangay Santa Fe',
+    subtitle: 'Barangay Emergency Line',
+    icon: 'bi-house-fill',
+    description: 'Direct line to the Barangay Santa Fe office for emergencies, assistance coordination, and general inquiries.',
+    phone: '+63 992 947 4309',
+    hours: '24/7',
+    accent: MAROON,
+  },
+  {
+    id: 2,
+    title: '911 Emergency',
+    subtitle: 'National Emergency Hotline',
+    icon: 'bi-shield-fill-exclamation',
+    description: 'For life-threatening emergencies requiring immediate national response — police, fire, or medical.',
+    phone: '911',
+    hours: '24/7',
+    accent: '#dc2626',
+  },
+  {
+    id: 3,
+    title: 'Dasmariñas Police',
+    subtitle: 'Dasmariñas City PNP',
+    icon: 'bi-shield-fill',
+    description: 'For law enforcement response, crime reports, and public safety concerns within Dasmariñas City.',
+    phone: '+63 46 242 0002',
+    hours: '24/7',
+    accent: '#1d4ed8',
+  },
+  {
+    id: 4,
+    title: 'CDRMC',
+    subtitle: 'Cavite Disaster Risk Mgmt.',
+    icon: 'bi-heart-pulse-fill',
+    description: 'Provincial disaster risk management office for coordinated disaster response across Cavite.',
+    phone: '+63 46 230 0345',
+    hours: '24/7',
+    accent: '#059669',
+  },
+];
 
-        {/* Center the grid more tightly */}
-        <div 
-          className="d-flex flex-wrap justify-content-center"
-          style={{
-            maxWidth: '820px', 
-            margin: '0 auto', 
-            gap: '15px 20px' 
-          }}
-        >
-          {contacts.map((contact) => (
-            <div 
-              key={contact.id} 
-              className="d-flex justify-content-center"
-              style={{ flex: '1 1 calc(50% - 20px)', minWidth: '320px' }}
-            >
-              <div 
-                className="contact-card d-flex flex-column rounded shadow border-0 text-center"
-                style={{ width: '100%', maxWidth: '380px' }}
-              >
-                <div className={`card-header ${contact.bgColor} text-white py-3`}>
-                  <i className={`bi ${contact.icon} mb-2`} style={{ fontSize: '2.3rem' }}></i>
-                  <h5 className="fw-bold mb-0">{contact.title}</h5>
-                  <small className={contact.bgColor === 'bg-warning' ? 'text-dark' : 'text-white-50'}>
-                    {contact.subtitle}
-                  </small>
+function Contact() {
+  return (
+    <section id="contact" style={{ background: '#fff', padding: SECTION_PAD }}>
+      <div className="container">
+
+        {/* header */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <p style={{
+            fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.16em',
+            textTransform: 'uppercase', color: MAROON,
+            margin: '0 0 10px', maxWidth: 'none',
+          }}>
+            Reach out
+          </p>
+          <h2 style={{
+            fontWeight: 800, fontSize: 'clamp(1.7rem, 3.5vw, 2.3rem)',
+            color: '#111', margin: '0 0 14px',
+          }}>
+            Emergency Contacts
+          </h2>
+          <div style={{
+            width: '48px', height: '4px', background: MAROON,
+            borderRadius: '2px', margin: '0 auto 20px',
+          }} />
+          <p style={{
+            margin: '0 auto', color: '#666', fontSize: '0.97rem',
+            lineHeight: '1.72', textAlign: 'center', maxWidth: 'none',
+          }}>
+            <span style={{ display: 'inline-block', maxWidth: '520px' }}>
+              In an emergency, every second counts. Save these numbers — or tap the floating
+              call button anywhere on the site to reach them instantly.
+            </span>
+          </p>
+        </div>
+
+        {/* 4 contact cards */}
+        <div className="row g-3" style={{ marginBottom: '32px' }}>
+          {contacts.map((c) => (
+            <div key={c.id} className="col-12 col-sm-6 col-lg-3">
+              <div style={{
+                borderRadius: CARD_RADIUS,
+                border: `1.5px solid ${c.accent}30`,
+                overflow: 'hidden',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+              }}>
+
+                {/* coloured top */}
+                <div style={{
+                  background: c.accent,
+                  padding: '22px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}>
+                  <div style={{
+                    width: '48px', height: '48px', borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <i className={`bi ${c.icon}`} style={{ color: '#fff', fontSize: '20px' }} />
+                  </div>
+                  <p style={{
+                    margin: 0, fontWeight: 700, color: '#fff',
+                    fontSize: '0.95rem', textAlign: 'center', maxWidth: 'none',
+                  }}>
+                    {c.title}
+                  </p>
+                  <p style={{
+                    margin: 0, fontSize: '0.74rem',
+                    color: 'rgba(255,255,255,0.78)',
+                    textAlign: 'center', maxWidth: 'none',
+                  }}>
+                    {c.subtitle}
+                  </p>
                 </div>
 
-                <div className="card-body p-3">
-                  <p className="small text-muted mb-3">{contact.description}</p>
-                  <ul className="list-unstyled small mb-0">
-                    <li className="mb-2"><span className="fw-bold">Email:</span> {contact.email}</li>
-                    <li className="mb-2"><span className="fw-bold">Phone:</span> {contact.phone}</li>
-                    <li><span className="fw-bold">Hours:</span> {contact.hours}</li>
-                  </ul>
+                {/* body */}
+                <div style={{
+                  padding: '18px 16px',
+                  flex: 1,
+                  background: '#fff',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}>
+                  <p style={{
+                    color: '#555', fontSize: '0.82rem', lineHeight: '1.58',
+                    margin: '0 0 14px', textAlign: 'left', maxWidth: 'none',
+                  }}>
+                    {c.description}
+                  </p>
+
+                  {/* phone */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <i className="bi bi-telephone-fill"
+                      style={{ color: c.accent, fontSize: '12px', marginTop: '3px', flexShrink: 0 }} />
+                    <div>
+                      <p style={{
+                        margin: 0, fontSize: '0.66rem', color: '#bbb',
+                        fontWeight: 700, textTransform: 'uppercase',
+                        letterSpacing: '0.07em', maxWidth: 'none',
+                      }}>Phone</p>
+                      <a href={`tel:${c.phone.replace(/\s/g, '')}`} style={{
+                        fontWeight: 700, color: c.accent,
+                        fontSize: '0.88rem', textDecoration: 'none',
+                      }}>
+                        {c.phone}
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* hours */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '16px' }}>
+                    <i className="bi bi-clock-fill"
+                      style={{ color: c.accent, fontSize: '12px', marginTop: '3px', flexShrink: 0 }} />
+                    <div>
+                      <p style={{
+                        margin: 0, fontSize: '0.66rem', color: '#bbb',
+                        fontWeight: 700, textTransform: 'uppercase',
+                        letterSpacing: '0.07em', maxWidth: 'none',
+                      }}>Hours</p>
+                      <p style={{
+                        margin: 0, color: '#444', fontSize: '0.85rem',
+                        fontWeight: 600, maxWidth: 'none',
+                      }}>
+                        {c.hours}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* call button pinned to bottom */}
+                  <div style={{ marginTop: 'auto' }}>
+                    <a href={`tel:${c.phone.replace(/\s/g, '')}`} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      gap: '6px', padding: '8px 0', borderRadius: '8px',
+                      background: c.accent, color: '#fff',
+                      fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none',
+                      transition: 'opacity 0.15s',
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.83'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                    >
+                      <i className="bi bi-telephone-fill" style={{ fontSize: '12px' }} />
+                      Call Now
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        <link 
-          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" 
-          rel="stylesheet"
-        />
-        <link 
-          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" 
-          rel="stylesheet"
-        />
-      </section>
-    );
-  }
+        {/* bottom note — horizontal layout */}
+        <div style={{
+          borderRadius: CARD_RADIUS,
+          background: '#fdf8f9',
+          border: '1.5px solid #f0e4e8',
+          padding: '24px 28px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px',
+          flexWrap: 'wrap',
+        }}>
+          <div style={{
+            width: '44px', height: '44px', borderRadius: '10px',
+            background: MAROON, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <i className="bi bi-laptop" style={{ color: '#fff', fontSize: '19px' }} />
+          </div>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <h6 style={{ fontWeight: 700, color: '#111', margin: '0 0 4px', fontSize: '0.95rem' }}>
+              Report directly through SafeConnect
+            </h6>
+            <p style={{
+              color: '#666', fontSize: '0.85rem', lineHeight: '1.62',
+              margin: 0, textAlign: 'left', maxWidth: 'none',
+            }}>
+              Signed-in residents can submit emergency reports, assistance requests, and petty crime
+              reports through the platform — with GPS location and media attachments automatically captured.
+            </p>
+          </div>
+        </div>
 
-  export default Contact;
+      </div>
+    </section>
+  );
+}
+
+export default Contact;
