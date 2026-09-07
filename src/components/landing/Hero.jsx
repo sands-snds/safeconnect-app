@@ -800,13 +800,30 @@ function Hero() {
                                                 placeholder="Confirm your password"
                                                 value={signUpConfirmPassword}
                                                 onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                                                style={{ paddingRight: '36px' }}
+                                                style={{
+                                                    paddingRight: '36px',
+                                                    borderColor: signUpConfirmPassword
+                                                        ? signUpPassword === signUpConfirmPassword ? '#198754' : '#dc3545'
+                                                        : undefined,
+                                                }}
                                             />
                                             <PasswordToggleButton
                                                 visible={showSignUpConfirmPassword}
                                                 onToggle={() => setShowSignUpConfirmPassword(v => !v)}
                                             />
                                         </div>
+                                        {signUpConfirmPassword && (
+                                            <p style={{
+                                                margin: '6px 0 0',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 600,
+                                                color: signUpPassword === signUpConfirmPassword ? '#198754' : '#dc3545',
+                                            }}>
+                                                {signUpPassword === signUpConfirmPassword
+                                                    ? '✓ Passwords match'
+                                                    : '✗ Passwords do not match'}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <button

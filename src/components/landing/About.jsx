@@ -1,216 +1,152 @@
 import React from 'react';
 
-const MAROON = '#6B2C3E';
-
-const roles = [
-  {
-    title: 'Residents',
-    icon: 'bi-house-door-fill',
-    tagline: 'Community members of Barangay Santa Fe',
-    accent: MAROON,
-    features: [
-      { icon: 'bi-exclamation-triangle-fill', label: 'Report Emergencies',   desc: 'Fire, flood, medical, and other life-threatening incidents' },
-      { icon: 'bi-life-preserver',            label: 'Request Assistance',   desc: 'Food, shelter, medical supplies, and disaster support' },
-      { icon: 'bi-eye-fill',                  label: 'Report Petty Crimes',  desc: 'Theft, vandalism, and local disturbances' },
-      { icon: 'bi-megaphone-fill',            label: 'View Announcements',   desc: 'Real-time barangay news and advisories' },
-      { icon: 'bi-cloud-sun-fill',            label: 'Weather Updates',      desc: 'Live local weather from the dashboard' },
-      { icon: 'bi-person-gear',               label: 'Manage Profile',       desc: 'Photo, username, and password settings' },
-    ],
-  },
-  {
-    title: 'Barangay Admins',
-    icon: 'bi-shield-lock-fill',
-    tagline: 'Authorized barangay officials',
-    accent: '#1d4ed8',
-    features: [
-      { icon: 'bi-speedometer2',   label: 'Live Dashboard',     desc: 'All reports, stats, and alerts in one view' },
-      { icon: 'bi-card-checklist', label: 'Report Management',  desc: 'Update statuses across all report types' },
-      { icon: 'bi-newspaper',      label: 'Announcements',      desc: 'Publish news with images and link previews' },
-      { icon: 'bi-people-fill',    label: 'User Management',    desc: 'Activate, suspend, and manage accounts' },
-      { icon: 'bi-journal-text',   label: 'Activity Logs',      desc: 'Full audit trail of sign-ins and admin actions' },
-      { icon: 'bi-download',       label: 'Data Export',        desc: 'Export reports as Excel or PDF' },
-    ],
-  },
+const STEPS = [
+  { n:'01', icon:'bi-person-raise-hand',       title:'Resident submits a report',    body:'A community member opens SafeConnect and submits an emergency report, assistance request, or petty crime report — with GPS location and media attached.',  color:'#6B2C3E' },
+  { n:'02', icon:'bi-bell-fill',               title:'Admin sees it instantly',      body:'The barangay admin receives the report on the live dashboard the moment it is submitted. Every detail — type, location, severity — is right there.',          color:'#f97316' },
+  { n:'03', icon:'bi-arrow-repeat',            title:'Status is updated',            body:'The admin acts on the report, updates the status (Dispatched, In Progress, Resolved), and the resident can see the update in real time.',                    color:'#3b82f6' },
+  { n:'04', icon:'bi-patch-check-fill',        title:'Community stays safe',         body:'The incident is resolved and logged. The barangay has a full record of every event, every action, and every outcome — ready for review anytime.',             color:'#10b981' },
 ];
 
-function About() {
+const RESIDENTS = [
+  { icon:'bi-exclamation-octagon-fill', label:'Emergency Reports',    color:'#ef4444' },
+  { icon:'bi-hand-heart-fill',          label:'Assistance Requests',  color:'#f97316' },
+  { icon:'bi-eye-slash-fill',           label:'Crime Reports',        color:'#8b5cf6' },
+  { icon:'bi-megaphone-fill',           label:'Announcements',        color:'#0ea5e9' },
+  { icon:'bi-cloud-lightning-rain-fill',label:'Live Weather',         color:'#14b8a6' },
+  { icon:'bi-person-badge-fill',        label:'Profile Settings',     color:'#6366f1' },
+];
+
+const ADMINS = [
+  { icon:'bi-graph-up-arrow',           label:'Live Dashboard',       color:'#ef4444' },
+  { icon:'bi-clipboard2-pulse',         label:'Report Management',    color:'#f97316' },
+  { icon:'bi-send-fill',                label:'Announcements',        color:'#0ea5e9' },
+  { icon:'bi-person-lines-fill',        label:'User Management',      color:'#8b5cf6' },
+  { icon:'bi-clock-history',            label:'Activity Logs',        color:'#14b8a6' },
+  { icon:'bi-file-earmark-arrow-down-fill', label:'Data Export',     color:'#6366f1' },
+];
+
+export default function About() {
   return (
-    <section id="about" style={{ margin: 0, padding: '80px 0', background: '#fff' }}>
-      <div className="container" style={{ padding: '0 24px' }}>
+    <section id="about" style={{ margin: 0, padding: 0 }}>
+      <style>{`
+        .ab-outer { padding: 90px 0; background: #fff; }
+        .ab-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
+        .ab-steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; position: relative; margin-bottom: 72px; }
+        @media(max-width:900px){ .ab-steps{ grid-template-columns:repeat(2,1fr); } }
+        @media(max-width:500px){ .ab-steps{ grid-template-columns:1fr; } }
+        .ab-step { padding: 32px 24px; position: relative; }
+        .ab-step:not(:last-child)::after { content:''; position:absolute; top:52px; right:0; width:1px; height:60px; background:#efefef; }
+        @media(max-width:900px){ .ab-step:nth-child(2)::after,.ab-step:nth-child(4)::after{ display:none; } }
+        @media(max-width:500px){ .ab-step::after{ display:none; } }
+        .ab-num { font-size: 3.5rem; font-weight: 900; line-height: 1; letter-spacing: -0.04em; margin-bottom: 10px; }
+        .ab-roles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media(max-width:768px){ .ab-roles-grid{ grid-template-columns:1fr; } }
+        .ab-role-box { border-radius: 20px; overflow: hidden; border: 1.5px solid #f0f0f0; }
+        .ab-role-head { padding: 20px 24px; display: flex; align-items: center; gap: 14px; }
+        .ab-role-body { padding: 20px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #fafafa; }
+        @media(max-width:480px){ .ab-role-body{ grid-template-columns:1fr; } }
+        .ab-feat { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #fff; border-radius: 10px; border: 1px solid #f0f0f0; }
+      `}</style>
+      <div className="ab-outer">
+        <div className="container">
 
-        {/* header */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#fdf0f3', borderRadius: '20px', padding: '6px 16px', marginBottom: '16px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: MAROON }} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: MAROON }}>About SafeConnect</span>
+          {/* badge */}
+          <div className="ab-badge">
+            <i className="bi bi-info-circle-fill" /> About SafeConnect
           </div>
-          <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: '#111', margin: '0 0 14px', letterSpacing: '-0.02em' }}>
-            Connecting communities.<br />Saving lives.
-          </h2>
-          <p style={{ margin: '0 auto', color: '#888', fontSize: '0.95rem', maxWidth: '460px', lineHeight: '1.7' }}>
-            A web-based disaster response system built for <strong style={{ color: '#444' }}>Barangay Santa Fe, Dasmariñas, Cavite</strong> — so the right help reaches the right people, fast.
-          </p>
-        </div>
 
-        {/* mission + vision */}
-        <div className="row g-3" style={{ marginBottom: '48px' }}>
-          <div className="col-md-6">
-            <div style={{
-              borderRadius: '20px', height: '100%', overflow: 'hidden',
-              background: `linear-gradient(135deg, ${MAROON} 0%, #9b2335 100%)`,
-              padding: '36px 32px', position: 'relative',
-            }}>
-              <div style={{
-                position: 'absolute', top: '-20px', right: '-20px',
-                width: '100px', height: '100px', borderRadius: '50%',
-                background: 'rgba(255,255,255,0.06)',
-              }} />
-              <div style={{
-                position: 'absolute', bottom: '-30px', left: '-10px',
-                width: '140px', height: '140px', borderRadius: '50%',
-                background: 'rgba(255,255,255,0.04)',
-              }} />
-              <div style={{
-                width: '44px', height: '44px', borderRadius: '12px',
-                background: 'rgba(255,255,255,0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '18px',
-              }}>
-                <i className="bi bi-bullseye" style={{ color: '#fff', fontSize: '20px' }} />
-              </div>
-              <p style={{ margin: '0 0 10px', fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>Our Mission</p>
-              <p style={{ margin: '0 0 20px', color: 'rgba(255,255,255,0.8)', fontSize: '0.88rem', lineHeight: '1.72' }}>
-                To empower Barangay Santa Fe residents with a reliable, always-on platform for reporting
-                emergencies, requesting help, and receiving real-time updates — ensuring no call for
-                assistance ever goes unanswered.
+          {/* headline */}
+          <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:24, marginBottom:56 }}>
+            <h2 style={{ margin:0, fontSize:'clamp(1.8rem,3.5vw,2.6rem)', fontWeight:900, color:'#111', lineHeight:1.15, letterSpacing:'-0.02em' }}>
+              Built for Barangay Santa Fe.<br />Ready when you need it most.
+            </h2>
+            <div style={{ maxWidth:360 }}>
+              <p style={{ margin:'0 0 16px', color:'#888', lineHeight:1.75, fontSize:'0.93rem' }}>
+                SafeConnect is a web-based disaster response platform connecting residents and barangay administrators in Dasmariñas, Cavite.
               </p>
-              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                {[{ n: '24/7', l: 'Always on' }, { n: '3', l: 'Report types' }, { n: '1', l: 'Platform' }].map(s => (
+              <div style={{ display:'flex', gap:24 }}>
+                {[{n:'24/7',l:'Always on'},{n:'3',l:'Report types'},{n:'2',l:'User roles'}].map(s=>(
                   <div key={s.l}>
-                    <p style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem', color: '#fff' }}>{s.n}</p>
-                    <p style={{ margin: 0, fontSize: '0.72rem', color: 'rgba(255,255,255,0.65)' }}>{s.l}</p>
+                    <p style={{ margin:0, fontWeight:900, fontSize:'1.6rem', color:'#6B2C3E', lineHeight:1 }}>{s.n}</p>
+                    <p style={{ margin:'2px 0 0', fontSize:'0.72rem', color:'#aaa' }}>{s.l}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="col-md-6">
-            <div style={{
-              borderRadius: '20px', height: '100%',
-              border: '1.5px solid #f0f0f0', padding: '36px 32px',
-              display: 'flex', flexDirection: 'column', gap: '20px',
-            }}>
-              <div style={{
-                width: '44px', height: '44px', borderRadius: '12px',
-                background: '#fdf0f3',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <i className="bi bi-eye-fill" style={{ color: MAROON, fontSize: '20px' }} />
+          {/* divider label */}
+          <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:32 }}>
+            <p style={{ margin:0, fontWeight:800, fontSize:'0.78rem', letterSpacing:'0.12em', textTransform:'uppercase', color:'#bbb', whiteSpace:'nowrap' }}>How it works</p>
+            <div style={{ flex:1, height:1, background:'#f0f0f0' }} />
+          </div>
+
+          {/* steps */}
+          <div className="ab-steps" style={{ border:'1.5px solid #f0f0f0', borderRadius:20, marginBottom:72, overflow:'hidden' }}>
+            {STEPS.map((step,i) => (
+              <div key={step.n} className="ab-step" style={{ background: i%2===0?'#fff':'#fafafa' }}>
+                <p className="ab-num" style={{ color: step.color + '30' }}>{step.n}</p>
+                <div style={{ width:38, height:38, borderRadius:10, background:step.color+'18', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
+                  <i className={`bi ${step.icon}`} style={{ color:step.color, fontSize:16 }} />
+                </div>
+                <p style={{ margin:'0 0 6px', fontWeight:800, fontSize:'0.9rem', color:'#111' }}>{step.title}</p>
+                <p style={{ margin:0, fontSize:'0.79rem', color:'#aaa', lineHeight:1.65 }}>{step.body}</p>
               </div>
-              <div>
-                <p style={{ margin: '0 0 10px', fontWeight: 800, fontSize: '1.1rem', color: '#111' }}>Our Vision</p>
-                <p style={{ margin: 0, color: '#666', fontSize: '0.88rem', lineHeight: '1.72' }}>
-                  A fully connected community where technology closes the gap between danger and
-                  help — and every resident has a direct line to the people who can protect them.
-                </p>
+            ))}
+          </div>
+
+          {/* who uses it */}
+          <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:32 }}>
+            <p style={{ margin:0, fontWeight:800, fontSize:'0.78rem', letterSpacing:'0.12em', textTransform:'uppercase', color:'#bbb', whiteSpace:'nowrap' }}>Who uses it</p>
+            <div style={{ flex:1, height:1, background:'#f0f0f0' }} />
+          </div>
+
+          <div className="ab-roles-grid">
+            {/* residents */}
+            <div className="ab-role-box">
+              <div className="ab-role-head" style={{ background:'#6B2C3E' }}>
+                <div style={{ width:42,height:42,borderRadius:12,background:'rgba(255,255,255,0.18)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                  <i className="bi bi-house-door-fill" style={{ color:'#fff',fontSize:18 }} />
+                </div>
+                <div>
+                  <p style={{ margin:0,fontWeight:800,color:'#fff',fontSize:'1rem' }}>Residents</p>
+                  <p style={{ margin:0,fontSize:'0.75rem',color:'rgba(255,255,255,0.7)' }}>Community members of Barangay Santa Fe</p>
+                </div>
               </div>
-              {/* step list */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
-                {['Resident reports an incident', 'Admin receives it instantly', 'Response is coordinated', 'Community stays safe'].map((step, i) => (
-                  <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-                      background: i === 0 ? MAROON : '#f4f4f5',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: i === 0 ? '#fff' : '#999' }}>{i + 1}</span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: '0.83rem', color: i === 0 ? '#111' : '#aaa', fontWeight: i === 0 ? 700 : 400 }}>{step}</p>
-                    {i < 3 && <div style={{ marginLeft: 'auto', width: '1px', display: 'none' }} />}
+              <div className="ab-role-body">
+                {RESIDENTS.map(f=>(
+                  <div key={f.label} className="ab-feat">
+                    <i className={`bi ${f.icon}`} style={{ color:f.color,fontSize:15,flexShrink:0 }} />
+                    <p style={{ margin:0,fontSize:'0.8rem',fontWeight:600,color:'#333' }}>{f.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* admins */}
+            <div className="ab-role-box">
+              <div className="ab-role-head" style={{ background:'#1d4ed8' }}>
+                <div style={{ width:42,height:42,borderRadius:12,background:'rgba(255,255,255,0.18)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                  <i className="bi bi-shield-lock-fill" style={{ color:'#fff',fontSize:18 }} />
+                </div>
+                <div>
+                  <p style={{ margin:0,fontWeight:800,color:'#fff',fontSize:'1rem' }}>Barangay Admins</p>
+                  <p style={{ margin:0,fontSize:'0.75rem',color:'rgba(255,255,255,0.7)' }}>Authorized barangay officials</p>
+                </div>
+              </div>
+              <div className="ab-role-body">
+                {ADMINS.map(f=>(
+                  <div key={f.label} className="ab-feat">
+                    <i className={`bi ${f.icon}`} style={{ color:f.color,fontSize:15,flexShrink:0 }} />
+                    <p style={{ margin:0,fontSize:'0.8rem',fontWeight:600,color:'#333' }}>{f.label}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
+
         </div>
-
-        {/* who uses safeconnect */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h3 style={{ margin: '0 0 8px', fontWeight: 800, fontSize: 'clamp(1.3rem, 3vw, 1.8rem)', color: '#111', letterSpacing: '-0.01em' }}>
-            Who uses SafeConnect?
-          </h3>
-          <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>
-            Two roles. One connected platform.
-          </p>
-        </div>
-
-        <div className="row g-3">
-          {roles.map(role => (
-            <div key={role.title} className="col-md-6">
-              <div style={{
-                borderRadius: '20px', border: '1.5px solid #f0f0f0',
-                overflow: 'hidden', height: '100%',
-                transition: 'box-shadow 0.2s, border-color 0.2s',
-              }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.boxShadow = `0 12px 40px ${role.accent}15`;
-                  e.currentTarget.style.borderColor = `${role.accent}30`;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = '#f0f0f0';
-                }}
-              >
-                {/* header */}
-                <div style={{
-                  padding: '20px 24px',
-                  background: `${role.accent}08`,
-                  borderBottom: `1.5px solid ${role.accent}18`,
-                  display: 'flex', alignItems: 'center', gap: '14px',
-                }}>
-                  <div style={{
-                    width: '48px', height: '48px', borderRadius: '13px',
-                    background: role.accent,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    boxShadow: `0 4px 14px ${role.accent}40`,
-                  }}>
-                    <i className={`bi ${role.icon}`} style={{ color: '#fff', fontSize: '20px' }} />
-                  </div>
-                  <div>
-                    <p style={{ margin: 0, fontWeight: 800, fontSize: '1.05rem', color: '#111' }}>{role.title}</p>
-                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#888' }}>{role.tagline}</p>
-                  </div>
-                </div>
-
-                {/* features */}
-                <div style={{ padding: '20px 24px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {role.features.map(f => (
-                      <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                        <div style={{
-                          width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
-                          background: `${role.accent}10`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <i className={`bi ${f.icon}`} style={{ color: role.accent, fontSize: '14px' }} />
-                        </div>
-                        <div>
-                          <p style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem', color: '#222' }}>{f.label}</p>
-                          <p style={{ margin: 0, fontSize: '0.78rem', color: '#999', lineHeight: '1.5' }}>{f.desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
       </div>
     </section>
   );
 }
-
-export default About;

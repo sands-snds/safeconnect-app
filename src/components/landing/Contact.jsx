@@ -1,186 +1,79 @@
 import React from 'react';
 
-const MAROON = '#6B2C3E';
-
-const contacts = [
-  {
-    id: 1,
-    title: 'Barangay Santa Fe',
-    subtitle: 'Barangay Emergency Line',
-    icon: 'bi-house-fill',
-    phone: '+63 992 947 4309',
-    accent: MAROON,
-    desc: 'Direct line to the Barangay Santa Fe office for emergencies and coordination.',
-  },
-  {
-    id: 2,
-    title: '911 Emergency',
-    subtitle: 'National Emergency Hotline',
-    icon: 'bi-shield-fill-exclamation',
-    phone: '911',
-    accent: '#dc2626',
-    desc: 'Immediate national response for life-threatening incidents — police, fire, or medical.',
-  },
-  {
-    id: 3,
-    title: 'Dasmariñas PNP',
-    subtitle: 'Dasmariñas City Police',
-    icon: 'bi-shield-fill',
-    phone: '+63 46 242 0002',
-    accent: '#1d4ed8',
-    desc: 'Law enforcement and public safety concerns within Dasmariñas City.',
-  },
-  {
-    id: 4,
-    title: 'CDRMC',
-    subtitle: 'Cavite Disaster Risk Mgmt.',
-    icon: 'bi-heart-pulse-fill',
-    phone: '+63 46 230 0345',
-    accent: '#059669',
-    desc: 'Provincial office for coordinated disaster response across Cavite.',
-  },
+const HOTLINES = [
+  { title: 'Barangay Santa Fe', sub: 'Primary line', phone: '+63 992 947 4309', icon: 'bi-house-fill',              color: '#6B2C3E', note: 'Emergencies, coordination & general inquiries' },
+  { title: '911',               sub: 'National hotline', phone: '911',           icon: 'bi-telephone-outbound-fill', color: '#ef4444', note: 'Police, fire, and medical — nationwide response' },
+  { title: 'Dasmariñas PNP',   sub: 'City police',   phone: '+63 46 242 0002',  icon: 'bi-shield-fill',             color: '#3b82f6', note: 'Crime, public safety & law enforcement' },
+  { title: 'CDRMC Cavite',     sub: 'Disaster mgmt', phone: '+63 46 230 0345',  icon: 'bi-heart-pulse-fill',        color: '#10b981', note: 'Provincial disaster risk management & response' },
 ];
 
-function Contact() {
+export default function Contact() {
   return (
-    <section id="contact" style={{ margin: 0, padding: '80px 0', background: '#fafafa' }}>
-      <div className="container" style={{ padding: '0 24px' }}>
+    <section id="contact" style={{ margin: 0, padding: 0 }}>
+      <style>{`
+        .ct-outer { padding: 90px 0; background: #faf8f9; }
+        .ct-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
+        .ct-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 24px; }
+        @media(max-width:768px){ .ct-row{ grid-template-columns:1fr; } }
+        .ct-card { background: #fff; border-radius: 20px; padding: 24px; display: flex; gap: 18px; align-items: flex-start; border: 1.5px solid #f0f0f0; transition: box-shadow 0.2s, transform 0.2s; }
+        .ct-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.09); transform: translateY(-3px); }
+        .ct-icon-wrap { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .ct-call { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; text-decoration: none; margin-top: 12px; transition: opacity 0.15s; }
+        .ct-call:hover { opacity: 0.8; }
+        .ct-banner { border-radius: 20px; padding: 28px 32px; background: #6B2C3E; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+      `}</style>
+      <div className="ct-outer">
+        <div className="container">
 
-        {/* header */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#fdf0f3', borderRadius: '20px', padding: '6px 16px', marginBottom: '16px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: MAROON }} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: MAROON }}>Emergency Contacts</span>
+          <div className="ct-badge">
+            <i className="bi bi-telephone-fill" /> Emergency Contacts
           </div>
-          <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: '#111', margin: '0 0 14px', letterSpacing: '-0.02em' }}>
-            Help is always<br />one call away.
-          </h2>
-          <p style={{ margin: '0 auto', color: '#888', fontSize: '0.95rem', maxWidth: '400px', lineHeight: '1.7' }}>
-            Save these numbers or tap the call button on this page to reach them instantly.
-          </p>
-        </div>
 
-        {/* contact cards */}
-        <div className="row g-3" style={{ marginBottom: '24px' }}>
-          {contacts.map(c => (
-            <div key={c.id} className="col-12 col-sm-6 col-lg-3">
-              <div style={{
-                borderRadius: '20px', background: '#fff',
-                border: '1.5px solid #efefef',
-                overflow: 'hidden', height: '100%',
-                display: 'flex', flexDirection: 'column',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-              }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = `0 16px 48px ${c.accent}20`;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                {/* gradient top */}
-                <div style={{
-                  padding: '28px 20px 24px',
-                  background: `linear-gradient(135deg, ${c.accent} 0%, ${c.accent}cc 100%)`,
-                  textAlign: 'center',
-                }}>
-                  <div style={{
-                    width: '56px', height: '56px', borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 12px',
-                  }}>
-                    <i className={`bi ${c.icon}`} style={{ color: '#fff', fontSize: '24px' }} />
-                  </div>
-                  <p style={{ margin: '0 0 2px', fontWeight: 800, fontSize: '0.97rem', color: '#fff' }}>{c.title}</p>
-                  <p style={{ margin: 0, fontSize: '0.74rem', color: 'rgba(255,255,255,0.78)' }}>{c.subtitle}</p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24, marginBottom: 40 }}>
+            <h2 style={{ margin: 0, fontSize: 'clamp(1.8rem,3.5vw,2.6rem)', fontWeight: 900, color: '#111', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+              Help is always<br />one call away.
+            </h2>
+            <p style={{ margin: 0, maxWidth: 340, color: '#888', lineHeight: 1.75, fontSize: '0.93rem' }}>
+              Save these numbers now. In an emergency, every second counts. You can also tap the floating call button anywhere on this page.
+            </p>
+          </div>
+
+          <div className="ct-row">
+            {HOTLINES.map(h => (
+              <div key={h.title} className="ct-card">
+                <div className="ct-icon-wrap" style={{ background: h.color + '15' }}>
+                  <i className={`bi ${h.icon}`} style={{ fontSize: 24, color: h.color }} />
                 </div>
-
-                {/* body */}
-                <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <p style={{ margin: '0 0 16px', fontSize: '0.81rem', color: '#777', lineHeight: '1.6', flex: 1 }}>
-                    {c.desc}
-                  </p>
-
-                  {/* phone chip */}
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    background: `${c.accent}0f`, borderRadius: '10px',
-                    padding: '10px 12px', marginBottom: '12px',
-                  }}>
-                    <i className="bi bi-telephone-fill" style={{ color: c.accent, fontSize: '13px', flexShrink: 0 }} />
-                    <div>
-                      <p style={{ margin: 0, fontSize: '0.62rem', color: '#aaa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Phone</p>
-                      <p style={{ margin: 0, fontWeight: 800, color: '#111', fontSize: '0.9rem' }}>{c.phone}</p>
-                    </div>
-                    <span style={{
-                      marginLeft: 'auto', background: `${c.accent}18`, color: c.accent,
-                      fontSize: '0.63rem', fontWeight: 700, padding: '2px 8px',
-                      borderRadius: '20px', flexShrink: 0,
-                    }}>24/7</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <p style={{ margin: 0, fontWeight: 900, fontSize: '1rem', color: '#111' }}>{h.title}</p>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: h.color, background: h.color+'15', padding: '2px 10px', borderRadius: 20 }}>{h.sub}</span>
                   </div>
-
-                  <a href={`tel:${c.phone.replace(/\s/g, '')}`} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    gap: '7px', padding: '11px', borderRadius: '10px',
-                    background: c.accent, color: '#fff',
-                    fontWeight: 700, fontSize: '0.86rem', textDecoration: 'none',
-                    transition: 'opacity 0.15s',
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                  >
-                    <i className="bi bi-telephone-fill" style={{ fontSize: '13px' }} />
-                    Call Now
+                  <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#aaa', lineHeight: 1.6 }}>{h.note}</p>
+                  <a href={`tel:${h.phone.replace(/\s/g,'')}`} className="ct-call" style={{ background: h.color, color: '#fff' }}>
+                    <i className="bi bi-telephone-fill" style={{ fontSize: 11 }} />
+                    {h.phone}
                   </a>
                 </div>
               </div>
+            ))}
+          </div>
+
+          <div className="ct-banner">
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <i className="bi bi-phone-fill" style={{ color: '#fff', fontSize: 22 }} />
             </div>
-          ))}
-        </div>
-
-        {/* bottom banner */}
-        <div style={{
-          borderRadius: '18px',
-          background: `linear-gradient(135deg, ${MAROON} 0%, #9b2335 100%)`,
-          padding: '28px 32px',
-          display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap',
-        }}>
-          <div style={{
-            width: '48px', height: '48px', borderRadius: '12px',
-            background: 'rgba(255,255,255,0.15)', flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <i className="bi bi-laptop" style={{ color: '#fff', fontSize: '20px' }} />
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <p style={{ margin: '0 0 4px', fontWeight: 800, color: '#fff', fontSize: '1rem' }}>Signed in? Report through SafeConnect.</p>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: '0.85rem', lineHeight: 1.65 }}>Submit emergency reports, assistance requests, and petty crime reports — GPS and photos captured automatically.</p>
+            </div>
+            <a href="#home" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, background: '#fff', color: '#6B2C3E', fontWeight: 800, fontSize: '0.87rem', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' }}>
+              Open SafeConnect <i className="bi bi-arrow-right" />
+            </a>
           </div>
-          <div style={{ flex: 1, minWidth: '200px' }}>
-            <p style={{ margin: '0 0 4px', fontWeight: 800, color: '#fff', fontSize: '0.97rem' }}>
-              Already a resident? Report directly through SafeConnect.
-            </p>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '0.83rem', lineHeight: '1.6' }}>
-              Submit emergency reports, assistance requests, and petty crime reports — with GPS and media automatically captured.
-            </p>
-          </div>
-          <a href="#home" style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            padding: '11px 22px', borderRadius: '10px',
-            background: '#fff', color: MAROON,
-            fontWeight: 800, fontSize: '0.85rem', textDecoration: 'none',
-            flexShrink: 0, transition: 'opacity 0.15s', whiteSpace: 'nowrap',
-          }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-          >
-            Sign In to Report
-            <i className="bi bi-arrow-right" />
-          </a>
-        </div>
 
+        </div>
       </div>
     </section>
   );
 }
-
-export default Contact;

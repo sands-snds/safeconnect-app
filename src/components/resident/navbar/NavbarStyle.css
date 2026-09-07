@@ -174,14 +174,14 @@
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.5rem;
     cursor: pointer;
     transition: all 0.2s;
     border: none;
     background: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    max-width: 180px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    max-width: 200px;
 }
 
 .resident-user-menu span {
@@ -192,7 +192,6 @@
 
 .resident-user-menu:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    opacity: 0.8;
 }
 
 .resident-user-dropdown {
@@ -796,13 +795,14 @@
 /* ─── Profile photo in the trigger button ─────────────────────────────────── */
 
 .resident-user-avatar-img {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     border-radius: 50%;
     object-fit: cover;
+    object-position: center;
     flex-shrink: 0;
-    border: 2px solid rgba(255, 255, 255, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.7);
     display: block;
 }
 
@@ -816,18 +816,21 @@
 }
 
 .resident-dropdown-avatar-img {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     border-radius: 50%;
     object-fit: cover;
+    object-position: center;
     flex-shrink: 0;
     border: 2px solid #e5d9dc;
+    display: block;
 }
 
 /* Initials circle shown when no photo is uploaded */
 .resident-dropdown-avatar-initials {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: #6B2C3E;
     color: white;
@@ -854,10 +857,13 @@
 .mobile-menu-avatar-img {
     width: 42px;
     height: 42px;
+    min-width: 42px;
     border-radius: 50%;
     object-fit: cover;
+    object-position: center;
     flex-shrink: 0;
     border: 2px solid rgba(255, 255, 255, 0.4);
+    display: block;
 }
 
 .mobile-menu-avatar-initials {

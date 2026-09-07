@@ -1,132 +1,83 @@
 import React, { useState } from 'react';
 
-const MAROON = '#6B2C3E';
-
-const groups = [
-  {
-    id: 'residents',
-    label: 'Residents',
-    icon: 'bi-house-door-fill',
-    accent: MAROON,
-    features: [
-      { icon: 'bi-exclamation-triangle-fill', label: 'Report Emergencies',  desc: 'Fire, flood, medical emergencies with GPS and photo/video.' },
-      { icon: 'bi-life-preserver',            label: 'Request Assistance',  desc: 'Ask for food, shelter, or medical support during disasters.' },
-      { icon: 'bi-eye-fill',                  label: 'Report Petty Crimes', desc: 'Flag theft, vandalism, or local disturbances quickly.' },
-      { icon: 'bi-megaphone-fill',            label: 'View Announcements',  desc: 'Real-time barangay advisories and community updates.' },
-      { icon: 'bi-cloud-sun-fill',            label: 'Weather Updates',     desc: 'Live local weather directly on your dashboard.' },
-      { icon: 'bi-person-gear',               label: 'Manage Profile',      desc: 'Update photo, username, and password anytime.' },
-    ],
-  },
-  {
-    id: 'admins',
-    label: 'Barangay Admins',
-    icon: 'bi-shield-lock-fill',
-    accent: '#1d4ed8',
-    features: [
-      { icon: 'bi-speedometer2',   label: 'Live Dashboard',    desc: 'All reports, stats, and urgent alerts in one place.' },
-      { icon: 'bi-card-checklist', label: 'Report Management', desc: 'Update statuses and respond to all report types.' },
-      { icon: 'bi-newspaper',      label: 'Announcements',     desc: 'Publish news with images and external link previews.' },
-      { icon: 'bi-people-fill',    label: 'User Management',   desc: 'Activate, suspend, and manage resident accounts.' },
-      { icon: 'bi-journal-text',   label: 'Activity Logs',     desc: 'Full audit trail of sign-ins and admin actions.' },
-      { icon: 'bi-download',       label: 'Data Export',       desc: 'Export reports as Excel or PDF for documentation.' },
-    ],
-  },
+const residents = [
+  { icon: 'bi-exclamation-octagon-fill', label: 'Emergency Reports',   color: '#ef4444', desc: 'Report fires, floods, or any life-threatening situation happening right now.' },
+  { icon: 'bi-hand-heart-fill',          label: 'Assistance Requests', color: '#f97316', desc: 'Request rescue, relief goods, or support during or after a disaster.' },
+  { icon: 'bi-eye-slash-fill',           label: 'Crime Reports',       color: '#8b5cf6', desc: 'Report theft, vandalism, or suspicious activity in your area.' },
+  { icon: 'bi-megaphone-fill',           label: 'Announcements',       color: '#0ea5e9', desc: 'Read the latest barangay alerts, updates, and community news.' },
+  { icon: 'bi-cloud-lightning-rain-fill',label: 'Live Weather',        color: '#14b8a6', desc: 'Check real-time weather conditions before heading out.' },
+  { icon: 'bi-person-badge-fill',        label: 'Your Profile',        color: '#6366f1', desc: 'Manage your name, photo, and account password anytime.' },
 ];
 
-function Services() {
-  const [active, setActive] = useState('residents');
-  const group = groups.find(g => g.id === active);
+const admins = [
+  { icon: 'bi-graph-up-arrow',    label: 'Dashboard',        color: '#ef4444', desc: 'See all reports, status counts, and critical alerts the moment they arrive.' },
+  { icon: 'bi-clipboard2-pulse',  label: 'Manage Reports',   color: '#f97316', desc: 'Open, assign, update, and close incoming reports from one screen.' },
+  { icon: 'bi-send-fill',         label: 'Post Announcements', color: '#0ea5e9', desc: 'Publish barangay news with photos and source links in seconds.' },
+  { icon: 'bi-person-lines-fill', label: 'Resident Accounts', color: '#8b5cf6', desc: 'View, activate, or suspend resident accounts as needed.' },
+  { icon: 'bi-clock-history',     label: 'Activity Logs',    color: '#14b8a6', desc: 'Review a full record of every login and admin action taken.' },
+  { icon: 'bi-file-earmark-arrow-down-fill', label: 'Export Data', color: '#6366f1', desc: 'Download reports as Excel or PDF for offline use and records.' },
+];
+
+export default function Services() {
+  const [tab, setTab] = useState('residents');
+  const items = tab === 'residents' ? residents : admins;
 
   return (
-    <section id="services" style={{ margin: 0, padding: '80px 0', background: '#fff' }}>
-      <div className="container" style={{ padding: '0 24px' }}>
+    <section id="services" style={{ margin: 0, padding: 0 }}>
+      <style>{`
+        .svc-outer { padding: 90px 0; background: #fff; }
+        .svc-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
+        .svc-toggle { display: inline-flex; background: #f4f4f6; border-radius: 14px; padding: 5px; gap: 4px; margin-bottom: 48px; }
+        .svc-toggle-btn { padding: 10px 28px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.87rem; cursor: pointer; transition: all 0.2s; background: transparent; color: #888; }
+        .svc-toggle-btn.active { background: #6B2C3E; color: #fff; box-shadow: 0 4px 16px rgba(107,44,62,0.3); }
+        .svc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+        @media(max-width:768px){ .svc-grid{ grid-template-columns: repeat(2,1fr); } }
+        @media(max-width:480px){ .svc-grid{ grid-template-columns: 1fr; } }
+        .svc-item { border-radius: 20px; padding: 28px 24px; background: #fafafa; border: 1.5px solid #f0f0f0; transition: all 0.22s; cursor: default; }
+        .svc-item:hover { background: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.09); transform: translateY(-4px); border-color: #e0e0e0; }
+        .svc-dot { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+      `}</style>
+      <div className="svc-outer">
+        <div className="container">
 
-        {/* header */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#fdf0f3', borderRadius: '20px', padding: '6px 16px', marginBottom: '16px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: MAROON }} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: MAROON }}>Platform Features</span>
+          <div className="svc-badge">
+            <i className="bi bi-stars" /> What SafeConnect offers
           </div>
-          <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: '#111', margin: '0 0 14px', letterSpacing: '-0.02em' }}>
-            Everything your role needs,<br />in one place.
-          </h2>
-          <p style={{ margin: '0 auto', color: '#888', fontSize: '0.95rem', maxWidth: '420px', lineHeight: '1.7' }}>
-            Select your role to explore the tools built specifically for you.
-          </p>
-        </div>
 
-        {/* tab pills */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px' }}>
-          <div style={{ display: 'inline-flex', background: '#f4f4f5', borderRadius: '14px', padding: '5px', gap: '4px' }}>
-            {groups.map(g => {
-              const on = active === g.id;
-              return (
-                <button key={g.id} onClick={() => setActive(g.id)} style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '10px 24px', borderRadius: '10px', border: 'none',
-                  background: on ? g.accent : 'transparent',
-                  color: on ? '#fff' : '#666',
-                  fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
-                  boxShadow: on ? `0 4px 14px ${g.accent}40` : 'none',
-                  transition: 'all 0.22s',
-                }}>
-                  <i className={`bi ${g.icon}`} />
-                  {g.label}
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24, marginBottom: 40 }}>
+            <h2 style={{ margin: 0, fontSize: 'clamp(1.8rem,3.5vw,2.6rem)', fontWeight: 900, color: '#111', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+              One platform.<br />Every tool you need.
+            </h2>
+            <p style={{ margin: 0, maxWidth: 340, color: '#888', lineHeight: 1.75, fontSize: '0.93rem' }}>
+              Whether you're a resident staying safe or an admin keeping the barangay running — SafeConnect has exactly what you need.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex' }}>
+            <div className="svc-toggle">
+              {['residents','admins'].map(t => (
+                <button key={t} className={`svc-toggle-btn${tab===t?' active':''}`} onClick={() => setTab(t)}>
+                  <i className={`bi ${t==='residents'?'bi-house-door-fill':'bi-shield-lock-fill'} me-2`} />
+                  {t === 'residents' ? 'For Residents' : 'For Admins'}
                 </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* feature cards */}
-        <div className="row g-3">
-          {group.features.map((f, i) => (
-            <div key={f.label} className="col-12 col-sm-6 col-lg-4">
-              <div style={{
-                position: 'relative', borderRadius: '18px',
-                border: '1.5px solid #f0f0f0', padding: '24px',
-                height: '100%', background: '#fff', overflow: 'hidden',
-                transition: 'box-shadow 0.2s, border-color 0.2s, transform 0.2s',
-              }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.boxShadow = `0 12px 40px ${group.accent}18`;
-                  e.currentTarget.style.borderColor = `${group.accent}40`;
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = '#f0f0f0';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                {/* bg number */}
-                <span style={{
-                  position: 'absolute', bottom: '-8px', right: '14px',
-                  fontSize: '5rem', fontWeight: 900, color: '#f5f5f5',
-                  lineHeight: 1, userSelect: 'none', letterSpacing: '-0.04em',
-                  pointerEvents: 'none',
-                }}>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-
-                <div style={{
-                  width: '44px', height: '44px', borderRadius: '12px',
-                  background: `${group.accent}12`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: '16px',
-                }}>
-                  <i className={`bi ${f.icon}`} style={{ color: group.accent, fontSize: '18px' }} />
-                </div>
-                <p style={{ margin: '0 0 6px', fontWeight: 800, fontSize: '0.92rem', color: '#111' }}>{f.label}</p>
-                <p style={{ margin: 0, fontSize: '0.81rem', color: '#888', lineHeight: '1.6' }}>{f.desc}</p>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
 
+          <div className="svc-grid">
+            {items.map(item => (
+              <div key={item.label} className="svc-item">
+                <div className="svc-dot" style={{ background: item.color + '18' }}>
+                  <i className={`bi ${item.icon}`} style={{ fontSize: 22, color: item.color }} />
+                </div>
+                <p style={{ margin: '0 0 6px', fontWeight: 800, fontSize: '0.95rem', color: '#111' }}>{item.label}</p>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#888', lineHeight: 1.65 }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+        </div>
       </div>
     </section>
   );
 }
-
-export default Services;
