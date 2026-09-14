@@ -214,9 +214,46 @@ const sendAnnouncementToAll = async (residents, announcement) => {
     }
 };
 
+
+
+// ── 5. Password reset email ──────────────────────────────────────────────────
+const sendPasswordResetEmail = async (toEmail, fullName, otp) => {
+    const html = wrap(`
+        <h2 style="margin:0 0 8px;font-size:20px;color:#111;font-weight:800;">
+            Reset your password
+        </h2>
+        <p style="margin:0 0 24px;font-size:14px;color:#666;line-height:1.7;">
+            Hi <strong>${fullName}</strong>, we received a request to reset your
+            SafeConnect password. Use the code below — it expires in
+            <strong>10 minutes</strong>.
+        </p>
+        <div style="background:#fdf0f3;border:1.5px solid #f5c6d0;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px;">
+            <p style="margin:0 0 6px;font-size:12px;color:#999;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;">
+                Password reset code
+            </p>
+            <p style="margin:0;font-size:40px;font-weight:900;color:#6B2C3E;letter-spacing:0.18em;">
+                ${otp}
+            </p>
+        </div>
+        <p style="margin:0;font-size:13px;color:#aaa;line-height:1.6;">
+            If you did not request a password reset, you can safely ignore this
+            email. Your password will not be changed.
+        </p>
+    `);
+
+    await transporter.sendMail({
+        from: FROM,
+        to: toEmail,
+        subject: `${otp} is your SafeConnect password reset code`,
+        html,
+    });
+};
+
+// Update exports to include the new function
 module.exports = {
     sendOtpEmail,
     sendWelcomeEmail,
     sendSigninNotification,
     sendAnnouncementToAll,
+    sendPasswordResetEmail,
 };

@@ -7,22 +7,21 @@ const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
 const NAME_ALLOWED_REGEX = /[^a-zA-Z\s]/g;
 const DIGITS_ONLY_REGEX  = /[^0-9]/g;
 const PASSWORD_REQUIREMENTS = [
-    { label: 'at least 8 characters',        test: (pw) => pw.length >= 8 },
-    { label: 'an uppercase letter',           test: (pw) => /[A-Z]/.test(pw) },
-    { label: 'a number',                      test: (pw) => /[0-9]/.test(pw) },
-    { label: 'a symbol (e.g. ! @ # $ %)',     test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+    { label: 'at least 8 characters',    test: (pw) => pw.length >= 8 },
+    { label: 'an uppercase letter',       test: (pw) => /[A-Z]/.test(pw) },
+    { label: 'a number',                  test: (pw) => /[0-9]/.test(pw) },
+    { label: 'a symbol (e.g. ! @ # $ %)', test: (pw) => /[^A-Za-z0-9]/.test(pw) },
 ];
-const getMissingPasswordRequirements = (pw) =>
-    PASSWORD_REQUIREMENTS.filter((r) => !r.test(pw)).map((r) => r.label);
+const getMissingRequirements = (pw) =>
+    PASSWORD_REQUIREMENTS.filter(r => !r.test(pw)).map(r => r.label);
 
 const EMERGENCY_CONTACTS = [
-    { id:'police',    label:'911 Emergency',    sublabel:'National Emergency Hotline',       number:'911',            icon:'bi-shield-fill-exclamation', color:'#dc2626' },
-    { id:'dasma',     label:'Dasmariñas Police',sublabel:'Dasmariñas City PNP',              number:'+63462420002',   icon:'bi-shield-fill',             color:'#1d4ed8' },
-    { id:'cdrmc',     label:'CDRMC',             sublabel:'Cavite Disaster Risk Management', number:'+63462300345',   icon:'bi-heart-pulse-fill',        color:'#059669' },
-    { id:'barangay',  label:'Barangay Santa Fe', sublabel:'Barangay Emergency Line',         number:'+639929474309',  icon:'bi-house-fill',              color:'#7c3aed' },
+    { id:'police',   label:'911 Emergency',     sublabel:'National Emergency Hotline',       number:'911',           icon:'bi-shield-fill-exclamation', color:'#dc2626' },
+    { id:'dasma',    label:'Dasmariñas Police',  sublabel:'Dasmariñas City PNP',              number:'+63462420002',  icon:'bi-shield-fill',             color:'#1d4ed8' },
+    { id:'cdrmc',    label:'CDRMC',              sublabel:'Cavite Disaster Risk Management',  number:'+63462300345',  icon:'bi-heart-pulse-fill',        color:'#059669' },
+    { id:'barangay', label:'Barangay Santa Fe',  sublabel:'Barangay Emergency Line',          number:'+639929474309', icon:'bi-house-fill',              color:'#7c3aed' },
 ];
 
-// ── API helpers ───────────────────────────────────────────────────────────────
 const apiPost = async (path, body) => {
     const res = await fetch(`${API_BASE}/auth/${path}`, {
         method: 'POST',
@@ -35,8 +34,7 @@ const apiPost = async (path, body) => {
 // ── EmergencyCallButton ───────────────────────────────────────────────────────
 function EmergencyCallButton() {
     const [showContacts, setShowContacts] = useState(false);
-    const handleCall = (number) => { window.location.href = `tel:${number}`; setShowContacts(false); };
-
+    const handleCall = (n) => { window.location.href = `tel:${n}`; setShowContacts(false); };
     return (
         <>
             {showContacts && <div onClick={() => setShowContacts(false)} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:1050,backdropFilter:'blur(2px)' }} />}
@@ -46,7 +44,8 @@ function EmergencyCallButton() {
                     <p style={{ margin:'0 0 12px',fontSize:'12px',color:'#6b7280' }}>Tap a contact to call immediately</p>
                     <div style={{ display:'flex',flexDirection:'column',gap:'8px' }}>
                         {EMERGENCY_CONTACTS.map(c => (
-                            <button key={c.id} onClick={() => handleCall(c.number)} style={{ display:'flex',alignItems:'center',gap:'12px',padding:'10px 12px',borderRadius:'10px',border:`1.5px solid ${c.color}22`,background:`${c.color}0d`,cursor:'pointer',textAlign:'left',width:'100%' }}
+                            <button key={c.id} onClick={() => handleCall(c.number)}
+                                style={{ display:'flex',alignItems:'center',gap:'12px',padding:'10px 12px',borderRadius:'10px',border:`1.5px solid ${c.color}22`,background:`${c.color}0d`,cursor:'pointer',textAlign:'left',width:'100%' }}
                                 onMouseEnter={e => e.currentTarget.style.background=`${c.color}22`}
                                 onMouseLeave={e => e.currentTarget.style.background=`${c.color}0d`}>
                                 <div style={{ width:'38px',height:'38px',borderRadius:'50%',background:c.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
@@ -64,154 +63,102 @@ function EmergencyCallButton() {
                     </div>
                 </div>
             )}
-            <button onClick={() => setShowContacts(v => !v)} aria-label="Emergency Contacts" style={{ position:'fixed',bottom:'24px',right:'24px',zIndex:1052,width:'60px',height:'60px',borderRadius:'50%',background:showContacts?'linear-gradient(135deg,#7f1d1d,#dc2626)':'linear-gradient(135deg,#dc2626,#ef4444)',border:'none',boxShadow:showContacts?'0 4px 24px rgba(220,38,38,0.5)':'0 4px 20px rgba(220,38,38,0.45)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s,box-shadow 0.2s,background 0.2s',transform:showContacts?'scale(1.08) rotate(15deg)':'scale(1)',animation:showContacts?'none':'pulse-ring 2s infinite' }}
+            <button onClick={() => setShowContacts(v => !v)} aria-label="Emergency Contacts"
+                style={{ position:'fixed',bottom:'24px',right:'24px',zIndex:1052,width:'60px',height:'60px',borderRadius:'50%',background:showContacts?'linear-gradient(135deg,#7f1d1d,#dc2626)':'linear-gradient(135deg,#dc2626,#ef4444)',border:'none',boxShadow:showContacts?'0 4px 24px rgba(220,38,38,0.5)':'0 4px 20px rgba(220,38,38,0.45)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s,box-shadow 0.2s,background 0.2s',transform:showContacts?'scale(1.08) rotate(15deg)':'scale(1)',animation:showContacts?'none':'pulse-ring 2s infinite' }}
                 onMouseEnter={e => { if(!showContacts) e.currentTarget.style.transform='scale(1.1)'; }}
                 onMouseLeave={e => { if(!showContacts) e.currentTarget.style.transform='scale(1)'; }}>
                 <i className={showContacts?'bi bi-x-lg':'bi bi-telephone-fill'} style={{ color:'#fff',fontSize:showContacts?'20px':'22px' }} />
             </button>
             <style>{`
-                @keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(220,38,38,0.55),0 4px 20px rgba(220,38,38,0.45)} 60%{box-shadow:0 0 0 14px rgba(220,38,38,0),0 4px 20px rgba(220,38,38,0.45)} 100%{box-shadow:0 0 0 0 rgba(220,38,38,0),0 4px 20px rgba(220,38,38,0.45)} }
-                @keyframes slideUpFade { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+                @keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(220,38,38,0.55),0 4px 20px rgba(220,38,38,0.45)}60%{box-shadow:0 0 0 14px rgba(220,38,38,0),0 4px 20px rgba(220,38,38,0.45)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0),0 4px 20px rgba(220,38,38,0.45)}}
+                @keyframes slideUpFade{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
             `}</style>
         </>
     );
 }
 
+// ── Shared OTP input box row ──────────────────────────────────────────────────
+function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs }) {
+    return (
+        <div style={{ display:'flex',gap:'10px',justifyContent:'center',marginBottom:'24px' }} onPaste={onPaste}>
+            {otp.map((digit, i) => (
+                <input key={i} ref={el => refs.current[i] = el}
+                    type="text" inputMode="numeric" maxLength={1} value={digit}
+                    onChange={e => onChange(i, e.target.value)}
+                    onKeyDown={e => onKeyDown(i, e)}
+                    style={{ width:'48px',height:'56px',textAlign:'center',fontSize:'1.4rem',fontWeight:800,border:`2px solid ${digit?'#6B2C3E':'#dee2e6'}`,borderRadius:'10px',outline:'none',color:'#6B2C3E',transition:'border-color 0.15s' }}
+                    onFocus={e => e.target.style.borderColor='#6B2C3E'}
+                    onBlur={e => e.target.style.borderColor=digit?'#6B2C3E':'#dee2e6'}
+                />
+            ))}
+        </div>
+    );
+}
+
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
-    const [showSignInModal,  setShowSignInModal]  = useState(false);
-    const [showSignUpModal,  setShowSignUpModal]  = useState(false);
-    // 'form' | 'otp'
-    const [signUpStep,       setSignUpStep]       = useState('form');
+    // Modal visibility
+    const [showSignIn,    setShowSignIn]    = useState(false);
+    const [showSignUp,    setShowSignUp]    = useState(false);
+    const [showForgot,    setShowForgot]    = useState(false);
 
-    const [signInEmail,      setSignInEmail]      = useState('');
-    const [signInPassword,   setSignInPassword]   = useState('');
-    const [showSignInPw,     setShowSignInPw]      = useState(false);
+    // Sign-up step: 'form' | 'otp'
+    const [signUpStep,    setSignUpStep]    = useState('form');
+    // Forgot password step: 'email' | 'otp' | 'reset' | 'done'
+    const [forgotStep,    setForgotStep]    = useState('email');
 
-    const [signUpFirstName,  setSignUpFirstName]  = useState('');
-    const [signUpMiddleName, setSignUpMiddleName] = useState('');
-    const [signUpLastName,   setSignUpLastName]   = useState('');
-    const [signUpUsername,   setSignUpUsername]   = useState('');
-    const [signUpContact,    setSignUpContact]    = useState('');
-    const [signUpEmail,      setSignUpEmail]      = useState('');
-    const [signUpPassword,   setSignUpPassword]   = useState('');
-    const [signUpConfirm,    setSignUpConfirm]    = useState('');
-    const [showSignUpPw,     setShowSignUpPw]      = useState(false);
-    const [showSignUpConfPw, setShowSignUpConfPw]  = useState(false);
+    // Sign-in fields
+    const [siEmail,       setSiEmail]       = useState('');
+    const [siPassword,    setSiPassword]    = useState('');
+    const [showSiPw,      setShowSiPw]      = useState(false);
 
-    // OTP step
-    const [otp,              setOtp]              = useState(['','','','','','']);
-    const [otpEmail,         setOtpEmail]         = useState('');   // email used when OTP was sent
-    const [resendCooldown,   setResendCooldown]   = useState(0);
+    // Sign-up fields
+    const [suFirst,       setSuFirst]       = useState('');
+    const [suMiddle,      setSuMiddle]      = useState('');
+    const [suLast,        setSuLast]        = useState('');
+    const [suUsername,    setSuUsername]    = useState('');
+    const [suContact,     setSuContact]     = useState('');
+    const [suEmail,       setSuEmail]       = useState('');
+    const [suPassword,    setSuPassword]    = useState('');
+    const [suConfirm,     setSuConfirm]     = useState('');
+    const [showSuPw,      setShowSuPw]      = useState(false);
+    const [showSuConfPw,  setShowSuConfPw]  = useState(false);
+
+    // Forgot password fields
+    const [fpEmail,       setFpEmail]       = useState('');
+    const [fpNewPw,       setFpNewPw]       = useState('');
+    const [fpConfirmPw,   setFpConfirmPw]   = useState('');
+    const [showFpNewPw,   setShowFpNewPw]   = useState(false);
+    const [showFpConfPw,  setShowFpConfPw]  = useState(false);
+
+    // Shared OTP state (reused for both signup and reset)
+    const [otp,           setOtp]           = useState(['','','','','','']);
+    const [otpEmail,      setOtpEmail]      = useState('');
+    const [resendCooldown,setResendCooldown]= useState(0);
     const otpRefs = useRef([]);
 
-    const [isSubmitting,     setIsSubmitting]     = useState(false);
-    const [error,            setError]            = useState('');
-    const [successMessage,   setSuccessMessage]   = useState('');
+    const [isSubmitting,  setIsSubmitting]  = useState(false);
+    const [error,         setError]         = useState('');
+    const [successMsg,    setSuccessMsg]    = useState('');
 
-    // ── Resend countdown ──
+    // Countdown timer for resend button
     useEffect(() => {
         if (resendCooldown <= 0) return;
         const t = setTimeout(() => setResendCooldown(v => v - 1), 1000);
         return () => clearTimeout(t);
     }, [resendCooldown]);
 
-    const handleNameChange = (setter) => (e) =>
-        setter(e.target.value.replace(NAME_ALLOWED_REGEX, ''));
+    const clearErr = () => { setError(''); setSuccessMsg(''); };
 
-    const handleContactChange = (e) =>
-        setSignUpContact(e.target.value.replace(DIGITS_ONLY_REGEX, '').slice(0, 10));
-
-    const handleSignInButtonClick = () => {
-        setShowSignInModal(true);
-        setShowSignUpModal(false);
-        setError('');
-        setSuccessMessage('');
-    };
-
-    // ── Sign in ───────────────────────────────────────────────────────────────
-    const handleSignIn = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSuccessMessage('');
-        const email    = signInEmail.trim();
-        const password = signInPassword;
-        if (!email || !password) { setError('Please enter both email and password'); return; }
-
-        setIsSubmitting(true);
-        try {
-            const result = await signinUser(email, password);
-            if (!result.success) { setError(result.message || 'Invalid email or password.'); return; }
-
-            setAuthToken(result.token, result.isAdmin);
-            if (result.isAdmin) {
-                sessionStorage.setItem('adminAuthenticated', 'true');
-                window.location.href = '/admin';
-                return;
-            }
-            sessionStorage.setItem('userAuthenticated', 'true');
-            sessionStorage.setItem('currentUser', JSON.stringify(result.user));
-            localStorage.setItem('residentName', result.user.fullName);
-            window.location.href = '/resident';
-        } catch {
-            setError('Could not reach the server. Please check your connection and try again.');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    // ── Sign up step 1: send OTP ──────────────────────────────────────────────
-    const handleSignUpSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSuccessMessage('');
-
-        if (!signUpFirstName || !signUpLastName || !signUpUsername ||
-            !signUpContact || !signUpEmail || !signUpPassword || !signUpConfirm) {
-            setError('Please fill in all required fields'); return;
-        }
-        if (signUpContact.length !== 10) { setError('Contact number must be exactly 10 digits'); return; }
-        if (signUpPassword !== signUpConfirm) { setError('Passwords do not match'); return; }
-        const missing = getMissingPasswordRequirements(signUpPassword);
-        if (missing.length > 0) { setError(`Password is missing: ${missing.join(', ')}`); return; }
-
-        const fullName = [signUpFirstName, signUpMiddleName, signUpLastName].filter(Boolean).join(' ');
-        setIsSubmitting(true);
-        try {
-            const result = await apiPost('request-otp', {
-                fullName,
-                username: signUpUsername,
-                contact: `+63${signUpContact}`,
-                email: signUpEmail,
-                password: signUpPassword,
-            });
-            if (!result.success) { setError(result.message || 'Failed to send verification code.'); return; }
-
-            setOtpEmail(signUpEmail);
-            setOtp(['','','','','','']);
-            setSignUpStep('otp');
-            setResendCooldown(60);
-        } catch {
-            setError('Could not reach the server. Please check your connection and try again.');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    // ── OTP input handling ────────────────────────────────────────────────────
-    const handleOtpChange = (index, value) => {
+    // ── OTP helpers ───────────────────────────────────────────────────────────
+    const handleOtpChange = (i, value) => {
         const cleaned = value.replace(/\D/g, '').slice(-1);
-        const next = [...otp];
-        next[index] = cleaned;
-        setOtp(next);
-        if (cleaned && index < 5) otpRefs.current[index + 1]?.focus();
+        const next = [...otp]; next[i] = cleaned; setOtp(next);
+        if (cleaned && i < 5) otpRefs.current[i + 1]?.focus();
     };
-
-    const handleOtpKeyDown = (index, e) => {
-        if (e.key === 'Backspace' && !otp[index] && index > 0)
-            otpRefs.current[index - 1]?.focus();
+    const handleOtpKeyDown = (i, e) => {
+        if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus();
     };
-
     const handleOtpPaste = (e) => {
         const text = e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6);
         if (!text) return;
@@ -221,88 +168,185 @@ function Hero() {
         otpRefs.current[Math.min(text.length, 5)]?.focus();
         e.preventDefault();
     };
-
-    // ── Sign up step 2: verify OTP ────────────────────────────────────────────
-    const handleVerifyOtp = async (e) => {
-        e.preventDefault();
-        setError('');
-        const code = otp.join('');
-        if (code.length < 6) { setError('Please enter the complete 6-digit code.'); return; }
-
-        setIsSubmitting(true);
-        try {
-            const result = await apiPost('verify-otp', { email: otpEmail, otp: code });
-            if (!result.success) { setError(result.message || 'Incorrect or expired code.'); return; }
-
-            // Reset form state
-            setSignUpFirstName(''); setSignUpMiddleName(''); setSignUpLastName('');
-            setSignUpUsername(''); setSignUpContact(''); setSignUpEmail('');
-            setSignUpPassword(''); setSignUpConfirm('');
-            setOtp(['','','','','','']); setSignUpStep('form');
-            setShowSignUpModal(false);
-            setShowSignInModal(true);
-            setSuccessMessage('Account created successfully! Please sign in.');
-        } catch {
-            setError('Could not reach the server. Please check your connection and try again.');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    // ── Resend OTP ────────────────────────────────────────────────────────────
-    const handleResendOtp = async () => {
-        if (resendCooldown > 0) return;
-        setError(''); setIsSubmitting(true);
-        try {
-            const result = await apiPost('resend-otp', { email: otpEmail });
-            if (!result.success) { setError(result.message || 'Could not resend code.'); return; }
-            setOtp(['','','','','','']);
-            setResendCooldown(60);
-        } catch {
-            setError('Could not reach the server.');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const switchToSignUp = () => { setShowSignInModal(false); setError(''); setSuccessMessage(''); setShowSignUpModal(true); };
-    const switchToSignIn = () => { setShowSignUpModal(false); setError(''); setSuccessMessage(''); setShowSignInModal(true); setSignUpStep('form'); };
-
-    const closeAllModals = () => {
-        setShowSignInModal(false); setShowSignUpModal(false); setSignUpStep('form');
-        setSignInEmail(''); setSignInPassword(''); setShowSignInPw(false);
-        setSignUpFirstName(''); setSignUpMiddleName(''); setSignUpLastName('');
-        setSignUpUsername(''); setSignUpContact(''); setSignUpEmail('');
-        setSignUpPassword(''); setSignUpConfirm('');
-        setShowSignUpPw(false); setShowSignUpConfPw(false);
-        setOtp(['','','','','','']); setError(''); setSuccessMessage('');
-    };
+    const resetOtp = () => { setOtp(['','','','','','']); };
 
     const PasswordToggleButton = ({ visible, onToggle }) => (
-        <button type="button" onClick={onToggle} aria-label={visible ? 'Hide password' : 'Show password'}
+        <button type="button" onClick={onToggle} aria-label={visible?'Hide password':'Show password'}
             style={{ position:'absolute',right:'10px',top:'50%',transform:'translateY(-50%)',background:'none',border:'none',padding:0,display:'flex',alignItems:'center',color:'#6B2C3E',cursor:'pointer' }}>
             {visible ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
     );
 
+    // ── Close everything ──────────────────────────────────────────────────────
+    const closeAll = () => {
+        setShowSignIn(false); setShowSignUp(false); setShowForgot(false);
+        setSignUpStep('form'); setForgotStep('email');
+        setSiEmail(''); setSiPassword(''); setShowSiPw(false);
+        setSuFirst(''); setSuMiddle(''); setSuLast('');
+        setSuUsername(''); setSuContact(''); setSuEmail('');
+        setSuPassword(''); setSuConfirm('');
+        setShowSuPw(false); setShowSuConfPw(false);
+        setFpEmail(''); setFpNewPw(''); setFpConfirmPw('');
+        setShowFpNewPw(false); setShowFpConfPw(false);
+        resetOtp(); setOtpEmail(''); setResendCooldown(0);
+        setError(''); setSuccessMsg('');
+    };
+
+    // ── Sign in ───────────────────────────────────────────────────────────────
+    const handleSignIn = async (e) => {
+        e.preventDefault(); clearErr();
+        if (!siEmail.trim() || !siPassword) { setError('Please enter both email and password'); return; }
+        setIsSubmitting(true);
+        try {
+            const result = await signinUser(siEmail.trim(), siPassword);
+            if (!result.success) { setError(result.message || 'Invalid email or password.'); return; }
+            setAuthToken(result.token, result.isAdmin);
+            if (result.isAdmin) {
+                sessionStorage.setItem('adminAuthenticated', 'true');
+                window.location.href = '/admin'; return;
+            }
+            sessionStorage.setItem('userAuthenticated', 'true');
+            sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+            localStorage.setItem('residentName', result.user.fullName);
+            window.location.href = '/resident';
+        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        finally { setIsSubmitting(false); }
+    };
+
+    // ── Sign up: step 1 — send OTP ────────────────────────────────────────────
+    const handleSignUpSubmit = async (e) => {
+        e.preventDefault(); clearErr();
+        if (!suFirst||!suLast||!suUsername||!suContact||!suEmail||!suPassword||!suConfirm) {
+            setError('Please fill in all required fields'); return;
+        }
+        if (suContact.length !== 10) { setError('Contact number must be exactly 10 digits'); return; }
+        if (suPassword !== suConfirm) { setError('Passwords do not match'); return; }
+        const missing = getMissingRequirements(suPassword);
+        if (missing.length > 0) { setError(`Password is missing: ${missing.join(', ')}`); return; }
+
+        const fullName = [suFirst, suMiddle, suLast].filter(Boolean).join(' ');
+        setIsSubmitting(true);
+        try {
+            const result = await apiPost('request-otp', {
+                fullName, username: suUsername,
+                contact: `+63${suContact}`, email: suEmail, password: suPassword,
+            });
+            if (!result.success) { setError(result.message || 'Failed to send verification code.'); return; }
+            setOtpEmail(suEmail); resetOtp(); setSignUpStep('otp'); setResendCooldown(60);
+        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        finally { setIsSubmitting(false); }
+    };
+
+    // ── Sign up: step 2 — verify OTP ─────────────────────────────────────────
+    const handleVerifySignupOtp = async (e) => {
+        e.preventDefault(); clearErr();
+        const code = otp.join('');
+        if (code.length < 6) { setError('Please enter the complete 6-digit code.'); return; }
+        setIsSubmitting(true);
+        try {
+            const result = await apiPost('verify-otp', { email: otpEmail, otp: code });
+            if (!result.success) { setError(result.message || 'Incorrect or expired code.'); return; }
+            setSuFirst(''); setSuMiddle(''); setSuLast('');
+            setSuUsername(''); setSuContact(''); setSuEmail('');
+            setSuPassword(''); setSuConfirm('');
+            resetOtp(); setSignUpStep('form');
+            setShowSignUp(false); setShowSignIn(true);
+            setSuccessMsg('Account created successfully! Please sign in.');
+        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        finally { setIsSubmitting(false); }
+    };
+
+    const handleResendSignupOtp = async () => {
+        if (resendCooldown > 0) return;
+        clearErr(); setIsSubmitting(true);
+        try {
+            const result = await apiPost('resend-otp', { email: otpEmail });
+            if (!result.success) { setError(result.message || 'Could not resend code.'); return; }
+            resetOtp(); setResendCooldown(60);
+        } catch { setError('Could not reach the server.'); }
+        finally { setIsSubmitting(false); }
+    };
+
+    // ── Forgot password: step 1 — enter email ────────────────────────────────
+    const handleForgotEmail = async (e) => {
+        e.preventDefault(); clearErr();
+        if (!fpEmail.trim()) { setError('Please enter your email address.'); return; }
+        setIsSubmitting(true);
+        try {
+            const result = await apiPost('forgot-password', { email: fpEmail.trim() });
+            if (!result.success) { setError(result.message || 'Something went wrong.'); return; }
+            setOtpEmail(fpEmail.trim()); resetOtp(); setForgotStep('otp'); setResendCooldown(60);
+        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        finally { setIsSubmitting(false); }
+    };
+
+    // ── Forgot password: step 2 — verify OTP ─────────────────────────────────
+    const handleVerifyResetOtp = async (e) => {
+        e.preventDefault(); clearErr();
+        const code = otp.join('');
+        if (code.length < 6) { setError('Please enter the complete 6-digit code.'); return; }
+        setIsSubmitting(true);
+        try {
+            const result = await apiPost('verify-reset-otp', { email: otpEmail, otp: code });
+            if (!result.success) { setError(result.message || 'Incorrect or expired code.'); return; }
+            resetOtp(); setForgotStep('reset');
+        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        finally { setIsSubmitting(false); }
+    };
+
+    const handleResendResetOtp = async () => {
+        if (resendCooldown > 0) return;
+        clearErr(); setIsSubmitting(true);
+        try {
+            const result = await apiPost('resend-reset-otp', { email: otpEmail });
+            if (!result.success) { setError(result.message || 'Could not resend code.'); return; }
+            resetOtp(); setResendCooldown(60);
+        } catch { setError('Could not reach the server.'); }
+        finally { setIsSubmitting(false); }
+    };
+
+    // ── Forgot password: step 3 — set new password ───────────────────────────
+    const handleResetPassword = async (e) => {
+        e.preventDefault(); clearErr();
+        if (!fpNewPw || !fpConfirmPw) { setError('Please fill in both password fields.'); return; }
+        if (fpNewPw !== fpConfirmPw) { setError('Passwords do not match.'); return; }
+        const missing = getMissingRequirements(fpNewPw);
+        if (missing.length > 0) { setError(`Password is missing: ${missing.join(', ')}`); return; }
+        setIsSubmitting(true);
+        try {
+            const result = await apiPost('reset-password', { email: otpEmail, newPassword: fpNewPw });
+            if (!result.success) { setError(result.message || 'Could not reset password.'); return; }
+            setForgotStep('done');
+        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        finally { setIsSubmitting(false); }
+    };
+
+    // ── Modal header title helpers ────────────────────────────────────────────
+    const forgotTitle = {
+        email: 'Forgot Password',
+        otp:   'Check Your Email',
+        reset: 'Create New Password',
+        done:  'Password Reset',
+    }[forgotStep];
+
     return (
         <>
-            {/* ── Hero section ── */}
+            {/* ── Hero carousel ── */}
             <div id="home" style={{ minHeight:'100vh',position:'relative',display:'flex',alignItems:'center' }}>
                 <div id="homeCarousel" className="carousel slide" data-bs-ride="carousel" data-bs-interval="4000" data-bs-pause="hover"
                     style={{ position:'absolute',top:0,left:0,width:'100%',height:'100%' }}>
                     <div className="carousel-indicators">
-                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" className="active" aria-current="true" aria-label="Slide 1"></button>
-                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" className="active" aria-current="true" aria-label="Slide 1" />
+                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="1" aria-label="Slide 2" />
+                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2" aria-label="Slide 3" />
                     </div>
                     <div className="carousel-inner" style={{ height:'100%' }}>
                         <div className="carousel-item active" style={{ height:'100%' }}><img src="/images/0c38766bd32b9d2652dd32d72a8739d8.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Rescue Team" /></div>
                         <div className="carousel-item" style={{ height:'100%' }}><img src="/images/istockphoto-1431608809-612x612.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Community rescue" /></div>
                         <div className="carousel-item" style={{ height:'100%' }}><img src="/images/Resized-p-MMR0389-resized-50-percent-1024x682.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Evacuation" /></div>
                     </div>
-                    <button className="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon" aria-hidden="true"></span><span className="visually-hidden">Previous</span></button>
-                    <button className="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next"><span className="carousel-control-next-icon" aria-hidden="true"></span><span className="visually-hidden">Next</span></button>
+                    <button className="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon" aria-hidden="true" /><span className="visually-hidden">Previous</span></button>
+                    <button className="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next"><span className="carousel-control-next-icon" aria-hidden="true" /><span className="visually-hidden">Next</span></button>
                 </div>
                 <div style={{ position:'absolute',top:0,left:0,width:'100%',height:'100%',background:'linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6))',zIndex:1 }} />
                 <div className="container" style={{ position:'relative',zIndex:2,color:'white' }}>
@@ -319,8 +363,8 @@ function Hero() {
                                 and find safe evacuation centers — all in one place.
                             </p>
                             <div className="d-flex gap-3 flex-wrap mt-4 justify-content-center justify-content-lg-start">
-                                <button className="btn btn-danger btn-lg fw-bold shadow" onClick={handleSignInButtonClick} style={{ fontSize:'1.1rem',minWidth:'150px',padding:'0.75rem 2rem' }}>Sign In</button>
-                                <button className="btn btn-outline-light btn-lg fw-bold" onClick={() => setShowSignUpModal(true)} style={{ fontSize:'1.1rem',minWidth:'150px',padding:'0.75rem 2rem' }}>Sign Up</button>
+                                <button className="btn btn-danger btn-lg fw-bold shadow" onClick={() => { clearErr(); setShowSignIn(true); }} style={{ fontSize:'1.1rem',minWidth:'150px',padding:'0.75rem 2rem' }}>Sign In</button>
+                                <button className="btn btn-outline-light btn-lg fw-bold" onClick={() => { clearErr(); setShowSignUp(true); }} style={{ fontSize:'1.1rem',minWidth:'150px',padding:'0.75rem 2rem' }}>Sign Up</button>
                             </div>
                         </div>
                     </div>
@@ -328,34 +372,46 @@ function Hero() {
             </div>
 
             {/* ── Sign In Modal ── */}
-            {showSignInModal && (
-                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }} onClick={closeAllModals}>
+            {showSignIn && (
+                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }} onClick={closeAll}>
                     <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header" style={{ backgroundColor:'#6B2C3E',color:'white' }}>
                                 <h5 className="modal-title fw-bold" style={{ color:'white' }}>Sign In</h5>
-                                <button type="button" className="btn-close btn-close-white" onClick={closeAllModals} />
+                                <button type="button" className="btn-close btn-close-white" onClick={closeAll} />
                             </div>
                             <div className="modal-body p-4">
-                                {error       && <div className="alert alert-danger"   role="alert">{error}</div>}
-                                {successMessage && <div className="alert alert-success" role="alert">{successMessage}</div>}
+                                {error      && <div className="alert alert-danger"  role="alert">{error}</div>}
+                                {successMsg && <div className="alert alert-success" role="alert">{successMsg}</div>}
+
                                 <div className="mb-3">
-                                    <label htmlFor="loginEmail" className="form-label fw-bold">Email Address</label>
-                                    <input type="email" className="form-control" id="loginEmail" placeholder="Enter your email" value={signInEmail} onChange={e => setSignInEmail(e.target.value)} />
+                                    <label htmlFor="siEmail" className="form-label fw-bold">Email Address</label>
+                                    <input type="email" className="form-control" id="siEmail" placeholder="Enter your email" value={siEmail} onChange={e => setSiEmail(e.target.value)} />
                                 </div>
-                                <div className="mb-4">
-                                    <label htmlFor="loginPassword" className="form-label fw-bold">Password</label>
+                                <div className="mb-2">
+                                    <label htmlFor="siPassword" className="form-label fw-bold">Password</label>
                                     <div style={{ position:'relative' }}>
-                                        <input type={showSignInPw?'text':'password'} className="form-control" id="loginPassword" placeholder="Enter your password" value={signInPassword} onChange={e => setSignInPassword(e.target.value)} style={{ paddingRight:'36px' }} />
-                                        <PasswordToggleButton visible={showSignInPw} onToggle={() => setShowSignInPw(v=>!v)} />
+                                        <input type={showSiPw?'text':'password'} className="form-control" id="siPassword" placeholder="Enter your password" value={siPassword} onChange={e => setSiPassword(e.target.value)} style={{ paddingRight:'36px' }} />
+                                        <PasswordToggleButton visible={showSiPw} onToggle={() => setShowSiPw(v=>!v)} />
                                     </div>
                                 </div>
+
+                                {/* Forgot password link */}
+                                <div className="text-end mb-3">
+                                    <button type="button" className="btn btn-link p-0 text-decoration-none" style={{ fontSize:'0.85rem',color:'#6B2C3E' }}
+                                        onClick={() => { setShowSignIn(false); setShowForgot(true); clearErr(); setForgotStep('email'); setFpEmail(siEmail); }}>
+                                        Forgot password?
+                                    </button>
+                                </div>
+
                                 <button onClick={handleSignIn} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
                                     {isSubmitting ? 'Signing In...' : 'Sign In'}
                                 </button>
                                 <div className="text-center">
                                     <p className="mb-0">Don't have an account?{' '}
-                                        <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={switchToSignUp} style={{ color:'#6B2C3E',fontWeight:'bold' }}>Sign Up</button>
+                                        <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold"
+                                            onClick={() => { setShowSignIn(false); setShowSignUp(true); clearErr(); }}
+                                            style={{ color:'#6B2C3E' }}>Sign Up</button>
                                     </p>
                                 </div>
                             </div>
@@ -365,77 +421,75 @@ function Hero() {
             )}
 
             {/* ── Sign Up Modal ── */}
-            {showSignUpModal && (
-                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }} onClick={closeAllModals}>
+            {showSignUp && (
+                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }} onClick={closeAll}>
                     <div className="modal-dialog modal-dialog-centered modal-lg" style={{ display:'flex',justifyContent:'center',alignItems:'center',margin:'auto',minHeight:'100vh' }} onClick={e => e.stopPropagation()}>
                         <div className="modal-content" style={{ width:'100%',maxWidth:'900px' }}>
                             <div className="modal-header" style={{ backgroundColor:'#6B2C3E',color:'white' }}>
                                 <h5 className="modal-title fw-bold" style={{ color:'white' }}>
                                     {signUpStep === 'otp' ? 'Verify Your Email' : 'Create Account'}
                                 </h5>
-                                <button type="button" className="btn-close btn-close-white" onClick={closeAllModals} />
+                                <button type="button" className="btn-close btn-close-white" onClick={closeAll} />
                             </div>
-
                             <div className="modal-body p-4">
                                 {error && <div className="alert alert-danger" role="alert">{error}</div>}
 
-                                {/* ── Step 1: Registration form ── */}
                                 {signUpStep === 'form' && (
                                     <>
                                         <div className="row">
                                             <div className="col-md-4 mb-3">
-                                                <label htmlFor="registerFirstName" className="form-label fw-bold">First Name</label>
-                                                <input type="text" className="form-control" id="registerFirstName" placeholder="First name" value={signUpFirstName} onChange={handleNameChange(setSignUpFirstName)} />
+                                                <label className="form-label fw-bold">First Name</label>
+                                                <input type="text" className="form-control" placeholder="First name" value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                                             </div>
                                             <div className="col-md-4 mb-3">
-                                                <label htmlFor="registerMiddleName" className="form-label fw-bold">Middle Name</label>
-                                                <input type="text" className="form-control" id="registerMiddleName" placeholder="(Optional)" value={signUpMiddleName} onChange={handleNameChange(setSignUpMiddleName)} />
+                                                <label className="form-label fw-bold">Middle Name</label>
+                                                <input type="text" className="form-control" placeholder="(Optional)" value={suMiddle} onChange={e => setSuMiddle(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                                             </div>
                                             <div className="col-md-4 mb-3">
-                                                <label htmlFor="registerLastName" className="form-label fw-bold">Last Name</label>
-                                                <input type="text" className="form-control" id="registerLastName" placeholder="Last name" value={signUpLastName} onChange={handleNameChange(setSignUpLastName)} />
+                                                <label className="form-label fw-bold">Last Name</label>
+                                                <input type="text" className="form-control" placeholder="Last name" value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                                             </div>
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="registerUsername" className="form-label fw-bold">Username</label>
-                                            <input type="text" className="form-control" id="registerUsername" placeholder="Choose a username" value={signUpUsername} onChange={e => setSignUpUsername(e.target.value)} />
+                                            <label className="form-label fw-bold">Username</label>
+                                            <input type="text" className="form-control" placeholder="Choose a username" value={suUsername} onChange={e => setSuUsername(e.target.value)} />
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="registerContact" className="form-label fw-bold">Contact Number</label>
+                                            <label className="form-label fw-bold">Contact Number</label>
                                             <div className="input-group">
                                                 <span className="input-group-text">+63</span>
-                                                <input type="tel" className="form-control" id="registerContact" placeholder="9XXXXXXXXX" value={signUpContact} onChange={handleContactChange} maxLength={10} inputMode="numeric" />
+                                                <input type="tel" className="form-control" placeholder="9XXXXXXXXX" value={suContact} onChange={e => setSuContact(e.target.value.replace(DIGITS_ONLY_REGEX,'').slice(0,10))} maxLength={10} inputMode="numeric" />
                                             </div>
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="registerEmail" className="form-label fw-bold">Email Address</label>
-                                            <input type="email" className="form-control" id="registerEmail" placeholder="Enter your email" value={signUpEmail} onChange={e => setSignUpEmail(e.target.value)} />
+                                            <label className="form-label fw-bold">Email Address</label>
+                                            <input type="email" className="form-control" placeholder="Enter your email" value={suEmail} onChange={e => setSuEmail(e.target.value)} />
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="registerPassword" className="form-label fw-bold">Password</label>
+                                            <label className="form-label fw-bold">Password</label>
                                             <div style={{ position:'relative' }}>
-                                                <input type={showSignUpPw?'text':'password'} className="form-control" id="registerPassword" placeholder="Min. 8 characters" value={signUpPassword} onChange={e => setSignUpPassword(e.target.value)} style={{ paddingRight:'36px' }} />
-                                                <PasswordToggleButton visible={showSignUpPw} onToggle={() => setShowSignUpPw(v=>!v)} />
+                                                <input type={showSuPw?'text':'password'} className="form-control" placeholder="Min. 8 characters" value={suPassword} onChange={e => setSuPassword(e.target.value)} style={{ paddingRight:'36px' }} />
+                                                <PasswordToggleButton visible={showSuPw} onToggle={() => setShowSuPw(v=>!v)} />
                                             </div>
-                                            {signUpPassword && (
+                                            {suPassword && (
                                                 <ul className="list-unstyled mb-0 mt-2" style={{ fontSize:'0.85rem' }}>
                                                     {PASSWORD_REQUIREMENTS.map(req => {
-                                                        const met = req.test(signUpPassword);
+                                                        const met = req.test(suPassword);
                                                         return <li key={req.label} style={{ color:met?'#198754':'#dc3545' }}>{met?'✓':'✗'} {req.label}</li>;
                                                     })}
                                                 </ul>
                                             )}
                                         </div>
                                         <div className="mb-4">
-                                            <label htmlFor="registerConfirmPassword" className="form-label fw-bold">Confirm Password</label>
+                                            <label className="form-label fw-bold">Confirm Password</label>
                                             <div style={{ position:'relative' }}>
-                                                <input type={showSignUpConfPw?'text':'password'} className="form-control" id="registerConfirmPassword" placeholder="Confirm your password" value={signUpConfirm} onChange={e => setSignUpConfirm(e.target.value)}
-                                                    style={{ paddingRight:'36px', borderColor:signUpConfirm?(signUpPassword===signUpConfirm?'#198754':'#dc3545'):undefined }} />
-                                                <PasswordToggleButton visible={showSignUpConfPw} onToggle={() => setShowSignUpConfPw(v=>!v)} />
+                                                <input type={showSuConfPw?'text':'password'} className="form-control" placeholder="Confirm your password" value={suConfirm} onChange={e => setSuConfirm(e.target.value)}
+                                                    style={{ paddingRight:'36px',borderColor:suConfirm?(suPassword===suConfirm?'#198754':'#dc3545'):undefined }} />
+                                                <PasswordToggleButton visible={showSuConfPw} onToggle={() => setShowSuConfPw(v=>!v)} />
                                             </div>
-                                            {signUpConfirm && (
-                                                <p style={{ margin:'6px 0 0',fontSize:'0.85rem',fontWeight:600,color:signUpPassword===signUpConfirm?'#198754':'#dc3545' }}>
-                                                    {signUpPassword===signUpConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
+                                            {suConfirm && (
+                                                <p style={{ margin:'6px 0 0',fontSize:'0.85rem',fontWeight:600,color:suPassword===suConfirm?'#198754':'#dc3545' }}>
+                                                    {suPassword===suConfirm?'✓ Passwords match':'✗ Passwords do not match'}
                                                 </p>
                                             )}
                                         </div>
@@ -444,71 +498,179 @@ function Hero() {
                                         </button>
                                         <div className="text-center">
                                             <p className="mb-0">Already have an account?{' '}
-                                                <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={switchToSignIn} style={{ color:'#6B2C3E',fontWeight:'bold' }}>Sign In</button>
+                                                <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold"
+                                                    onClick={() => { setShowSignUp(false); setShowSignIn(true); clearErr(); setSignUpStep('form'); }}
+                                                    style={{ color:'#6B2C3E' }}>Sign In</button>
                                             </p>
                                         </div>
                                     </>
                                 )}
 
-                                {/* ── Step 2: OTP entry ── */}
                                 {signUpStep === 'otp' && (
                                     <div style={{ maxWidth:'420px',margin:'0 auto' }}>
                                         <div style={{ textAlign:'center',marginBottom:'24px' }}>
                                             <div style={{ width:'64px',height:'64px',borderRadius:'50%',background:'#fdf0f3',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
                                                 <i className="bi bi-envelope-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
                                             </div>
-                                            <h6 className="fw-bold" style={{ color:'#111',marginBottom:'8px' }}>Check your email</h6>
-                                            <p style={{ color:'#666',fontSize:'0.9rem',marginBottom:0 }}>
+                                            <h6 className="fw-bold mb-2">Check your email</h6>
+                                            <p style={{ color:'#666',fontSize:'0.9rem',margin:0 }}>
                                                 We sent a 6-digit code to <strong>{otpEmail}</strong>.
                                                 Enter it below to verify your email and create your account.
                                             </p>
                                         </div>
-
-                                        {/* 6-box OTP input */}
-                                        <div style={{ display:'flex',gap:'10px',justifyContent:'center',marginBottom:'24px' }} onPaste={handleOtpPaste}>
-                                            {otp.map((digit, i) => (
-                                                <input
-                                                    key={i}
-                                                    ref={el => otpRefs.current[i] = el}
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    maxLength={1}
-                                                    value={digit}
-                                                    onChange={e => handleOtpChange(i, e.target.value)}
-                                                    onKeyDown={e => handleOtpKeyDown(i, e)}
-                                                    style={{
-                                                        width:'48px',height:'56px',textAlign:'center',
-                                                        fontSize:'1.4rem',fontWeight:800,
-                                                        border:`2px solid ${digit?'#6B2C3E':'#dee2e6'}`,
-                                                        borderRadius:'10px',outline:'none',
-                                                        color:'#6B2C3E',transition:'border-color 0.15s',
-                                                    }}
-                                                    onFocus={e => e.target.style.borderColor='#6B2C3E'}
-                                                    onBlur={e => e.target.style.borderColor=digit?'#6B2C3E':'#dee2e6'}
-                                                />
-                                            ))}
-                                        </div>
-
-                                        <button onClick={handleVerifyOtp} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting || otp.join('').length < 6}>
+                                        <OtpBoxes otp={otp} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} refs={otpRefs} />
+                                        <button onClick={handleVerifySignupOtp} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting||otp.join('').length<6}>
                                             {isSubmitting ? 'Verifying...' : 'Verify & Create Account'}
                                         </button>
-
-                                        <div className="text-center">
-                                            <p style={{ fontSize:'0.875rem',color:'#666',marginBottom:'8px' }}>
-                                                Didn't receive the code?
-                                            </p>
-                                            <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold" onClick={handleResendOtp} disabled={resendCooldown > 0 || isSubmitting}
-                                                style={{ color: resendCooldown > 0 ? '#aaa' : '#6B2C3E', fontSize:'0.875rem' }}>
-                                                {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend code'}
+                                        <div className="text-center mb-3">
+                                            <p style={{ fontSize:'0.875rem',color:'#666',marginBottom:'6px' }}>Didn't receive the code?</p>
+                                            <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold" onClick={handleResendSignupOtp} disabled={resendCooldown>0||isSubmitting}
+                                                style={{ color:resendCooldown>0?'#aaa':'#6B2C3E',fontSize:'0.875rem' }}>
+                                                {resendCooldown>0?`Resend code in ${resendCooldown}s`:'Resend code'}
                                             </button>
                                         </div>
-
-                                        <div className="text-center mt-3">
-                                            <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={() => { setSignUpStep('form'); setError(''); }}
-                                                style={{ color:'#888',fontSize:'0.85rem' }}>
+                                        <div className="text-center">
+                                            <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={() => { setSignUpStep('form'); clearErr(); }} style={{ color:'#888',fontSize:'0.85rem' }}>
                                                 ← Back to registration
                                             </button>
                                         </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Forgot Password Modal ── */}
+            {showForgot && (
+                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }} onClick={closeAll}>
+                    <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
+                        <div className="modal-content">
+                            <div className="modal-header" style={{ backgroundColor:'#6B2C3E',color:'white' }}>
+                                <h5 className="modal-title fw-bold" style={{ color:'white' }}>{forgotTitle}</h5>
+                                <button type="button" className="btn-close btn-close-white" onClick={closeAll} />
+                            </div>
+                            <div className="modal-body p-4">
+                                {error      && <div className="alert alert-danger"  role="alert">{error}</div>}
+                                {successMsg && <div className="alert alert-success" role="alert">{successMsg}</div>}
+
+                                {/* Step 1: Enter email */}
+                                {forgotStep === 'email' && (
+                                    <>
+                                        <div style={{ textAlign:'center',marginBottom:'20px' }}>
+                                            <div style={{ width:'64px',height:'64px',borderRadius:'50%',background:'#fdf0f3',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}>
+                                                <i className="bi bi-lock-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
+                                            </div>
+                                            <p style={{ color:'#666',fontSize:'0.9rem',margin:0 }}>
+                                                Enter your registered email address and we'll send you a verification code to reset your password.
+                                            </p>
+                                        </div>
+                                        <div className="mb-4">
+                                            <label className="form-label fw-bold">Email Address</label>
+                                            <input type="email" className="form-control" placeholder="Enter your registered email" value={fpEmail} onChange={e => setFpEmail(e.target.value)} />
+                                        </div>
+                                        <button onClick={handleForgotEmail} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
+                                            {isSubmitting ? 'Sending code...' : 'Send Reset Code'}
+                                        </button>
+                                        <div className="text-center">
+                                            <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={() => { setShowForgot(false); setShowSignIn(true); clearErr(); }} style={{ color:'#6B2C3E',fontSize:'0.875rem',fontWeight:600 }}>
+                                                ← Back to Sign In
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Step 2: Enter OTP */}
+                                {forgotStep === 'otp' && (
+                                    <div style={{ maxWidth:'420px',margin:'0 auto' }}>
+                                        <div style={{ textAlign:'center',marginBottom:'24px' }}>
+                                            <div style={{ width:'64px',height:'64px',borderRadius:'50%',background:'#fdf0f3',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
+                                                <i className="bi bi-envelope-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
+                                            </div>
+                                            <h6 className="fw-bold mb-2">Check your email</h6>
+                                            <p style={{ color:'#666',fontSize:'0.9rem',margin:0 }}>
+                                                We sent a 6-digit reset code to <strong>{otpEmail}</strong>.
+                                            </p>
+                                        </div>
+                                        <OtpBoxes otp={otp} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} refs={otpRefs} />
+                                        <button onClick={handleVerifyResetOtp} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting||otp.join('').length<6}>
+                                            {isSubmitting ? 'Verifying...' : 'Verify Code'}
+                                        </button>
+                                        <div className="text-center mb-3">
+                                            <p style={{ fontSize:'0.875rem',color:'#666',marginBottom:'6px' }}>Didn't receive the code?</p>
+                                            <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold" onClick={handleResendResetOtp} disabled={resendCooldown>0||isSubmitting}
+                                                style={{ color:resendCooldown>0?'#aaa':'#6B2C3E',fontSize:'0.875rem' }}>
+                                                {resendCooldown>0?`Resend code in ${resendCooldown}s`:'Resend code'}
+                                            </button>
+                                        </div>
+                                        <div className="text-center">
+                                            <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={() => { setForgotStep('email'); clearErr(); }} style={{ color:'#888',fontSize:'0.85rem' }}>
+                                                ← Use a different email
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Step 3: New password */}
+                                {forgotStep === 'reset' && (
+                                    <>
+                                        <div style={{ textAlign:'center',marginBottom:'20px' }}>
+                                            <div style={{ width:'64px',height:'64px',borderRadius:'50%',background:'#fdf0f3',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}>
+                                                <i className="bi bi-shield-lock-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
+                                            </div>
+                                            <p style={{ color:'#666',fontSize:'0.9rem',margin:0 }}>
+                                                Create a new password for <strong>{otpEmail}</strong>.
+                                            </p>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="form-label fw-bold">New Password</label>
+                                            <div style={{ position:'relative' }}>
+                                                <input type={showFpNewPw?'text':'password'} className="form-control" placeholder="Min. 8 characters" value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} style={{ paddingRight:'36px' }} />
+                                                <PasswordToggleButton visible={showFpNewPw} onToggle={() => setShowFpNewPw(v=>!v)} />
+                                            </div>
+                                            {fpNewPw && (
+                                                <ul className="list-unstyled mb-0 mt-2" style={{ fontSize:'0.85rem' }}>
+                                                    {PASSWORD_REQUIREMENTS.map(req => {
+                                                        const met = req.test(fpNewPw);
+                                                        return <li key={req.label} style={{ color:met?'#198754':'#dc3545' }}>{met?'✓':'✗'} {req.label}</li>;
+                                                    })}
+                                                </ul>
+                                            )}
+                                        </div>
+                                        <div className="mb-4">
+                                            <label className="form-label fw-bold">Confirm New Password</label>
+                                            <div style={{ position:'relative' }}>
+                                                <input type={showFpConfPw?'text':'password'} className="form-control" placeholder="Confirm your new password" value={fpConfirmPw} onChange={e => setFpConfirmPw(e.target.value)}
+                                                    style={{ paddingRight:'36px',borderColor:fpConfirmPw?(fpNewPw===fpConfirmPw?'#198754':'#dc3545'):undefined }} />
+                                                <PasswordToggleButton visible={showFpConfPw} onToggle={() => setShowFpConfPw(v=>!v)} />
+                                            </div>
+                                            {fpConfirmPw && (
+                                                <p style={{ margin:'6px 0 0',fontSize:'0.85rem',fontWeight:600,color:fpNewPw===fpConfirmPw?'#198754':'#dc3545' }}>
+                                                    {fpNewPw===fpConfirmPw?'✓ Passwords match':'✗ Passwords do not match'}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <button onClick={handleResetPassword} className="btn w-100 fw-bold" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
+                                            {isSubmitting ? 'Saving...' : 'Save New Password'}
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Step 4: Done */}
+                                {forgotStep === 'done' && (
+                                    <div style={{ textAlign:'center',padding:'8px 0' }}>
+                                        <div style={{ width:'72px',height:'72px',borderRadius:'50%',background:'#d1fae5',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px' }}>
+                                            <i className="bi bi-check-lg" style={{ fontSize:'32px',color:'#059669' }} />
+                                        </div>
+                                        <h6 className="fw-bold mb-2" style={{ color:'#111' }}>Password reset successfully!</h6>
+                                        <p style={{ color:'#666',fontSize:'0.9rem',marginBottom:'24px' }}>
+                                            Your password has been updated. You can now sign in with your new password.
+                                        </p>
+                                        <button className="btn w-100 fw-bold" style={{ backgroundColor:'#6B2C3E',color:'white' }}
+                                            onClick={() => { setShowForgot(false); setShowSignIn(true); clearErr(); setForgotStep('email'); setFpEmail(''); setFpNewPw(''); setFpConfirmPw(''); }}>
+                                            Sign In Now
+                                        </button>
                                     </div>
                                 )}
                             </div>
