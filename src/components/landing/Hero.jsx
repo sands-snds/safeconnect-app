@@ -206,7 +206,17 @@ function Hero() {
                 window.location.href = '/admin'; return;
             }
             sessionStorage.setItem('userAuthenticated', 'true');
-            sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+            // Store the full user object including photoUrl so the navbar
+            // avatar persists across sessions without a separate profile fetch.
+            sessionStorage.setItem('currentUser', JSON.stringify({
+                id:       result.user.id,
+                fullName: result.user.fullName,
+                username: result.user.username,
+                contact:  result.user.contact,
+                email:    result.user.email,
+                role:     result.user.role,
+                photoUrl: result.user.photoUrl || null,
+            }));
             localStorage.setItem('residentName', result.user.fullName);
             window.location.href = '/resident';
         } catch { setError('Could not reach the server. Please check your connection and try again.'); }

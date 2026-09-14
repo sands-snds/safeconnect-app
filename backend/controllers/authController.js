@@ -472,6 +472,16 @@ exports.signin = async (req, res) => {
 
         const token = generateToken(user);
 
+        // Resolve photo_url to a full URL so the navbar avatar works immediately
+        // after login without needing a separate profile fetch.
+        const ASSET_BASE = process.env.ASSET_BASE ||
+            `http://localhost:${process.env.PORT || 5000}`;
+        const resolvePhoto = (p) => {
+            if (!p) return null;
+            if (/^https?:\/\//.test(p) || p.startsWith("data:")) return p;
+            return `${ASSET_BASE}${p}`;
+        };
+
         return res.json({
             success: true,
             isAdmin: user.role === "admin",
@@ -483,6 +493,7 @@ exports.signin = async (req, res) => {
                 contact:  user.contact_number,
                 email:    user.email_address,
                 role:     user.role,
+                photoUrl: resolvePhoto(user.photo_url),
             },
             message: "Login successful",
         });
