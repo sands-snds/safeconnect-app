@@ -5,24 +5,33 @@ import EmergencyReportSection from '../components/resident/EmergencyReportSectio
 import Footer from '../components/shared/DonationFooter';
 import ResidentEmergencyModal from '../components/resident/ResidentEmergencyModal';
 import ResidentAssistanceModal from '../components/resident/ResidentAssistanceModal';
+import ResidentPettyCrimeModal from '../components/resident/ResidentPettyCrimeModal';
 import "../styles/emergencyreport.css";
 import "../styles/residentemergencymodal.css";
 
-
 function ResidentPage() {
-  const [emergencyModal, setEmergencyModal] = useState({ show: false, type: '' });
-  const [assistanceModal, setAssistanceModal] = useState({ show: false, type: '' });
-  const [assistancePrefillLocation, setAssistancePrefillLocation] = useState(null); 
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const [emergencyOpen,   setEmergencyOpen]   = useState(false);
+  const [assistanceOpen,  setAssistanceOpen]  = useState(false);
+  const [pettyCrimeOpen,  setPettyCrimeOpen]  = useState(false);
 
   useEffect(() => {
-    const backdrops = document.querySelectorAll('.modal-backdrop');
-    backdrops.forEach(backdrop => backdrop.remove());
+    // Load current user from sessionStorage
+    try {
+      const raw = sessionStorage.getItem('currentUser');
+      if (raw) setCurrentUser(JSON.parse(raw));
+    } catch {
+      // ignore parse errors
+    }
 
+    // Clean up any stale Bootstrap modal artefacts
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(b => b.remove());
     document.body.classList.remove('modal-open');
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow     = 'auto';
     document.body.style.paddingRight = '';
     document.body.style.pointerEvents = 'auto';
-
     window.scrollTo({ top: 0, behavior: 'auto' });
 
     if (process.env.NODE_ENV === 'development') {
@@ -30,65 +39,52 @@ function ResidentPage() {
     }
 
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow      = 'auto';
       document.body.style.pointerEvents = 'auto';
     };
   }, []);
 
-  const openEmergencyModal = (type) => {
-    if (process.env.NODE_ENV === 'development') console.log('Opening emergency modal:', type);
-    setEmergencyModal({ show: true, type });
-  };
-
-  const closeEmergencyModal = () => {
-    if (process.env.NODE_ENV === 'development') console.log('Closing emergency modal');
-    setEmergencyModal({ show: false, type: '' });
-  };
-
-  const openAssistanceModal = (type, prefillLocation = null) => {
-    if (process.env.NODE_ENV === 'development') console.log('Opening assistance modal:', type);
-    setAssistancePrefillLocation(prefillLocation);
-    setAssistanceModal({ show: true, type });
-  };
-
-  const closeAssistanceModal = () => {
-    if (process.env.NODE_ENV === 'development') console.log('Closing assistance modal');
-    setAssistanceModal({ show: false, type: '' });
-    setAssistancePrefillLocation(null);
-  };
-
   return (
-    <div 
-      className="resident-page" 
-      style={{ position: 'relative', minHeight: '100vh' }}
-    >
+    <div className="resident-page" style={{ position: 'relative', minHeight: '100vh' }}>
       <ResidentNavbar />
-      
-        <section id="home">
-          <ResidentHero 
-            onReportEmergency={openEmergencyModal}
-            onRequestHelp={openAssistanceModal}
-          />
-        </section>
 
-        <section id="emergency-report">
-          <EmergencyReportSection onReportClick={openEmergencyModal} />
-        </section>
+      <section id="home">
+        <ResidentHero
+          onReportEmergency={() => setEmergencyOpen(true)}
+          onRequestHelp={() => setAssistanceOpen(true)}
+        />
+      </section>
+
+      <section id="emergency-report">
+        <EmergencyReportSection
+            onReportClick={() => setEmergencyOpen(true)}
+            onAssistanceClick={() => setAssistanceOpen(true)}
+            onPettyCrimeClick={() => setPettyCrimeOpen(true)}
+          />
+      </section>
 
       <Footer />
 
-      <ResidentEmergencyModal 
-        show={emergencyModal.show}
-        type={emergencyModal.type}
-        onClose={closeEmergencyModal}
-        onRequestAssistance={(location) => openAssistanceModal('', location)}
+      {/* ── Modals ── */}
+      <ResidentEmergencyModal
+        isOpen={emergencyOpen}
+        show={emergencyOpen}
+        onClose={() => setEmergencyOpen(false)}
+        currentUser={currentUser}
       />
 
-      <ResidentAssistanceModal 
-        show={assistanceModal.show}
-        type={assistanceModal.type}
-        onClose={closeAssistanceModal}
-        prefillLocation={assistancePrefillLocation}
+      <ResidentAssistanceModal
+        isOpen={assistanceOpen}
+        show={assistanceOpen}
+        onClose={() => setAssistanceOpen(false)}
+        currentUser={currentUser}
+      />
+
+      <ResidentPettyCrimeModal
+        isOpen={pettyCrimeOpen}
+        show={pettyCrimeOpen}
+        onClose={() => setPettyCrimeOpen(false)}
+        currentUser={currentUser}
       />
     </div>
   );

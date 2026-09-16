@@ -5,7 +5,41 @@ const { validateStatusTransition } = require("../utils/statusWorkflow");
 
 exports.createReport = async (req, res) => {
     try {
-        const result = await PettyCrimeService.create(req.body);
+        const imagePaths = req.files?.length
+            ? req.files.map(f => `/uploads/${f.filename}`)
+            : [];
+
+        const {
+            reporterId,
+            reporterName,
+            reporterContact,
+            reportFor,
+            victimName,
+            victimContact,
+            victimRelationship,
+            crimeType,
+            description,
+            location,
+            incidentDate,
+            suspectDescription,
+        } = req.body;
+
+        const result = await PettyCrimeService.create({
+            reporterId:         reporterId      || null,
+            reporterName:       reporterName    || null,
+            reporterContact:    reporterContact || null,
+            reportFor:          reportFor       || "self",
+            victimName:         reportFor === "others" ? (victimName    || null) : null,
+            victimContact:      reportFor === "others" ? (victimContact || null) : null,
+            victimRelationship: reportFor === "others" ? (victimRelationship || null) : null,
+            crimeType,
+            description,
+            location,
+            incidentDate:       incidentDate       || null,
+            suspectDescription: suspectDescription || null,
+            imagePaths,
+        });
+
         res.status(201).json(result);
     } catch (err) {
         console.error(err);
@@ -62,10 +96,10 @@ exports.updateStatus = async (req, res) => {
         if (report.reporter_id && replyMessage) {
             await Notification.create({
                 userId: report.reporter_id,
-                title: `Update on your petty crime report`,
+                title: "Update on your petty crime report",
                 message: replyMessage,
                 notificationType: "petty_crime_status",
-                referenceId: report.id
+                referenceId: report.id,
             });
         }
 

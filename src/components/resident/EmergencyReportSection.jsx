@@ -205,7 +205,7 @@ function EmergencyCallButton() {
   );
 }
 
-function EmergencyReportSection({ onReportClick }) {
+function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrimeClick }) {
 
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showPettyCrimeModal, setShowPettyCrimeModal] = useState(false);
