@@ -26,7 +26,6 @@ const getCurrentUser = () => {
   } catch {
     raw = {};
   }
-  // Unwrap if the whole signin response ({ success, user, ... }) was stored
   const source = raw && raw.user ? raw.user : raw;
   const id =
     source.id ??
@@ -37,10 +36,6 @@ const getCurrentUser = () => {
   return { ...source, id };
 };
 
-// Cooldown is tracked per-account, not per-browser: the localStorage key is
-// suffixed with the currently logged-in user's id (or "guest" when nobody
-// is signed in) so switching accounts on the same device/browser doesn't
-// inherit someone else's cooldown timer.
 const getCooldownStorageKey = () => {
   const currentUser = getCurrentUser();
   return `${REPORT_COOLDOWN_KEY}_${currentUser.id ?? 'guest'}`;
@@ -58,14 +53,14 @@ const formatRemaining = (ms) => {
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
 };
-function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport,onUpdated}) {
+function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated }) {
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     assistanceType: '',
     houseNumber: '',
     street: '',
     floorUnit: '',
-    location: '', // single editable address field, used only when editing
+    location: '',
     situation: '',
     special: [],
     urgency: '',
@@ -74,9 +69,14 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [mapQuery, setMapQuery] = useState(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
-  const [gpsCoords, setGpsCoords] = useState(null); // exact GPS pin, takes priority over typed address
+  const [gpsCoords, setGpsCoords] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [reportFor, setReportFor] = useState('self');
+  const [victimName, setVictimName] = useState('');
+  const [victimContact, setVictimContact] = useState('');
+  const [victimRelationship, setVictimRelationship] = useState('');
+
   useEffect(() => {
     if (!editingReport) return;
     setFormData((prev) => ({
@@ -89,10 +89,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         ? editingReport.specialNeeds.split(',').map((s) => s.trim()).filter(Boolean)
         : []
     }));
-    // Only house#/street were ever collected separately at create time — the
-    // backend only stores the merged address string, so on edit we restore
-    // that string as-is into a single "Location" field rather than trying
-    // to (unreliably) split it back into house#/street.
     if (editingReport.latitude != null && editingReport.longitude != null) {
       setGpsCoords({ lat: editingReport.latitude, lng: editingReport.longitude });
     }
@@ -147,8 +143,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       };
     });
   };
-  // Uses the device's GPS to pin the map exactly, then best-effort fills
-  // the house number / street fields via free reverse geocoding.
   const handleUseCurrentLocation = () => {
     setLocationError('');
     if (!navigator.geolocation) {
@@ -214,9 +208,15 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       alert('Please provide the house/lot number and street.');
       return;
     }
+    if (reportFor === 'others' && !victimName.trim()) {
+      alert('Please enter the name of the person you are requesting for.');
+      return;
+    }
+    if (reportFor === 'others' && !victimRelationship) {
+      alert('Please select your relationship to them.');
+      return;
+    }
     const currentUser = getCurrentUser();
-    // Not fatal — requests can still be submitted anonymously — but it means
-    // this request will NOT show up under "My Reports" for anyone.
     if (!currentUser.id) {
       console.warn(
         'No user id found in sessionStorage("currentUser"). This request will be saved without a user_id and will not appear in "My Reports".'
@@ -262,7 +262,11 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         longitude: gpsCoords ? gpsCoords.lng : null,
         situation: formData.situation,
         special: formData.special.join(', ') || null,
-        urgency: formData.urgency || null
+        urgency: formData.urgency || null,
+        reportFor,
+        victimName: reportFor === 'others' ? victimName.trim() : null,
+        victimContact: reportFor === 'others' ? victimContact.trim() : null,
+        victimRelationship: reportFor === 'others' ? victimRelationship : null
       });
       if (!result.success) {
         throw new Error(result.message || 'Failed to submit request');
@@ -281,6 +285,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         urgency: '',
         consent: false
       });
+      setReportFor('self');
+      setVictimName(''); setVictimContact(''); setVictimRelationship('');
       setGpsCoords(null);
       setLocationError('');
       setMapQuery(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
@@ -385,6 +391,57 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 </button>
 </div>
 <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+
+          {/* ── ADDED: Reporting For toggle ── */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
+              Who are you requesting for?
+            </label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="button"
+                onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); }}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'self' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'self' ? '#fef2f2' : '#fff', color: reportFor === 'self' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
+                <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i>Myself
+              </button>
+              <button type="button"
+                onClick={() => setReportFor('others')}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'others' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'others' ? '#fef2f2' : '#fff', color: reportFor === 'others' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
+                <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i>Someone Else
+              </button>
+            </div>
+          </div>
+          {reportFor === 'others' && (
+            <div style={{ marginBottom: '16px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', padding: '14px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
+                <i className="bi bi-person-exclamation"></i> Person You Are Requesting For
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Their Name <span style={{ color: '#dc3545' }}>*</span></label>
+                  <input type="text" placeholder="Full name" value={victimName} onChange={e => setVictimName(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Their Contact <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span></label>
+                  <input type="text" placeholder="+63 9XX XXX XXXX" value={victimContact} onChange={e => setVictimContact(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
+                </div>
+              </div>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Your Relationship <span style={{ color: '#dc3545' }}>*</span></label>
+              <select value={victimRelationship} onChange={e => setVictimRelationship(e.target.value)}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }}>
+                <option value="">Select relationship</option>
+                <option value="Family Member">Family Member</option>
+                <option value="Friend">Friend</option>
+                <option value="Neighbor">Neighbor</option>
+                <option value="Colleague">Colleague</option>
+                <option value="Stranger">Stranger</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          )}
+          {/* ── END ADDED ── */}
+
 <div style={{ marginBottom: '16px' }}>
 <div style={{ marginBottom: '16px' }}>
 <label style={{

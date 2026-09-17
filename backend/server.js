@@ -2,6 +2,9 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 const db = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
