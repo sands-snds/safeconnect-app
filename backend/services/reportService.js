@@ -25,7 +25,11 @@ class ReportService {
             peopleAffected: data.people,
             specialNeeds: data.special,
             photoUrl: data.photoUrl,
-            mediaType: data.mediaType
+            mediaType: data.mediaType,
+            reportFor: data.reportFor,
+            victimName: data.victimName,
+            victimContact: data.victimContact,
+            victimRelationship: data.victimRelationship
         };
 
         const reportId = await Report.create(report);

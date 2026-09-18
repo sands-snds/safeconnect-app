@@ -126,14 +126,14 @@ export const updateUserStatus = async (userId, status) => {
 
 // ── Emergency reports ─────────────────────────────────────────────────────────
 export const fetchEmergencyReports = async () => {
-    const res = await fetch(`${API_ENDPOINTS.REPORTS}`, { headers: authHeaders() });
+    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}`, { headers: authHeaders() });
     return res.json();
 };
 
 // Accepts FormData (with optional media files) or a plain object.
 export const createEmergencyReport = async (data) => {
     const isFormData = data instanceof FormData;
-    const res = await fetch(`${API_ENDPOINTS.REPORTS}`, {
+    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}`, {
         method: "POST",
         headers: isFormData ? authHeadersNoContentType() : authHeaders(),
         body: isFormData ? data : JSON.stringify(data),
@@ -141,8 +141,8 @@ export const createEmergencyReport = async (data) => {
     return res.json();
 };
 
-export const updateEmergencyReport = async (id, data) => {
-    const res = await fetch(`${API_ENDPOINTS.REPORTS}/${id}`, {
+export const updateEmergencyReport = async ({ id, ...data }) => {
+    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify(data),
@@ -151,7 +151,7 @@ export const updateEmergencyReport = async (id, data) => {
 };
 
 export const updateEmergencyStatus = async (id, status) => {
-    const res = await fetch(`${API_ENDPOINTS.REPORTS}/${id}/status`, {
+    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}/status`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify({ status }),
@@ -160,7 +160,7 @@ export const updateEmergencyStatus = async (id, status) => {
 };
 
 export const deleteEmergencyReport = async (id) => {
-    const res = await fetch(`${API_ENDPOINTS.REPORTS}/${id}`, {
+    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
     });

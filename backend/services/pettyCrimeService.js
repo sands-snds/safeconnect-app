@@ -16,7 +16,11 @@ class PettyCrimeService {
             latitude: data.latitude,
             longitude: data.longitude,
             description: data.description,
-            suspectInfo: data.suspectInfo
+            suspectInfo: data.suspectInfo,
+            reportFor: data.reportFor,
+            victimName: data.victimName,
+            victimContact: data.victimContact,
+            victimRelationship: data.victimRelationship
         });
 
         await NotificationService.create({

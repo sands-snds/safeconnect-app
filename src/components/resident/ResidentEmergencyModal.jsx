@@ -108,6 +108,10 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [showAssistancePrompt, setShowAssistancePrompt] = useState(false);
   const [submittedLocation, setSubmittedLocation] = useState(null);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [reportFor, setReportFor] = useState('self');
+  const [victimName, setVictimName] = useState('');
+  const [victimContact, setVictimContact] = useState('');
+  const [victimRelationship, setVictimRelationship] = useState('');
  
   // Location / map state
   const [mapQuery, setMapQuery] = useState(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
@@ -361,7 +365,11 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     setGpsCoords(null);
     setLocationError('');
     setMapQuery(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
- 
+    setReportFor('self');
+    setVictimName('');
+    setVictimContact('');
+    setVictimRelationship('');
+
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
  
@@ -393,7 +401,16 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       alert('Please attach a photo or video of the incident. This is required.');
       return;
     }
- 
+
+    if (reportFor === 'others' && !victimName.trim()) {
+      alert('Please enter the name of the person you are reporting for.');
+      return;
+    }
+    if (reportFor === 'others' && !victimRelationship) {
+      alert('Please select your relationship to them.');
+      return;
+    }
+
     const currentUser = getCurrentUser();
  
     // Not fatal — reports can still be submitted anonymously — but it means
@@ -469,7 +486,11 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         special: formData.special.join(', ') || null,
         // photoUrl kept for backend compatibility; mediaType distinguishes image vs video
         photoUrl: mediaUrl || null,
-        mediaType: formData.mediaType || null
+        mediaType: formData.mediaType || null,
+        reportFor,
+        victimName: reportFor === 'others' ? victimName.trim() : null,
+        victimContact: reportFor === 'others' ? victimContact.trim() : null,
+        victimRelationship: reportFor === 'others' ? victimRelationship : null
       });
  
       if (!result.success) {
@@ -916,6 +937,47 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           margin-top: 4px;
         }
  
+        .reportfor-toggle {
+          display: flex;
+          gap: 10px;
+        }
+
+        .reportfor-btn {
+          flex: 1;
+          padding: 10px;
+          border-radius: 8px;
+          border: 2px solid #d1d5db;
+          background: #fff;
+          color: #374151;
+          font-weight: 600;
+          font-size: 13px;
+          cursor: pointer;
+        }
+
+        .reportfor-btn.active {
+          border-color: #dc3545;
+          background: #fef2f2;
+          color: #dc3545;
+        }
+
+        .victim-box {
+          margin-bottom: 16px;
+          background: #fff5f5;
+          border: 1px solid #fecaca;
+          border-radius: 8px;
+          padding: 14px;
+        }
+
+        .victim-box-label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 10px;
+          font-weight: 600;
+          color: #dc3545;
+          font-size: 13px;
+        }
+
         .cooldown-banner {
           grid-column: 1 / -1;
           text-align: center;
@@ -1033,7 +1095,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               <div className="header-icon">
                 <i className="bi bi-exclamation-triangle-fill"></i>
               </div>
-              <h2 className="modal-title">{isEditing ? `Edit ${type} Report` : `Report ${type}`}</h2>
+              <h2 className="modal-title">{isEditing ? `Edit ${type || 'Emergency'} Report` : `Report ${type || 'an Emergency'}`}</h2>
               <button
                 className="close-button"
                 onClick={onClose}
@@ -1045,7 +1107,76 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
             </div>
  
             <form className="modal-form" onSubmit={handleSubmit}>
- 
+
+              <div className="form-group">
+                <label className="form-label">Who are you reporting for?</label>
+                <div className="reportfor-toggle">
+                  <button
+                    type="button"
+                    className={`reportfor-btn ${reportFor === 'self' ? 'active' : ''}`}
+                    onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); }}
+                    disabled={isSubmitting}
+                  >
+                    <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i> Reporting for Myself
+                  </button>
+                  <button
+                    type="button"
+                    className={`reportfor-btn ${reportFor === 'others' ? 'active' : ''}`}
+                    onClick={() => setReportFor('others')}
+                    disabled={isSubmitting}
+                  >
+                    <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i> Reporting for Others
+                  </button>
+                </div>
+              </div>
+
+              {reportFor === 'others' && (
+                <div className="victim-box">
+                  <div className="victim-box-label">
+                    <i className="bi bi-person-exclamation"></i> Person You Are Reporting For
+                  </div>
+                  <div className="form-grid" style={{ marginBottom: '10px' }}>
+                    <div>
+                      <label className="form-label">Their Name <span className="required">*</span></label>
+                      <input
+                        type="text"
+                        placeholder="Full name"
+                        value={victimName}
+                        onChange={(e) => setVictimName(e.target.value)}
+                        disabled={isSubmitting}
+                        className="form-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Their Contact <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="+63 9XX XXX XXXX"
+                        value={victimContact}
+                        onChange={(e) => setVictimContact(e.target.value)}
+                        disabled={isSubmitting}
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                  <label className="form-label">Your Relationship <span className="required">*</span></label>
+                  <select
+                    value={victimRelationship}
+                    onChange={(e) => setVictimRelationship(e.target.value)}
+                    disabled={isSubmitting}
+                    className="form-select"
+                  >
+                    <option value="">Select relationship</option>
+                    <option value="Family Member">Family Member</option>
+                    <option value="Friend">Friend</option>
+                    <option value="Neighbor">Neighbor</option>
+                    <option value="Colleague">Colleague</option>
+                    <option value="Stranger">Stranger</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              )}
+
               <div className="form-group">
                 <div className="form-group">
                   <label className="form-label">

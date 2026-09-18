@@ -5,39 +5,7 @@ const { validateStatusTransition } = require("../utils/statusWorkflow");
 
 exports.createRequest = async (req, res) => {
     try {
-        const imagePaths = req.files?.length
-            ? req.files.map(f => `/uploads/${f.filename}`)
-            : [];
-
-        const {
-            reporterId,
-            reporterName,
-            reporterContact,
-            reportFor,
-            victimName,
-            victimContact,
-            victimRelationship,
-            assistanceType,
-            description,
-            location,
-            numberOfPeople,
-        } = req.body;
-
-        const result = await AssistanceRequestService.create({
-            reporterId:         reporterId      || null,
-            reporterName:       reporterName    || null,
-            reporterContact:    reporterContact || null,
-            reportFor:          reportFor       || "self",
-            victimName:         reportFor === "others" ? (victimName    || null) : null,
-            victimContact:      reportFor === "others" ? (victimContact || null) : null,
-            victimRelationship: reportFor === "others" ? (victimRelationship || null) : null,
-            assistanceType,
-            description,
-            location,
-            numberOfPeople:     numberOfPeople  || 1,
-            imagePaths,
-        });
-
+        const result = await AssistanceRequestService.create(req.body);
         res.status(201).json(result);
     } catch (err) {
         console.error(err);

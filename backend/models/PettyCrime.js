@@ -20,9 +20,13 @@ class PettyCrime {
                 longitude,
                 description,
                 suspect_info,
+                report_for,
+                victim_name,
+                victim_contact,
+                victim_relationship,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 report.reportReference,
@@ -35,6 +39,10 @@ class PettyCrime {
                 report.longitude || null,
                 report.description,
                 report.suspectInfo || null,
+                report.reportFor || "self",
+                report.victimName || null,
+                report.victimContact || null,
+                report.victimRelationship || null,
                 "Received"
             ]
         );

@@ -82,6 +82,10 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [gpsCoords, setGpsCoords] = useState(null); // exact GPS pin, takes priority over typed address
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [reportFor, setReportFor] = useState('self');
+  const [victimName, setVictimName] = useState('');
+  const [victimContact, setVictimContact] = useState('');
+  const [victimRelationship, setVictimRelationship] = useState('');
   useEffect(() => {
     if (!editingReport) return;
     setFormData((prev) => ({
@@ -211,6 +215,14 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       alert('Please provide the house/lot number and street.');
       return;
     }
+    if (reportFor === 'others' && !victimName.trim()) {
+      alert('Please enter the name of the person you are reporting for.');
+      return;
+    }
+    if (reportFor === 'others' && !victimRelationship) {
+      alert('Please select your relationship to them.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       if (isEditing) {
@@ -249,7 +261,11 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         latitude: gpsCoords ? gpsCoords.lat : null,
         longitude: gpsCoords ? gpsCoords.lng : null,
         description: formData.description,
-        suspectInfo: formData.suspectInfo || null
+        suspectInfo: formData.suspectInfo || null,
+        reportFor,
+        victimName: reportFor === 'others' ? victimName.trim() : null,
+        victimContact: reportFor === 'others' ? victimContact.trim() : null,
+        victimRelationship: reportFor === 'others' ? victimRelationship : null
       });
       if (!result.success) {
         throw new Error(result.message || 'Failed to submit report');
@@ -269,6 +285,10 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         suspectInfo: '',
         consent: false
       });
+      setReportFor('self');
+      setVictimName('');
+      setVictimContact('');
+      setVictimRelationship('');
       setGpsCoords(null);
       setLocationError('');
       setMapQuery(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
@@ -373,6 +393,55 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           onSubmit={handleSubmit}
           style={{ padding:'24px' }}
 >
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
+              Who are you reporting for?
+            </label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="button"
+                onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); }}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'self' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'self' ? '#fef2f2' : '#fff', color: reportFor === 'self' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
+                <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i>Reporting for Myself
+              </button>
+              <button type="button"
+                onClick={() => setReportFor('others')}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'others' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'others' ? '#fef2f2' : '#fff', color: reportFor === 'others' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
+                <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i>Reporting for Others
+              </button>
+            </div>
+          </div>
+          {reportFor === 'others' && (
+            <div style={{ marginBottom: '16px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', padding: '14px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
+                <i className="bi bi-person-exclamation"></i> Person You Are Reporting For
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Their Name <span style={{ color: '#dc3545' }}>*</span></label>
+                  <input type="text" placeholder="Full name" value={victimName} onChange={e => setVictimName(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Their Contact <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span></label>
+                  <input type="text" placeholder="+63 9XX XXX XXXX" value={victimContact} onChange={e => setVictimContact(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
+                </div>
+              </div>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Your Relationship <span style={{ color: '#dc3545' }}>*</span></label>
+              <select value={victimRelationship} onChange={e => setVictimRelationship(e.target.value)}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }}>
+                <option value="">Select relationship</option>
+                <option value="Family Member">Family Member</option>
+                <option value="Friend">Friend</option>
+                <option value="Neighbor">Neighbor</option>
+                <option value="Colleague">Colleague</option>
+                <option value="Stranger">Stranger</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          )}
+
 <div style={{ marginBottom:'16px' }}>
 <label style={{
               display:'flex',

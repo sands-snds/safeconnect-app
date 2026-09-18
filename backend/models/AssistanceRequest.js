@@ -23,9 +23,13 @@ class AssistanceRequest {
                 urgency_level,
                 describe_your_situation,
                 special_needs,
+                report_for,
+                victim_name,
+                victim_contact,
+                victim_relationship,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 request.reportReference,
@@ -38,9 +42,13 @@ class AssistanceRequest {
                 request.latitude || null,
                 request.longitude || null,
                 request.peopleAffected || 1,
-                request.urgency,
+                request.urgency || "Medium",
                 request.situation,
                 request.specialNeeds || null,
+                request.reportFor || "self",
+                request.victimName || null,
+                request.victimContact || null,
+                request.victimRelationship || null,
                 "Received"
             ]
         );
@@ -96,7 +104,7 @@ class AssistanceRequest {
                 request.location,
                 request.latitude || null,
                 request.longitude || null,
-                request.urgency,
+                request.urgency || "Medium",
                 request.situation,
                 request.specialNeeds || null,
                 id

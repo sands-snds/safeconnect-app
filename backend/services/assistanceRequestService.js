@@ -18,7 +18,11 @@ class AssistanceRequestService {
             longitude: data.longitude,
             urgency: data.urgency,
             situation: data.situation,
-            specialNeeds: data.special
+            specialNeeds: data.special,
+            reportFor: data.reportFor,
+            victimName: data.victimName,
+            victimContact: data.victimContact,
+            victimRelationship: data.victimRelationship
         });
 
         await NotificationService.create({

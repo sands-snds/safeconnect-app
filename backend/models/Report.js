@@ -1,137 +1,171 @@
-const Report = require("../models/Report");
-const ReportService = require("../services/reportService");
-const Notification = require("../models/Notification");
-const { validateStatusTransition } = require("../utils/statusWorkflow");
+// Emergency Reports model (table: emergency_reports).
+// Field names map to what ResidentEmergencyModal.jsx sends via
+// createEmergencyReport()/updateEmergencyReport() in Services/api.js,
+// via reportService.js's mapping.
+const db = require("../config/db");
 
-exports.createReport = async (req, res) => {
-    try {
-        const imagePaths = req.files?.length
-            ? req.files.map(f => `/uploads/${f.filename}`)
-            : [];
+class Report {
 
-        const {
-            reporterId,
-            reporterName,
-            reporterContact,
-            reportFor,
-            victimName,
-            victimContact,
-            victimRelationship,
-            category,
-            description,
-            location,
-        } = req.body;
-
-        const result = await ReportService.create({
-            reporterId:         reporterId     || null,
-            reporterName:       reporterName   || null,
-            reporterContact:    reporterContact || null,
-            reportFor:          reportFor      || "self",
-            victimName:         reportFor === "others" ? (victimName    || null) : null,
-            victimContact:      reportFor === "others" ? (victimContact || null) : null,
-            victimRelationship: reportFor === "others" ? (victimRelationship || null) : null,
-            category,
-            description,
-            location,
-            imagePaths,
-        });
-
-        res.status(201).json(result);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: "Failed to submit emergency report." });
+    static async create(report) {
+        const [result] = await db.query(
+            `
+            INSERT INTO emergency_reports
+            (
+                report_reference,
+                reporter_id,
+                emergency_type,
+                severity,
+                reporter_name,
+                contact_number,
+                location,
+                latitude,
+                longitude,
+                incident_details,
+                number_of_people_affected,
+                special_needs,
+                photo_url,
+                media_type,
+                report_for,
+                victim_name,
+                victim_contact,
+                victim_relationship,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `,
+            [
+                report.reportReference,
+                report.reporterId || null,
+                report.emergencyType,
+                report.severity,
+                report.reporterName,
+                report.contactNumber,
+                report.location,
+                report.latitude || null,
+                report.longitude || null,
+                report.details,
+                report.peopleAffected || null,
+                report.specialNeeds || null,
+                report.photoUrl || null,
+                report.mediaType || null,
+                report.reportFor || "self",
+                report.victimName || null,
+                report.victimContact || null,
+                report.victimRelationship || null,
+                "Received"
+            ]
+        );
+        return result.insertId;
     }
-};
 
-exports.getReports = async (req, res) => {
-    try {
-        const reports = await Report.findAll();
-        res.json(reports);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: "Failed to retrieve reports." });
-    }
-};
+    static async findAll(filters = {}) {
+        let sql = `
+            SELECT *, reporter_name AS reporter, time AS created_at
+            FROM emergency_reports
+            WHERE 1=1
+        `;
+        const values = [];
 
-exports.getReport = async (req, res) => {
-    try {
-        const report = await Report.findById(req.params.id);
-        res.json(report);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false });
-    }
-};
-
-exports.updateReport = async (req, res) => {
-    try {
-        const result = await ReportService.update(req.params.id, req.body);
-        res.json(result);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: "Failed to update report." });
-    }
-};
-
-exports.updateStatus = async (req, res) => {
-    try {
-        const report = await Report.findById(req.params.id);
-        if (!report) {
-            return res.status(404).json({ success: false, message: "Report not found." });
+        if (filters.status) {
+            sql += " AND status=?";
+            values.push(filters.status);
         }
 
-        let replyMessage;
-        try {
-            replyMessage = validateStatusTransition(report.status, req.body.status);
-        } catch (validationError) {
-            return res.status(400).json({ success: false, message: validationError.message });
-        }
-
-        const affected = await Report.updateStatus(req.params.id, req.body.status);
-
-        if (report.reporter_id && replyMessage) {
-            await Notification.create({
-                userId: report.reporter_id,
-                title: "Update on your emergency report",
-                message: replyMessage,
-                notificationType: "emergency_status",
-                referenceId: report.id,
-            });
-        }
-
-        res.json({ success: affected > 0 });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false });
+        sql += " ORDER BY time DESC";
+        const [rows] = await db.query(sql, values);
+        return rows;
     }
-};
 
-exports.deleteReport = async (req, res) => {
-    try {
-        const affected = await Report.delete(req.params.id);
-        res.json({ success: affected > 0 });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false });
+    static async findByReporter(reporterId) {
+        const [rows] = await db.query(
+            `SELECT * FROM emergency_reports WHERE reporter_id = ? ORDER BY time DESC`,
+            [reporterId]
+        );
+        return rows;
     }
-};
 
-exports.getStatistics = async (req, res) => {
-    try {
-        const stats = await Report.getStatistics();
-        res.json(stats);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false });
+    static async findById(id) {
+        const [rows] = await db.query(
+            `SELECT * FROM emergency_reports WHERE id = ?`,
+            [id]
+        );
+        return rows[0];
     }
-};
 
-exports.getReportsByUser = async (req, res) => {
-    try {
-        const reports = await Report.findByReporter(req.params.userId);
-        res.json(reports);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false });
+    static async update(id, report) {
+        const [result] = await db.query(
+            `
+            UPDATE emergency_reports
+            SET
+                emergency_type = ?,
+                severity = ?,
+                location = ?,
+                latitude = ?,
+                longitude = ?,
+                incident_details = ?,
+                number_of_people_affected = ?,
+                special_needs = ?,
+                photo_url = COALESCE(?, photo_url),
+                media_type = COALESCE(?, media_type)
+            WHERE id = ?
+            `,
+            [
+                report.emergencyType,
+                report.severity,
+                report.location,
+                report.latitude || null,
+                report.longitude || null,
+                report.details,
+                report.peopleAffected || null,
+                report.specialNeeds || null,
+                report.photoUrl || null,
+                report.mediaType || null,
+                id
+            ]
+        );
+        return result.affectedRows;
     }
-};
+
+    static async updateStatus(id, status) {
+        const [result] = await db.query(
+            `UPDATE emergency_reports SET status = ? WHERE id = ?`,
+            [status, id]
+        );
+        return result.affectedRows;
+    }
+
+    static async delete(id) {
+        const [result] = await db.query(
+            `DELETE FROM emergency_reports WHERE id = ?`,
+            [id]
+        );
+        return result.affectedRows;
+    }
+
+    static async getStatistics() {
+        const [rows] = await db.query(`
+            SELECT
+                COUNT(*) AS totalReports,
+                SUM(status='Pending') AS pending,
+                SUM(status='Dispatched') AS dispatched,
+                SUM(status='In Progress') AS inProgress,
+                SUM(status='Resolved') AS resolved,
+                SUM(status='Cancelled') AS cancelled
+            FROM emergency_reports
+        `);
+        return rows[0];
+    }
+
+    static async getLatestReference() {
+        const [rows] = await db.query(`
+            SELECT report_reference
+            FROM emergency_reports
+            WHERE report_reference IS NOT NULL
+            ORDER BY id DESC
+            LIMIT 1
+        `);
+        return rows[0];
+    }
+}
+
+module.exports = Report;

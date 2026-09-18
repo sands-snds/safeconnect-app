@@ -368,7 +368,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
             fontWeight: '700',
             color: '#1f2937',
             flex: 1
-          }}>Request Assistance {type}</h2>
+          }}>{isEditing ? 'Edit Assistance Request' : 'Request Assistance'}</h2>
 <button
             onClick={onClose}
             type="button"
