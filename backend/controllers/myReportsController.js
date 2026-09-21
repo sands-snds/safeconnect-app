@@ -5,6 +5,49 @@ const Report = require("../models/Report");
 const AssistanceRequest = require("../models/AssistanceRequest");
 const PettyCrime = require("../models/PettyCrime");
 
+// Normalizes each report type's raw DB columns into the shape
+// MyReportsPage.jsx (list/filter/display) and the resident modals'
+// edit-prefill code expect: type, title, description, date, location,
+// status, id — plus the type-specific fields needed to restore the
+// edit form (peopleAffected/specialNeeds, urgency, suspectInfo, etc.)
+const normalizeEmergency = (r) => ({
+    ...r,
+    type: "Emergency",
+    title: r.emergency_type,
+    description: r.incident_details,
+    date: r.time,
+    location: r.location,
+    peopleAffected: r.number_of_people_affected,
+    specialNeeds: r.special_needs,
+    latitude: r.latitude,
+    longitude: r.longitude
+});
+
+const normalizeAssistance = (r) => ({
+    ...r,
+    type: "Assistance",
+    title: r.request_assistance_type,
+    description: r.describe_your_situation,
+    date: r.timestamp,
+    location: r.current_location,
+    urgency: r.urgency_level,
+    specialNeeds: r.special_needs,
+    latitude: r.latitude,
+    longitude: r.longitude
+});
+
+const normalizePettyCrime = (r) => ({
+    ...r,
+    type: "Petty Crime",
+    title: r.crime_type,
+    description: r.description,
+    date: r.timestamp,
+    location: r.location,
+    suspectInfo: r.suspect_info,
+    latitude: r.latitude,
+    longitude: r.longitude
+});
+
 exports.getMyReports = async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -16,14 +59,10 @@ exports.getMyReports = async (req, res) => {
         ]);
 
         const combined = [
-            ...emergency.map(r => ({ ...r, reportType: "emergency" })),
-            ...assistance.map(r => ({ ...r, reportType: "assistance" })),
-            ...pettyCrime.map(r => ({ ...r, reportType: "petty_crime" }))
-        ].sort((a, b) => {
-            const dateA = new Date(a.time || a.timestamp);
-            const dateB = new Date(b.time || b.timestamp);
-            return dateB - dateA;
-        });
+            ...emergency.map(normalizeEmergency),
+            ...assistance.map(normalizeAssistance),
+            ...pettyCrime.map(normalizePettyCrime)
+        ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         res.json(combined);
     } catch (err) {

@@ -344,7 +344,7 @@ export const markAllMyNotificationsRead = async (userId) => {
 
 // ── My reports (resident) ─────────────────────────────────────────────────────
 export const fetchMyReports = async (userId) => {
-    const res = await fetch(`${API_BASE}/my-reports/${userId}`, { headers: authHeaders() });
+    const res = await fetch(`${API_ENDPOINTS.REPORTS}/user/${userId}`, { headers: authHeaders() });
     return res.json();
 };
 
