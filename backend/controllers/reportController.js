@@ -109,7 +109,7 @@ exports.getReportsByUser = async (req, res) => {
 
 exports.updateStatus = async (req, res) => {
     try {
-        const report = await Report.findById(req.params.id);
+        const report = await Report.findStatusById(req.params.id);
         if (!report) {
             return res.status(404).json({ success: false, message: "Report not found." });
         }

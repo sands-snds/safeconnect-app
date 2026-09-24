@@ -85,6 +85,16 @@ class AssistanceRequest {
         return rows[0];
     }
 
+    // Status changes only need these columns. findById also pulls the
+    // photo/video (stored as base64 text), which can be several MB.
+    static async findStatusById(id) {
+        const [rows] = await db.query(
+            `SELECT id, status, reporter_id FROM assistance_requests WHERE id = ?`,
+            [id]
+        );
+        return rows[0];
+    }
+
     static async update(id, request) {
         const [result] = await db.query(
             `

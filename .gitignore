@@ -18,6 +18,7 @@
 .env.test.local
 .env.production.local
 backend/.env
+backend/.env.azure
 
 # uploaded content (announcement images, profile photos)
 backend/uploads/*

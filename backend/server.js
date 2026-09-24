@@ -21,9 +21,20 @@ const path = require("path");
 
 const app = express();
 
-// ── CORS: allow the React dev server to call the API and load images ──
+// ── CORS: allow the React dev server plus any deployed frontends ──
+// ALLOWED_ORIGINS is a comma-separated list, e.g. the Azure Static Web App
+// URL: https://<name>.azurestaticapps.net
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  ...(process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((o) => o.trim().replace(/\/$/, ""))
+    .filter(Boolean),
+];
+
 app.use(cors({
-  origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+  origin: allowedOrigins,
   credentials: true,
 }));
 

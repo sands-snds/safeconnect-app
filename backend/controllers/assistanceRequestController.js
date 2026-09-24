@@ -45,7 +45,7 @@ exports.updateRequest = async (req, res) => {
 
 exports.updateStatus = async (req, res) => {
     try {
-        const request = await AssistanceRequest.findById(req.params.id);
+        const request = await AssistanceRequest.findStatusById(req.params.id);
         if (!request) {
             return res.status(404).json({ success: false, message: "Request not found." });
         }
