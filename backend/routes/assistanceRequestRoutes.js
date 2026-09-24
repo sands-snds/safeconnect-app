@@ -6,6 +6,9 @@ const fs       = require("fs");
 
 const controller = require("../controllers/assistanceRequestController");
 const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
+const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
+
+const logStatus = logActivity("Updated request status", describeStatusChange("assistance_requests", "Assistance request"));
 
 // ── Multer setup ──────────────────────────────────────────────────────────────
 const uploadDir = path.join(__dirname, "../uploads");
@@ -32,8 +35,8 @@ router.get("/",              verifyToken, verifyAdmin, controller.getRequests);
 router.get("/statistics",    verifyToken, verifyAdmin, controller.getStatistics);
 router.get("/:id",           verifyToken,             controller.getRequest);
 router.put("/:id",           verifyToken,             controller.updateRequest);
-router.put("/:id/status",    verifyToken, verifyAdmin, controller.updateStatus);
-router.patch("/:id/status",  verifyToken, verifyAdmin, controller.updateStatus);
+router.put("/:id/status",    verifyToken, verifyAdmin, logStatus, controller.updateStatus);
+router.patch("/:id/status",  verifyToken, verifyAdmin, logStatus, controller.updateStatus);
 router.delete("/:id",        verifyToken, verifyAdmin, controller.deleteRequest);
 
 module.exports = router;

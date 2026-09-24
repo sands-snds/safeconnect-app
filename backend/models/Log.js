@@ -10,15 +10,5 @@ class Log {
         return rows;
     }
 
-    static async getAdminLogs() {
-
-        const [rows] = await db.query(`
-            SELECT *
-            FROM admin_logs
-            ORDER BY id DESC
-        `);
-        return rows;
-    }
-
 }
 module.exports = Log;

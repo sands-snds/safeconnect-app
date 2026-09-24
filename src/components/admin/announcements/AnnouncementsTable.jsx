@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import ListView from "../shared/ListView";
+import ListView, { allOption } from "../shared/ListView";
 import AnnouncementModal from "./AnnouncementModal";
 import { fetchAnnouncements, deleteAnnouncement } from "../../../Services/api";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest - Oldest" },
@@ -54,6 +54,7 @@ const AnnouncementsTable = ({
 
   const [sortOrder, setSortOrder] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -149,13 +150,13 @@ const AnnouncementsTable = ({
     return result;
   }, [data, currentFilters.search, currentFilters.status, sortOrder]);
 
-  const totalPages = Math.max(1, Math.ceil(processedData.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(processedData.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
 
   const pagedData = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE;
-    return processedData.slice(start, start + PAGE_SIZE);
-  }, [processedData, safePage]);
+    const start = (safePage - 1) * pageSize;
+    return processedData.slice(start, start + pageSize);
+  }, [processedData, safePage, pageSize]);
 
   // Reset back to page 1 whenever the search term or sort order changes,
   // so the user isn't stranded on an empty page.
@@ -370,7 +371,6 @@ const AnnouncementsTable = ({
       ) : (
         <ListView
           data={pagedData}
-          title="Announcements"
           layout="cards"
           cardsContainerStyle={{
             display: 'flex',
@@ -384,7 +384,7 @@ const AnnouncementsTable = ({
           setFilters={setFilters}
           renderRow={renderRow}
           statusOptions={[
-            "Select Category",
+            allOption("All Categories"),
             ...STATUS_OPTIONS
           ]}
           sortOptions={SORT_OPTIONS}
@@ -396,6 +396,12 @@ const AnnouncementsTable = ({
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalItems={processedData.length}
+          pageSize={pageSize}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+          itemLabel="announcements"
         />
       )}
 

@@ -2,7 +2,8 @@ export default function DashboardSummary({
     emergencyReports = [],
     assistanceRequests = [],
     pettyCrimeReports = [],
-    onCreateAnnouncement
+    onCreateAnnouncement,
+    adminName = "Administrator"
 }) {
     const totalReports =
         emergencyReports.length +
@@ -54,7 +55,7 @@ export default function DashboardSummary({
                             fontWeight: 700
                         }}
                     >
-                        Welcome back, Administrator 👋
+                        Welcome back, {adminName} 👋
                     </h1>
                 </div>
 

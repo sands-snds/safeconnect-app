@@ -58,6 +58,9 @@ class AnnouncementService {
             datePosted: data.date,
             imagePath: imagePath || null,
             sourceUrl: data.source_url || null,
+            sourceTitle: data.source_title || null,
+            sourceImage: data.source_image || null,
+            sourceSite: data.source_site || null,
         });
 
         if (removeImage && !imagePath) {
@@ -120,27 +123,61 @@ class AnnouncementService {
                     }
 
                     let html = "";
+                    let finished = false;
+                    response.setEncoding("utf8");
                     response.on("data", (chunk) => {
                         html += chunk;
-                        if (html.length > 100000) response.destroy();
+                        // The <head> meta tags are all we need. Stop reading
+                        // big pages early -- destroy() emits "close", not
+                        // "end", so both are handled below.
+                        if (html.length > 300000 || /<\/head>/i.test(chunk)) response.destroy();
                     });
 
-                    response.on("end", () => {
-                        const getMeta = (property) => {
-                            const regex = new RegExp(
-                                `<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']*)["']`,
-                                "i"
-                            );
-                            const match = html.match(regex);
-                            return match ? match[1] : null;
+                    const finish = () => {
+                        if (finished) return;
+                        finished = true;
+                        const decode = (s) =>
+                            s
+                                .replace(/&amp;/g, "&")
+                                .replace(/&quot;/g, '"')
+                                .replace(/&#0?39;|&apos;/g, "'")
+                                .replace(/&lt;/g, "<")
+                                .replace(/&gt;/g, ">");
+
+                        // Sites put the attributes in either order and use
+                        // property= (Open Graph) or name= (Twitter cards).
+                        const getMeta = (...keys) => {
+                            const tags = html.match(/<meta\b[^>]*>/gi) || [];
+                            for (const key of keys) {
+                                for (const tag of tags) {
+                                    const attr = tag.match(/\b(?:property|name)\s*=\s*["']([^"']+)["']/i);
+                                    if (!attr || attr[1].toLowerCase() !== key) continue;
+                                    const content = tag.match(/\bcontent\s*=\s*(["'])(.*?)\1/i);
+                                    if (content && content[2].trim()) return decode(content[2].trim());
+                                }
+                            }
+                            return null;
                         };
 
+                        const titleTag = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+                        let image = getMeta("og:image", "og:image:url", "twitter:image", "twitter:image:src");
+                        if (image) {
+                            try {
+                                image = new URL(image, url).toString();
+                            } catch {
+                                image = null;
+                            }
+                        }
+
                         resolve({
-                            title: getMeta("og:title"),
-                            image: getMeta("og:image"),
-                            site: getMeta("og:site_name") || parsed.hostname,
+                            title: getMeta("og:title", "twitter:title") || (titleTag ? decode(titleTag[1].trim()) : null),
+                            image,
+                            site: getMeta("og:site_name") || parsed.hostname.replace(/^www\./, ""),
                         });
-                    });
+                    };
+
+                    response.on("end", finish);
+                    response.on("close", finish);
                 }
             );
 

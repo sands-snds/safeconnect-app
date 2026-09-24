@@ -19,16 +19,49 @@ export const API_ENDPOINTS = {
 export const SHEETDB_APIS = {};
 
 // ── Auth token helpers ────────────────────────────────────────────────────────
-export const getAuthToken = () => localStorage.getItem("authToken");
+// Admin and resident sessions keep separate tokens. They used to share one
+// "authToken" key, so in the same browser an admin signing in replaced the
+// resident's token (and vice versa) -- the resident tab then fetched "my
+// notifications" as the admin and never saw their status-update messages,
+// and logging out on one side logged the other out too.
+const RESIDENT_TOKEN_KEY = "authToken";
+const ADMIN_TOKEN_KEY = "adminAuthToken";
 
-export const setAuthToken = (token, isAdmin = false) => {
-    localStorage.setItem("authToken", token);
-    localStorage.setItem("isAdmin", isAdmin ? "true" : "false");
+// Which session the current page belongs to (/admin vs everything else).
+const isAdminContext = () =>
+    typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
+
+export const getAuthToken = () => {
+    if (isAdminContext()) {
+        // Fallback: admins signed in before the split still have their
+        // token under the shared key (flagged by the old "isAdmin" entry).
+        return localStorage.getItem(ADMIN_TOKEN_KEY) ||
+            (localStorage.getItem("isAdmin") === "true" ? localStorage.getItem(RESIDENT_TOKEN_KEY) : null);
+    }
+    return localStorage.getItem(RESIDENT_TOKEN_KEY);
 };
 
+export const setAuthToken = (token, isAdmin = false) => {
+    if (isAdmin) {
+        localStorage.setItem(ADMIN_TOKEN_KEY, token);
+    } else {
+        localStorage.setItem(RESIDENT_TOKEN_KEY, token);
+        localStorage.removeItem("isAdmin");
+    }
+};
+
+// Clears only the session of the page you're on.
 export const clearAuthToken = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("isAdmin");
+    if (isAdminContext()) {
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        if (localStorage.getItem("isAdmin") === "true") {
+            localStorage.removeItem(RESIDENT_TOKEN_KEY);
+            localStorage.removeItem("isAdmin");
+        }
+    } else {
+        localStorage.removeItem(RESIDENT_TOKEN_KEY);
+        localStorage.removeItem("isAdmin");
+    }
 };
 
 const authHeaders = () => ({
@@ -140,6 +173,20 @@ export const updateUserStatus = async (userId, status) => {
     });
     const result = await res.json();
     return Boolean(result.success);
+};
+
+// role: "resident" | "admin". Returns { success, message }.
+export const updateUserRole = async (userId, role) => {
+    const res = await fetch(`${API_ENDPOINTS.USERS}/${userId}/role`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ role }),
+    });
+    try {
+        return await res.json();
+    } catch {
+        return { success: false, message: "Failed to update role." };
+    }
 };
 
 // ── Emergency reports ─────────────────────────────────────────────────────────
@@ -365,6 +412,7 @@ export const fetchAnnouncements = async () => {
         category: a.category || '',
         message: a.message || '',
         date: a.date_posted ? new Date(a.date_posted).toLocaleDateString() : '',
+        rawDate: a.date_posted || a.created_at || null,
         imageUrl: resolveAssetUrl(a.image_path) || null,
         sourceUrl: a.source_url || null,
         sourceTitle: a.source_title || null,
@@ -432,21 +480,51 @@ export const fetchSignInLogs = async () => {
     }));
 };
 
+// { admins, activity } -- see backend/controllers/logController.js.
+// admins: one entry per admin account (online state, last login, latest action).
+// activity: every logged admin action, newest first.
 export const fetchAdminLogs = async () => {
     const res = await fetch(`${API_ENDPOINTS.LOGS}/admin`, { headers: authHeaders() });
     const data = await res.json();
-    if (!Array.isArray(data)) return [];
+    if (!data?.success) return { admins: [], activity: [] };
 
-    return data.map((log) => ({
-        id: log.id,
-        email: log.email_address || '',
-        // admin_logs only ever records successful admin sign-ins, there is
-        // no separate status column for it.
-        status: 'Success',
-        timestamp: log.login_time ? new Date(log.login_time).toLocaleString() : '',
-        ipAddress: 'Not tracked',
-        device: 'Not tracked'
-    }));
+    return {
+        admins: data.admins.map((a) => ({
+            id: a.id,
+            fullName: a.full_name || '',
+            username: a.username || '',
+            email: a.email_address || '',
+            status: a.status || 'Active',
+            photoUrl: resolveAssetUrl(a.photo_url),
+            online: Boolean(a.online),
+            lastSeen: a.last_seen || null,
+            lastLogin: a.last_login || null,
+            latestAction: a.latest_action || '',
+            latestDetails: a.latest_details || '',
+            latestAt: a.latest_at || null
+        })),
+        activity: data.activity.map((log) => ({
+            id: log.id,
+            adminId: log.admin_id,
+            email: log.admin_email || '',
+            username: log.admin_username || '',
+            action: log.action || '',
+            details: log.details || '',
+            createdAt: log.created_at || null
+        }))
+    };
+};
+
+// Records the logout in the admin activity log. Must run before the token is cleared.
+export const logoutAdmin = async () => {
+    try {
+        await fetch(`${API_ENDPOINTS.LOGS}/admin/logout`, {
+            method: "POST",
+            headers: authHeaders(),
+        });
+    } catch {
+        // logging out locally still works if this fails
+    }
 };
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -495,9 +573,29 @@ export const fetchMyNotifications = async () => {
     }));
 };
 
+// Admin bell: marks a single notification read (e.g. when "See report" is clicked).
+export const markNotificationRead = async (id) => {
+    const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}/${id}/read`, {
+        method: "PUT",
+        headers: authHeaders(),
+    });
+    const result = await res.json();
+    return Boolean(result.success);
+};
+
 // Real route is /read-all, not /mark-all-read.
 export const markAllNotificationsRead = async () => {
     const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}/read-all`, {
+        method: "PUT",
+        headers: authHeaders(),
+    });
+    const result = await res.json();
+    return Boolean(result.success);
+};
+
+// Resident bell: marks one of your own notifications read.
+export const markMyNotificationRead = async (id) => {
+    const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine/${id}/read`, {
         method: "PUT",
         headers: authHeaders(),
     });

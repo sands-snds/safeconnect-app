@@ -7,6 +7,8 @@ const ReportCard = ({
   accentColor = "#d1d5db",
   title,
   badge,
+  // Optional extra element next to the badge (e.g. the "For <name>" pill).
+  tag,
   subtitle,
   statusControl,
   expanded,
@@ -60,6 +62,7 @@ const ReportCard = ({
                 {badge.text}
               </span>
             )}
+            {tag}
           </div>
           <div style={{ fontSize: 12.5, color: "#6b7280", marginTop: 2 }}>
             {subtitle}

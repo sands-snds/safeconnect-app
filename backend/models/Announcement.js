@@ -67,7 +67,10 @@ class Announcement {
                 message=?,
                 date_posted=?,
                 image_path=COALESCE(?, image_path),
-                source_url=?
+                source_url=?,
+                source_title=?,
+                source_image=?,
+                source_site=?
             WHERE id=?
             `,
             [
@@ -77,6 +80,9 @@ class Announcement {
                 data.datePosted,
                 data.imagePath || null,
                 data.sourceUrl || null,
+                data.sourceTitle || null,
+                data.sourceImage || null,
+                data.sourceSite || null,
                 id
             ]
         );

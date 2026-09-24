@@ -155,13 +155,20 @@ CREATE TABLE signin_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
--- admin_logs
+-- admin_activity_logs (replaces the old admin_logs table)
+-- Every admin action: logins/logouts, status and role changes,
+-- announcements, report exports. Also auto-created by the backend on start.
 -- --------------------------------------------------------
-CREATE TABLE admin_logs (
+CREATE TABLE admin_activity_logs (
   id INT(11) NOT NULL AUTO_INCREMENT,
-  email_address VARCHAR(255) NOT NULL,
-  login_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
+  admin_id INT(11) DEFAULT NULL,
+  admin_email VARCHAR(255) NOT NULL,
+  admin_username VARCHAR(100) DEFAULT NULL,
+  action VARCHAR(100) NOT NULL,
+  details TEXT DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY admin_id (admin_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 

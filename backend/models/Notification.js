@@ -76,6 +76,18 @@ class Notification {
         return result.affectedRows;
     }
 
+    static async markAsReadForUser(id, userId) {
+        const [result] = await db.query(
+            `
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE id = ? AND user_id = ?
+            `,
+            [id, userId]
+        );
+        return result.affectedRows;
+    }
+
     static async markAllAsReadForUser(userId) {
         const [result] = await db.query(
             `

@@ -3,6 +3,7 @@ const AssistanceRequest = require("../models/AssistanceRequest");
 const PettyCrime = require("../models/PettyCrime");
 const User = require("../models/User");
 const Log = require("../models/Log");
+const AdminActivity = require("../models/AdminActivity");
 
 const PDFService = require("./pdfService");
 const ExcelService = require("./excelService");
@@ -192,22 +193,42 @@ const EXPORTERS = {
     },
 
     adminLogs: {
-        reportTitle: "Admin Login Logs Report",
-        filenamePrefix: "Admin_Logs",
-        async build() {
-            const logs = await Log.getAdminLogs();
+        reportTitle: "Admin Activity Report",
+        filenamePrefix: "Admin_Activity",
+        async build(filters = {}) {
+            let logs = await AdminActivity.getRecent(5000);
+
+            if (filters.admin) {
+                logs = logs.filter((l) => l.admin_email === filters.admin);
+            }
+            if (filters.search) {
+                const q = String(filters.search).toLowerCase();
+                logs = logs.filter((l) =>
+                    [l.admin_email, l.admin_username, l.action, l.details]
+                        .some((v) => String(v || "").toLowerCase().includes(q))
+                );
+            }
+
+            const admins = new Set(logs.map((l) => l.admin_email)).size;
 
             return {
                 summary: [
-                    { label: "Total Admin Logins", value: logs.length }
+                    { label: "Total Actions", value: logs.length },
+                    { label: "Admins", value: admins }
                 ],
                 columns: [
+                    { label: "Admin", key: "admin" },
                     { label: "Email", key: "email" },
-                    { label: "Login Time", key: "date" }
+                    { label: "Action", key: "action" },
+                    { label: "Details", key: "details" },
+                    { label: "Time", key: "date" }
                 ],
                 rows: logs.map((l) => [
-                    l.email_address,
-                    fmtDate(l.login_time)
+                    l.admin_username || "",
+                    l.admin_email,
+                    l.action,
+                    l.details || "",
+                    fmtDate(l.created_at)
                 ])
             };
         }

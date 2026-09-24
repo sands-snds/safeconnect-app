@@ -21,6 +21,8 @@ const AdminPage = () => {
     setIsAuthenticated,
     showSigninModal,
     setShowSignInModal,
+    adminUser,
+    setAdminUser,
     handleLogout
   } = useAdminAuth();
   
@@ -39,12 +41,14 @@ const AdminPage = () => {
     notifications,
     unreadCount,
     markAllRead,
+    markOneRead,
 
     loadAllData,
     refreshAllData,   
     loadAnnouncements,
     handleRefresh,
     updateStatus,
+    updateUserRole,
     handleFormSubmit
   } = useAdminData();
 
@@ -76,9 +80,9 @@ const AdminPage = () => {
   const [filters, setFilters] = useState({
     emergency: { status: 'All Items', search: '' },
     assistance: { status: 'All Items', search: '' },
-    users: { status: 'All Items', search: '' },
+    users: { status: 'All Items', search: '', role: 'All Roles' },
     signins: { status: 'All Items', search: '' },
-    adminLogs: { status: 'All Items', search: '' },
+    adminLogs: { status: 'All Items', search: '', admin: '' },
     announcements: { status: 'All Items', search: '' },
     pettyCrime: { status: 'All Items', search: '' }
   });
@@ -179,6 +183,9 @@ useEffect(() => {
     );
   }
 
+  const adminName =
+    adminUser?.fullName || adminUser?.username || "Administrator";
+
   const renderActiveView = () => {
     switch (activeView) {
       case 'dashboard':
@@ -196,6 +203,7 @@ useEffect(() => {
             getSeverityColor={getSeverityColor}
             onNavigate={handleNavigation}
             onCreateAnnouncement={handleCreateAnnouncementShortcut}
+            adminName={adminName}
           />
         );
       case "emergency-reports":
@@ -250,6 +258,8 @@ useEffect(() => {
                 filters={filters}
                 setFilters={setFilters}
                 onUpdateStatus={updateStatus}
+                onUpdateRole={updateUserRole}
+                currentAdminId={adminUser?.id}
             />
         );
       case "sign-in-logs":
@@ -279,6 +289,7 @@ useEffect(() => {
             getSeverityColor={getSeverityColor}
             onNavigate={handleNavigation}
             onCreateAnnouncement={handleCreateAnnouncementShortcut}
+            adminName={adminName}
           />
         );
     }
@@ -303,6 +314,8 @@ useEffect(() => {
             notifications={notifications}
             unreadCount={unreadCount}
             onMarkAllRead={markAllRead}
+            onMarkOneRead={markOneRead}
+            adminUser={adminUser}
           >
               {isAuthenticated
                   ? renderActiveView()
@@ -311,7 +324,8 @@ useEffect(() => {
 
           {showSigninModal && (
               <SignInModal
-                  onSuccess={() => {
+                  onSuccess={(user) => {
+                      setAdminUser(user || null);
                       setIsAuthenticated(true);
                       setShowSignInModal(false);
                   }}

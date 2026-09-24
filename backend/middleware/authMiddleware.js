@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const adminPresence = require("../services/adminPresence");
 
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -27,18 +29,37 @@ const verifyToken = (req, res, next) => {
     });
 };
 
-const verifyAdmin = (req, res, next) => {
+// Checks the role against the database rather than trusting the token's
+// role claim -- tokens last 7 days, so otherwise a demoted/suspended admin
+// would keep admin access (and a newly promoted one wouldn't get it) until
+// their token expired. Attaches the admin's row as req.admin for activity logging.
+const verifyAdmin = async (req, res, next) => {
 
-    if (!req.user || req.user.role !== "admin") {
-
+    if (!req.user) {
         return res.status(403).json({
             success: false,
             message: "Admin access only."
         });
-
     }
 
-    next();
+    try {
+        const admin = await User.findById(req.user.id);
+
+        if (!admin || admin.role !== "admin" || (admin.status && admin.status !== "Active")) {
+            return res.status(403).json({
+                success: false,
+                message: "Admin access only."
+            });
+        }
+
+        req.admin = admin;
+        adminPresence.touch(admin.id);
+
+        next();
+    } catch (err) {
+        console.error("verifyAdmin error:", err);
+        return res.status(500).json({ success: false, message: "Internal server error." });
+    }
 };
 
 // Allows a resident to manage their own profile (photo/username/password),

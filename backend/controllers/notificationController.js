@@ -59,6 +59,17 @@ exports.getMyNotifications = async (req, res) => {
     }
 };
 
+// Only marks it if the notification belongs to the signed-in user.
+exports.markMineAsRead = async (req, res) => {
+    try {
+        const affected = await Notification.markAsReadForUser(req.params.id, req.user.id);
+        res.json({ success: affected > 0 });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false });
+    }
+};
+
 exports.markAllMineAsRead = async (req, res) => {
     try {
         await Notification.markAllAsReadForUser(req.user.id);

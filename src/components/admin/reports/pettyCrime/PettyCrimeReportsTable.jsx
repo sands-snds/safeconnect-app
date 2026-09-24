@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 
-import ListView from "../../shared/ListView";
+import ListView, { allOption } from "../../shared/ListView";
 import ReportCard from "../../shared/ReportCard";
 
 import PettyCrimeReportDetails from "./PettyCrimeReportDetails";
 import StatusSelect from "../../shared/StatusSelect";
+import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 
 const STATUS_OPTIONS = [
   "Received",
@@ -31,6 +32,7 @@ const PettyCrimeReportsTable = ({
       key={report.id}
       accentColor="#b45309"
       title={report.crimeType}
+      tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
       statusControl={
         <StatusSelect
@@ -56,10 +58,14 @@ const PettyCrimeReportsTable = ({
       setFilters={setFilters}
       renderRow={renderRow}
       statusOptions={[
-        "Select",
+        allOption("All Statuses"),
         ...STATUS_OPTIONS
       ]}
+      extraFilters={
+        <ReportForFilter filterType="pettyCrime" filters={filters} setFilters={setFilters} />
+      }
       exportType="pettyCrime"
+      itemLabel="reports"
     />
   );
 };

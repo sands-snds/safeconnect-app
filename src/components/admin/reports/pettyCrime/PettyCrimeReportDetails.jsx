@@ -2,6 +2,7 @@ import React from "react";
 
 import DetailField from "../../shared/DetailField";
 import ReportImage from "../shared/ReportImage";
+import { ReportForDetails, isForOthers } from "../shared/ReportFor";
 
 const PettyCrimeReportDetails = ({ report }) => {
   const photo =
@@ -23,13 +24,15 @@ const PettyCrimeReportDetails = ({ report }) => {
           minWidth: "260px"
         }}
       >
+        <ReportForDetails report={report} personLabel="Victim" />
+
         <DetailField
-          label="Reporter Name"
+          label={isForOthers(report) ? "Reported By" : "Reporter Name"}
           value={report.reporter}
         />
 
         <DetailField
-          label="Contact Number"
+          label={isForOthers(report) ? "Reporter Contact" : "Contact Number"}
           value={report.phone}
         />
 

@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Section from './Section';
 import Table from './Table';
 import GenerateReportButton from './GenerateReportButton';
+import Pagination from './Pagination';
+
+const DEFAULT_PAGE_SIZE = 10;
+
+// The filter value every tab treats as "don't filter by status".
+export const ALL_OPTION = 'All Items';
+export const allOption = (label) => ({ value: ALL_OPTION, label });
 
 const ListView = ({
   title,
@@ -20,28 +27,79 @@ const ListView = ({
   // Only used when layout === 'cards'. Defaults to a stacked list (used by
   // the report tables); Announcements overrides this with a responsive grid.
   cardsContainerStyle = { display: 'flex', flexDirection: 'column', gap: '10px' },
-  // Optional: only rendered when provided, so tables that don't use them
-  // (everything except Announcements, for now) keep working unchanged.
+  // Optional sort dropdown (Announcements).
   sortOptions,
   sortValue,
   onSortChange,
+  // Pagination: by default ListView paginates `data` itself. Pass `page` +
+  // `totalPages` + `onPageChange` (+ totalItems/pageSize) to control it from
+  // outside instead -- Announcements does, since it sorts before paging and
+  // passes in only the current page's items.
   page,
   totalPages,
   onPageChange,
   totalItems,
+  pageSize,
+  onPageSizeChange,
+  itemLabel,
   // Optional: pass an export type key (see exportService.js's EXPORTERS map
   // on the backend) to render a "Generate Report" PDF/Excel button in the
   // filter row. Omit to leave a page without one.
   exportType,
   exportLabel,
   // Optional override for the "+ Add New" button text.
-  addLabel = '+ Add New'
+  addLabel = '+ Add New',
+  // Optional: extra filter controls rendered after the status filter
+  // (e.g. the Users tab's role filter).
+  extraFilters
 }) => {
-  const showPagination = typeof totalPages === 'number' && totalPages > 1;
+  const isControlled = typeof page === 'number';
+
+  const [internalPage, setInternalPage] = useState(1);
+  const [internalPageSize, setInternalPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const listTopRef = useRef(null);
+
+  // Back to page 1 whenever the search/filters change -- but not when the
+  // data itself refreshes (the 30s auto-refresh shouldn't throw you back to
+  // page 1 while you're reading page 3).
+  const filterKey = JSON.stringify(filters?.[filterType] || {});
+  useEffect(() => {
+    setInternalPage(1);
+  }, [filterKey]);
+
+  const effectivePageSize = isControlled ? (pageSize || DEFAULT_PAGE_SIZE) : internalPageSize;
+  const effectiveTotalItems = isControlled ? (totalItems ?? data.length) : data.length;
+  const effectiveTotalPages = isControlled
+    ? (totalPages || 1)
+    : Math.max(1, Math.ceil(data.length / internalPageSize));
+  // Clamp in case the list shrank (e.g. a filter or refresh removed items).
+  const currentPage = Math.min(isControlled ? page : internalPage, effectiveTotalPages);
+
+  const visibleData = isControlled
+    ? data
+    : data.slice((currentPage - 1) * internalPageSize, currentPage * internalPageSize);
+
+  const goToPage = (next) => {
+    const clamped = Math.max(1, Math.min(effectiveTotalPages, next));
+    if (isControlled) {
+      onPageChange && onPageChange(clamped);
+    } else {
+      setInternalPage(clamped);
+    }
+    // Bring the top of the list back into view after switching pages.
+    listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handlePageSizeChange = isControlled
+    ? onPageSizeChange
+    : (size) => {
+        setInternalPageSize(size);
+        setInternalPage(1);
+      };
 
   return (
-    <div>
-      <h1 className="font-bold text-2xl mb-5">{title}</h1>
+    <div ref={listTopRef} style={{ scrollMarginTop: 96 }}>
+      {title && <h1 className="font-bold text-2xl mb-5">{title}</h1>}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '16px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1 1 240px', minWidth: '200px' }}>
@@ -68,11 +126,18 @@ const ListView = ({
             }))}
             className="form-select"
           >
-            {statusOptions.map(opt => (
-              <option key={opt}>{opt}</option>
-            ))}
+            {/* An option is either a string or { value, label } -- the
+                "show everything" option must have the value 'All Items'
+                (ALL_OPTION, top of this file), whatever its label. */}
+            {statusOptions.map(opt => {
+              const value = typeof opt === 'object' ? opt.value : opt;
+              const label = typeof opt === 'object' ? opt.label : opt;
+              return <option key={value} value={value}>{label}</option>;
+            })}
           </select>
         </div>
+
+        {extraFilters}
 
         {sortOptions && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -103,7 +168,7 @@ const ListView = ({
             type={exportType}
             label={exportLabel}
             filters={{
-              status: filters[filterType]?.status !== 'All Items' && filters[filterType]?.status !== 'Select'
+              status: filters[filterType]?.status !== 'All Items'
                 ? filters[filterType]?.status
                 : undefined,
               search: filters[filterType]?.search || undefined
@@ -115,7 +180,7 @@ const ListView = ({
       {layout === 'cards' ? (
         <div>
           <div style={cardsContainerStyle}>
-            {data.map(item => renderRow(item))}
+            {visibleData.map(item => renderRow(item))}
           </div>
 
           {data.length === 0 && (
@@ -127,7 +192,7 @@ const ListView = ({
       ) : (
         <Section title={`All ${title}`}>
           <Table headers={headers}>
-            {data.map(item => renderRow(item))}
+            {visibleData.map(item => renderRow(item))}
           </Table>
 
           {data.length === 0 && (
@@ -138,44 +203,15 @@ const ListView = ({
         </Section>
       )}
 
-      {showPagination && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: '16px',
-            paddingTop: '16px',
-            borderTop: '1px solid #e5e7eb',
-            flexWrap: 'wrap',
-            gap: '10px'
-          }}
-        >
-          <span style={{ fontSize: '.85rem', color: '#6b7280' }}>
-            {typeof totalItems === 'number' ? `${totalItems} total · ` : ''}
-            Page {page} of {totalPages}
-          </span>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={() => onPageChange && onPageChange(Math.max(1, page - 1))}
-              disabled={page <= 1}
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={() => onPageChange && onPageChange(Math.min(totalPages, page + 1))}
-              disabled={page >= totalPages}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={currentPage}
+        totalPages={effectiveTotalPages}
+        totalItems={effectiveTotalItems}
+        pageSize={effectivePageSize}
+        onPageChange={goToPage}
+        onPageSizeChange={handlePageSizeChange}
+        itemLabel={itemLabel}
+      />
     </div>
   );
 };

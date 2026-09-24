@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 
-import ListView from "../../shared/ListView";
+import ListView, { allOption } from "../../shared/ListView";
 import ReportCard from "../../shared/ReportCard";
 
 import EmergencyReportDetails from "./EmergencyReportDetails";
 import StatusSelect from "../../shared/StatusSelect";
+import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 
 const STATUS_OPTIONS = [
   "Received",
@@ -37,6 +38,7 @@ const EmergencyReportsTable = ({
         bg: "#f3f4f6",
         color: getSeverityColor(report.severity)
       }}
+      tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
       statusControl={
         <StatusSelect
@@ -62,10 +64,14 @@ const EmergencyReportsTable = ({
       setFilters={setFilters}
       renderRow={renderRow}
       statusOptions={[
-        "Select",
+        allOption("All Statuses"),
         ...STATUS_OPTIONS
       ]}
+      extraFilters={
+        <ReportForFilter filterType="emergency" filters={filters} setFilters={setFilters} />
+      }
       exportType="emergency"
+      itemLabel="reports"
     />
   );
 };

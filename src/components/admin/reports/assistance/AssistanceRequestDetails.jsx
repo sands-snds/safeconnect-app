@@ -2,6 +2,7 @@ import React from "react";
 
 import DetailField from "../../shared/DetailField";
 import ReportImage from "../shared/ReportImage";
+import { ReportForDetails, isForOthers } from "../shared/ReportFor";
 
 const AssistanceRequestDetails = ({ request }) => {
   const photo =
@@ -23,13 +24,15 @@ const AssistanceRequestDetails = ({ request }) => {
           minWidth: "260px"
         }}
       >
+        <ReportForDetails report={request} personLabel="Person Needing Help" />
+
         <DetailField
-          label="Requester Name"
+          label={isForOthers(request) ? "Requested By" : "Requester Name"}
           value={request.requester}
         />
 
         <DetailField
-          label="Contact Number"
+          label={isForOthers(request) ? "Requester Contact" : "Contact Number"}
           value={request.phone}
         />
 

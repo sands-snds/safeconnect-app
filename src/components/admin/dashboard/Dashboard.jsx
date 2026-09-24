@@ -18,7 +18,8 @@ export default function Dashboard({
     announcements,
     onStatCardClick,
     onCreateAnnouncement,
-    onNavigate
+    onNavigate,
+    adminName
 }) {
     return (
         <>
@@ -27,6 +28,7 @@ export default function Dashboard({
                 assistanceRequests={assistanceRequests}
                 pettyCrimeReports={pettyCrimeReports}
                 onCreateAnnouncement={onCreateAnnouncement}
+                adminName={adminName}
             />
 
             <AdminStats
@@ -58,6 +60,7 @@ export default function Dashboard({
                 emergencyReports={emergencyReports}
                 assistanceRequests={assistanceRequests}
                 pettyCrimeReports={pettyCrimeReports}
+                onNavigate={onNavigate}
             />
         </>
     );

@@ -150,6 +150,13 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
 
       if (sourceUrl.trim()) {
         payload.append("source_url", sourceUrl.trim());
+        // Save the fetched preview so the resident News page can show the
+        // article's image/title without re-fetching the link.
+        if (linkPreview) {
+          if (linkPreview.title) payload.append("source_title", linkPreview.title);
+          if (linkPreview.image) payload.append("source_image", linkPreview.image);
+          if (linkPreview.site) payload.append("source_site", linkPreview.site);
+        }
       }
 
       if (imageFile) {

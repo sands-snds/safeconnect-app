@@ -23,9 +23,15 @@ const ReportsPage = ({
 
         const currentFilter = filters[filterType];
 
-        if (currentFilter.status !== "All Items") {
+        if (currentFilter.status && currentFilter.status !== "All Items") {
             filtered = filtered.filter(
                 item => item[statusKey] === currentFilter.status
+            );
+        }
+
+        if (currentFilter.reportFor && currentFilter.reportFor !== "all") {
+            filtered = filtered.filter(
+                item => (item.reportFor || "self") === currentFilter.reportFor
             );
         }
 

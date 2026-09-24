@@ -1,5 +1,5 @@
 import React from 'react';
-import ListView from '../shared/ListView';
+import ListView, { allOption } from '../shared/ListView';
 import StatusBadge from '../shared/StatusBadge';
 
 const SignInLogsTable = ({ 
@@ -30,8 +30,9 @@ const SignInLogsTable = ({
       setFilters={setFilters}
       headers={['USER', 'LOGIN TIME', 'IP ADDRESS', 'DEVICE', 'STATUS']}
       renderRow={renderRow}
-      statusOptions={['All Items', 'Success', 'Failed']}
+      statusOptions={[allOption('All Statuses'), 'Success', 'Failed']}
       exportType="signinLogs"
+      itemLabel="sign-ins"
     />
   );
 };

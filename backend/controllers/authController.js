@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const dns    = require("dns").promises;
 const User   = require("../models/User");
+const AdminActivity = require("../models/AdminActivity");
 const { generateToken } = require("../utils/jwt");
 const {
     sendOtpEmail,
@@ -464,7 +465,7 @@ exports.signin = async (req, res) => {
         }
 
         await User.logSignin(user.full_name, email, "Success");
-        if (user.role === "admin") await User.logAdminSignin(email);
+        if (user.role === "admin") await AdminActivity.record(user, "Logged in");
 
         sendSigninNotification(email, user.full_name).catch((err) =>
             console.error("Sign-in notification email failed:", err)

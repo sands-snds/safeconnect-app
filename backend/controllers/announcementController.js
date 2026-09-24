@@ -69,11 +69,13 @@ exports.getLinkPreview = async (req, res) => {
     try {
         const url = req.query.url;
         if (!url) {
-            return res.status(400).json({ message: "A url query parameter is required." });
+            return res.status(400).json({ success: false, message: "A url query parameter is required." });
         }
         const preview = await AnnouncementService.fetchLinkPreview(url);
-        res.json(preview);
+        // CreateAnnouncementView checks result.success -- without it every
+        // preview was treated as a failure and discarded.
+        res.json({ success: true, ...preview });
     } catch (err) {
-        res.status(422).json({ message: err.message || "Could not read that link." });
+        res.status(422).json({ success: false, message: err.message || "Could not read that link." });
     }
 };

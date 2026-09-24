@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { fetchMyNotifications, markAllMyNotificationsRead } from "../../../../Services/api";
+import { fetchMyNotifications, markAllMyNotificationsRead, markMyNotificationRead } from "../../../../Services/api";
 
 const READ_STORAGE_KEY = "resident_read_announcements";
 
@@ -112,10 +112,9 @@ export default function useNotifications(
             setPersonalNotifications(prev =>
                 prev.map(n => String(n.id) === realId ? { ...n, isRead: true } : n)
             );
-            // Individual personal notifications don't have their own
-            // mark-read endpoint wired up client-side yet -- "mark all"
-            // (below) covers the common case. This just updates local state
-            // so the badge/list reflect it was opened.
+            // Saved on the backend too, otherwise the next poll would bring
+            // it back as unread.
+            markMyNotificationRead(realId).catch(() => {});
             return;
         }
 

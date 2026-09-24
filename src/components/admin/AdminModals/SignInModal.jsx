@@ -30,8 +30,9 @@ const SignInModal = ({ onSuccess }) => {
     }
 
     sessionStorage.setItem('adminAuthenticated', 'true');
+    sessionStorage.setItem('adminUser', JSON.stringify(result.user || {}));
     setAuthToken(result.token, true);
-    onSuccess();
+    onSuccess(result.user);
   };
 
   return (

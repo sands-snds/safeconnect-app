@@ -30,6 +30,14 @@ exports.updateUserStatus = async (req, res) => {
             });
         }
 
+        // An admin suspending/closing their own account would lock them out.
+        if (String(req.user.id) === String(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "You can't change the status of your own account."
+            });
+        }
+
         await User.updateStatus(id, status);
         return res.json({
             success: true,
@@ -42,6 +50,52 @@ exports.updateUserStatus = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to update user."
+        });
+    }
+};
+
+const ALLOWED_ROLES = ["resident", "admin"];
+
+// Promote a resident to admin (or demote an admin back to resident).
+// verifyAdmin reads the role from the database, so this takes effect on the
+// account's very next request -- no re-login needed.
+exports.updateUserRole = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+
+        if (!ALLOWED_ROLES.includes(role)) {
+            return res.status(400).json({
+                success: false,
+                message: `Role must be one of: ${ALLOWED_ROLES.join(", ")}.`
+            });
+        }
+
+        // Also guarantees there's always at least one admin left.
+        if (String(req.user.id) === String(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "You can't change the role of your own account."
+            });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        await User.updateRole(id, role);
+        return res.json({
+            success: true,
+            message: role === "admin" ? "User promoted to admin." : "User changed to resident."
+        });
+    }
+
+    catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update user role."
         });
     }
 };

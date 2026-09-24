@@ -22,7 +22,9 @@ const AdminLayout = ({
     lastUpdate,
     notifications,
     unreadCount,
-    onMarkAllRead
+    onMarkAllRead,
+    onMarkOneRead,
+    adminUser
 }) => {
 
     return (
@@ -53,6 +55,10 @@ const AdminLayout = ({
                         notifications={notifications}
                         unreadCount={unreadCount}
                         onMarkAllRead={onMarkAllRead}
+                        onMarkOneRead={onMarkOneRead}
+                        onNavigate={onNavigate}
+                        onLogout={onLogout}
+                        adminUser={adminUser}
                     />
 
                     <div

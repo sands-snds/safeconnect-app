@@ -19,7 +19,7 @@ const AdminStats = ({
   assistanceRequests = [], 
   registeredUsers = [], 
   signInLogs = [], 
-  adminLogs = [],
+  adminLogs = { admins: [] },
   announcements = [],
   pettyCrimeReports = [],
   onStatCardClick 
@@ -63,8 +63,8 @@ const AdminStats = ({
         onClick={() => onStatCardClick('sign-in-logs')}
       />
       <StatCard 
-        label="ADMIN LOGINS" 
-        value={adminLogs.length} 
+        label="ADMIN ACCOUNTS" 
+        value={adminLogs.admins?.length || 0} 
         color="#ddd6fe" 
         onClick={() => onStatCardClick('admin-logs')}
       />

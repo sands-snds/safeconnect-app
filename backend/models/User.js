@@ -123,17 +123,6 @@ class User {
     }
 
 /* =========================================================
-                    Log Admin Signin
-============================================================*/
-
-    static async logAdminSignin(email) {
-        await db.query(
-            `INSERT INTO admin_logs (email_address) VALUES (?)`,
-            [email]
-        );
-    }
-
-/* =========================================================
                     Get All Users
 ============================================================*/
 
@@ -168,6 +157,18 @@ class User {
             WHERE id = ?
             `,
             [status, id]
+        );
+        return result.affectedRows;
+    }
+
+/* =========================================================
+                    Update User Role
+============================================================*/
+
+    static async updateRole(id, role) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET role = ? WHERE id = ?`,
+            [role, id]
         );
         return result.affectedRows;
     }

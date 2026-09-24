@@ -166,6 +166,7 @@ function ResidentNavbar() {
     setShowDropdown(false);
     if (!showNotifications) {
       reloadAnnouncements();
+      reloadPersonalNotifications();
     }
   };
 

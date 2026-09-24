@@ -12,6 +12,8 @@ import {
     createAssistanceRequest,
     updateStatus as updateSheetStatus,
     fetchNotifications,
+    markNotificationRead,
+    updateUserRole as updateUserRoleApi,
     markAllNotificationsRead
 } from "../../../Services/api";
 
@@ -30,7 +32,7 @@ export default function useAdminData() {
     const [assistanceRequests, setAssistanceRequests] = useState([]);
     const [registeredUsers, setRegisteredUsers] = useState([]);
     const [signInLogs, setSignInLogs] = useState([]);
-    const [adminLogs, setAdminLogs] = useState([]);
+    const [adminLogs, setAdminLogs] = useState({ admins: [], activity: [] });
     const [announcements, setAnnouncements] = useState([]);
     const [pettyCrimeReports, setPettyCrimeReports] = useState([]);
     const [notifications, setNotifications] = useState([]);
@@ -75,6 +77,17 @@ export default function useAdminData() {
         if (!success) return;
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
         setUnreadCount(0);
+    };
+
+    // Updates local state right away so the badge drops immediately; the
+    // next refresh re-syncs from the backend if the request failed.
+    const markOneRead = async (id) => {
+        const target = notifications.find(n => n.id === id);
+        if (!target || target.isRead) return;
+
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+        setUnreadCount(prev => Math.max(prev - 1, 0));
+        await markNotificationRead(id).catch(() => false);
     };
 
     // Initial page load ONLY
@@ -153,7 +166,7 @@ export default function useAdminData() {
     const updateStatus = async (id, newStatus, type) => {
 
         if (!["emergency", "assistance", "pettyCrime", "users"].includes(type)) {
-            return;
+            return false;
         }
 
         // api.js's updateStatus already knows the right URL + HTTP method
@@ -164,7 +177,7 @@ export default function useAdminData() {
             newStatus
         );
 
-        if (!success) return;
+        if (!success) return false;
 
         const update = list =>
             list.map(item =>
@@ -187,6 +200,20 @@ export default function useAdminData() {
 
         if (type === "users")
             setRegisteredUsers(prev => update(prev));
+
+        return true;
+    };
+
+    // Returns { success, message } so the Users table can show the reason
+    // when the backend refuses (e.g. changing your own role).
+    const updateUserRole = async (id, role) => {
+        const result = await updateUserRoleApi(id, role);
+        if (!result?.success) return result;
+
+        setRegisteredUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
+        // Admin Logs lists admin accounts, so it changes too.
+        loadAdminLogs();
+        return result;
     };
 
     const handleFormSubmit = async (e, type) => {
@@ -240,11 +267,13 @@ export default function useAdminData() {
         notifications,
         unreadCount,
         markAllRead,
+        markOneRead,
         loadAllData,
         refreshAllData,
         loadAnnouncements,
         handleRefresh,
         updateStatus,
+        updateUserRole,
         handleFormSubmit
     };
 }

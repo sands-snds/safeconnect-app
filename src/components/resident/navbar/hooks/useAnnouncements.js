@@ -11,30 +11,23 @@ export default function useAnnouncements() {
             setLoading(true);
             setError("");
             const data = await fetchAnnouncements();
+            if (!Array.isArray(data)) throw new Error("Unexpected response");
 
+            // fetchAnnouncements() already returns camelCase fields with the
+            // image URL resolved. This used to re-map snake_case keys
+            // (image_url, source_url, ...) that no longer exist, which left
+            // every image and article link empty on the News page.
             const formatted = data.map(item => ({
-                id:
-                    item.id,
-                title:
-                    item.title || "",
-                category:
-                    item.category || "General",
-                message:
-                    item.message || "",
-                date:
-                    item.date_posted ||
-                    item.date ||
-                    item.created_at,
-                imageUrl:
-                    item.image_url ||
-                    item.image ||
-                    "",
-                sourceUrl:
-                    item.source_url ||
-                    "",
-                sourceSite:
-                    item.source_site ||
-                    ""
+                id: item.id,
+                title: item.title || "",
+                category: item.category || "General",
+                message: item.message || "",
+                date: item.rawDate || item.date,
+                imageUrl: item.imageUrl || "",
+                sourceUrl: item.sourceUrl || "",
+                sourceTitle: item.sourceTitle || "",
+                sourceImage: item.sourceImage || "",
+                sourceSite: item.sourceSite || ""
             }));
 
             formatted.sort((a, b) =>

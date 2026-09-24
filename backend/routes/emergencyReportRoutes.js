@@ -6,6 +6,9 @@ const fs       = require("fs");
 
 const reportController = require("../controllers/reportController");
 const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
+const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
+
+const logStatus = logActivity("Updated report status", describeStatusChange("emergency_reports", "Emergency report"));
 
 // ── Multer setup ──────────────────────────────────────────────────────────────
 const uploadDir = path.join(__dirname, "../uploads");
@@ -32,8 +35,8 @@ router.get("/",              verifyToken, verifyAdmin, reportController.getRepor
 router.get("/statistics",    verifyToken, verifyAdmin, reportController.getStatistics);
 router.get("/:id",           verifyToken,             reportController.getReport);
 router.put("/:id",           verifyToken,             reportController.updateReport);
-router.put("/:id/status",    verifyToken, verifyAdmin, reportController.updateStatus);
-router.patch("/:id/status",  verifyToken, verifyAdmin, reportController.updateStatus);
+router.put("/:id/status",    verifyToken, verifyAdmin, logStatus, reportController.updateStatus);
+router.patch("/:id/status",  verifyToken, verifyAdmin, logStatus, reportController.updateStatus);
 router.delete("/:id",        verifyToken,             reportController.deleteReport);
 
 module.exports = router;

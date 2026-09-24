@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 
-import ListView from "../../shared/ListView";
+import ListView, { allOption } from "../../shared/ListView";
 import ReportCard from "../../shared/ReportCard";
 
 import AssistanceRequestDetails from "./AssistanceRequestDetails";
 import StatusSelect from "../../shared/StatusSelect";
+import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 
 const STATUS_OPTIONS = [
   "Received",
@@ -36,6 +37,7 @@ const AssistanceRequestsTable = ({
         bg: "#f3f4f6",
         color: "#374151"
       }}
+      tag={<ReportForTag report={request} />}
       subtitle={`${request.requester} · ${request.location} · ${request.date}`}
       statusControl={
         <StatusSelect
@@ -61,10 +63,14 @@ const AssistanceRequestsTable = ({
       setFilters={setFilters}
       renderRow={renderRow}
       statusOptions={[
-        "Select",
+        allOption("All Statuses"),
         ...STATUS_OPTIONS
       ]}
+      extraFilters={
+        <ReportForFilter filterType="assistance" filters={filters} setFilters={setFilters} />
+      }
       exportType="assistance"
+      itemLabel="requests"
     />
   );
 };

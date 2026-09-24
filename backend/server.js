@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const db = require("./config/db");
+const AdminActivity = require("./models/AdminActivity");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const logRoutes = require("./routes/logRoutes");
@@ -73,3 +74,8 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Creates admin_activity_logs on existing databases (no manual migration needed).
+AdminActivity.ensureTable().catch((err) =>
+  console.error("Could not create admin_activity_logs table:", err.message)
+);

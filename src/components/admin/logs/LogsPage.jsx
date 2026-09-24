@@ -43,12 +43,6 @@ const LogsPage = ({
         "status"
     );
 
-    const filteredAdminLogs = filterData(
-        adminLogs,
-        "adminLogs",
-        "status"
-    );
-
     switch (activeView) {
 
         case "sign-in-logs":
@@ -62,8 +56,11 @@ const LogsPage = ({
 
         case "admin-logs":
             return (
+                // Filters its own activity list (search + admin), since
+                // adminLogs is { admins, activity } rather than a flat list.
                 <AdminLogsTable
-                    data={filteredAdminLogs}
+                    admins={adminLogs.admins}
+                    activity={adminLogs.activity}
                     filters={filters}
                     setFilters={setFilters}
                 />

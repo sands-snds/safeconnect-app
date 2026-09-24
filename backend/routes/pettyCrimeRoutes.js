@@ -6,6 +6,9 @@ const fs       = require("fs");
 
 const controller = require("../controllers/pettyCrimeController");
 const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
+const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
+
+const logStatus = logActivity("Updated report status", describeStatusChange("petty_crimes", "Petty crime report"));
 
 // ── Multer setup ──────────────────────────────────────────────────────────────
 const uploadDir = path.join(__dirname, "../uploads");
@@ -32,7 +35,7 @@ router.get("/",              verifyToken, verifyAdmin, controller.getReports);
 router.get("/statistics",    verifyToken, verifyAdmin, controller.getStatistics);
 router.get("/:id",           verifyToken,             controller.getReport);
 router.put("/:id",           verifyToken,             controller.updateReport);
-router.patch("/:id/status",  verifyToken, verifyAdmin, controller.updateStatus);
+router.patch("/:id/status",  verifyToken, verifyAdmin, logStatus, controller.updateStatus);
 router.delete("/:id",        verifyToken, verifyAdmin, controller.deleteReport);
 
 module.exports = router;
