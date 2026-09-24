@@ -175,7 +175,7 @@ VALUES (
   'admin',
   NULL,
   'admin@safeconnect.org',
-  '$2b$10$ctsjB6pqsfYIQqsUM5IW3uGszwUhw9P/0i0I9pthQiP87brjfTTpG',
+  'Admin123',
   'admin',
   'Active'
 );

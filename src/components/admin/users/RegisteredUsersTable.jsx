@@ -39,6 +39,7 @@ const RegisteredUsersTable = ({
       headers={['USER','DATE REGISTERED','STATUS']}
       renderRow={renderRow}
       statusOptions={['Select', 'Active', 'Pending', 'Suspended', 'Closed']}
+      exportType="users"
     />
     
   );

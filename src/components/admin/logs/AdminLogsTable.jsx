@@ -1,4 +1,5 @@
 import React from 'react';
+import GenerateReportButton from '../shared/GenerateReportButton';
 
 const AdminLogsTable = ({ data, filters, setFilters }) => {
   return (
@@ -36,6 +37,11 @@ const AdminLogsTable = ({ data, filters, setFilters }) => {
             ...prev,
             adminLogs: { ...prev.adminLogs, search: e.target.value }
           }))}
+        />
+
+        <GenerateReportButton
+          type="adminLogs"
+          filters={{ search: filters.adminLogs?.search || undefined }}
         />
       </div>
 

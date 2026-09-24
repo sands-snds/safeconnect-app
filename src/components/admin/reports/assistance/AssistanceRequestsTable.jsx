@@ -64,6 +64,7 @@ const AssistanceRequestsTable = ({
         "Select",
         ...STATUS_OPTIONS
       ]}
+      exportType="assistance"
     />
   );
 };

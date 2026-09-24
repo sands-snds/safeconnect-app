@@ -38,10 +38,6 @@ const AdminSidebar = ({
       title: "CONTENT",
       items: [
         {
-          id: "create-announcement",
-          label: "Create Announcement"
-        },
-        {
           id: "announcement-page",
           label: "Announcements"
         }

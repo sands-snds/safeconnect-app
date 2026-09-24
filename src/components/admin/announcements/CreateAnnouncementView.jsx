@@ -137,19 +137,30 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
     setSubmitting(true);
 
     try {
-      const announcement = {
-        title,
-        category,
-        message,
-        date: date || new Date().toISOString().slice(0, 10),
-        sourceUrl: sourceUrl.trim() || null,
-        imageFile,
-        removeImage: isEditMode && removeImage
-      };
+      // createAnnouncement/updateAnnouncement in Services/api.js send
+      // whatever they're given straight through as the fetch body, so it
+      // has to already be a real FormData object -- a plain JS object here
+      // silently produces an empty request body, which is why every column
+      // was landing NULL.
+      const payload = new FormData();
+      payload.append("title", title);
+      payload.append("category", category);
+      payload.append("message", message);
+      payload.append("date", date || new Date().toISOString().slice(0, 10));
+
+      if (sourceUrl.trim()) {
+        payload.append("source_url", sourceUrl.trim());
+      }
+
+      if (imageFile) {
+        payload.append("image", imageFile);
+      } else if (isEditMode && removeImage) {
+        payload.append("remove_image", "1");
+      }
 
       const result = isEditMode
-        ? await updateAnnouncement(editingAnnouncement.id, announcement)
-        : await createAnnouncement(announcement);
+        ? await updateAnnouncement(editingAnnouncement.id, payload)
+        : await createAnnouncement(payload);
 
       if (!result.success) {
         throw new Error(

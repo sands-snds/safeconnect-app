@@ -43,7 +43,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/emergency-reports", emergencyReportRoutes);
 app.use("/api/assistance-requests", assistanceRequestRoutes);
 app.use("/api/petty-crimes", pettyCrimeRoutes);
-app.use("/api/export", exportRoutes);
+app.use("/api/export", require("./routes/exportRoutes"));
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/settings", systemSettingRoutes);

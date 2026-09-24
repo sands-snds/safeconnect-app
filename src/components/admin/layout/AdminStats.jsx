@@ -15,13 +15,13 @@ const StatCard = ({ label, value, color, onClick }) => (
 );
 
 const AdminStats = ({ 
-  emergencyReports, 
-  assistanceRequests, 
-  registeredUsers, 
-  signInLogs, 
-  adminLogs,
-  announcements,
-  pettyCrimeReports,
+  emergencyReports = [], 
+  assistanceRequests = [], 
+  registeredUsers = [], 
+  signInLogs = [], 
+  adminLogs = [],
+  announcements = [],
+  pettyCrimeReports = [],
   onStatCardClick 
 }) => {
   return (

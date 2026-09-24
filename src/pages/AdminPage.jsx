@@ -62,6 +62,17 @@ const AdminPage = () => {
     handleStatCardClick
   } = useAdminNavigation();
 
+  // Dashboard's "Create Announcement" shortcut needs to both navigate to the
+  // Announcements tab and open the create modal once there -- navigation
+  // alone would just land on the list. See AnnouncementsTable.jsx's
+  // pendingCreateAnnouncement effect for the other half of this.
+  const [pendingCreateAnnouncement, setPendingCreateAnnouncement] = useState(false);
+
+  const handleCreateAnnouncementShortcut = () => {
+    setPendingCreateAnnouncement(true);
+    handleNavigation("announcement-page");
+  };
+
   const [filters, setFilters] = useState({
     emergency: { status: 'All Items', search: '' },
     assistance: { status: 'All Items', search: '' },
@@ -184,6 +195,7 @@ useEffect(() => {
             onStatCardClick={handleStatCardClick}
             getSeverityColor={getSeverityColor}
             onNavigate={handleNavigation}
+            onCreateAnnouncement={handleCreateAnnouncementShortcut}
           />
         );
       case "emergency-reports":
@@ -210,8 +222,6 @@ useEffect(() => {
       case "announcement-page":
           return (
               <AnnouncementsPage
-                  activeView={activeView}
-
                   editingAnnouncement={
                       editingAnnouncement
                   }
@@ -228,7 +238,8 @@ useEffect(() => {
                       loadAnnouncements
                   }
 
-                  setActiveView={setActiveView}
+                  pendingCreateAnnouncement={pendingCreateAnnouncement}
+                  onConsumePendingCreateAnnouncement={() => setPendingCreateAnnouncement(false)}
               />
           );
 
@@ -267,6 +278,7 @@ useEffect(() => {
             onStatCardClick={handleStatCardClick}
             getSeverityColor={getSeverityColor}
             onNavigate={handleNavigation}
+            onCreateAnnouncement={handleCreateAnnouncementShortcut}
           />
         );
     }

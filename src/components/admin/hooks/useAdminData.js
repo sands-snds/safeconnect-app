@@ -12,8 +12,7 @@ import {
     createAssistanceRequest,
     updateStatus as updateSheetStatus,
     fetchNotifications,
-    markAllNotificationsRead,
-    SHEETDB_APIS
+    markAllNotificationsRead
 } from "../../../Services/api";
 
 import {
@@ -153,31 +152,14 @@ export default function useAdminData() {
 
     const updateStatus = async (id, newStatus, type) => {
 
-        let api;
-
-        switch (type) {
-            case "emergency":
-                api = SHEETDB_APIS.emergencyReports;
-                break;
-
-            case "assistance":
-                api = SHEETDB_APIS.assistanceRequests;
-                break;
-
-            case "pettyCrime":
-                api = SHEETDB_APIS.pettyCrimes;
-                break;
-
-            case "users":
-                api = SHEETDB_APIS.registeredUsers;
-                break;
-
-            default:
-                return;
+        if (!["emergency", "assistance", "pettyCrime", "users"].includes(type)) {
+            return;
         }
 
+        // api.js's updateStatus already knows the right URL + HTTP method
+        // per type (see its own comment) -- no need to look one up here.
         const success = await updateSheetStatus(
-            api,
+            type,
             id,
             newStatus
         );

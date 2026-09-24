@@ -67,7 +67,7 @@ class AnnouncementService {
         return { success: true };
     }
 
-    static async fetchLinkPreview(url) {
+    static async fetchLinkPreview(url, redirectsLeft = 3) {
         return new Promise((resolve, reject) => {
             let parsed;
             try {
@@ -81,35 +81,68 @@ class AnnouncementService {
             }
 
             const client = parsed.protocol === "https:" ? https : http;
-            const request = client.get(url, { timeout: 5000 }, (response) => {
-                if (response.statusCode >= 400) {
-                    response.resume();
-                    return reject(new Error("Could not read that link."));
-                }
+            const request = client.get(
+                url,
+                {
+                    timeout: 5000,
+                    headers: {
+                        // Many real-world sites (Wikipedia, government sites
+                        // behind a WAF/CDN, etc.) reject a request outright
+                        // with 403/406 if it has no User-Agent at all -- this
+                        // was rejecting essentially every URL that wasn't
+                        // trivially simple.
+                        "User-Agent":
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        Accept: "text/html,application/xhtml+xml"
+                    }
+                },
+                (response) => {
+                    // Follow redirects ourselves -- the raw http/https
+                    // modules don't do this automatically, and this is
+                    // exactly how something like Wikipedia's "Random
+                    // article" link is designed to work (a 30x redirect to
+                    // the actual page), not an edge case.
+                    if (
+                        response.statusCode >= 300 &&
+                        response.statusCode < 400 &&
+                        response.headers.location &&
+                        redirectsLeft > 0
+                    ) {
+                        response.resume();
+                        const nextUrl = new URL(response.headers.location, url).toString();
+                        resolve(AnnouncementService.fetchLinkPreview(nextUrl, redirectsLeft - 1));
+                        return;
+                    }
 
-                let html = "";
-                response.on("data", (chunk) => {
-                    html += chunk;
-                    if (html.length > 100000) response.destroy();
-                });
+                    if (response.statusCode >= 400) {
+                        response.resume();
+                        return reject(new Error("Could not read that link."));
+                    }
 
-                response.on("end", () => {
-                    const getMeta = (property) => {
-                        const regex = new RegExp(
-                            `<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']*)["']`,
-                            "i"
-                        );
-                        const match = html.match(regex);
-                        return match ? match[1] : null;
-                    };
-
-                    resolve({
-                        title: getMeta("og:title"),
-                        image: getMeta("og:image"),
-                        site: getMeta("og:site_name") || parsed.hostname,
+                    let html = "";
+                    response.on("data", (chunk) => {
+                        html += chunk;
+                        if (html.length > 100000) response.destroy();
                     });
-                });
-            });
+
+                    response.on("end", () => {
+                        const getMeta = (property) => {
+                            const regex = new RegExp(
+                                `<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']*)["']`,
+                                "i"
+                            );
+                            const match = html.match(regex);
+                            return match ? match[1] : null;
+                        };
+
+                        resolve({
+                            title: getMeta("og:title"),
+                            image: getMeta("og:image"),
+                            site: getMeta("og:site_name") || parsed.hostname,
+                        });
+                    });
+                }
+            );
 
             request.on("error", () => reject(new Error("Could not reach that link.")));
             request.on("timeout", () => {

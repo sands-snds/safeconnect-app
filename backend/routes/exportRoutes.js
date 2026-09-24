@@ -12,14 +12,16 @@ const {
 router.use(verifyToken);
 router.use(verifyAdmin);
 
+// :type is one of: emergency, assistance, pettyCrime, users, signinLogs, adminLogs
+// (see ExportService.validTypes in exportService.js for the source of truth)
 router.get(
-    "/pdf/reports",
-    exportController.exportReportsPDF
+    "/pdf/:type",
+    exportController.exportPDF
 );
 
 router.get(
-    "/excel/reports",
-    exportController.exportReportsExcel
+    "/excel/:type",
+    exportController.exportExcel
 );
 
 module.exports = router;

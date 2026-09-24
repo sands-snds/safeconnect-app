@@ -2,7 +2,7 @@ export default function DashboardSummary({
     emergencyReports = [],
     assistanceRequests = [],
     pettyCrimeReports = [],
-    onNavigate
+    onCreateAnnouncement
 }) {
     const totalReports =
         emergencyReports.length +
@@ -60,9 +60,7 @@ export default function DashboardSummary({
 
                 <button
                     className="button button-primary"
-                    onClick={() =>
-                        onNavigate("create-announcement")
-                    }
+                    onClick={onCreateAnnouncement}
                 >
                     + Create Announcement
                 </button>

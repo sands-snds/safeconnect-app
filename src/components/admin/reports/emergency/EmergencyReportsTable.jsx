@@ -65,6 +65,7 @@ const EmergencyReportsTable = ({
         "Select",
         ...STATUS_OPTIONS
       ]}
+      exportType="emergency"
     />
   );
 };

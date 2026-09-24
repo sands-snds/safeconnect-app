@@ -3,6 +3,7 @@ import React from "react";
 import AdminStats from "../layout/AdminStats";
 import DashboardSummary from "./DashboardSummary";
 import DashboardCharts from "./DashboardCharts";
+import ReportsOverTimeChart from "./ReportsOverTimeChart";
 import DashboardRecentReports from "./DashboardRecentReports";
 // DashboardAlerts and DashboardQuickActions are intentionally not rendered here.
 // Kept in the codebase for potential future use -- see components/admin/dashboard/.
@@ -25,7 +26,7 @@ export default function Dashboard({
                 emergencyReports={emergencyReports}
                 assistanceRequests={assistanceRequests}
                 pettyCrimeReports={pettyCrimeReports}
-                onNavigate={onNavigate}
+                onCreateAnnouncement={onCreateAnnouncement}
             />
 
             <AdminStats
@@ -39,6 +40,14 @@ export default function Dashboard({
                 onStatCardClick={onStatCardClick}
             />
 
+            <div style={{ marginTop: "24px" }}>
+                <ReportsOverTimeChart
+                    emergencyReports={emergencyReports}
+                    assistanceRequests={assistanceRequests}
+                    pettyCrimeReports={pettyCrimeReports}
+                />
+            </div>
+
             <DashboardCharts
                 emergencyReports={emergencyReports}
                 assistanceRequests={assistanceRequests}
@@ -50,17 +59,6 @@ export default function Dashboard({
                 assistanceRequests={assistanceRequests}
                 pettyCrimeReports={pettyCrimeReports}
             />
-
-            {onCreateAnnouncement && (
-                <button
-                    type="button"
-                    className="fab-create-announcement"
-                    onClick={onCreateAnnouncement}
-                >
-                    <i className="bi bi-plus-lg"></i>
-                    <span>Create Announcement</span>
-                </button>
-            )}
         </>
     );
 }

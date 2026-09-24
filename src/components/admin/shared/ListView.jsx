@@ -1,6 +1,7 @@
 import React from 'react';
 import Section from './Section';
 import Table from './Table';
+import GenerateReportButton from './GenerateReportButton';
 
 const ListView = ({
   title,
@@ -27,7 +28,14 @@ const ListView = ({
   page,
   totalPages,
   onPageChange,
-  totalItems
+  totalItems,
+  // Optional: pass an export type key (see exportService.js's EXPORTERS map
+  // on the backend) to render a "Generate Report" PDF/Excel button in the
+  // filter row. Omit to leave a page without one.
+  exportType,
+  exportLabel,
+  // Optional override for the "+ Add New" button text.
+  addLabel = '+ Add New'
 }) => {
   const showPagination = typeof totalPages === 'number' && totalPages > 1;
 
@@ -82,9 +90,25 @@ const ListView = ({
         )}
 
         {onAdd && (
-          <button onClick={onAdd} className="button button-primary">
-            + Add New
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label className="font-medium text-sm" style={{ visibility: 'hidden' }}>.</label>
+            <button onClick={onAdd} className="button button-primary">
+              {addLabel}
+            </button>
+          </div>
+        )}
+
+        {exportType && (
+          <GenerateReportButton
+            type={exportType}
+            label={exportLabel}
+            filters={{
+              status: filters[filterType]?.status !== 'All Items' && filters[filterType]?.status !== 'Select'
+                ? filters[filterType]?.status
+                : undefined,
+              search: filters[filterType]?.search || undefined
+            }}
+          />
         )}
       </div>
 

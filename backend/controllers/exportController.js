@@ -1,33 +1,45 @@
 const ExportService = require("../services/exportService");
 
-exports.exportReportsPDF = async (req, res) => {
+const isValidType = (type) => ExportService.validTypes.includes(type);
+
+exports.exportPDF = async (req, res) => {
+    const { type } = req.params;
+
+    if (!isValidType(type)) {
+        return res.status(400).json({
+            success: false,
+            message: `Unknown report type "${type}". Valid types: ${ExportService.validTypes.join(", ")}`
+        });
+    }
+
     try {
-        await ExportService.exportReportsPDF(
-            res,
-            req.query
-        );
+        await ExportService.exportPDF(type, req.query, res);
     } catch (err) {
         console.error(err);
-
-        res.status(500).json({
-            success: false,
-            message: "Unable to export PDF."
-        });
+        // Headers may already be sent if the failure happened mid-stream;
+        // guard against a double response.
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: "Unable to export PDF." });
+        }
     }
 };
 
-exports.exportReportsExcel = async (req, res) => {
+exports.exportExcel = async (req, res) => {
+    const { type } = req.params;
+
+    if (!isValidType(type)) {
+        return res.status(400).json({
+            success: false,
+            message: `Unknown report type "${type}". Valid types: ${ExportService.validTypes.join(", ")}`
+        });
+    }
+
     try {
-        await ExportService.exportReportsExcel(
-            res,
-            req.query
-        );
+        await ExportService.exportExcel(type, req.query, res);
     } catch (err) {
         console.error(err);
-
-        res.status(500).json({
-            success: false,
-            message: "Unable to export Excel."
-        });
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: "Unable to export Excel." });
+        }
     }
 };

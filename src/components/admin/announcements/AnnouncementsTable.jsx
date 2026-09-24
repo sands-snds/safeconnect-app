@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ListView from "../shared/ListView";
+import AnnouncementModal from "./AnnouncementModal";
 import { fetchAnnouncements, deleteAnnouncement } from "../../../Services/api";
 
 const PAGE_SIZE = 10;
@@ -19,13 +20,42 @@ const STATUS_OPTIONS = [
   "Evacuation"
 ];
 
-const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
+const CATEGORY_COLORS = {
+  "Emergency Alert": { bg: "#fee2e2", color: "#b91c1c" },
+  "Weather Advisory": { bg: "#dbeafe", color: "#1e40af" },
+  "Evacuation": { bg: "#fef3c7", color: "#92400e" },
+  "Community Event": { bg: "#ede9fe", color: "#6d28d9" },
+  "Community Update": { bg: "#dcfce7", color: "#166534" },
+  "Announcement": { bg: "rgba(107, 44, 62, 0.1)", color: "#6B2C3E" },
+  "General": { bg: "rgba(107, 44, 62, 0.1)", color: "#6B2C3E" }
+};
+
+const AnnouncementsTable = ({
+  filters,
+  setFilters,
+  // Optional: the current logged-in-once-per-app editingAnnouncement state
+  // (from useAdminNavigation, threaded through AdminPage -> AnnouncementsPage)
+  // doubles as "which announcement is open in the edit modal, if any".
+  editingAnnouncement,
+  setEditingAnnouncement,
+  // Optional: lets the Dashboard's "Create Announcement" shortcut open this
+  // modal directly once it has navigated here, instead of just landing on
+  // the list. See useEffect below.
+  pendingCreateAnnouncement,
+  onConsumePendingCreateAnnouncement,
+  // Optional: useAdminData's own announcements loader, kept separate from
+  // this table's local `data` state (see loadAnnouncements below) so the
+  // dashboard's stat counts stay in sync too after a create/edit/delete.
+  refreshDashboardData
+}) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [sortOrder, setSortOrder] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const filterType = "announcements";
   const currentFilters = filters[filterType] || { status: "All Items", search: "" };
@@ -47,6 +77,29 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
   useEffect(() => {
     loadAnnouncements();
   }, []);
+
+  // Dashboard FAB clicked -> already navigated to this tab -> open the
+  // create modal, then tell the parent we've handled it so it doesn't
+  // reopen every time this component happens to re-render.
+  useEffect(() => {
+    if (pendingCreateAnnouncement) {
+      setShowCreateModal(true);
+      if (onConsumePendingCreateAnnouncement) onConsumePendingCreateAnnouncement();
+    }
+  }, [pendingCreateAnnouncement, onConsumePendingCreateAnnouncement]);
+
+  const isModalOpen = showCreateModal || !!editingAnnouncement;
+
+  const closeModal = () => {
+    setShowCreateModal(false);
+    if (setEditingAnnouncement) setEditingAnnouncement(null);
+  };
+
+  const handleSaved = () => {
+    closeModal();
+    loadAnnouncements();
+    if (refreshDashboardData) refreshDashboardData();
+  };
 
   // The search box and sort dropdown live in ListView, but this table owns
   // the raw data, so filtering/sorting/pagination all happen here.
@@ -125,12 +178,14 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
           (announcement) => announcement.id !== id
         )
       );
+
+      if (refreshDashboardData) refreshDashboardData();
     } catch (err) {
       alert(err.message);
     }
   };
 
-  const truncate = (text, length = 80) => {
+  const truncate = (text, length = 240) => {
     if (!text) return "";
 
     return text.length > length
@@ -138,79 +193,40 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
       : text;
   };
 
-  const CATEGORY_COLORS = {
-    "Emergency Alert": { bg: "#fee2e2", color: "#b91c1c" },
-    "Weather Advisory": { bg: "#dbeafe", color: "#1e40af" },
-    "Evacuation": { bg: "#fef3c7", color: "#92400e" },
-    "Community Event": { bg: "#ede9fe", color: "#6d28d9" },
-    "Community Update": { bg: "#dcfce7", color: "#166534" },
-    "Announcement": { bg: "#f3f4f6", color: "#374151" },
-    "General": { bg: "#f3f4f6", color: "#374151" }
-  };
-
   const renderRow = (announcement) => {
     const image = announcement.imageUrl || announcement.sourceImage;
     const categoryStyle = CATEGORY_COLORS[announcement.category] || CATEGORY_COLORS["General"];
 
     return (
-      <div
-        key={announcement.id}
-        style={{
-          background: "#fff",
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column"
-        }}
-      >
-        {image ? (
-          <img
-            src={image}
-            alt={announcement.title}
-            style={{ width: "100%", height: 170, objectFit: "cover" }}
-          />
-        ) : (
+      <div key={announcement.id} className="announcement-admin-card">
+        {image && (
           <div
-            style={{
-              width: "100%",
-              height: 170,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#f3f4f6",
-              color: "#9ca3af",
-              fontSize: 32
-            }}
-          >
-            <i className="bi bi-image"></i>
-          </div>
+            className="announcement-admin-card-media"
+            style={{ backgroundImage: `url(${image})` }}
+          />
         )}
 
-        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <div className="announcement-admin-card-body">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <span
+              className="announcement-admin-card-badge"
               style={{
-                fontSize: 11,
-                fontWeight: 600,
-                padding: "2px 10px",
-                borderRadius: 20,
                 background: categoryStyle.bg,
                 color: categoryStyle.color
               }}
             >
               {announcement.category}
             </span>
-            <span style={{ fontSize: 12, color: "#9ca3af" }}>
+            <span className="announcement-admin-card-date">
               {announcement.date}
             </span>
           </div>
 
-          <div style={{ fontSize: 15, fontWeight: 600, color: "#111827", marginBottom: 4 }}>
+          <h3 className="announcement-admin-card-title">
             {announcement.title}
-          </div>
+          </h3>
 
-          <p style={{ fontSize: 13, color: "#4b5563", margin: "0 0 10px", flex: 1 }}>
+          <p className="announcement-admin-card-message">
             {truncate(announcement.message)}
           </p>
 
@@ -219,26 +235,27 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
               href={announcement.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="source-link"
-              style={{ marginBottom: 10 }}
+              className="announcement-admin-card-source"
             >
-              <i className="bi bi-link-45deg"></i>{" "}
+              <i className="bi bi-box-arrow-up-right"></i>{" "}
               {announcement.sourceSite || "View article"}
             </a>
           )}
 
-          <div style={{ display: "flex", gap: 8, marginTop: "auto", paddingTop: 10, borderTop: "1px solid #f3f4f6" }}>
+          <div className="announcement-admin-card-actions">
             <button
+              type="button"
               className="button button-secondary"
-              style={{ flex: 1, fontSize: 12.5 }}
-              onClick={() => onEdit && onEdit(announcement)}
+              style={{ fontSize: 12.5, padding: '8px 18px' }}
+              onClick={() => setEditingAnnouncement && setEditingAnnouncement(announcement)}
             >
               <i className="bi bi-pencil-square"></i> Edit
             </button>
 
             <button
+              type="button"
               className="button button-secondary"
-              style={{ flex: 1, fontSize: 12.5 }}
+              style={{ fontSize: 12.5, padding: '8px 18px' }}
               onClick={() => handleDelete(announcement.id)}
             >
               <i className="bi bi-trash"></i> Delete
@@ -252,17 +269,88 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
   return (
     <>
       <style>{`
-        .source-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          color: #6B2C3E;
-          text-decoration: none;
-          font-size: 0.75rem;
+        .announcement-admin-card {
+          background: #fff;
+          border-radius: 16px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .source-link:hover {
+        .announcement-admin-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+        }
+
+        .announcement-admin-card-media {
+          width: 100%;
+          height: clamp(220px, 38vw, 380px);
+          background-size: cover;
+          background-position: center;
+          flex-shrink: 0;
+        }
+
+        .announcement-admin-card-body {
+          padding: 22px 26px 22px;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+
+        .announcement-admin-card-badge {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 4px 12px;
+          border-radius: 999px;
+        }
+
+        .announcement-admin-card-date {
+          font-size: 12px;
+          color: #9ca3af;
+        }
+
+        .announcement-admin-card-title {
+          font-size: 19px;
+          font-weight: 700;
+          color: #111827;
+          margin: 0 0 8px;
+          line-height: 1.3;
+        }
+
+        .announcement-admin-card-message {
+          font-size: 14.5px;
+          color: #6b7280;
+          line-height: 1.65;
+          margin: 0 0 14px;
+          flex: 1;
+        }
+
+        .announcement-admin-card-source {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          color: #6B2C3E;
+          text-decoration: none;
+          font-size: 12.5px;
+          font-weight: 600;
+          margin-bottom: 12px;
+        }
+
+        .announcement-admin-card-source:hover {
           text-decoration: underline;
+        }
+
+        .announcement-admin-card-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+          margin-top: auto;
+          padding-top: 14px;
+          border-top: 1px solid #f3f4f6;
         }
       `}</style>
 
@@ -282,11 +370,14 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
       ) : (
         <ListView
           data={pagedData}
+          title="Announcements"
           layout="cards"
           cardsContainerStyle={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '16px'
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px',
+            width: '70%',
+            margin: '0 auto'
           }}
           filterType="announcements"
           filters={filters}
@@ -299,12 +390,21 @@ const AnnouncementsTable = ({ filters, setFilters, onEdit }) => {
           sortOptions={SORT_OPTIONS}
           sortValue={sortOrder}
           onSortChange={setSortOrder}
+          onAdd={() => setShowCreateModal(true)}
+          addLabel="+ New Announcement"
           page={safePage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalItems={processedData.length}
         />
       )}
+
+      <AnnouncementModal
+        show={isModalOpen}
+        editingAnnouncement={editingAnnouncement}
+        onClose={closeModal}
+        onSaved={handleSaved}
+      />
     </>
   );
 };

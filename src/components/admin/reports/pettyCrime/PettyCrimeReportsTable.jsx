@@ -59,6 +59,7 @@ const PettyCrimeReportsTable = ({
         "Select",
         ...STATUS_OPTIONS
       ]}
+      exportType="pettyCrime"
     />
   );
 };

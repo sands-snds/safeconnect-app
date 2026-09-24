@@ -31,6 +31,7 @@ const SignInLogsTable = ({
       headers={['USER', 'LOGIN TIME', 'IP ADDRESS', 'DEVICE', 'STATUS']}
       renderRow={renderRow}
       statusOptions={['All Items', 'Success', 'Failed']}
+      exportType="signinLogs"
     />
   );
 };
