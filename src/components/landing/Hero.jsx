@@ -351,9 +351,9 @@ function Hero() {
                         <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2" aria-label="Slide 3" />
                     </div>
                     <div className="carousel-inner" style={{ height:'100%' }}>
-                        <div className="carousel-item active" style={{ height:'100%' }}><img src="/images/0c38766bd32b9d2652dd32d72a8739d8.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Rescue Team" /></div>
-                        <div className="carousel-item" style={{ height:'100%' }}><img src="/images/istockphoto-1431608809-612x612.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Community rescue" /></div>
-                        <div className="carousel-item" style={{ height:'100%' }}><img src="/images/Resized-p-MMR0389-resized-50-percent-1024x682.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Evacuation" /></div>
+                        <div className="carousel-item active" style={{ height:'100%' }}><img src="/images/Santa Fe 3.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Barangay Santa Fe" /></div>
+                        <div className="carousel-item" style={{ height:'100%' }}><img src="/images/Santa Fe 2.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Community rescue" /></div>
+                        <div className="carousel-item" style={{ height:'100%' }}><img src="/images/Santa Fe.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Evacuation" /></div>
                     </div>
                     <button className="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon" aria-hidden="true" /><span className="visually-hidden">Previous</span></button>
                     <button className="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next"><span className="carousel-control-next-icon" aria-hidden="true" /><span className="visually-hidden">Next</span></button>

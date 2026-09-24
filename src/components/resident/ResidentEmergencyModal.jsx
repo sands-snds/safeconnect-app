@@ -100,8 +100,9 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     special: [],
     media: null,
     mediaPreviewUrl: null,
-    mediaType: null
-   
+    mediaType: null,
+    consent: false
+
   });
  
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -191,7 +192,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   }, [formData.mediaPreviewUrl]);
  
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value, files, type, checked } = e.target;
  
     if (name === 'media') {
       const file = files[0];
@@ -240,7 +241,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       setGpsCoords(null);
     }
  
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
  
   // Removes the currently attached photo/video and resets the file input
@@ -360,7 +361,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       special: [],
       media: null,
       mediaPreviewUrl: null,
-      mediaType: null
+      mediaType: null,
+      consent: false
     });
     setGpsCoords(null);
     setLocationError('');
@@ -1431,7 +1433,38 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               ))}
             </div>
               </div>
- 
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  color: '#374151',
+                  lineHeight: '1.5'
+                }}>
+                  <input
+                    type="checkbox"
+                    name="consent"
+                    checked={formData.consent}
+                    onChange={handleChange}
+                    required
+                    style={{
+                      marginTop: '2px',
+                      width: '16px',
+                      height: '16px',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      accentColor: '#dc3545'
+                    }}
+                  />
+                  <span>
+                    I confirm that the information provided is accurate and consent to be contacted by the response team.
+                  </span>
+                </label>
+              </div>
+
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
