@@ -22,7 +22,9 @@ import {
     buildAssistanceRequestFromForm
 } from "../shared/formUtils";
 
-export default function useAdminData() {
+// isSuperAdmin: only super admins load System tab data (users, sign-in
+// logs, admin logs) -- the backend refuses it for normal admins.
+export default function useAdminData({ isSuperAdmin = false } = {}) {
 
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -90,6 +92,10 @@ export default function useAdminData() {
         await markNotificationRead(id).catch(() => false);
     };
 
+    const systemLoaders = isSuperAdmin
+        ? [loadRegisteredUsers, loadSignInLogs, loadAdminLogs]
+        : [];
+
     // Initial page load ONLY
     const loadAllData = async () => {
         setIsLoading(true);
@@ -98,9 +104,7 @@ export default function useAdminData() {
             await Promise.all([
                 loadEmergencyReports(),
                 loadAssistanceRequests(),
-                loadRegisteredUsers(),
-                loadSignInLogs(),
-                loadAdminLogs(),
+                ...systemLoaders.map(fn => fn()),
                 loadAnnouncements(),
                 loadPettyCrimeReports(),
                 loadNotifications()
@@ -120,9 +124,7 @@ export default function useAdminData() {
             await Promise.all([
                 loadEmergencyReports(),
                 loadAssistanceRequests(),
-                loadRegisteredUsers(),
-                loadSignInLogs(),
-                loadAdminLogs(),
+                ...systemLoaders.map(fn => fn()),
                 loadAnnouncements(),
                 loadPettyCrimeReports(),
                 loadNotifications()
@@ -138,17 +140,17 @@ export default function useAdminData() {
     // re-fetches what's actually showing on screen instead of everything.
     const VIEW_LOADERS = {
         "dashboard": [
-            loadEmergencyReports, loadAssistanceRequests, loadRegisteredUsers,
-            loadSignInLogs, loadAdminLogs, loadAnnouncements, loadPettyCrimeReports
+            loadEmergencyReports, loadAssistanceRequests, ...systemLoaders,
+            loadAnnouncements, loadPettyCrimeReports
         ],
         "emergency-reports": [loadEmergencyReports],
         "assistance-requests": [loadAssistanceRequests],
         "petty-crime-reports": [loadPettyCrimeReports],
         "create-announcement": [loadAnnouncements],
         "announcement-page": [loadAnnouncements],
-        "registered-users": [loadRegisteredUsers],
-        "sign-in-logs": [loadSignInLogs],
-        "admin-logs": [loadAdminLogs]
+        "registered-users": isSuperAdmin ? [loadRegisteredUsers] : [],
+        "sign-in-logs": isSuperAdmin ? [loadSignInLogs] : [],
+        "admin-logs": isSuperAdmin ? [loadAdminLogs] : []
     };
 
     const handleRefresh = async (activeView) => {

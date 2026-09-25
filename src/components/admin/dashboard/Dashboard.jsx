@@ -19,7 +19,8 @@ export default function Dashboard({
     onStatCardClick,
     onCreateAnnouncement,
     onNavigate,
-    adminName
+    adminName,
+    isSuperAdmin = false
 }) {
     return (
         <>
@@ -40,6 +41,7 @@ export default function Dashboard({
                 announcements={announcements}
                 pettyCrimeReports={pettyCrimeReports}
                 onStatCardClick={onStatCardClick}
+                isSuperAdmin={isSuperAdmin}
             />
 
             <div style={{ marginTop: "24px" }}>

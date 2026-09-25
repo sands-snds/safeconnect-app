@@ -5,7 +5,7 @@ const path     = require("path");
 const fs       = require("fs");
 
 const controller = require("../controllers/pettyCrimeController");
-const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
+const { verifyToken, verifyAdmin, verifyReportAccess } = require("../middleware/authMiddleware");
 const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
 
 const logStatus = logActivity("Updated report status", describeStatusChange("petty_crimes", "Petty crime report"));
@@ -33,9 +33,9 @@ const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 102
 router.post("/",             verifyToken,             upload.array("media", 10), controller.createReport);
 router.get("/",              verifyToken, verifyAdmin, controller.getReports);
 router.get("/statistics",    verifyToken, verifyAdmin, controller.getStatistics);
-router.get("/:id",           verifyToken,             controller.getReport);
-router.put("/:id",           verifyToken,             controller.updateReport);
+router.get("/:id",           verifyToken, verifyReportAccess("petty_crimes", "admin"), controller.getReport);
+router.put("/:id",           verifyToken, verifyReportAccess("petty_crimes", "super"), controller.updateReport);
 router.patch("/:id/status",  verifyToken, verifyAdmin, logStatus, controller.updateStatus);
-router.delete("/:id",        verifyToken, verifyAdmin, controller.deleteReport);
+router.delete("/:id",        verifyToken, verifyReportAccess("petty_crimes", "super"), controller.deleteReport);
 
 module.exports = router;

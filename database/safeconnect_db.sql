@@ -20,7 +20,7 @@ CREATE TABLE registered_users (
   contact_number VARCHAR(20) DEFAULT NULL,
   email_address VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL, -- bcrypt hash
-  role VARCHAR(20) NOT NULL DEFAULT 'resident', -- 'resident' | 'admin'
+  role VARCHAR(20) NOT NULL DEFAULT 'resident', -- 'resident' | 'admin' | 'super_admin'
   photo_url TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Active', -- Active / Pending / Suspended / Closed
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

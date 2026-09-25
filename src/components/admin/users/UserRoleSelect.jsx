@@ -1,9 +1,11 @@
 export const USER_ROLES = [
     { value: "resident", label: "Resident" },
-    { value: "admin", label: "Admin" }
+    { value: "admin", label: "Admin" },
+    { value: "super_admin", label: "Super Admin" }
 ];
 
 const ROLE_COLORS = {
+    super_admin: { bg: "#3b0d1b", color: "#fff" },
     admin:    { bg: "#6B2C3E", color: "#fff" },
     resident: { bg: "#eef2ff", color: "#3730a3" }
 };

@@ -2,6 +2,7 @@ import React from "react";
 
 const AdminSidebar = ({
   activeView,
+  isSuperAdmin,
   onNavigate,
   onLogout,
   showMobileMenu,
@@ -45,6 +46,7 @@ const AdminSidebar = ({
     },
     {
       title: "SYSTEM",
+      superAdminOnly: true,
       items: [
         {
           id: "registered-users",
@@ -98,7 +100,9 @@ const AdminSidebar = ({
           padding: "14px"
         }}
       >
-        {menuSections.map((section) => (
+        {menuSections
+          .filter((section) => isSuperAdmin || !section.superAdminOnly)
+          .map((section) => (
           <div
             key={section.title}
             style={{ marginBottom: "18px" }}

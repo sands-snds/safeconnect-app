@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ListView, { allOption } from '../shared/ListView';
 import UserStatusSelect, { USER_STATUSES } from './UserStatusSelect';
-import UserRoleSelect from './UserRoleSelect';
+import UserRoleSelect, { USER_ROLES } from './UserRoleSelect';
 import UserChangeConfirmModal from './UserChangeConfirmModal';
 
 const RegisteredUsersTable = ({
@@ -99,8 +99,9 @@ const RegisteredUsersTable = ({
         className="form-select"
       >
         <option value="All Roles">All Roles</option>
-        <option value="resident">Resident</option>
-        <option value="admin">Admin</option>
+        {USER_ROLES.map((r) => (
+          <option key={r.value} value={r.value}>{r.label}</option>
+        ))}
       </select>
     </div>
   );

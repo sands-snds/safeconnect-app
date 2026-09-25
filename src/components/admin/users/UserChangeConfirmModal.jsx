@@ -4,7 +4,8 @@ import React from "react";
 // account status). Same look as shared/StatusConfirmModal.jsx.
 const CONSEQUENCES = {
     role: {
-        admin: "They'll get full access to the admin panel: reports, users, announcements and logs. This applies on their next action; no re-login needed.",
+        super_admin: "They'll get full access to the admin panel, including the System tabs (users, sign-in logs, admin logs). This applies on their next action; no re-login needed.",
+        admin: "They'll be able to handle reports and announcements, but not the System tabs (users, sign-in logs, admin logs). This applies on their next action; no re-login needed.",
         resident: "They'll lose access to the admin panel immediately and go back to being a regular resident account."
     },
     status: {
@@ -15,17 +16,18 @@ const CONSEQUENCES = {
     }
 };
 
-const LABELS = { admin: "Admin", resident: "Resident" };
+const LABELS = { super_admin: "Super Admin", admin: "Admin", resident: "Resident" };
+const ROLE_RANK = { resident: 0, admin: 1, super_admin: 2 };
 
 const UserChangeConfirmModal = ({ change, onConfirm, onCancel, isSubmitting, error }) => {
     if (!change) return null;
 
     const { user, field, value } = change;
     const displayValue = LABELS[value] || value;
-    const isPromotion = field === "role" && value === "admin";
+    const isPromotion = field === "role" && (ROLE_RANK[value] ?? 0) > (ROLE_RANK[user.role] ?? 0);
 
     const title = field === "role"
-        ? (isPromotion ? `Promote ${user.fullName || user.email} to Admin?` : `Change ${user.fullName || user.email} to Resident?`)
+        ? `${isPromotion ? "Promote" : "Change"} ${user.fullName || user.email} to ${displayValue}?`
         : `Set ${user.fullName || user.email}'s status to "${displayValue}"?`;
 
     return (

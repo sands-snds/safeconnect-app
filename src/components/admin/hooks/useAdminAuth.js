@@ -58,10 +58,11 @@ export default function useAdminAuth() {
         }
     };
 
-    // Sessions that signed in before adminUser was stored won't have it --
-    // fetch it from the backend using the id in the token.
+    // Refresh the profile from the backend (using the id in the token) each
+    // time the panel opens: older sessions didn't store it at all, and the
+    // role decides which tabs show, so it shouldn't be a stale copy.
     useEffect(() => {
-        if (!isAuthenticated || adminUser?.fullName) return;
+        if (!isAuthenticated) return;
 
         const userId = getTokenUserId();
         if (!userId) return;
@@ -118,9 +119,12 @@ export default function useAdminAuth() {
         navigate("/");
     };
 
+    const isSuperAdmin = adminUser?.role === "super_admin";
+
     return {
 
         isAuthenticated,
+        isSuperAdmin,
         setIsAuthenticated,
 
         showSigninModal,

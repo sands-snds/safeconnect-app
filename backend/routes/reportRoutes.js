@@ -6,8 +6,8 @@ const express = require("express");
 const router = express.Router();
 
 const myReportsController = require("../controllers/myReportsController");
-const { verifyToken } = require("../middleware/authMiddleware");
+const { verifyToken, verifySelfOrAnyAdmin } = require("../middleware/authMiddleware");
 
-router.get("/user/:userId", verifyToken, myReportsController.getMyReports);
+router.get("/user/:userId", verifyToken, verifySelfOrAnyAdmin, myReportsController.getMyReports);
 
 module.exports = router;

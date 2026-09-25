@@ -61,7 +61,7 @@ class AdminActivity {
                 WHERE l2.admin_id = u.id
                 ORDER BY l2.id DESC LIMIT 1
             )
-            WHERE u.role = 'admin'
+            WHERE u.role IN ('admin', 'super_admin')
             ORDER BY la.created_at IS NULL, la.created_at DESC
         `);
         return rows;

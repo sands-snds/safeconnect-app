@@ -264,7 +264,8 @@ const EXPORTERS = {
                 summary: [
                     { label: "Total Users", value: users.length },
                     { label: "Residents", value: roleCounts.resident || 0 },
-                    { label: "Admins", value: roleCounts.admin || 0 }
+                    { label: "Admins", value: roleCounts.admin || 0 },
+                    { label: "Super Admins", value: roleCounts.super_admin || 0 }
                 ],
                 columns: [
                     { label: "Name", key: "name" },

@@ -5,7 +5,7 @@ const path     = require("path");
 const fs       = require("fs");
 
 const reportController = require("../controllers/reportController");
-const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
+const { verifyToken, verifyAdmin, verifyReportAccess } = require("../middleware/authMiddleware");
 const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
 
 const logStatus = logActivity("Updated report status", describeStatusChange("emergency_reports", "Emergency report"));
@@ -33,10 +33,10 @@ const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 102
 router.post("/",             verifyToken,             upload.array("media", 10), reportController.createReport);
 router.get("/",              verifyToken, verifyAdmin, reportController.getReports);
 router.get("/statistics",    verifyToken, verifyAdmin, reportController.getStatistics);
-router.get("/:id",           verifyToken,             reportController.getReport);
-router.put("/:id",           verifyToken,             reportController.updateReport);
+router.get("/:id",           verifyToken, verifyReportAccess("emergency_reports", "admin"), reportController.getReport);
+router.put("/:id",           verifyToken, verifyReportAccess("emergency_reports", "super"), reportController.updateReport);
 router.put("/:id/status",    verifyToken, verifyAdmin, logStatus, reportController.updateStatus);
 router.patch("/:id/status",  verifyToken, verifyAdmin, logStatus, reportController.updateStatus);
-router.delete("/:id",        verifyToken,             reportController.deleteReport);
+router.delete("/:id",        verifyToken, verifyReportAccess("emergency_reports", "super"), reportController.deleteReport);
 
 module.exports = router;

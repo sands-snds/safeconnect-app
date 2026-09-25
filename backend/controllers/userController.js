@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const { ROLES, ALL_ROLES } = require("../utils/roles");
 
 exports.getUsers = async (req, res) => {
     try {
@@ -54,9 +55,15 @@ exports.updateUserStatus = async (req, res) => {
     }
 };
 
-const ALLOWED_ROLES = ["resident", "admin"];
+const ALLOWED_ROLES = ALL_ROLES;
 
-// Promote a resident to admin (or demote an admin back to resident).
+const ROLE_CHANGE_MESSAGES = {
+    [ROLES.SUPER_ADMIN]: "User promoted to super admin.",
+    [ROLES.ADMIN]: "User changed to admin.",
+    [ROLES.RESIDENT]: "User changed to resident."
+};
+
+// Change a user's role (resident / admin / super admin). Super admin only.
 // verifyAdmin reads the role from the database, so this takes effect on the
 // account's very next request -- no re-login needed.
 exports.updateUserRole = async (req, res) => {
@@ -87,7 +94,7 @@ exports.updateUserRole = async (req, res) => {
         await User.updateRole(id, role);
         return res.json({
             success: true,
-            message: role === "admin" ? "User promoted to admin." : "User changed to resident."
+            message: ROLE_CHANGE_MESSAGES[role]
         });
     }
 

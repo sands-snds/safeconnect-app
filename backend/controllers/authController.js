@@ -3,6 +3,7 @@ const dns    = require("dns").promises;
 const User   = require("../models/User");
 const AdminActivity = require("../models/AdminActivity");
 const { generateToken } = require("../utils/jwt");
+const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
 const {
     sendOtpEmail,
     sendWelcomeEmail,
@@ -465,7 +466,7 @@ exports.signin = async (req, res) => {
         }
 
         await User.logSignin(user.full_name, email, "Success");
-        if (user.role === "admin") await AdminActivity.record(user, "Logged in");
+        if (isAdminRole(user.role)) await AdminActivity.record(user, "Logged in");
 
         sendSigninNotification(email, user.full_name).catch((err) =>
             console.error("Sign-in notification email failed:", err)
@@ -485,7 +486,8 @@ exports.signin = async (req, res) => {
 
         return res.json({
             success: true,
-            isAdmin: user.role === "admin",
+            isAdmin: isAdminRole(user.role),
+            isSuperAdmin: isSuperAdminRole(user.role),
             token,
             user: {
                 id:       user.id,

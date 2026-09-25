@@ -7,6 +7,7 @@ const AdminLayout = ({
     children,
 
     activeView,
+    isSuperAdmin,
     pageTitle,
     alerts,
 
@@ -38,6 +39,7 @@ const AdminLayout = ({
             >
                 <AdminSidebar
                     activeView={activeView}
+                    isSuperAdmin={isSuperAdmin}
                     onNavigate={onNavigate}
                     onLogout={onLogout}
                     showMobileMenu={showMobileMenu}

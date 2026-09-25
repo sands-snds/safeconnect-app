@@ -7,6 +7,7 @@ const upload = require("../middleware/uploadMiddleware");
 const {
     verifyToken,
     verifyAdmin,
+    verifySuperAdmin,
     verifySelfOrAdmin
 } = require("../middleware/authMiddleware");
 const { logActivity } = require("../middleware/activityLogger");
@@ -19,11 +20,11 @@ const describeUserChange = (field) => async (req) => {
 };
 const logUserStatus = logActivity("Changed user status", describeUserChange("status"));
 
-// Admin-only: full user list / status + role management
-router.get("/", verifyToken, verifyAdmin, userController.getUsers);
-router.put("/:id", verifyToken, verifyAdmin, logUserStatus, userController.updateUserStatus);
-router.patch("/:id/status", verifyToken, verifyAdmin, logUserStatus, userController.updateUserStatus);
-router.patch("/:id/role", verifyToken, verifyAdmin, logActivity("Changed user role", describeUserChange("role")), userController.updateUserRole);
+// Super admin only (System > Users): full user list / status + role management
+router.get("/", verifyToken, verifyAdmin, verifySuperAdmin, userController.getUsers);
+router.put("/:id", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
+router.patch("/:id/status", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
+router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Changed user role", describeUserChange("role")), userController.updateUserRole);
 
 // Self-or-admin: a resident's own profile (SettingsPage.jsx, MyReportsPage.jsx)
 router.get("/:id", verifyToken, verifySelfOrAdmin, userController.getUserById);

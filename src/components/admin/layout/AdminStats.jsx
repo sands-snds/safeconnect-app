@@ -22,7 +22,8 @@ const AdminStats = ({
   adminLogs = { admins: [] },
   announcements = [],
   pettyCrimeReports = [],
-  onStatCardClick 
+  onStatCardClick,
+  isSuperAdmin = false
 }) => {
   return (
     <div className="stats-grid">
@@ -50,6 +51,8 @@ const AdminStats = ({
         color="#e0f2fe" 
         onClick={() => onStatCardClick('announcement-page')}
       />
+      {/* System tab stats: super admin only, like the tabs they open. */}
+      {isSuperAdmin && (<>
       <StatCard 
         label="REGISTERED USERS" 
         value={registeredUsers.length} 
@@ -68,6 +71,7 @@ const AdminStats = ({
         color="#ddd6fe" 
         onClick={() => onStatCardClick('admin-logs')}
       />
+      </>)}
     </div>
   );
 };

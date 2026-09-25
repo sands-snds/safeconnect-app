@@ -6,11 +6,15 @@ const controller = require("../controllers/systemSettingController");
 
 const {
     verifyToken,
-    verifyAdmin
+    verifyAdmin,
+    verifySuperAdmin
 } = require("../middleware/authMiddleware");
 
 router.use(verifyToken);
 router.use(verifyAdmin);
+
+// System settings: super admin only.
+router.use(verifySuperAdmin);
 
 router.get(
     "/",

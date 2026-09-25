@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/admin.css';
 import { getSeverityColor } from "../components/admin/shared/chartUtils";
 
@@ -21,6 +21,7 @@ const AdminPage = () => {
     setIsAuthenticated,
     showSigninModal,
     setShowSignInModal,
+    isSuperAdmin,
     sessionExpired,
     setSessionExpired,
     adminUser,
@@ -52,7 +53,7 @@ const AdminPage = () => {
     updateStatus,
     updateUserRole,
     handleFormSubmit
-  } = useAdminData();
+  } = useAdminData({ isSuperAdmin });
 
   const {
     activeView,
@@ -101,6 +102,9 @@ const AdminPage = () => {
   "admin-logs": "Admin Logs"
 };
 
+// Tabs under SYSTEM in the sidebar: super admin only.
+const SYSTEM_VIEWS = ["registered-users", "sign-in-logs", "admin-logs"];
+
   const alerts = [];
     const emergencyPending =
         emergencyReports.filter(r => r.status !== "Resolved").length;
@@ -143,6 +147,17 @@ useEffect(() => {
     // Initial load only
     loadAllData();
 }, [isAuthenticated]);
+
+// The role can arrive after the first load (it comes from the profile
+// fetch), so load the System tab data once it turns out to be a super admin.
+const wasSuperAdmin = useRef(isSuperAdmin);
+useEffect(() => {
+    if (isAuthenticated && isSuperAdmin && !wasSuperAdmin.current) {
+        refreshAllData();
+    }
+    wasSuperAdmin.current = isSuperAdmin;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [isAuthenticated, isSuperAdmin]);
 
 useEffect(() => {
     if (!isAuthenticated) return;
@@ -188,8 +203,14 @@ useEffect(() => {
   const adminName =
     adminUser?.fullName || adminUser?.username || "Administrator";
 
+  // Normal admins never see the System tabs; fall back to the dashboard if
+  // one is somehow selected (e.g. a stat card or a demoted super admin).
+  const visibleView = !isSuperAdmin && SYSTEM_VIEWS.includes(activeView)
+    ? "dashboard"
+    : activeView;
+
   const renderActiveView = () => {
-    switch (activeView) {
+    switch (visibleView) {
       case 'dashboard':
         return (
           <Dashboard
@@ -206,6 +227,7 @@ useEffect(() => {
             onNavigate={handleNavigation}
             onCreateAnnouncement={handleCreateAnnouncementShortcut}
             adminName={adminName}
+            isSuperAdmin={isSuperAdmin}
           />
         );
       case "emergency-reports":
@@ -292,6 +314,7 @@ useEffect(() => {
             onNavigate={handleNavigation}
             onCreateAnnouncement={handleCreateAnnouncementShortcut}
             adminName={adminName}
+            isSuperAdmin={isSuperAdmin}
           />
         );
     }
@@ -299,8 +322,9 @@ useEffect(() => {
   return (
       <>
           <AdminLayout
-            activeView={activeView}
-            pageTitle={PAGE_TITLES[activeView] || "Dashboard"}
+            activeView={visibleView}
+            pageTitle={PAGE_TITLES[visibleView] || "Dashboard"}
+            isSuperAdmin={isSuperAdmin}
             alerts={alerts}
 
             onNavigate={handleNavigation}
