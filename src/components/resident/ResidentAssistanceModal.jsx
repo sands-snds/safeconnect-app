@@ -67,6 +67,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     consent: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [mapQuery, setMapQuery] = useState(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
   const [gpsCoords, setGpsCoords] = useState(null);
@@ -273,7 +274,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       }
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
       setCooldownRemaining(REPORT_COOLDOWN_MS);
-      alert('Assistance request submitted successfully! Our team will contact you soon.');
       setFormData({
         assistanceType: '',
         houseNumber: '',
@@ -290,7 +290,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setGpsCoords(null);
       setLocationError('');
       setMapQuery(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
-      onClose();
+      setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('There was an error submitting your request. Please try again.');
@@ -298,16 +298,16 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setIsSubmitting(false);
     }
   };
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+  const closeSuccessPopup = () => {
+    setShowSuccessPopup(false);
+    onClose();
   };
-  if (!show) return null;
+  if (!show && !showSuccessPopup) return null;
   return (
+<>
+{show && (
 <div
       className="modal-overlay"
-      onClick={handleOverlayClick}
       style={{
         position: 'fixed',
         top: 0,
@@ -901,6 +901,81 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 </form>
 </div>
 </div>
+)}
+
+{showSuccessPopup && (
+  <div
+    className="modal-overlay"
+    onClick={(e) => { if (e.target === e.currentTarget) closeSuccessPopup(); }}
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10001,
+      padding: '20px'
+    }}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        maxWidth: '420px',
+        width: '100%',
+        padding: '28px 24px',
+        textAlign: 'center',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+      }}
+    >
+      <div style={{
+        width: '56px',
+        height: '56px',
+        borderRadius: '50%',
+        backgroundColor: '#16a34a',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '28px',
+        margin: '0 auto 16px'
+      }}>
+        <i className="bi bi-check-lg"></i>
+      </div>
+      <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 700, color: '#1f2937' }}>
+        Request Submitted
+      </h3>
+      <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#4b5563', lineHeight: 1.5 }}>
+        Your assistance request has been submitted successfully. Our team will contact you soon.
+      </p>
+      <button
+        type="button"
+        onClick={closeSuccessPopup}
+        style={{
+          padding: '12px 20px',
+          borderRadius: '24px',
+          border: 'none',
+          background: '#dc3545',
+          color: 'white',
+          fontWeight: 600,
+          fontSize: '14px',
+          cursor: 'pointer',
+          width: '100%'
+        }}
+      >
+        Done
+      </button>
+    </div>
+  </div>
+)}
+</>
   );
 }
 export default ResidentAssistanceModal;

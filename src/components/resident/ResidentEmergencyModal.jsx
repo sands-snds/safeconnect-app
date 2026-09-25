@@ -520,12 +520,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     }
   };
  
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget && !isSubmitting) {
-      onClose();
-    }
-  };
- 
   const closeAssistancePrompt = () => {
     setShowAssistancePrompt(false);
     onClose();
@@ -1091,7 +1085,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       `}</style>
  
       {show && (
-        <div className="modal-overlay" onClick={handleOverlayClick}>
+        <div className="modal-overlay">
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="header-icon">
