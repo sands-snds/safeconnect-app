@@ -11,7 +11,9 @@ import { exportReport } from '../../../Services/api';
 //   label   - optional button label override (defaults to "Generate Report")
 //   filters - optional plain object of the currently-applied filters/search,
 //             forwarded to the backend so the export matches what's on screen
-const GenerateReportButton = ({ type, label = 'Generate Report', filters = {} }) => {
+//   inline  - true when not in a labelled form row (e.g. above a chart); drops
+//             the invisible spacer label used to line up with ListView fields
+const GenerateReportButton = ({ type, label = 'Generate Report', filters = {}, inline = false }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const menuRef = useRef(null);
@@ -42,7 +44,7 @@ const GenerateReportButton = ({ type, label = 'Generate Report', filters = {} })
 
   return (
     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '8px' }} ref={menuRef}>
-      <label className="font-medium text-sm" style={{ visibility: 'hidden' }}>.</label>
+      {!inline && <label className="font-medium text-sm" style={{ visibility: 'hidden' }}>.</label>}
       <button
         type="button"
         className="button button-secondary"

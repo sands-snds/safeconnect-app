@@ -4,7 +4,7 @@ import { signinUser, setAuthToken } from '../../../Services/api';
 // This modal never existed in the project — isAuthenticated had no way to
 // ever become true, which is why the dashboard/reports/etc never rendered
 // even though nothing was throwing an error.
-const SignInModal = ({ onSuccess }) => {
+const SignInModal = ({ onSuccess, notice }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -41,6 +41,12 @@ const SignInModal = ({ onSuccess }) => {
         <h2 className="font-bold text-xl uppercase" style={{ marginBottom: '20px' }}>
           Admin Sign In
         </h2>
+
+        {notice && (
+          <p style={{ margin: '-8px 0 16px', padding: '10px 12px', borderRadius: 8, background: '#fef3c7', color: '#92400e', fontSize: 13 }}>
+            {notice}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-field">

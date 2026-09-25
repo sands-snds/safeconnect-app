@@ -5,7 +5,8 @@ import {
     getAuthToken,
     fetchUserProfile,
     resolveAssetUrl,
-    logoutAdmin
+    logoutAdmin,
+    SESSION_EXPIRED_EVENT
 } from "../../../Services/api";
 
 const ADMIN_USER_KEY = "adminUser";
@@ -81,6 +82,22 @@ export default function useAdminAuth() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated]);
 
+    // The backend rejected our token (e.g. signed out in another tab).
+    // Show the sign-in box over the current screen rather than logging
+    // out, so an announcement being written isn't lost -- after signing
+    // back in the admin can just submit again.
+    const [sessionExpired, setSessionExpired] = useState(false);
+
+    useEffect(() => {
+        const onExpired = () => {
+            if (!window.location.pathname.startsWith("/admin")) return;
+            setSessionExpired(true);
+            setShowSignInModal(true);
+        };
+        window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+        return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    }, []);
+
     const handleLogout = async () => {
 
         // Needs the token, so it runs before clearAuthToken().
@@ -108,6 +125,9 @@ export default function useAdminAuth() {
 
         showSigninModal,
         setShowSignInModal,
+
+        sessionExpired,
+        setSessionExpired,
 
         adminUser,
         setAdminUser,

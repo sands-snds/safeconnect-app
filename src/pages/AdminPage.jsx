@@ -21,6 +21,8 @@ const AdminPage = () => {
     setIsAuthenticated,
     showSigninModal,
     setShowSignInModal,
+    sessionExpired,
+    setSessionExpired,
     adminUser,
     setAdminUser,
     handleLogout
@@ -324,10 +326,14 @@ useEffect(() => {
 
           {showSigninModal && (
               <SignInModal
+                  notice={sessionExpired
+                      ? "Your session has ended. Please sign in again to continue. Anything you were typing is still there."
+                      : ""}
                   onSuccess={(user) => {
                       setAdminUser(user || null);
                       setIsAuthenticated(true);
                       setShowSignInModal(false);
+                      setSessionExpired(false);
                   }}
               />
           )}

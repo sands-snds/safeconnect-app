@@ -64,14 +64,39 @@ export const clearAuthToken = () => {
     }
 };
 
+// Only send Authorization when there's a token -- "Bearer null" gets a
+// confusing "Invalid token." back instead of "No token provided."
+const authorization = () => {
+    const token = getAuthToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 const authHeaders = () => ({
     "Content-Type": "application/json",
-    Authorization: `Bearer ${getAuthToken()}`,
+    ...authorization(),
 });
 
-const authHeadersNoContentType = () => ({
-    Authorization: `Bearer ${getAuthToken()}`,
-});
+const authHeadersNoContentType = () => authorization();
+
+// Messages authMiddleware.verifyToken sends when the session is gone.
+const SESSION_ERRORS = ["Invalid token.", "Access denied. No token provided."];
+export const SESSION_EXPIRED_EVENT = "safeconnect:session-expired";
+export const isSessionError = (result) => SESSION_ERRORS.includes(result?.message);
+
+// fetch() that notices a missing/invalid login (e.g. the token was cleared
+// by logging out in another tab) and tells the page to ask for sign-in
+// again, instead of every request failing silently with 401/403.
+const apiFetch = async (...args) => {
+    const res = await fetch(...args);
+    if (res.status === 401 || res.status === 403) {
+        const body = await res.clone().json().catch(() => null);
+        if (body && SESSION_ERRORS.includes(body.message)) {
+            clearAuthToken();
+            window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+        }
+    }
+    return res;
+};
 
 // ── Asset URL resolver ────────────────────────────────────────────────────────
 export const resolveAssetUrl = (path) => {
@@ -82,7 +107,7 @@ export const resolveAssetUrl = (path) => {
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const signinUser = async (email, password) => {
-    const res = await fetch(`${API_ENDPOINTS.AUTH}/signin`, {
+    const res = await apiFetch(`${API_ENDPOINTS.AUTH}/signin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -91,7 +116,7 @@ export const signinUser = async (email, password) => {
 };
 
 export const signupUser = async (fullName, email, password, extra = {}) => {
-    const res = await fetch(`${API_ENDPOINTS.AUTH}/signup`, {
+    const res = await apiFetch(`${API_ENDPOINTS.AUTH}/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName, email, password, ...extra }),
@@ -101,7 +126,7 @@ export const signupUser = async (fullName, email, password, extra = {}) => {
 
 // ── User profile ──────────────────────────────────────────────────────────────
 export const fetchUserProfile = async (userId) => {
-    const res = await fetch(`${API_ENDPOINTS.USERS}/${userId}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}`, {
         headers: authHeaders(),
     });
     const data = await res.json();
@@ -112,7 +137,7 @@ export const fetchUserProfile = async (userId) => {
 };
 
 export const updateUsername = async (userId, username) => {
-    const res = await fetch(`${API_ENDPOINTS.USERS}/${userId}/username`, {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/username`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify({ username }),
@@ -121,7 +146,7 @@ export const updateUsername = async (userId, username) => {
 };
 
 export const changePassword = async (userId, currentPassword, newPassword) => {
-    const res = await fetch(`${API_ENDPOINTS.USERS}/${userId}/password`, {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/password`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify({ currentPassword, newPassword }),
@@ -132,7 +157,7 @@ export const changePassword = async (userId, currentPassword, newPassword) => {
 export const uploadProfilePhoto = async (userId, file) => {
     const formData = new FormData();
     formData.append("photo", file);
-    const res = await fetch(`${API_ENDPOINTS.USERS}/${userId}/photo`, {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/photo`, {
         method: "POST",
         headers: authHeadersNoContentType(),
         body: formData,
@@ -148,7 +173,7 @@ export const uploadProfilePhoto = async (userId, file) => {
 // which otherwise renders as blank cells for everything except `status`
 // (the one field name that happens to match in both shapes).
 export const fetchRegisteredUsers = async () => {
-    const res = await fetch(`${API_ENDPOINTS.USERS}`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}`, { headers: authHeaders() });
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
@@ -166,7 +191,7 @@ export const fetchRegisteredUsers = async () => {
 
 // Real route is PATCH-only (see backend/routes/userRoutes.js) -- PUT 404s.
 export const updateUserStatus = async (userId, status) => {
-    const res = await fetch(`${API_ENDPOINTS.USERS}/${userId}/status`, {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/status`, {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ status }),
@@ -177,7 +202,7 @@ export const updateUserStatus = async (userId, status) => {
 
 // role: "resident" | "admin". Returns { success, message }.
 export const updateUserRole = async (userId, role) => {
-    const res = await fetch(`${API_ENDPOINTS.USERS}/${userId}/role`, {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/role`, {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ role }),
@@ -196,7 +221,7 @@ export const updateUserRole = async (userId, role) => {
 // was returning raw JSON directly, which is why report cards/details were
 // showing blank fields even though the data existed in the database.
 export const fetchEmergencyReports = async () => {
-    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}`, { headers: authHeaders() });
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
@@ -228,7 +253,7 @@ export const fetchEmergencyReports = async () => {
 // Accepts FormData (with optional media files) or a plain object.
 export const createEmergencyReport = async (data) => {
     const isFormData = data instanceof FormData;
-    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}`, {
         method: "POST",
         headers: isFormData ? authHeadersNoContentType() : authHeaders(),
         body: isFormData ? data : JSON.stringify(data),
@@ -237,7 +262,7 @@ export const createEmergencyReport = async (data) => {
 };
 
 export const updateEmergencyReport = async ({ id, ...data }) => {
-    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify(data),
@@ -246,7 +271,7 @@ export const updateEmergencyReport = async ({ id, ...data }) => {
 };
 
 export const updateEmergencyStatus = async (id, status) => {
-    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}/status`, {
+    const res = await apiFetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}/status`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify({ status }),
@@ -255,7 +280,7 @@ export const updateEmergencyStatus = async (id, status) => {
 };
 
 export const deleteEmergencyReport = async (id) => {
-    const res = await fetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
     });
@@ -265,7 +290,7 @@ export const deleteEmergencyReport = async (id) => {
 // ── Assistance requests ───────────────────────────────────────────────────────
 // Same mapping fix as emergency reports above.
 export const fetchAssistanceRequests = async () => {
-    const res = await fetch(`${API_ENDPOINTS.ASSISTANCE}`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.ASSISTANCE}`, { headers: authHeaders() });
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
@@ -296,7 +321,7 @@ export const fetchAssistanceRequests = async () => {
 // Accepts FormData (with optional media files) or a plain object.
 export const createAssistanceRequest = async (data) => {
     const isFormData = data instanceof FormData;
-    const res = await fetch(`${API_ENDPOINTS.ASSISTANCE}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.ASSISTANCE}`, {
         method: "POST",
         headers: isFormData ? authHeadersNoContentType() : authHeaders(),
         body: isFormData ? data : JSON.stringify(data),
@@ -305,7 +330,7 @@ export const createAssistanceRequest = async (data) => {
 };
 
 export const updateAssistanceRequest = async (id, data) => {
-    const res = await fetch(`${API_ENDPOINTS.ASSISTANCE}/${id}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.ASSISTANCE}/${id}`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify(data),
@@ -314,7 +339,7 @@ export const updateAssistanceRequest = async (id, data) => {
 };
 
 export const updateAssistanceStatus = async (id, status) => {
-    const res = await fetch(`${API_ENDPOINTS.ASSISTANCE}/${id}/status`, {
+    const res = await apiFetch(`${API_ENDPOINTS.ASSISTANCE}/${id}/status`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify({ status }),
@@ -323,7 +348,7 @@ export const updateAssistanceStatus = async (id, status) => {
 };
 
 export const deleteAssistanceRequest = async (id) => {
-    const res = await fetch(`${API_ENDPOINTS.ASSISTANCE}/${id}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.ASSISTANCE}/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
     });
@@ -333,7 +358,7 @@ export const deleteAssistanceRequest = async (id) => {
 // ── Petty crime reports ───────────────────────────────────────────────────────
 // Same mapping fix as emergency reports above.
 export const fetchPettyCrimes = async () => {
-    const res = await fetch(`${API_ENDPOINTS.PETTY_CRIMES}`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}`, { headers: authHeaders() });
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
@@ -361,7 +386,7 @@ export const fetchPettyCrimes = async () => {
 // Accepts FormData (with optional media files) or a plain object.
 export const createPettyCrimeReport = async (data) => {
     const isFormData = data instanceof FormData;
-    const res = await fetch(`${API_ENDPOINTS.PETTY_CRIMES}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}`, {
         method: "POST",
         headers: isFormData ? authHeadersNoContentType() : authHeaders(),
         body: isFormData ? data : JSON.stringify(data),
@@ -370,7 +395,7 @@ export const createPettyCrimeReport = async (data) => {
 };
 
 export const updatePettyCrimeReport = async (id, data) => {
-    const res = await fetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify(data),
@@ -379,7 +404,7 @@ export const updatePettyCrimeReport = async (id, data) => {
 };
 
 export const updatePettyCrimeStatus = async (id, status) => {
-    const res = await fetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}/status`, {
+    const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}/status`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify({ status }),
@@ -388,7 +413,7 @@ export const updatePettyCrimeStatus = async (id, status) => {
 };
 
 export const deletePettyCrimeReport = async (id) => {
-    const res = await fetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
     });
@@ -397,7 +422,7 @@ export const deletePettyCrimeReport = async (id) => {
 
 // ── Announcements ─────────────────────────────────────────────────────────────
 export const fetchAnnouncements = async () => {
-    const res = await fetch(`${API_ENDPOINTS.ANNOUNCEMENTS}`);
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}`);
     const data = await res.json();
     if (!Array.isArray(data)) return data;
 
@@ -422,7 +447,7 @@ export const fetchAnnouncements = async () => {
 };
 
 export const createAnnouncement = async (formData) => {
-    const res = await fetch(`${API_ENDPOINTS.ANNOUNCEMENTS}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}`, {
         method: "POST",
         headers: authHeadersNoContentType(),
         body: formData,
@@ -431,7 +456,7 @@ export const createAnnouncement = async (formData) => {
 };
 
 export const updateAnnouncement = async (id, formData) => {
-    const res = await fetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}`, {
         method: "PUT",
         headers: authHeadersNoContentType(),
         body: formData,
@@ -440,7 +465,7 @@ export const updateAnnouncement = async (id, formData) => {
 };
 
 export const deleteAnnouncement = async (id) => {
-    const res = await fetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}`, {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
     });
@@ -448,7 +473,7 @@ export const deleteAnnouncement = async (id) => {
 };
 
 export const fetchLinkPreview = async (url) => {
-    const res = await fetch(
+    const res = await apiFetch(
         `${API_ENDPOINTS.ANNOUNCEMENTS}/link-preview?url=${encodeURIComponent(url)}`,
         { headers: authHeaders() }
     );
@@ -465,7 +490,7 @@ export const fetchLinkPreview = async (url) => {
 // this version is honest about it instead: "Not tracked" until the backend
 // is actually updated to capture req.ip / a user-agent string per login.
 export const fetchSignInLogs = async () => {
-    const res = await fetch(`${API_ENDPOINTS.LOGS}/signin`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/signin`, { headers: authHeaders() });
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
@@ -484,7 +509,7 @@ export const fetchSignInLogs = async () => {
 // admins: one entry per admin account (online state, last login, latest action).
 // activity: every logged admin action, newest first.
 export const fetchAdminLogs = async () => {
-    const res = await fetch(`${API_ENDPOINTS.LOGS}/admin`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/admin`, { headers: authHeaders() });
     const data = await res.json();
     if (!data?.success) return { admins: [], activity: [] };
 
@@ -518,7 +543,7 @@ export const fetchAdminLogs = async () => {
 // Records the logout in the admin activity log. Must run before the token is cleared.
 export const logoutAdmin = async () => {
     try {
-        await fetch(`${API_ENDPOINTS.LOGS}/admin/logout`, {
+        await apiFetch(`${API_ENDPOINTS.LOGS}/admin/logout`, {
             method: "POST",
             headers: authHeaders(),
         });
@@ -529,7 +554,7 @@ export const logoutAdmin = async () => {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export const fetchAllData = async () => {
-    const res = await fetch(`${API_ENDPOINTS.DASHBOARD}`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.DASHBOARD}`, { headers: authHeaders() });
     return res.json();
 };
 
@@ -537,7 +562,7 @@ export const fetchAllData = async () => {
 // Admin bell: useAdminData.js destructures { notifications, unread } from
 // this, so the raw { success, data, unread } backend shape needs mapping.
 export const fetchNotifications = async () => {
-    const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}`, { headers: authHeaders() });
     const result = await res.json();
     if (!result.success) return { notifications: [], unread: 0 };
 
@@ -558,7 +583,7 @@ export const fetchNotifications = async () => {
 // Resident bell (useNotifications.js): identity comes from the JWT, no
 // userId in the URL -- the route is /mine, not /user/:id.
 export const fetchMyNotifications = async () => {
-    const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine`, { headers: authHeaders() });
     const result = await res.json();
     if (!result.success) return [];
 
@@ -575,7 +600,7 @@ export const fetchMyNotifications = async () => {
 
 // Admin bell: marks a single notification read (e.g. when "See report" is clicked).
 export const markNotificationRead = async (id) => {
-    const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}/${id}/read`, {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/${id}/read`, {
         method: "PUT",
         headers: authHeaders(),
     });
@@ -585,7 +610,7 @@ export const markNotificationRead = async (id) => {
 
 // Real route is /read-all, not /mark-all-read.
 export const markAllNotificationsRead = async () => {
-    const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}/read-all`, {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/read-all`, {
         method: "PUT",
         headers: authHeaders(),
     });
@@ -595,7 +620,7 @@ export const markAllNotificationsRead = async () => {
 
 // Resident bell: marks one of your own notifications read.
 export const markMyNotificationRead = async (id) => {
-    const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine/${id}/read`, {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine/${id}/read`, {
         method: "PUT",
         headers: authHeaders(),
     });
@@ -605,7 +630,7 @@ export const markMyNotificationRead = async (id) => {
 
 // Real route is /mine/read-all, no userId in the path.
 export const markAllMyNotificationsRead = async () => {
-    const res = await fetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine/read-all`, {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine/read-all`, {
         method: "PUT",
         headers: authHeaders(),
     });
@@ -615,7 +640,7 @@ export const markAllMyNotificationsRead = async () => {
 
 // ── My reports (resident) ─────────────────────────────────────────────────────
 export const fetchMyReports = async (userId) => {
-    const res = await fetch(`${API_ENDPOINTS.REPORTS}/user/${userId}`, { headers: authHeaders() });
+    const res = await apiFetch(`${API_ENDPOINTS.REPORTS}/user/${userId}`, { headers: authHeaders() });
     return res.json();
 };
 
@@ -638,7 +663,7 @@ export const exportReport = async (type, format, filters = {}) => {
 
     const url = `${API_ENDPOINTS.EXPORT}/${format}/${type}${query ? `?${query}` : ""}`;
 
-    const res = await fetch(url, { headers: authHeadersNoContentType() });
+    const res = await apiFetch(url, { headers: authHeadersNoContentType() });
 
     if (!res.ok) {
         let message = "Failed to generate report.";
@@ -682,7 +707,7 @@ export const updateStatus = async (type, id, status) => {
     const entry = config[type];
     if (!entry) throw new Error(`Unknown report type: ${type}`);
 
-    const res = await fetch(entry.url, {
+    const res = await apiFetch(entry.url, {
         method: entry.method,
         headers: authHeaders(),
         body: JSON.stringify({ status }),

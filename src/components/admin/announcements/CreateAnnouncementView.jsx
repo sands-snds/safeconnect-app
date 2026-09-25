@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { fetchLinkPreview, createAnnouncement, updateAnnouncement } from "../../../Services/api";
+import { fetchLinkPreview, createAnnouncement, updateAnnouncement, isSessionError } from "../../../Services/api";
 import { ANNOUNCEMENT_CATEGORIES } from "./constants";
 
 const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) => {
@@ -168,6 +168,9 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
       const result = isEditMode
         ? await updateAnnouncement(editingAnnouncement.id, payload)
         : await createAnnouncement(payload);
+
+      // The sign-in box is already showing; the form keeps its contents.
+      if (isSessionError(result)) return;
 
       if (!result.success) {
         throw new Error(

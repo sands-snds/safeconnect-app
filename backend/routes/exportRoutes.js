@@ -14,6 +14,8 @@ router.use(verifyToken);
 router.use(verifyAdmin);
 
 const EXPORT_NAMES = {
+    reportsOverTime: "Reports over time",
+    statusSummary: "Reports by status",
     emergency: "Emergency reports",
     assistance: "Assistance requests",
     pettyCrime: "Petty crime reports",
@@ -25,7 +27,7 @@ const EXPORT_NAMES = {
 const describeExport = (format) => (req) =>
     `${EXPORT_NAMES[req.params.type] || req.params.type} (${format})`;
 
-// :type is one of: emergency, assistance, pettyCrime, users, signinLogs, adminLogs
+// :type is one of: reportsOverTime, statusSummary, emergency, assistance, pettyCrime, users, signinLogs, adminLogs
 // (see ExportService.validTypes in exportService.js for the source of truth)
 router.get(
     "/pdf/:type",

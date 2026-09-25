@@ -1,4 +1,5 @@
 import PieChartCard from "./PieChartCard";
+import GenerateReportButton from "../shared/GenerateReportButton";
 import { STATUS_COLORS, SEVERITY_COLORS, buildPieData } from "../shared/chartUtils";
 
 export default function DashboardCharts({
@@ -7,6 +8,24 @@ export default function DashboardCharts({
     pettyCrimeReports = []
 }) {
     return (
+        <div style={{ marginTop: "24px" }}>
+        {/* Exports the counts behind these pie charts: each category by status. */}
+        <div
+            style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
+                marginBottom: "12px"
+            }}
+        >
+            <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#111827", margin: 0 }}>
+                Reports by Status
+            </h3>
+            <GenerateReportButton type="statusSummary" inline />
+        </div>
+
         <div
             style={{
                 display: "grid",
@@ -15,7 +34,6 @@ export default function DashboardCharts({
                         ? "1fr"
                         : "repeat(2, 1fr)",
                 gap: "20px",
-                marginTop: "24px",
                 alignItems: "stretch"
             }}
         >
@@ -62,6 +80,7 @@ export default function DashboardCharts({
                 colorMap={STATUS_COLORS}
             />
 
+        </div>
         </div>
     );
 }

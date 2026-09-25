@@ -11,12 +11,32 @@ import {
 } from "recharts";
 
 import Section from "../shared/Section";
+import GenerateReportButton from "../shared/GenerateReportButton";
 
 const RANGE_OPTIONS = [
     { key: "7d", label: "Last 7 Days", days: 7 },
+    { key: "15d", label: "Last 15 Days", days: 15 },
     { key: "30d", label: "Last 30 Days", days: 30 },
     { key: "90d", label: "Last 90 Days", days: 90 }
 ];
+
+// "category" puts each category's bar side by side per day; "overall"
+// stacks them into one bar showing the day's total.
+const VIEW_OPTIONS = [
+    { key: "category", label: "Each Category" },
+    { key: "overall", label: "Overall" }
+];
+
+const toggleButtonStyle = (active) => ({
+    padding: "6px 12px",
+    borderRadius: "6px",
+    border: "1px solid " + (active ? "#3b82f6" : "#d1d5db"),
+    background: active ? "#eff6ff" : "#fff",
+    color: active ? "#1d4ed8" : "#374151",
+    fontSize: "12.5px",
+    fontWeight: 500,
+    cursor: "pointer"
+});
 
 const REPORT_SERIES = [
     { key: "emergency", label: "Emergency", color: "#ef4444" },
@@ -42,7 +62,9 @@ export default function ReportsOverTimeChart({
     pettyCrimeReports = []
 }) {
     const [rangeKey, setRangeKey] = useState("30d");
-    const range = RANGE_OPTIONS.find((r) => r.key === rangeKey) || RANGE_OPTIONS[1];
+    const [viewMode, setViewMode] = useState("category");
+    const range = RANGE_OPTIONS.find((r) => r.key === rangeKey) || RANGE_OPTIONS[2];
+    const stacked = viewMode === "overall";
 
     const chartData = useMemo(() => {
         const today = new Date();
@@ -103,26 +125,27 @@ export default function ReportsOverTimeChart({
                     {totalInRange} report{totalInRange === 1 ? "" : "s"} in this period
                 </span>
 
-                <div style={{ display: "flex", gap: "6px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                     {RANGE_OPTIONS.map((opt) => (
                         <button
                             key={opt.key}
                             type="button"
                             onClick={() => setRangeKey(opt.key)}
-                            style={{
-                                padding: "6px 12px",
-                                borderRadius: "6px",
-                                border: "1px solid " + (rangeKey === opt.key ? "#3b82f6" : "#d1d5db"),
-                                background: rangeKey === opt.key ? "#eff6ff" : "#fff",
-                                color: rangeKey === opt.key ? "#1d4ed8" : "#374151",
-                                fontSize: "12.5px",
-                                fontWeight: 500,
-                                cursor: "pointer"
-                            }}
+                            style={toggleButtonStyle(rangeKey === opt.key)}
                         >
                             {opt.label}
                         </button>
                     ))}
+
+                    {/* Exports the same range as the chart, one row per day. */}
+                    <GenerateReportButton
+                        type="reportsOverTime"
+                        inline
+                        filters={{
+                            days: range.days,
+                            tzOffset: new Date().getTimezoneOffset()
+                        }}
+                    />
                 </div>
             </div>
 
@@ -145,7 +168,12 @@ export default function ReportsOverTimeChart({
                                 height={range.days > 14 ? 50 : 30}
                             />
                             <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={32} />
-                            <Tooltip />
+                            <Tooltip
+                                formatter={(value, name) => [
+                                    value,
+                                    REPORT_SERIES.find((s) => s.key === name)?.label || name
+                                ]}
+                            />
                             <Legend
                                 formatter={(value) =>
                                     REPORT_SERIES.find((s) => s.key === value)?.label || value
@@ -156,10 +184,10 @@ export default function ReportsOverTimeChart({
                                     key={series.key}
                                     dataKey={series.key}
                                     name={series.key}
-                                    stackId="reports"
+                                    stackId={stacked ? "reports" : undefined}
                                     fill={series.color}
                                     radius={
-                                        series.key === REPORT_SERIES[REPORT_SERIES.length - 1].key
+                                        !stacked || series.key === REPORT_SERIES[REPORT_SERIES.length - 1].key
                                             ? [4, 4, 0, 0]
                                             : 0
                                     }
@@ -168,6 +196,22 @@ export default function ReportsOverTimeChart({
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
+            )}
+
+            {totalInRange > 0 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginTop: "12px" }}>
+                {VIEW_OPTIONS.map((opt) => (
+                    <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setViewMode(opt.key)}
+                        style={toggleButtonStyle(viewMode === opt.key)}
+                        aria-pressed={viewMode === opt.key}
+                    >
+                        {opt.label}
+                    </button>
+                ))}
+            </div>
             )}
         </Section>
     );
