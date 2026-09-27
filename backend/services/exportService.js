@@ -349,14 +349,20 @@ const EXPORTERS = {
                 columns: [
                     { label: "Name", key: "name" },
                     { label: "Email", key: "email", weight: 1.6 },
-                    { label: "Role", key: "role" },
-                    { label: "Status", key: "status" },
-                    { label: "Timestamp", key: "date", weight: 1.3 }
+                    { label: "Role", key: "role", weight: 0.8 },
+                    { label: "IP Address", key: "ip", weight: 1.1 },
+                    { label: "Location", key: "location", weight: 1.6 },
+                    { label: "Device", key: "device", weight: 1.6 },
+                    { label: "Status", key: "status", weight: 0.7 },
+                    { label: "Timestamp", key: "date", weight: 1.2 }
                 ],
                 rows: logs.map((l) => [
                     l.full_name,
                     l.email_address,
                     ROLE_LABELS[l.role] || "Unknown",
+                    l.ip_address || "Not tracked",
+                    l.location || "",
+                    l.device || "Not tracked",
                     l.status,
                     fmtDate(l.timestamp)
                 ])

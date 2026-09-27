@@ -17,7 +17,10 @@ const SignInLogsTable = ({
       </td>
       <td className="table-cell text-sm">{log.loginTime}</td>
       <td className="table-cell text-sm">{ROLE_LABELS[log.role] || 'Unknown'}</td>
-      <td className="table-cell text-sm">{log.ipAddress}</td>
+      <td className="table-cell">
+        <div className="text-sm">{log.ipAddress}</div>
+        {log.location && <div className="text-gray-500 text-xs">{log.location}</div>}
+      </td>
       <td className="table-cell text-sm">{log.device}</td>
       <td className="table-cell">
         <StatusBadge status={log.status} />

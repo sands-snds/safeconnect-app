@@ -4,6 +4,8 @@ const User   = require("../models/User");
 const AdminActivity = require("../models/AdminActivity");
 const { generateToken } = require("../utils/jwt");
 const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
+const Log = require("../models/Log");
+const { signinContext, lookupLocation } = require("../utils/signinContext");
 const {
     sendOtpEmail,
     sendWelcomeEmail,
@@ -437,6 +439,16 @@ exports.signup = async (req, res) => {
 /* =========================================================
    SIGN IN
 ============================================================*/
+// Logs a sign-in attempt with the visitor's IP and device, then fills in the
+// approximate location in the background so the login isn't kept waiting.
+const recordSignin = async (req, fullName, email, status) => {
+    const ctx = signinContext(req);
+    const id = await Log.logSignin(fullName, email, status, ctx);
+    lookupLocation(ctx.ip)
+        .then((location) => location && Log.setSigninLocation(id, location))
+        .catch((err) => console.error("Sign-in location lookup failed:", err.message));
+};
+
 exports.signin = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -451,18 +463,18 @@ exports.signin = async (req, res) => {
         const user = await User.findByEmail(email);
 
         if (!user) {
-            await User.logSignin("Unknown User", email, "Failed");
+            await recordSignin(req, "Unknown User", email, "Failed");
             return res.json({ success: false, message: "Invalid email or password." });
         }
 
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            await User.logSignin(user.full_name, email, "Failed");
+            await recordSignin(req, user.full_name, email, "Failed");
             return res.json({ success: false, message: "Invalid email or password." });
         }
 
         if (user.status && user.status !== "Active") {
-            await User.logSignin(user.full_name, email, "Failed");
+            await recordSignin(req, user.full_name, email, "Failed");
             const STATUS_MESSAGES = {
                 Pending:   "Your account is still pending approval.",
                 Suspended: "Your account has been suspended. Please contact an administrator.",
@@ -474,7 +486,7 @@ exports.signin = async (req, res) => {
             });
         }
 
-        await User.logSignin(user.full_name, email, "Success");
+        await recordSignin(req, user.full_name, email, "Success");
         if (isAdminRole(user.role)) await AdminActivity.record(user, "Logged in");
 
         sendSigninNotification(email, user.full_name).catch((err) =>

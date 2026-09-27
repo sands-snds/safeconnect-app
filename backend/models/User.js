@@ -108,19 +108,7 @@ class User {
         return result.affectedRows;
     }
 
-/* =========================================================
-                    Log Signin Attempt
-============================================================*/
-
-    static async logSignin(fullName, email, status) {
-        await db.query(
-            `INSERT INTO signin_logs
-            (full_name, email_address, status)
-            VALUES (?, ?, ?)`,
-            [fullName, email, status]
-        );
-
-    }
+// Sign-in attempts are logged by Log.logSignin (models/Log.js).
 
 /* =========================================================
                     Get All Users

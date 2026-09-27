@@ -106,11 +106,30 @@ export const resolveAssetUrl = (path) => {
 };
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
+// Phone model / real OS version for the sign-in log (System > Sign-in Logs).
+// Only Chromium browsers (Chrome, Edge, Samsung Internet) expose these;
+// elsewhere the backend falls back to the User-Agent. Never blocks login.
+const getDeviceHints = async () => {
+    try {
+        const uad = navigator.userAgentData;
+        if (!uad?.getHighEntropyValues) return undefined;
+        const values = await Promise.race([
+            uad.getHighEntropyValues(["model", "platformVersion"]),
+            new Promise((resolve) => setTimeout(() => resolve(null), 500))
+        ]);
+        if (!values) return undefined;
+        return { model: values.model || undefined, platformVersion: values.platformVersion || undefined, mobile: uad.mobile };
+    } catch {
+        return undefined;
+    }
+};
+
 export const signinUser = async (email, password) => {
+    const device = await getDeviceHints();
     const res = await apiFetch(`${API_ENDPOINTS.AUTH}/signin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, device }),
     });
     return res.json();
 };
@@ -482,13 +501,9 @@ export const fetchLinkPreview = async (url) => {
 
 // ── Logs ──────────────────────────────────────────────────────────────────────
 // Same mapping problem as users: raw rows use snake_case, tables expect
-// camelCase. Also: `signin_logs` and `admin_logs` were never actually
-// designed to capture IP address or device -- those columns don't exist in
-// the schema. An earlier version of this file filled them in with fabricated
-// placeholder values (a random IP, a sniffed User-Agent unrelated to the
-// logged-in user's own device). That's misleading data presented as real, so
-// this version is honest about it instead: "Not tracked" until the backend
-// is actually updated to capture req.ip / a user-agent string per login.
+// camelCase. IP address, device and approximate location are recorded by the
+// backend at sign-in (backend/utils/signinContext.js); logs from before that
+// have none and show "Not tracked" rather than made-up values.
 export const fetchSignInLogs = async () => {
     const res = await apiFetch(`${API_ENDPOINTS.LOGS}/signin`, { headers: authHeaders() });
     const data = await res.json();
@@ -500,8 +515,10 @@ export const fetchSignInLogs = async () => {
         email: log.email_address || '',
         loginTime: log.timestamp ? new Date(log.timestamp).toLocaleString() : '',
         role: log.role || '',
-        ipAddress: 'Not tracked',
-        device: 'Not tracked',
+        // Logs from before IP/device tracking was added have neither.
+        ipAddress: log.ip_address || 'Not tracked',
+        location: log.location || '',
+        device: log.device || 'Not tracked',
         status: log.status || ''
     }));
 };
