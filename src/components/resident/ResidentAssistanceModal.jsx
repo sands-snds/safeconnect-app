@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
+import LocationPickerMap from './location/LocationPickerMap';
+import useLocationPin from './location/useLocationPin';
 const SERVICE_AREA = {
   barangay: 'Santa Fe',
   city: 'Dasmariñas',
@@ -69,10 +71,25 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
-  const [mapQuery, setMapQuery] = useState(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
-  const [gpsCoords, setGpsCoords] = useState(null);
-  const [isLocating, setIsLocating] = useState(false);
-  const [locationError, setLocationError] = useState('');
+  // Map pin, "Use my current location" and the Santa Fe boundary check
+  // (./location/useLocationPin.js). A new pin fills in the address.
+  const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
+    setFormData((prev) => (isEditing
+      ? { ...prev, location: fullAddress }
+      : { ...prev, houseNumber: houseNumber || prev.houseNumber, street: street || prev.street }));
+  }, [isEditing]);
+  const {
+    gpsCoords,
+    setGpsCoords,
+    isLocating,
+    locationError,
+    setLocationError,
+    isOutsideSantaFe,
+    outsideMessage,
+    handleUseCurrentLocation,
+    handlePickOnMap
+  } = useLocationPin({ onAddress: fillAddressFromPin });
+  const locationSectionRef = useRef(null);
   const [reportFor, setReportFor] = useState('self');
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
@@ -93,7 +110,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     if (editingReport.latitude != null && editingReport.longitude != null) {
       setGpsCoords({ lat: editingReport.latitude, lng: editingReport.longitude });
     }
-  }, [editingReport]);
+  }, [editingReport, setGpsCoords]);
   useEffect(() => {
     document.body.style.overflow = show ? 'hidden' : 'auto';
     return () => {
@@ -108,21 +125,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     }, 1000);
     return () => clearInterval(interval);
   }, [show]);
-  useEffect(() => {
-    if (gpsCoords) return;
-    const timer = setTimeout(() => {
-      if (isEditing) {
-        setMapQuery(formData.location.trim() || `${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
-        return;
-      }
-      const composed = `${formData.houseNumber} ${formData.street}`.trim();
-      const query = composed
-        ? `${composed}, Barangay ${SERVICE_AREA.barangay}, ${SERVICE_AREA.city}, ${SERVICE_AREA.province}, ${SERVICE_AREA.country}`
-        : `${SERVICE_AREA.lat},${SERVICE_AREA.lng}`;
-      setMapQuery(query);
-    }, 700);
-    return () => clearTimeout(timer);
-  }, [formData.houseNumber, formData.street, formData.location, gpsCoords, isEditing]);
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name === 'houseNumber' || name === 'street') {
@@ -144,53 +146,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       };
     });
   };
-  const handleUseCurrentLocation = () => {
-    setLocationError('');
-    if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by this browser.');
-      return;
-    }
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        setGpsCoords({ lat: latitude, lng: longitude });
-        setMapQuery(`${latitude},${longitude}`);
-        if (accuracy && accuracy > 100) {
-          setLocationError(
-            `Location accuracy is low (~${Math.round(accuracy)}m). Please double-check the pin on the map.`
-          );
-        }
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-          );
-          const data = await res.json();
-          if (data && data.address) {
-            const addr = data.address;
-            setFormData((prev) => ({
-              ...prev,
-              houseNumber: addr.house_number || prev.houseNumber,
-              street: addr.road || addr.pedestrian || addr.suburb || prev.street
-            }));
-          }
-        } catch (err) {
-          console.error('Reverse geocoding error:', err);
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (err) => {
-        setIsLocating(false);
-        if (err.code === err.PERMISSION_DENIED) {
-          setLocationError('Location access was denied. Please allow it or enter your address manually.');
-        } else {
-          setLocationError('Unable to retrieve your location. Please enter your address manually.');
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isEditing) {
@@ -200,6 +155,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         return;
       }
     }
+    // The map already shows why; bring it into view.
+    if (isOutsideSantaFe) {
+      locationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     if (isEditing) {
       if (!formData.location.trim()) {
         alert('Please provide a location.');
@@ -289,7 +250,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setVictimName(''); setVictimContact(''); setVictimRelationship('');
       setGpsCoords(null);
       setLocationError('');
-      setMapQuery(`${SERVICE_AREA.lat},${SERVICE_AREA.lng}`);
       setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -668,48 +628,15 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 <div style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
               Requests are limited to Barangay Santa Fe, Dasmariñas, Cavite, Philippines
 </div>
-<div style={{
-              marginTop: '10px',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              border: '1px solid #d1d5db'
-            }}>
-<iframe
-                key={mapQuery}
-                src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=16&output=embed`}
-                title="Map of the entered location within Barangay Santa Fe"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  height: '180px',
-                  border: 0
-                }}
-></iframe>
-<a
-                href={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'block',
-                  padding: '8px 10px',
-                  fontSize: '12px',
-                  color: '#dc3545',
-                  textDecoration: 'none',
-                  backgroundColor: '#fff',
-                  borderTop: '1px solid #e5e7eb'
-                }}
->
-<i className="bi bi-box-arrow-up-right"></i> Open this location in Google Maps
-</a>
+<div ref={locationSectionRef}>
+  <LocationPickerMap
+    pin={gpsCoords}
+    onPick={handlePickOnMap}
+    isOutside={isOutsideSantaFe}
+    outsideMessage={outsideMessage}
+    disabled={isSubmitting}
+  />
 </div>
-            {gpsCoords && (
-<div style={{ marginTop: '6px', fontSize: '11px', color: '#6b7280' }}>
-<i className="bi bi-geo-alt-fill"></i> Pinned using your device's GPS ({gpsCoords.lat.toFixed(5)}, {gpsCoords.lng.toFixed(5)})
-</div>
-            )}
 </div>
 <div style={{ marginBottom: '16px' }}>
 <label style={{

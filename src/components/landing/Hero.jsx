@@ -19,7 +19,7 @@ const EMERGENCY_CONTACTS = [
     { id:'police',   label:'911 Emergency',     sublabel:'National Emergency Hotline',       number:'911',           icon:'bi-shield-fill-exclamation', color:'#dc2626' },
     { id:'dasma',    label:'Dasmariñas Police',  sublabel:'Dasmariñas City PNP',              number:'+63462420002',  icon:'bi-shield-fill',             color:'#1d4ed8' },
     { id:'cdrmc',    label:'CDRMC',              sublabel:'Cavite Disaster Risk Management',  number:'+63462300345',  icon:'bi-heart-pulse-fill',        color:'#059669' },
-    { id:'barangay', label:'Barangay Santa Fe',  sublabel:'Barangay Emergency Line',          number:'+639929474309', icon:'bi-house-fill',              color:'#7c3aed' },
+    { id:'barangay', label:'Barangay Santa Fe',  sublabel:'Barangay Emergency Line',          number:'+63567341876', icon:'bi-house-fill',              color:'#7c3aed' },
 ];
 
 const apiPost = async (path, body) => {

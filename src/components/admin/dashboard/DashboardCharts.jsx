@@ -60,7 +60,7 @@ export default function DashboardCharts({
                 colorMap={STATUS_COLORS}
             />
 
-{/*
+            {/*
             <PieChartCard
                 title="Reports by Severity"
                 data={buildPieData(
@@ -69,7 +69,17 @@ export default function DashboardCharts({
                 )}
                 colorMap={SEVERITY_COLORS}
             />
-*/}
+            */}
+
+            
+
+        </div>
+        <div
+            style={{
+                gridColumn: "1 / -1",
+                width: "50%",
+                justifySelf: "center"
+            }}>
 
             <PieChartCard
                 title="Assistance Requests by Status"
@@ -79,8 +89,9 @@ export default function DashboardCharts({
                 )}
                 colorMap={STATUS_COLORS}
             />
-
-        </div>
+            
+            
+            </div>
         </div>
     );
 }

@@ -1,4 +1,7 @@
+const fs = require("fs");
+const path = require("path");
 const ExcelJS = require("exceljs");
+const STYLE = require("../config/reportStyle");
 
 // Generic, branded table-report Excel generator -- the Excel counterpart to
 // pdfService.js. See that file's comment for the shared design: category
@@ -12,6 +15,7 @@ class ExcelService {
         const {
             reportTitle,
             filenamePrefix,
+            subtitle,
             summary = [],
             columns,
             rows
@@ -40,7 +44,25 @@ class ExcelService {
         worksheet.getCell("A3").font = { bold: true, size: 14 };
         worksheet.getCell("A3").alignment = { horizontal: "center" };
 
-        worksheet.getCell("A5").value = `Generated: ${new Date().toLocaleString()}`;
+        if (subtitle) {
+            worksheet.mergeCells(`A4:${lastColLetter}4`);
+            worksheet.getCell("A4").value = subtitle;
+            worksheet.getCell("A4").alignment = { horizontal: "center" };
+        }
+
+        worksheet.getCell("A5").value = `Generated: ${new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" })}`;
+
+        // Logos (config/reportStyle.js) in the top-left and top-right
+        // corners, over the title rows. Missing files are simply skipped.
+        [1, 2, 3].forEach((r) => { worksheet.getRow(r).height = 22; });
+        const addLogo = (logo, col) => {
+            if (!logo.file || !fs.existsSync(logo.file)) return;
+            const extension = path.extname(logo.file).slice(1).toLowerCase().replace("jpg", "jpeg");
+            const imageId = workbook.addImage({ filename: logo.file, extension });
+            worksheet.addImage(imageId, { tl: { col, row: 0 }, ext: { width: 80, height: 80 } });
+        };
+        addLogo(STYLE.logos.left, 0.1);
+        addLogo(STYLE.logos.right, Math.max(columns.length - 1, 0) + 0.3);
 
         let nextRow = 7;
 
@@ -60,11 +82,11 @@ class ExcelService {
 
         const headerRow = nextRow;
 
-        worksheet.columns = columns.map((col) => ({
-            header: col.label,
-            key: col.key || col.label,
-            width: col.excelWidth || 22
-        }));
+        // Widths only: giving exceljs a `header` here writes the column labels
+        // into row 1, over the SAFECONNECT title. The header row is written below.
+        columns.forEach((col, i) => {
+            worksheet.getColumn(i + 1).width = col.excelWidth || 22;
+        });
 
         const headerRowRef = worksheet.getRow(headerRow);
         headerRowRef.values = columns.map((c) => c.label);

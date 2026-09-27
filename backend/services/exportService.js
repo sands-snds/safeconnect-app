@@ -51,7 +51,45 @@ const summaryFromCounts = (total, counts, label = "Reports") => [
     ...REPORT_STATUSES.map((s) => ({ label: s, value: counts[s] || 0 }))
 ];
 
-const fmtDate = (value) => (value ? new Date(value).toLocaleString() : "");
+// Philippine time: the Azure server runs in UTC, which put every exported
+// time 8 hours behind.
+const REPORT_TIMEZONE = "Asia/Manila";
+const fmtDate = (value) =>
+    (value ? new Date(value).toLocaleString("en-PH", { timeZone: REPORT_TIMEZONE }) : "");
+
+const ROLE_LABELS = { super_admin: "Super Admin", admin: "Admin", resident: "Resident" };
+
+const isDayKey = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
+
+// Options from the report tabs' Generate Report form:
+//   status   - one of REPORT_STATUSES, or empty for all
+//   from, to - YYYY-MM-DD (inclusive), in the admin's timezone
+//   tzOffset - the browser's getTimezoneOffset(), see localDayKey
+// Returns model filters ({ status, from, to } with Date bounds) plus a
+// human-readable description for the report's subtitle.
+const reportOptions = (filters = {}) => {
+    const status = REPORT_STATUSES.includes(filters.status) ? filters.status : null;
+    const tzOffset = Number.isFinite(Number(filters.tzOffset)) ? Number(filters.tzOffset) : -480;
+    const localMidnight = (key) => new Date(new Date(`${key}T00:00:00Z`).getTime() + tzOffset * 60000);
+
+    const from = isDayKey(filters.from) ? localMidnight(filters.from) : null;
+    let to = null;
+    if (isDayKey(filters.to)) {
+        to = localMidnight(filters.to);
+        to.setUTCDate(to.getUTCDate() + 1); // include the whole "to" day
+    }
+
+    const period = filters.from && filters.to && isDayKey(filters.from) && isDayKey(filters.to)
+        ? `${dayKeyLabel(filters.from)} - ${dayKeyLabel(filters.to)}`
+        : isDayKey(filters.from) ? `From ${dayKeyLabel(filters.from)}`
+        : isDayKey(filters.to) ? `Until ${dayKeyLabel(filters.to)}`
+        : "All dates";
+
+    return {
+        modelFilters: { status, from, to },
+        subtitle: `Status: ${status || "All"}  |  Period: ${period}`
+    };
+};
 
 // Each entry describes how to build one exportable dataset: a human title,
 // a PDF-friendly filename prefix, and a build(filters) function returning
@@ -163,18 +201,20 @@ const EXPORTERS = {
         reportTitle: "Emergency Incident Report",
         filenamePrefix: "Emergency_Reports",
         async build(filters) {
-            const reports = await Report.findAll(filters);
+            const { modelFilters, subtitle } = reportOptions(filters);
+            const reports = await Report.findAll(modelFilters);
             const counts = countByStatus(reports);
             return {
+                subtitle,
                 summary: summaryFromCounts(reports.length, counts),
                 columns: [
-                    { label: "Reference", key: "reference" },
-                    { label: "Type", key: "type" },
-                    { label: "Severity", key: "severity" },
-                    { label: "Reporter", key: "reporter" },
-                    { label: "Location", key: "location" },
-                    { label: "Status", key: "status" },
-                    { label: "Date", key: "date" }
+                    { label: "Reference", key: "reference", weight: 1.2 },
+                    { label: "Type", key: "type", weight: 1.2 },
+                    { label: "Severity", key: "severity", weight: 0.8 },
+                    { label: "Reporter", key: "reporter", weight: 1.2 },
+                    { label: "Location", key: "location", weight: 2.6 },
+                    { label: "Status", key: "status", weight: 0.9 },
+                    { label: "Date", key: "date", weight: 1.3 }
                 ],
                 rows: reports.map((r) => [
                     r.report_reference,
@@ -193,19 +233,21 @@ const EXPORTERS = {
         reportTitle: "Assistance Requests Report",
         filenamePrefix: "Assistance_Requests",
         async build(filters) {
-            const requests = await AssistanceRequest.findAll(filters);
+            const { modelFilters, subtitle } = reportOptions(filters);
+            const requests = await AssistanceRequest.findAll(modelFilters);
             const counts = countByStatus(requests);
             return {
+                subtitle,
                 summary: summaryFromCounts(requests.length, counts, "Requests"),
                 columns: [
-                    { label: "Reference", key: "reference" },
-                    { label: "Type", key: "type" },
-                    { label: "Requester", key: "requester" },
-                    { label: "People", key: "people" },
-                    { label: "Location", key: "location" },
-                    { label: "Urgency", key: "urgency" },
-                    { label: "Status", key: "status" },
-                    { label: "Date", key: "date" }
+                    { label: "Reference", key: "reference", weight: 1.2 },
+                    { label: "Type", key: "type", weight: 1.2 },
+                    { label: "Requester", key: "requester", weight: 1.2 },
+                    { label: "People", key: "people", weight: 0.6 },
+                    { label: "Location", key: "location", weight: 2.4 },
+                    { label: "Urgency", key: "urgency", weight: 0.8 },
+                    { label: "Status", key: "status", weight: 0.9 },
+                    { label: "Date", key: "date", weight: 1.3 }
                 ],
                 rows: requests.map((r) => [
                     r.report_reference,
@@ -225,17 +267,19 @@ const EXPORTERS = {
         reportTitle: "Petty Crime Reports Report",
         filenamePrefix: "Petty_Crime_Reports",
         async build(filters) {
-            const reports = await PettyCrime.findAll(filters);
+            const { modelFilters, subtitle } = reportOptions(filters);
+            const reports = await PettyCrime.findAll(modelFilters);
             const counts = countByStatus(reports);
             return {
+                subtitle,
                 summary: summaryFromCounts(reports.length, counts),
                 columns: [
-                    { label: "Reference", key: "reference" },
-                    { label: "Crime Type", key: "type" },
-                    { label: "Reporter", key: "reporter" },
-                    { label: "Location", key: "location" },
-                    { label: "Status", key: "status" },
-                    { label: "Date", key: "date" }
+                    { label: "Reference", key: "reference", weight: 1.2 },
+                    { label: "Crime Type", key: "type", weight: 1.2 },
+                    { label: "Reporter", key: "reporter", weight: 1.2 },
+                    { label: "Location", key: "location", weight: 2.6 },
+                    { label: "Status", key: "status", weight: 0.9 },
+                    { label: "Date", key: "date", weight: 1.3 }
                 ],
                 rows: reports.map((r) => [
                     r.report_reference,
@@ -304,13 +348,21 @@ const EXPORTERS = {
                 ],
                 columns: [
                     { label: "Name", key: "name" },
-                    { label: "Email", key: "email" },
-                    { label: "Status", key: "status" },
-                    { label: "Timestamp", key: "date" }
+                    { label: "Email", key: "email", weight: 1.6 },
+                    { label: "Role", key: "role", weight: 0.8 },
+                    { label: "IP Address", key: "ip", weight: 1.1 },
+                    { label: "Location", key: "location", weight: 1.6 },
+                    { label: "Device", key: "device", weight: 1.6 },
+                    { label: "Status", key: "status", weight: 0.7 },
+                    { label: "Timestamp", key: "date", weight: 1.2 }
                 ],
                 rows: logs.map((l) => [
                     l.full_name,
                     l.email_address,
+                    ROLE_LABELS[l.role] || "Unknown",
+                    l.ip_address || "Not tracked",
+                    l.location || "",
+                    l.device || "Not tracked",
                     l.status,
                     fmtDate(l.timestamp)
                 ])
@@ -371,12 +423,13 @@ class ExportService {
         const exporter = EXPORTERS[type];
         if (!exporter) throw new Error(`Unknown export type: ${type}`);
 
-        const { summary, columns, rows } = await exporter.build(filters);
+        const { subtitle, summary, columns, rows } = await exporter.build(filters);
 
-        PDFService.generateTableReport(
+        await PDFService.generateTableReport(
             {
                 reportTitle: exporter.reportTitle,
                 filenamePrefix: exporter.filenamePrefix,
+                subtitle,
                 summary,
                 columns,
                 rows
@@ -389,12 +442,13 @@ class ExportService {
         const exporter = EXPORTERS[type];
         if (!exporter) throw new Error(`Unknown export type: ${type}`);
 
-        const { summary, columns, rows } = await exporter.build(filters);
+        const { subtitle, summary, columns, rows } = await exporter.build(filters);
 
         await ExcelService.generateTableReport(
             {
                 reportTitle: exporter.reportTitle,
                 filenamePrefix: exporter.filenamePrefix,
+                subtitle,
                 summary,
                 columns,
                 rows

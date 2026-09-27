@@ -70,6 +70,8 @@ const AssistanceRequestsTable = ({
         <ReportForFilter filterType="assistance" filters={filters} setFilters={setFilters} />
       }
       exportType="assistance"
+      exportWithOptions
+      exportTitle="Assistance Requests"
       itemLabel="requests"
     />
   );

@@ -58,6 +58,16 @@ class PettyCrime {
             values.push(filters.status);
         }
 
+        // Date range from the Generate Report form (Date objects; `to` is exclusive).
+        if (filters.from) {
+            sql += " AND timestamp >= ?";
+            values.push(filters.from);
+        }
+        if (filters.to) {
+            sql += " AND timestamp < ?";
+            values.push(filters.to);
+        }
+
         sql += " ORDER BY timestamp DESC";
         const [rows] = await db.query(sql, values);
         return rows;

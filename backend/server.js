@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const db = require("./config/db");
 const AdminActivity = require("./models/AdminActivity");
+const Log = require("./models/Log");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const logRoutes = require("./routes/logRoutes");
@@ -89,4 +90,9 @@ app.listen(PORT, () => {
 // Creates admin_activity_logs on existing databases (no manual migration needed).
 AdminActivity.ensureTable().catch((err) =>
   console.error("Could not create admin_activity_logs table:", err.message)
+);
+
+// Adds the IP / device / location columns to signin_logs if missing.
+Log.ensureColumns().catch((err) =>
+  console.error("Could not add signin_logs columns:", err.message)
 );

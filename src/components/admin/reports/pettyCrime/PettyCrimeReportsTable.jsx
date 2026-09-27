@@ -65,6 +65,8 @@ const PettyCrimeReportsTable = ({
         <ReportForFilter filterType="pettyCrime" filters={filters} setFilters={setFilters} />
       }
       exportType="pettyCrime"
+      exportWithOptions
+      exportTitle="Petty Crime Reports"
       itemLabel="reports"
     />
   );

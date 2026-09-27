@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchLinkPreview, createAnnouncement, updateAnnouncement, isSessionError } from "../../../Services/api";
 import { ANNOUNCEMENT_CATEGORIES } from "./constants";
+import ResultPopup from "../shared/ResultPopup";
 
 const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) => {
   const isEditMode = !!editingAnnouncement;
@@ -20,6 +21,9 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Save failures; the form stays open so nothing typed is lost. (Success
+  // is shown by the page, since the form closes on success.)
+  const [saveError, setSaveError] = useState("");
   const debounceRef = useRef(null);
 
   useEffect(() => {
@@ -179,15 +183,9 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
       }
 
       resetForm();
-      if (onCreated) onCreated();
-
-      alert(
-        isEditMode
-          ? "Announcement updated successfully!"
-          : "Announcement posted successfully!"
-      );
+      if (onCreated) onCreated({ edited: isEditMode });
     } catch (err) {
-      alert(err.message);
+      setSaveError(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -195,6 +193,15 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
 
   return (
     <div>
+      {saveError && (
+        <ResultPopup
+          type="error"
+          title={isEditMode ? "Couldn't Update Announcement" : "Couldn't Post Announcement"}
+          message={saveError}
+          onClose={() => setSaveError("")}
+        />
+      )}
+
       <div className="section" style={{ padding: "24px" }}>
         <form onSubmit={handleSubmit}>
           <div className="form-grid">

@@ -71,6 +71,16 @@ class Report {
             values.push(filters.status);
         }
 
+        // Date range from the Generate Report form (Date objects; `to` is exclusive).
+        if (filters.from) {
+            sql += " AND time >= ?";
+            values.push(filters.from);
+        }
+        if (filters.to) {
+            sql += " AND time < ?";
+            values.push(filters.to);
+        }
+
         sql += " ORDER BY time DESC";
         const [rows] = await db.query(sql, values);
         return rows;

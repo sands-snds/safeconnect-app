@@ -47,6 +47,8 @@ const ListView = ({
   // filter row. Omit to leave a page without one.
   exportType,
   exportLabel,
+  exportWithOptions = false,
+  exportTitle = '',
   // Optional override for the "+ Add New" button text.
   addLabel = '+ Add New',
   // Optional: extra filter controls rendered after the status filter
@@ -167,6 +169,8 @@ const ListView = ({
           <GenerateReportButton
             type={exportType}
             label={exportLabel}
+            withOptions={exportWithOptions}
+            optionsTitle={exportTitle}
             filters={{
               status: filters[filterType]?.status !== 'All Items'
                 ? filters[filterType]?.status
