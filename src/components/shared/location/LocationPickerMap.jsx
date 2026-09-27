@@ -213,7 +213,7 @@ const LocationPickerMap = ({
           <i className="bi bi-exclamation-octagon-fill"></i> {outsideMessage}
         </div>
       ) : pin ? (
-        <div style={{ marginTop: '6px', fontSize: '11.5px', color: '#6b7280' }}>
+        <div style={{ marginTop: '6px', fontSize: '15px', color: '#6b7280' }}>
           <i className="bi bi-geo-alt-fill"></i> Pinned. Drag the pin to adjust (try Satellite if streets aren't labelled).
           House number and street are now optional, but a landmark helps responders find you.
         </div>
