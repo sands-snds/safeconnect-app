@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { exportReport } from '../../../Services/api';
+import GenerateReportModal from './GenerateReportModal';
 
 // Drop-in "Generate Report" control for an admin list page. Renders a single
 // button that opens a small PDF/Excel choice, calls the export endpoint, and
@@ -13,8 +14,19 @@ import { exportReport } from '../../../Services/api';
 //             forwarded to the backend so the export matches what's on screen
 //   inline  - true when not in a labelled form row (e.g. above a chart); drops
 //             the invisible spacer label used to line up with ListView fields
-const GenerateReportButton = ({ type, label = 'Generate Report', filters = {}, inline = false }) => {
+//   withOptions  - open the report form (status / period / file type) instead
+//                  of the PDF/Excel dropdown; used by the report tabs
+//   optionsTitle - subtitle shown in that form, e.g. "Emergency Reports"
+const GenerateReportButton = ({
+  type,
+  label = 'Generate Report',
+  filters = {},
+  inline = false,
+  withOptions = false,
+  optionsTitle = ''
+}) => {
   const [open, setOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const menuRef = useRef(null);
 
@@ -48,13 +60,22 @@ const GenerateReportButton = ({ type, label = 'Generate Report', filters = {}, i
       <button
         type="button"
         className="button button-secondary"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (withOptions ? setShowForm(true) : setOpen((o) => !o))}
         disabled={loading}
         style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
       >
         <i className={`bi ${loading ? 'bi-hourglass-split' : 'bi-file-earmark-arrow-down'}`}></i>
         {loading ? 'Generating…' : label}
       </button>
+
+      {showForm && (
+        <GenerateReportModal
+          type={type}
+          title={optionsTitle}
+          defaultStatus={filters.status || ''}
+          onClose={() => setShowForm(false)}
+        />
+      )}
 
       {open && (
         <div

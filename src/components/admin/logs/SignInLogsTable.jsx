@@ -2,6 +2,8 @@ import React from 'react';
 import ListView, { allOption } from '../shared/ListView';
 import StatusBadge from '../shared/StatusBadge';
 
+const ROLE_LABELS = { super_admin: 'Super Admin', admin: 'Admin', resident: 'Resident' };
+
 const SignInLogsTable = ({ 
   data, 
   filters, 
@@ -14,6 +16,7 @@ const SignInLogsTable = ({
         <div className="text-gray-500 text-xs">{log.email}</div>
       </td>
       <td className="table-cell text-sm">{log.loginTime}</td>
+      <td className="table-cell text-sm">{ROLE_LABELS[log.role] || 'Unknown'}</td>
       <td className="table-cell text-sm">{log.ipAddress}</td>
       <td className="table-cell text-sm">{log.device}</td>
       <td className="table-cell">
@@ -28,7 +31,7 @@ const SignInLogsTable = ({
       filterType="signins"
       filters={filters}
       setFilters={setFilters}
-      headers={['USER', 'LOGIN TIME', 'IP ADDRESS', 'DEVICE', 'STATUS']}
+      headers={['USER', 'LOGIN TIME', 'ROLE', 'IP ADDRESS', 'DEVICE', 'STATUS']}
       renderRow={renderRow}
       statusOptions={[allOption('All Statuses'), 'Success', 'Failed']}
       exportType="signinLogs"

@@ -499,6 +499,7 @@ export const fetchSignInLogs = async () => {
         fullName: log.full_name || '',
         email: log.email_address || '',
         loginTime: log.timestamp ? new Date(log.timestamp).toLocaleString() : '',
+        role: log.role || '',
         ipAddress: 'Not tracked',
         device: 'Not tracked',
         status: log.status || ''

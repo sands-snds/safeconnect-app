@@ -71,6 +71,8 @@ const EmergencyReportsTable = ({
         <ReportForFilter filterType="emergency" filters={filters} setFilters={setFilters} />
       }
       exportType="emergency"
+      exportWithOptions
+      exportTitle="Emergency Reports"
       itemLabel="reports"
     />
   );
