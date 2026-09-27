@@ -331,12 +331,21 @@ exports.resetPassword = async (req, res) => {
             });
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        const user           = await User.findByEmail(email);
+        const user = await User.findByEmail(email);
 
         if (!user) {
             return res.json({ success: false, message: "Account not found." });
         }
+
+        const isSameAsOld = await bcrypt.compare(newPassword, user.password);
+        if (isSameAsOld) {
+            return res.json({
+                success: false,
+                message: "New password must be different from your current password.",
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         // Update password in DB
         await User.updatePassword(user.id, hashedPassword);

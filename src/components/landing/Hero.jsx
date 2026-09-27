@@ -383,7 +383,7 @@ function Hero() {
 
             {/* ── Sign In Modal ── */}
             {showSignIn && (
-                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }} onClick={closeAll}>
+                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }}>
                     <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header" style={{ backgroundColor:'#6B2C3E',color:'white' }}>
@@ -432,7 +432,7 @@ function Hero() {
 
             {/* ── Sign Up Modal ── */}
             {showSignUp && (
-                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }} onClick={closeAll}>
+                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }}>
                     <div className="modal-dialog modal-dialog-centered modal-lg" style={{ display:'flex',justifyContent:'center',alignItems:'center',margin:'auto',minHeight:'100vh' }} onClick={e => e.stopPropagation()}>
                         <div className="modal-content" style={{ width:'100%',maxWidth:'900px' }}>
                             <div className="modal-header" style={{ backgroundColor:'#6B2C3E',color:'white' }}>
@@ -554,7 +554,7 @@ function Hero() {
 
             {/* ── Forgot Password Modal ── */}
             {showForgot && (
-                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }} onClick={closeAll}>
+                <div className="modal fade show d-block" style={{ backgroundColor:'rgba(0,0,0,0.5)',zIndex:1060 }}>
                     <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header" style={{ backgroundColor:'#6B2C3E',color:'white' }}>
