@@ -2,6 +2,7 @@ import React from "react";
 
 import DetailField from "../../shared/DetailField";
 import ReportImage from "../shared/ReportImage";
+import ReportLocationMap from "../shared/ReportLocationMap";
 import { ReportForDetails, isForOthers } from "../shared/ReportFor";
 
 const AssistanceRequestDetails = ({ request }) => {
@@ -78,6 +79,8 @@ const AssistanceRequestDetails = ({ request }) => {
       </div>
 
       <ReportImage photo={photo} />
+
+      <ReportLocationMap latitude={request.latitude} longitude={request.longitude} />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPettyCrimeReport, updatePettyCrimeReport } from '../../Services/api';
-import LocationPickerMap from './location/LocationPickerMap';
-import useLocationPin from './location/useLocationPin';
+import LocationPickerMap from '../shared/location/LocationPickerMap';
+import useLocationPin from '../shared/location/useLocationPin';
 const CRIME_TYPES = [
   'Theft',
   'Vandalism',
@@ -72,6 +72,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     houseNumber: '',
     street: '',
     floorUnit: '',
+    landmark: '',
     location: '', // single editable address field, used only when editing
     crimeType: '',
     description: '',
@@ -82,7 +83,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   // Map pin, "Use my current location" and the Santa Fe boundary check
-  // (./location/useLocationPin.js). A new pin fills in the address.
+  // (../shared/location/useLocationPin.js). A new pin fills in the address.
   const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
     setFormData((prev) => (isEditing
       ? { ...prev, location: fullAddress }
@@ -139,9 +140,6 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const handleChange = (e) => {
     const { name, value, type, checked } =
       e.target;
-    if (name === 'houseNumber' || name === 'street') {
-      setGpsCoords(null);
-    }
     setFormData(prev => ({
       ...prev,
       [name]:
@@ -170,8 +168,8 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         alert('Please provide a location.');
         return;
       }
-    } else if (!formData.houseNumber.trim() || !formData.street.trim()) {
-      alert('Please provide the house/lot number and street.');
+    } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
+      alert('Please pin the location on the map, or enter the house/lot number and street.');
       return;
     }
     if (reportFor === 'others' && !victimName.trim()) {
@@ -208,9 +206,14 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       const composedAddress = [formData.houseNumber.trim(), formData.street.trim()]
         .filter(Boolean)
         .join(' ');
-      const floorUnitPart = formData.floorUnit.trim() ? `${formData.floorUnit.trim()}, ` : '';
-      const fullLocation =
-        `${floorUnitPart}${composedAddress}, Barangay ${SERVICE_AREA.barangay}, ${SERVICE_AREA.city}, ${SERVICE_AREA.province}, ${SERVICE_AREA.country}`;
+      // A pinned report may have no typed address -- the pin is the exact spot.
+      // The landmark goes in the same text, so admins and exports see it too.
+      const landmark = formData.landmark.trim();
+      const fullLocation = [
+        formData.floorUnit.trim(),
+        composedAddress || (gpsCoords ? 'Pinned location' : ''),
+        `Barangay ${SERVICE_AREA.barangay}, ${SERVICE_AREA.city}, ${SERVICE_AREA.province}, ${SERVICE_AREA.country}`
+      ].filter(Boolean).join(', ') + (landmark ? ` (Landmark: ${landmark})` : '');
       const result = await createPettyCrimeReport({
         crimeType: formData.crimeType,
         userId: currentUser.id || null,
@@ -235,6 +238,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         houseNumber: '',
         street: '',
         floorUnit: '',
+        landmark: '',
         location: '',
         crimeType: '',
         description: '',
@@ -520,7 +524,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 <input
                 type="text"
                 name="houseNumber"
-                required
+                required={!gpsCoords}
                 value={formData.houseNumber}
                 onChange={handleChange}
                 placeholder="House / Lot / Block No."
@@ -536,7 +540,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 <input
                 type="text"
                 name="street"
-                required
+                required={!gpsCoords}
                 value={formData.street}
                 onChange={handleChange}
                 placeholder="Street"
@@ -556,6 +560,22 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               value={formData.floorUnit}
               onChange={handleChange}
               placeholder="Floor / Unit / Room (Optional)"
+              style={{
+                width:'100%',
+                padding:'10px 14px',
+                borderRadius:'6px',
+                border:'1px solid #d1d5db',
+                fontSize:'14px',
+                outline:'none',
+                marginTop:'10px'
+              }}
+            />
+<input
+              type="text"
+              name="landmark"
+              value={formData.landmark}
+              onChange={handleChange}
+              placeholder="Landmark / directions (e.g. beside the covered court, blue gate)"
               style={{
                 width:'100%',
                 padding:'10px 14px',

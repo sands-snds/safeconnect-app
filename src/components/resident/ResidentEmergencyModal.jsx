@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createEmergencyReport, updateEmergencyReport } from '../../Services/api';
-import LocationPickerMap from './location/LocationPickerMap';
-import useLocationPin from './location/useLocationPin';
+import LocationPickerMap from '../shared/location/LocationPickerMap';
+import useLocationPin from '../shared/location/useLocationPin';
  
  
 // Fixed service area — form only accepts reports from this barangay
@@ -96,6 +96,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     houseNumber: '',
     street: '',
     floorUnit: '',
+    landmark: '',
     location: '', // single editable address field, used only when editing
     details: '',
     people: '',
@@ -117,7 +118,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [victimRelationship, setVictimRelationship] = useState('');
  
   // Map pin, "Use my current location" and the Santa Fe boundary check
-  // (./location/useLocationPin.js). A new pin fills in the address.
+  // (../shared/location/useLocationPin.js). A new pin fills in the address.
   const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
     setFormData((prev) => (isEditing
       ? { ...prev, location: fullAddress }
@@ -233,11 +234,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       return;
     }
  
-    // Editing the address by hand overrides any GPS pin
-    if (name === 'houseNumber' || name === 'street') {
-      setGpsCoords(null);
-    }
- 
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
  
@@ -297,6 +293,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       houseNumber: '',
       street: '',
       floorUnit: '',
+      landmark: '',
       location: '',
       details: '',
       people: '',
@@ -338,8 +335,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         alert('Please provide a location.');
         return;
       }
-    } else if (!formData.houseNumber.trim() || !formData.street.trim()) {
-      alert('Please provide the house/lot number and street.');
+    } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
+      alert('Please pin the location on the map, or enter the house/lot number and street.');
       return;
     }
  
@@ -414,8 +411,14 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       const composedAddress = [formData.houseNumber.trim(), formData.street.trim()]
         .filter(Boolean)
         .join(' ');
-      const floorUnitPart = formData.floorUnit.trim() ? `${formData.floorUnit.trim()}, ` : '';
-      const fullLocation = `${floorUnitPart}${composedAddress}, Barangay ${SERVICE_AREA.barangay}, ${SERVICE_AREA.city}, ${SERVICE_AREA.province}, ${SERVICE_AREA.country}`;
+      // A pinned report may have no typed address -- the pin is the exact spot.
+      // The landmark goes in the same text, so admins and exports see it too.
+      const landmark = formData.landmark.trim();
+      const fullLocation = [
+        formData.floorUnit.trim(),
+        composedAddress || (gpsCoords ? 'Pinned location' : ''),
+        `Barangay ${SERVICE_AREA.barangay}, ${SERVICE_AREA.city}, ${SERVICE_AREA.province}, ${SERVICE_AREA.country}`
+      ].filter(Boolean).join(', ') + (landmark ? ` (Landmark: ${landmark})` : '');
  
       console.log({
       userId: currentUser.id,
@@ -1151,7 +1154,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                         value={formData.houseNumber}
                         onChange={handleChange}
                         placeholder="House / Lot / Block No."
-                        required
+                        required={!gpsCoords}
                         disabled={isSubmitting}
                         className="form-input"
                       />
@@ -1161,7 +1164,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                         value={formData.street}
                         onChange={handleChange}
                         placeholder="Street"
-                        required
+                        required={!gpsCoords}
                         disabled={isSubmitting}
                         className="form-input"
                       />
@@ -1173,6 +1176,16 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                       value={formData.floorUnit}
                       onChange={handleChange}
                       placeholder="Floor / Unit / Room (Optional)"
+                      disabled={isSubmitting}
+                      className="form-input"
+                      style={{ marginTop: '10px' }}
+                    />
+                    <input
+                      type="text"
+                      name="landmark"
+                      value={formData.landmark}
+                      onChange={handleChange}
+                      placeholder="Landmark / directions (e.g. beside the covered court, blue gate)"
                       disabled={isSubmitting}
                       className="form-input"
                       style={{ marginTop: '10px' }}
