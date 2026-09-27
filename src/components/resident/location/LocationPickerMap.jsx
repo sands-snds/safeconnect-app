@@ -80,10 +80,15 @@ const LocationPickerMap = ({ pin, onPick, isOutside, outsideMessage, disabled = 
           style={{ height, width: '100%' }}
           attributionControl
         >
+          {/* OpenStreetMap blocks tile requests that arrive without a Referer
+              ("Access blocked"). Azure Static Web Apps sends
+              Referrer-Policy: same-origin, which strips it, so set the policy
+              on the tiles too (also set site-wide in staticwebapp.config.json). */}
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             maxZoom={19}
+            referrerPolicy="strict-origin-when-cross-origin"
           />
           <Polygon
             positions={SANTA_FE_BOUNDARY}
