@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ListView, { allOption } from "../shared/ListView";
 import AnnouncementModal from "./AnnouncementModal";
+import ResultPopup from "../shared/ResultPopup";
 import { fetchAnnouncements, deleteAnnouncement } from "../../../Services/api";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -57,6 +58,8 @@ const AnnouncementsTable = ({
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  // { type, title, message } for the success/error popup, or null.
+  const [popup, setPopup] = useState(null);
 
   const filterType = "announcements";
   const currentFilters = filters[filterType] || { status: "All Items", search: "" };
@@ -96,8 +99,11 @@ const AnnouncementsTable = ({
     if (setEditingAnnouncement) setEditingAnnouncement(null);
   };
 
-  const handleSaved = () => {
+  const handleSaved = ({ edited } = {}) => {
     closeModal();
+    setPopup(edited
+      ? { type: "success", title: "Announcement Updated", message: "Your changes have been saved." }
+      : { type: "success", title: "Announcement Posted", message: "Residents can now see it on the News page." });
     loadAnnouncements();
     if (refreshDashboardData) refreshDashboardData();
   };
@@ -182,7 +188,7 @@ const AnnouncementsTable = ({
 
       if (refreshDashboardData) refreshDashboardData();
     } catch (err) {
-      alert(err.message);
+      setPopup({ type: "error", title: "Couldn't Delete Announcement", message: err.message });
     }
   };
 
@@ -411,6 +417,15 @@ const AnnouncementsTable = ({
         onClose={closeModal}
         onSaved={handleSaved}
       />
+
+      {popup && (
+        <ResultPopup
+          type={popup.type}
+          title={popup.title}
+          message={popup.message}
+          onClose={() => setPopup(null)}
+        />
+      )}
     </>
   );
 };
