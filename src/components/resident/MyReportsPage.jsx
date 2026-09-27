@@ -66,7 +66,6 @@ const getRelativeTime = (dateStr) => {
 };
 
 const FILTERS = ['All', 'Emergency', 'Assistance', 'Petty Crime'];
-const DESC_PREVIEW_LENGTH = 140;
 
 function MyReportsPage({ isOpen, onClose, userId }) {
   const [reports, setReports] = useState([]);
@@ -75,7 +74,6 @@ function MyReportsPage({ isOpen, onClose, userId }) {
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
-  const [expandedKeys, setExpandedKeys] = useState({});
   const [copiedKey, setCopiedKey] = useState('');
   const [editingReport, setEditingReport] = useState(null);
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
@@ -139,10 +137,6 @@ function MyReportsPage({ isOpen, onClose, userId }) {
       return sortOrder === 'oldest' ? da - db : db - da;
     });
   }, [reports, activeFilter, searchQuery, sortOrder]);
-
-  const toggleExpanded = (key) => {
-    setExpandedKeys((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
 
   const copyReference = async (key, reference) => {
     try {
@@ -618,19 +612,6 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           color: #6B2C3E;
         }
 
-        .myreports-expand-btn {
-          border: none;
-          background: none;
-          color: #6B2C3E;
-          font-size: 0.82rem;
-          font-weight: 700;
-          cursor: pointer;
-          padding: 0.6rem 0 0;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-        }
-
         .myreports-detail-grid {
           margin-top: 0.75rem;
           padding-top: 0.75rem;
@@ -915,9 +896,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
               const key = `${r.type}-${r.id}`;
               const statusStyle = getStatusStyle(r.status);
               const theme = getTypeTheme(r.type);
-              const isExpanded = !!expandedKeys[key];
               const description = r.description || '';
-              const needsTruncation = description.length > DESC_PREVIEW_LENGTH;
               const hasCoords = r.latitude != null && r.longitude != null;
               const canEditOrDelete = r.status === 'Pending' || r.status === 'Received';
 
@@ -978,9 +957,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                     )}
 
                     {description && (
-                      <p className="myreports-card-desc">
-                        {isExpanded || !needsTruncation ? description : `${description.slice(0, DESC_PREVIEW_LENGTH)}…`}
-                      </p>
+                      <p className="myreports-card-desc">{description}</p>
                     )}
 
                     <div className="myreports-badges">
@@ -996,14 +973,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                       )}
                     </div>
 
-                    {(needsTruncation || detailItems.length > 0 || hasCoords || r.photo_url) && (
-                      <button className="myreports-expand-btn" onClick={() => toggleExpanded(key)}>
-                        <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
-                        {isExpanded ? 'Show less' : 'View details'}
-                      </button>
-                    )}
-
-                    {isExpanded && (detailItems.length > 0 || hasCoords || r.photo_url) && (
+                    {(detailItems.length > 0 || hasCoords || r.photo_url) && (
                       <div className="myreports-detail-grid">
                         {detailItems.map((item) => (
                           <div className="detail-item" key={item.label}>

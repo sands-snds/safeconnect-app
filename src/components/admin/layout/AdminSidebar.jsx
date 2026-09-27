@@ -70,28 +70,50 @@ const AdminSidebar = ({
       <div
         style={{
           padding: "22px 20px",
-          borderBottom: "1px solid rgba(255,255,255,.12)"
+          borderBottom: "1px solid rgba(255,255,255,.12)",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px"
         }}
       >
-        <h1
+        <div
           style={{
-            margin: 0,
-            fontSize: "1.7rem",
-            fontWeight: "700"
+            width: "42px",
+            height: "42px",
+            borderRadius: "50%",
+            overflow: "hidden",
+            flexShrink: 0,
+            boxShadow: "0 2px 8px rgba(0,0,0,.25)"
           }}
         >
-          SafeConnect
-        </h1>
+          <img
+            src="/images/safe-connect-logo.jpg"
+            alt="Safe Connect logo"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
 
-        <p
-          style={{
-            marginTop: 4,
-            fontSize: "12px",
-            opacity: 0.75
-          }}
-        >
-          Administration
-        </p>
+        <div>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "1.7rem",
+              fontWeight: "700"
+            }}
+          >
+            SafeConnect
+          </h1>
+
+          <p
+            style={{
+              marginTop: 4,
+              fontSize: "12px",
+              opacity: 0.75
+            }}
+          >
+            Administration
+          </p>
+        </div>
       </div>
 
       {/* Menu */}

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HeartFill } from 'react-bootstrap-icons';
 // Removed: useNavigate
 
 function Navbar() {
@@ -150,6 +149,7 @@ function Navbar() {
           display: flex;
           align-items: center;
           justify-content: center;
+          overflow: hidden;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
           flex-shrink: 0;
         }
@@ -168,15 +168,10 @@ function Navbar() {
           }
         }
         
-        .navbar-custom .brand-icon svg {
-          font-size: 1.25rem;
-          color: #DC3545;
-        }
-        
-        @media (max-width: 480px) {
-          .navbar-custom .brand-icon svg {
-            font-size: 1.1rem;
-          }
+        .navbar-custom .brand-icon img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
         
         /* Desktop Navigation */
@@ -365,7 +360,7 @@ function Navbar() {
           <div className="navbar-container">
             <button className="navbar-brand" onClick={handleHomeClick}>
               <div className="brand-icon">
-                <HeartFill />
+                <img src="/images/safe-connect-logo.jpg" alt="Safe Connect logo" />
               </div>
               <span>Safe Connect</span>
             </button>

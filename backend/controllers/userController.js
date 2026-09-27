@@ -2,6 +2,11 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const { ROLES, ALL_ROLES } = require("../utils/roles");
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Matches the +63 + 10-digit format the resident sign-up/settings forms
+// always submit (a "+63" prefix badge next to a 10-digit numeric input).
+const PH_CONTACT_REGEX = /^\+63\d{10}$/;
+
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.getAll();
@@ -155,6 +160,61 @@ exports.updateUsername = async (req, res) => {
     } catch (err) {
         console.error(err);
         return res.status(500).json({ success: false, message: "Failed to update username." });
+    }
+};
+
+exports.updateContact = async (req, res) => {
+    try {
+        const { contact } = req.body;
+        if (!contact || !PH_CONTACT_REGEX.test(contact)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide a valid mobile number (+63 followed by 10 digits)."
+            });
+        }
+
+        await User.updateContact(req.params.id, contact);
+        return res.json({ success: true, contact });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, message: "Failed to update contact number." });
+    }
+};
+
+exports.updateEmail = async (req, res) => {
+    try {
+        const { email, currentPassword } = req.body;
+
+        if (!email || !EMAIL_REGEX.test(email)) {
+            return res.status(400).json({ success: false, message: "Please enter a valid email address." });
+        }
+        if (!currentPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter your current password to confirm this change."
+            });
+        }
+
+        const user = await User.findByIdWithPassword(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        const validPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!validPassword) {
+            return res.status(401).json({ success: false, message: "Current password is incorrect." });
+        }
+
+        const existing = await User.findByEmail(email);
+        if (existing && String(existing.id) !== String(req.params.id)) {
+            return res.status(409).json({ success: false, message: "That email address is already in use." });
+        }
+
+        await User.updateEmail(req.params.id, email);
+        return res.json({ success: true, email });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, message: "Failed to update email address." });
     }
 };
 

@@ -30,6 +30,8 @@ router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, logActivit
 router.get("/:id", verifyToken, verifySelfOrAdmin, userController.getUserById);
 router.post("/:id/photo", verifyToken, verifySelfOrAdmin, upload.single("photo"), userController.uploadPhoto);
 router.patch("/:id/username", verifyToken, verifySelfOrAdmin, userController.updateUsername);
+router.patch("/:id/contact", verifyToken, verifySelfOrAdmin, userController.updateContact);
+router.patch("/:id/email", verifyToken, verifySelfOrAdmin, userController.updateEmail);
 router.patch("/:id/password", verifyToken, verifySelfOrAdmin, userController.changePassword);
 
 module.exports = router;

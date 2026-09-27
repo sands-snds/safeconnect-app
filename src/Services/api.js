@@ -125,29 +125,53 @@ export const signupUser = async (fullName, email, password, extra = {}) => {
 };
 
 // ── User profile ──────────────────────────────────────────────────────────────
+// GET /users/:id (userController.getUserById) returns the raw registered_users
+// row directly (id, full_name, contact_number, email_address, photo_url, ...) --
+// not wrapped in { success, user }. Callers (SettingsPage.jsx, useAdminAuth.js)
+// read those raw snake_case fields themselves; this just also resolves
+// photo_url into a ready-to-use absolute photoUrl for convenience.
 export const fetchUserProfile = async (userId) => {
     const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}`, {
         headers: authHeaders(),
     });
     const data = await res.json();
-    if (data && data.user) {
-        data.user.photoUrl = resolveAssetUrl(data.user.photo_url || data.user.photoUrl);
+    if (data && data.photo_url) {
+        data.photoUrl = resolveAssetUrl(data.photo_url);
     }
     return data;
 };
 
+// Real routes are PATCH-only (see backend/routes/userRoutes.js) -- PUT 404s.
 export const updateUsername = async (userId, username) => {
     const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/username`, {
-        method: "PUT",
+        method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ username }),
     });
     return res.json();
 };
 
+export const updateContact = async (userId, contact) => {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/contact`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ contact }),
+    });
+    return res.json();
+};
+
+export const updateEmail = async (userId, email, currentPassword) => {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/email`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ email, currentPassword }),
+    });
+    return res.json();
+};
+
 export const changePassword = async (userId, currentPassword, newPassword) => {
     const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/password`, {
-        method: "PUT",
+        method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ currentPassword, newPassword }),
     });

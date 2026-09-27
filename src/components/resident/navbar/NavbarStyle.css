@@ -55,13 +55,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
 }
 
-.resident-navbar .brand-icon i {
-    font-size: 1.25rem;
-    color: #DC3545;
+.resident-navbar .brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 
@@ -271,10 +273,6 @@
     .resident-navbar .brand-icon {
         width: 36px;
         height: 36px;
-    }
-
-    .resident-navbar .brand-icon i {
-        font-size: 1.1rem;
     }
 }
 

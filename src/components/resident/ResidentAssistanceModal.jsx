@@ -305,6 +305,10 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   if (!show && !showSuccessPopup) return null;
   return (
 <>
+<style>{`
+  .rf-2col { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 480px) { .rf-2col { grid-template-columns: 1fr; } }
+`}</style>
 {show && (
 <div
       className="modal-overlay"
@@ -415,7 +419,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
                 <i className="bi bi-person-exclamation"></i> Person You Are Requesting For
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+              <div className="rf-2col" style={{ gap: '12px', marginBottom: '10px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Their Name <span style={{ color: '#dc3545' }}>*</span></label>
                   <input type="text" placeholder="Full name" value={victimName} onChange={e => setVictimName(e.target.value)}
@@ -423,7 +427,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Their Contact <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span></label>
-                  <input type="text" placeholder="+63 9XX XXX XXXX" value={victimContact} onChange={e => setVictimContact(e.target.value)}
+                  <input type="tel" inputMode="numeric" placeholder="09XXXXXXXXX" maxLength={11} value={victimContact}
+                    onChange={e => setVictimContact(e.target.value.replace(/\D/g, '').slice(0, 11))}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
                 </div>
               </div>
@@ -594,7 +599,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 />
               ) : (
 <>
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+<div className="rf-2col" style={{ gap: '12px' }}>
 <input
                 type="text"
                 name="houseNumber"
@@ -753,9 +758,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 <i className="bi bi-info-circle-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
               Special Needs / Considerations
 </label>
-<div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
+<div className="rf-2col" style={{
               gap: '8px'
             }}>
               {SPECIAL_NEEDS_OPTIONS.map((option) => (

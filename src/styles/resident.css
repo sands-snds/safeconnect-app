@@ -227,14 +227,9 @@ header {
     font-size: 4rem;
     font-weight: 800;
     color: white;
-    letter-spacing: 6px;
-    margin-bottom: 1.5rem;
-    text-shadow: 2px 4px 12px rgba(0, 0, 0, 0.4);
     letter-spacing: 7px;
-    margin-top: 100px;
-    margin-bottom: 25px;
+    margin: 0 0 0.5rem;
     text-shadow: 0 2px 8px #7e1313a0;
-    transform: translateY(-40px);
 }
 
 .hero-subtitle {

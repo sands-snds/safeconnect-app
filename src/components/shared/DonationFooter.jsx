@@ -51,7 +51,7 @@ export default function DonationFooter() {
               <div className="mb-2">
                 <i className="bi bi-envelope-fill me-2 text-danger"></i>
                 <strong>Email Support:</strong><br />
-                <span className="ms-4">help@safeconnect.org</span>
+                <span className="ms-4">safeconnect.brgy.santafe@gmail.com</span>
               </div>
             </div>
           </div>

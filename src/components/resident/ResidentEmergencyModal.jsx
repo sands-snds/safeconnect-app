@@ -1146,10 +1146,12 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     <div>
                       <label className="form-label">Their Contact <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span></label>
                       <input
-                        type="text"
-                        placeholder="+63 9XX XXX XXXX"
+                        type="tel"
+                        inputMode="numeric"
+                        placeholder="09XXXXXXXXX"
+                        maxLength={11}
                         value={victimContact}
-                        onChange={(e) => setVictimContact(e.target.value)}
+                        onChange={(e) => setVictimContact(e.target.value.replace(/\D/g, '').slice(0, 11))}
                         disabled={isSubmitting}
                         className="form-input"
                       />

@@ -1,9 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { fetchUserProfile, updateUsername, changePassword, uploadProfilePhoto } from '../../Services/api';
+import {
+  fetchUserProfile,
+  updateUsername,
+  updateContact,
+  updateEmail,
+  changePassword,
+  uploadProfilePhoto
+} from '../../Services/api';
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-// Note: api.js already runs resolveAssetUrl on all photo URLs before returning
-// them, so no further URL resolution is needed here.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Strips whatever prefix a stored number has (+63, 63, or a leading 0) and
+// keeps the last 10 digits, so an existing "+639171234567" loads back into
+// the same "9XXXXXXXXX" input the sign-up form uses.
+const stripPhonePrefix = (raw) => {
+  if (!raw) return '';
+  const digits = String(raw).replace(/\D/g, '');
+  return digits.slice(-10);
+};
+
+const formatMemberSince = (dateStr) => {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+};
 
 function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const fileInputRef = useRef(null);
@@ -16,6 +38,17 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoMessage, setPhotoMessage] = useState(null);
+
+  // Email
+  const [emailInput, setEmailInput] = useState('');
+  const [emailPassword, setEmailPassword] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [emailMessage, setEmailMessage] = useState(null);
+
+  // Contact number
+  const [contactInput, setContactInput] = useState('');
+  const [savingContact, setSavingContact] = useState(false);
+  const [contactMessage, setContactMessage] = useState(null);
 
   // Username
   const [usernameInput, setUsernameInput] = useState('');
@@ -37,19 +70,31 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const loadProfile = async () => {
     setLoadingProfile(true);
     try {
+      // GET /users/:id returns the raw registered_users row directly
+      // (full_name, contact_number, email_address, photo_url, ...), not
+      // wrapped in { success, user } — map it into the camelCase shape
+      // the rest of this component uses.
       const result = await fetchUserProfile(user.id);
-      if (result.success) {
-        // fetchUserProfile already runs resolveAssetUrl on photo_url inside api.js,
-        // so result.user.photoUrl is already a full URL here.
-        setProfile(result.user);
-        setUsernameInput(result.user.username || '');
-        // Keep the navbar avatar in sync with whatever the backend returns.
-        if (result.user.photoUrl) {
-          onProfileUpdate?.({ photoUrl: result.user.photoUrl });
-        }
-      } else {
-        setProfile(user);
-        setUsernameInput(user?.username || '');
+      const mapped = (result && result.id) ? {
+        id: result.id,
+        fullName: result.full_name,
+        username: result.username,
+        contact: result.contact_number,
+        email: result.email_address,
+        role: result.role,
+        status: result.status,
+        photoUrl: result.photoUrl || null,
+        createdAt: result.created_at
+      } : (user || null);
+
+      setProfile(mapped);
+      setUsernameInput(mapped?.username || '');
+      setEmailInput(mapped?.email || '');
+      setContactInput(stripPhonePrefix(mapped?.contact));
+
+      // Keep the navbar avatar in sync with whatever the backend returns.
+      if (mapped?.photoUrl) {
+        onProfileUpdate?.({ photoUrl: mapped.photoUrl });
       }
     } finally {
       setLoadingProfile(false);
@@ -109,6 +154,63 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     setPhotoMessage(null);
   };
 
+  const handleSaveEmail = async () => {
+    setEmailMessage(null);
+    const trimmed = emailInput.trim();
+
+    if (!trimmed) { setEmailMessage({ type: 'error', text: 'Email address cannot be empty.' }); return; }
+    if (!EMAIL_REGEX.test(trimmed)) { setEmailMessage({ type: 'error', text: 'Enter a valid email address.' }); return; }
+    if (trimmed === profile?.email) { setEmailMessage(null); return; }
+    if (!emailPassword) {
+      setEmailMessage({ type: 'error', text: 'Enter your current password to confirm this change.' });
+      return;
+    }
+
+    setSavingEmail(true);
+    try {
+      const result = await updateEmail(user.id, trimmed, emailPassword);
+      if (result.success) {
+        setProfile(p => ({ ...p, email: trimmed }));
+        setEmailMessage({ type: 'success', text: 'Email address updated.' });
+        setEmailPassword('');
+        onProfileUpdate?.({ email: trimmed });
+      } else {
+        setEmailMessage({ type: 'error', text: result.message || 'Could not update email address.' });
+      }
+    } catch {
+      setEmailMessage({ type: 'error', text: 'Could not reach the server. Please try again.' });
+    } finally {
+      setSavingEmail(false);
+    }
+  };
+
+  const handleSaveContact = async () => {
+    setContactMessage(null);
+
+    if (contactInput.length !== 10) {
+      setContactMessage({ type: 'error', text: 'Enter a valid 10-digit mobile number.' });
+      return;
+    }
+    const fullContact = `+63${contactInput}`;
+    if (fullContact === profile?.contact) { setContactMessage(null); return; }
+
+    setSavingContact(true);
+    try {
+      const result = await updateContact(user.id, fullContact);
+      if (result.success) {
+        setProfile(p => ({ ...p, contact: fullContact }));
+        setContactMessage({ type: 'success', text: 'Phone number updated.' });
+        onProfileUpdate?.({ contact: fullContact });
+      } else {
+        setContactMessage({ type: 'error', text: result.message || 'Could not update phone number.' });
+      }
+    } catch {
+      setContactMessage({ type: 'error', text: 'Could not reach the server. Please try again.' });
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
   const handleSaveUsername = async () => {
     const trimmed = usernameInput.trim();
     if (!trimmed) { setUsernameMessage({ type: 'error', text: 'Username cannot be empty.' }); return; }
@@ -142,6 +244,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     }
     if (newPassword !== confirmPassword) {
       setPasswordMessage({ type: 'error', text: 'New password and confirmation do not match.' }); return;
+    }
+    if (newPassword === currentPassword) {
+      setPasswordMessage({ type: 'error', text: 'New password must be different from your current password.' }); return;
     }
 
     setSavingPassword(true);
@@ -182,7 +287,8 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
           box-shadow: 0 2px 12px rgba(0,0,0,0.15); flex-shrink: 0;
         }
         .settings-header h2 { color: white; font-size: clamp(1.2rem,2.5vw,1.6rem); font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.6rem; }
-        .settings-close-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 42px; height: 42px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; }
+        .settings-header-sub { color: rgba(255,255,255,0.75); font-size: 0.8rem; margin: 0.2rem 0 0 2.2rem; }
+        .settings-close-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 42px; height: 42px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; flex-shrink: 0; }
         .settings-close-btn:hover { background: rgba(255,255,255,0.28); }
         .settings-body { flex: 1; overflow-y: auto; padding: clamp(1.5rem,4vw,3rem) clamp(1.5rem,5vw,4rem) 4rem; }
         .settings-container { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.75rem; }
@@ -206,23 +312,33 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         .settings-photo-hint { font-size: 0.75rem; color: #9ca3af; }
         .settings-field { margin-bottom: 1rem; }
         .settings-field label { display: block; font-size: 0.82rem; font-weight: 600; color: #374151; margin-bottom: 0.4rem; }
+        .settings-field-hint { font-weight: 400; color: #9ca3af; font-size: 0.78rem; }
         .settings-field input { width: 100%; padding: 0.65rem 0.9rem; border: 1px solid #e5d9dc; border-radius: 8px; font-size: 0.92rem; color: #1f2937; box-sizing: border-box; transition: border-color 0.2s; }
         .settings-field input:focus { outline: none; border-color: #6B2C3E; }
+        .settings-field input:disabled { background: #f7f5f6; cursor: not-allowed; }
+        .settings-phone-row { display: flex; gap: 8px; }
+        .settings-phone-prefix { display: flex; align-items: center; padding: 0 0.9rem; border: 1px solid #e5d9dc; border-radius: 8px; background: #f7f5f6; color: #374151; font-weight: 600; font-size: 0.92rem; flex-shrink: 0; }
+        .settings-phone-row input { flex: 1; min-width: 0; }
         .settings-btn-primary { border: none; background: #6B2C3E; color: white; font-size: 0.88rem; font-weight: 700; padding: 0.65rem 1.4rem; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
         .settings-btn-primary:hover { background: #58202f; }
         .settings-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .settings-inline-message { font-size: 0.82rem; font-weight: 600; margin-top: 0.75rem; }
         .settings-inline-message.success { color: #166534; }
         .settings-inline-message.error { color: #991b1b; }
-        .settings-readonly-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid #f5f5f5; font-size: 0.88rem; }
+        .settings-readonly-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid #f5f5f5; font-size: 0.88rem; gap: 1rem; }
         .settings-readonly-row:last-child { border-bottom: none; }
         .settings-readonly-row span:first-child { color: #9ca3af; }
-        .settings-readonly-row span:last-child { color: #1f2937; font-weight: 600; }
+        .settings-readonly-row span:last-child { color: #1f2937; font-weight: 600; text-align: right; }
+        .settings-status-badge { display: inline-flex; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: #dcfce7; color: #166534; }
         .settings-photo-pending-note { font-size: 0.75rem; color: #f97316; font-weight: 600; }
+        .settings-divider { border: none; border-top: 1px solid #f0eaec; margin: 1.5rem 0; }
       `}</style>
 
       <div className="settings-header">
-        <h2><i className="bi bi-gear-fill" /> Settings</h2>
+        <div>
+          <h2><i className="bi bi-gear-fill" /> Settings</h2>
+          <p className="settings-header-sub">Manage your profile, contact details, and account security</p>
+        </div>
         <button className="settings-close-btn" onClick={onClose} aria-label="Close settings">
           <i className="bi bi-x-lg" />
         </button>
@@ -231,13 +347,12 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
       <div className="settings-body">
         <div className="settings-container">
 
-          {/* ── Profile photo + readonly info ── */}
+          {/* ── Profile photo + name ── */}
           <div className="settings-card">
-            <h3><i className="bi bi-person-badge-fill" /> Edit Profile</h3>
-            <p className="settings-card-sub">Update your profile photo and view your account details.</p>
+            <h3><i className="bi bi-person-badge-fill" /> Profile Photo</h3>
+            <p className="settings-card-sub">This appears next to your name across SafeConnect.</p>
 
             <div className="settings-photo-row">
-              {/* avatar */}
               <div className="settings-avatar">
                 {displayPhoto
                   ? <img src={displayPhoto} alt="Profile" />
@@ -246,7 +361,6 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
               <div className="settings-photo-actions">
                 <div className="settings-photo-btn-row">
-                  {/* always show Choose Photo */}
                   <button
                     className="settings-btn-secondary"
                     onClick={() => fileInputRef.current?.click()}
@@ -256,7 +370,6 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                     Choose Photo
                   </button>
 
-                  {/* Save Photo — only visible when a file is staged */}
                   {pendingFile && (
                     <>
                       <button
@@ -307,9 +420,69 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
             <div style={{ marginTop: '1.5rem' }}>
               <div className="settings-readonly-row"><span>Full name</span><span>{profile?.fullName || '—'}</span></div>
-              <div className="settings-readonly-row"><span>Email</span><span>{profile?.email || '—'}</span></div>
-              <div className="settings-readonly-row"><span>Contact number</span><span>{profile?.contact || '—'}</span></div>
             </div>
+          </div>
+
+          {/* ── Contact Information ── */}
+          <div className="settings-card">
+            <h3><i className="bi bi-person-lines-fill" /> Contact Information</h3>
+            <p className="settings-card-sub">Keep your email and phone number up to date so our team can reach you during an emergency.</p>
+
+            <div className="settings-field">
+              <label htmlFor="settings-email">Email address</label>
+              <input
+                id="settings-email"
+                type="email"
+                value={emailInput}
+                onChange={e => setEmailInput(e.target.value)}
+                placeholder="you@example.com"
+                disabled={loadingProfile}
+              />
+            </div>
+            <div className="settings-field">
+              <label htmlFor="settings-email-password">
+                Current password <span className="settings-field-hint">(required to change your email)</span>
+              </label>
+              <input
+                id="settings-email-password"
+                type="password"
+                value={emailPassword}
+                onChange={e => setEmailPassword(e.target.value)}
+                placeholder="Enter your current password"
+                disabled={loadingProfile}
+              />
+            </div>
+            <button className="settings-btn-primary" onClick={handleSaveEmail} disabled={savingEmail || loadingProfile}>
+              {savingEmail ? 'Saving...' : 'Save email'}
+            </button>
+            {emailMessage && (
+              <div className={`settings-inline-message ${emailMessage.type}`}>{emailMessage.text}</div>
+            )}
+
+            <hr className="settings-divider" />
+
+            <div className="settings-field">
+              <label htmlFor="settings-contact">Phone number</label>
+              <div className="settings-phone-row">
+                <span className="settings-phone-prefix">+63</span>
+                <input
+                  id="settings-contact"
+                  type="tel"
+                  inputMode="numeric"
+                  value={contactInput}
+                  onChange={e => setContactInput(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="9XXXXXXXXX"
+                  maxLength={10}
+                  disabled={loadingProfile}
+                />
+              </div>
+            </div>
+            <button className="settings-btn-primary" onClick={handleSaveContact} disabled={savingContact || loadingProfile}>
+              {savingContact ? 'Saving...' : 'Save phone number'}
+            </button>
+            {contactMessage && (
+              <div className={`settings-inline-message ${contactMessage.type}`}>{contactMessage.text}</div>
+            )}
           </div>
 
           {/* ── Username ── */}
@@ -357,6 +530,28 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
             {passwordMessage && (
               <div className={`settings-inline-message ${passwordMessage.type}`}>{passwordMessage.text}</div>
             )}
+          </div>
+
+          {/* ── Account Information ── */}
+          <div className="settings-card">
+            <h3><i className="bi bi-info-circle-fill" /> Account Information</h3>
+            <p className="settings-card-sub">Details about your SafeConnect account.</p>
+            <div className="settings-readonly-row">
+              <span>Account type</span>
+              <span>{profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : '—'}</span>
+            </div>
+            <div className="settings-readonly-row">
+              <span>Account status</span>
+              <span>
+                {profile?.status
+                  ? <span className="settings-status-badge">{profile.status}</span>
+                  : '—'}
+              </span>
+            </div>
+            <div className="settings-readonly-row">
+              <span>Member since</span>
+              <span>{formatMemberSince(profile?.createdAt)}</span>
+            </div>
           </div>
 
         </div>

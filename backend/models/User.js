@@ -108,6 +108,22 @@ class User {
         return result.affectedRows;
     }
 
+    static async updateContact(id, contact) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET contact_number = ? WHERE id = ?`,
+            [contact, id]
+        );
+        return result.affectedRows;
+    }
+
+    static async updateEmail(id, email) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET email_address = ? WHERE id = ?`,
+            [email, id]
+        );
+        return result.affectedRows;
+    }
+
 /* =========================================================
                     Log Signin Attempt
 ============================================================*/

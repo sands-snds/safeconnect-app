@@ -28,7 +28,6 @@ function ResidentHero() {
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
                 minHeight: "80vh",
-                height: "9vh",
                 width: "100%",
               }}
             >
@@ -43,10 +42,8 @@ function ResidentHero() {
                 }}
               >
                 <div className="container hero-content text-center text-lg-start">
-                  <h3 className="hero-title" style={{ marginTop: 0 }}>
-                    Barangay Sta. Fe
-                  </h3>
-                  <h3 className="hero-title" style={{ marginTop: -40 }}>
+                  <h3 className="hero-title">
+                    Barangay Sta. Fe<br />
                     Safe Connect
                   </h3>
 
