@@ -218,7 +218,7 @@ const LocationPickerMap = ({
           House number and street are now optional, but a landmark helps responders find you.
         </div>
       ) : (
-        <div style={{ marginTop: '6px', fontSize: '11.5px', color: '#6b7280' }}>
+        <div style={{ marginTop: '6px', fontSize: '15px', color: '#6b7280' }}>
           The dashed line marks Barangay Santa Fe. Reports can only be made from inside it.
         </div>
       )}
