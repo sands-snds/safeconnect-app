@@ -75,6 +75,7 @@ export default function DashboardCharts({
 
         </div>
         <div
+            className="dash-pie-wide"
             style={{
                 gridColumn: "1 / -1",
                 width: "50%",

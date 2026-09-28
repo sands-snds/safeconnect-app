@@ -275,7 +275,7 @@ function ResidentNavbar() {
             {/* Brand */}
             <button className="navbar-brand" onClick={handleHomeClick}>
               <div className="brand-icon">
-                <img src="/images/safe-connect-logo.jpg" alt="Safe Connect logo" />
+                <img src="/images/safeconnect-logo.svg" alt="Safe Connect logo" />
               </div>
               <span>Safe Connect</span>
             </button>

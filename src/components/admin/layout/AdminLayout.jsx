@@ -44,6 +44,7 @@ const AdminLayout = ({
                     onLogout={onLogout}
                     showMobileMenu={showMobileMenu}
                     onCloseMobileMenu={onCloseMobileMenu}
+                    adminUser={adminUser}
                 />
 
                 <main className="main-content">
@@ -60,14 +61,12 @@ const AdminLayout = ({
                         onMarkOneRead={onMarkOneRead}
                         onNavigate={onNavigate}
                         onLogout={onLogout}
+                        isSuperAdmin={isSuperAdmin}
                         adminUser={adminUser}
                     />
 
-                    <div
-                        style={{
-                            padding: "24px 32px"
-                        }}
-                    >
+                    {/* Padding lives in admin.css (.admin-page-body) so phones get narrower margins. */}
+                    <div className="admin-page-body">
                         {children}
                     </div>
                 </main>

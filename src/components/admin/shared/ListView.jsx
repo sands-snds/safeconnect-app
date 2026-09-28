@@ -103,8 +103,11 @@ const ListView = ({
     <div ref={listTopRef} style={{ scrollMarginTop: 96 }}>
       {title && <h1 className="font-bold text-2xl mb-5">{title}</h1>}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '16px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1 1 240px', minWidth: '200px' }}>
+      {/* lv-* classes: on phones admin.css turns this row into a grid --
+          search on its own line, the filters two per line, then the
+          action button full width. */}
+      <div className="lv-filters" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '16px', marginBottom: '20px' }}>
+        <div className="lv-search" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1 1 240px', minWidth: '200px' }}>
           <label className="font-medium text-sm">Search</label>
           <input
             type="text"
@@ -118,7 +121,7 @@ const ListView = ({
           />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="lv-filter" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <label className="font-medium text-sm">Filter by status</label>
           <select
             value={filters[filterType].status}
@@ -139,10 +142,10 @@ const ListView = ({
           </select>
         </div>
 
-        {extraFilters}
+        {extraFilters && <div className="lv-filter lv-extra">{extraFilters}</div>}
 
         {sortOptions && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="lv-filter" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label className="font-medium text-sm">Sort by</label>
             <select
               value={sortValue}
@@ -157,8 +160,8 @@ const ListView = ({
         )}
 
         {onAdd && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label className="font-medium text-sm" style={{ visibility: 'hidden' }}>.</label>
+          <div className="lv-action" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label className="font-medium text-sm lv-spacer" style={{ visibility: 'hidden' }}>.</label>
             <button onClick={onAdd} className="button button-primary">
               {addLabel}
             </button>
@@ -166,6 +169,7 @@ const ListView = ({
         )}
 
         {exportType && (
+          <div className="lv-action">
           <GenerateReportButton
             type={exportType}
             label={exportLabel}
@@ -178,12 +182,13 @@ const ListView = ({
               search: filters[filterType]?.search || undefined
             }}
           />
+          </div>
         )}
       </div>
 
       {layout === 'cards' ? (
         <div>
-          <div style={cardsContainerStyle}>
+          <div className="lv-cards" style={cardsContainerStyle}>
             {visibleData.map(item => renderRow(item))}
           </div>
 

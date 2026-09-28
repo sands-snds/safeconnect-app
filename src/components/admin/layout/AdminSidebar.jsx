@@ -6,8 +6,11 @@ const AdminSidebar = ({
   onNavigate,
   onLogout,
   showMobileMenu,
-  onCloseMobileMenu
+  onCloseMobileMenu,
+  adminUser
 }) => {
+  const adminName = adminUser?.fullName || adminUser?.username || "Administrator";
+
   const menuSections = [
     {
       title: "GENERAL",
@@ -64,7 +67,9 @@ const AdminSidebar = ({
     }
   ];
 
-  const SidebarContent = () => (
+  // showProfile: the phone drawer, opened from the header's profile
+  // button, starts with who is signed in (the desktop header shows that).
+  const SidebarContent = ({ showProfile = false }) => (
     <>
       {/* Logo */}
       <div
@@ -83,11 +88,14 @@ const AdminSidebar = ({
             borderRadius: "50%",
             overflow: "hidden",
             flexShrink: 0,
+            // The logo's inside is transparent; white keeps the maroon house
+            // visible against the maroon sidebar.
+            background: "#fff",
             boxShadow: "0 2px 8px rgba(0,0,0,.25)"
           }}
         >
           <img
-            src="/images/safe-connect-logo.jpg"
+            src="/images/safeconnect-logo.svg"
             alt="Safe Connect logo"
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
@@ -115,6 +123,65 @@ const AdminSidebar = ({
           </p>
         </div>
       </div>
+
+      {showProfile && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding: "16px 20px",
+            borderBottom: "1px solid rgba(255,255,255,.12)"
+          }}
+        >
+          {adminUser?.photoUrl ? (
+            <img
+              src={adminUser.photoUrl}
+              alt="Profile"
+              style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                background: "rgba(255,255,255,.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                flexShrink: 0
+              }}
+            >
+              {adminName.trim().split(/s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+            </div>
+          )}
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {adminName}
+            </div>
+            {adminUser?.email && (
+              <div style={{ fontSize: 12, opacity: 0.75, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {adminUser.email}
+              </div>
+            )}
+            <span
+              style={{
+                display: "inline-block",
+                marginTop: 4,
+                background: "rgba(255,255,255,.18)",
+                padding: "1px 8px",
+                borderRadius: 999,
+                fontSize: 11,
+                fontWeight: 600
+              }}
+            >
+              {isSuperAdmin ? "Super Admin" : "Admin"}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Menu */}
       <div
@@ -224,7 +291,7 @@ const AdminSidebar = ({
           showMobileMenu ? "open" : ""
         }`}
       >
-        <SidebarContent />
+        <SidebarContent showProfile />
       </div>
     </>
   );

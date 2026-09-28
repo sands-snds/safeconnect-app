@@ -11,11 +11,12 @@ export default function DashboardSummary({
         pettyCrimeReports.length;
 
     return (
+        // dash-summary-* classes: compact phone layout in styles/admin.css.
         <div
+            className="dash-summary"
             style={{
                 background: "#fff",
                 borderRadius: "16px",
-                padding: "28px 32px",
                 marginBottom: "24px",
                 boxShadow: "0 4px 12px rgba(0,0,0,.08)",
                 border: "1px solid #e5e7eb"
@@ -49,9 +50,9 @@ export default function DashboardSummary({
                     </span>
 
                     <h1
+                        className="dash-summary-title"
                         style={{
                             margin: 0,
-                            fontSize: "2rem",
                             fontWeight: 700
                         }}
                     >
@@ -60,7 +61,7 @@ export default function DashboardSummary({
                 </div>
 
                 <button
-                    className="button button-primary"
+                    className="button button-primary dash-summary-create"
                     onClick={onCreateAnnouncement}
                 >
                     + Create Announcement
@@ -78,6 +79,7 @@ export default function DashboardSummary({
                 }}
             >
                 <p
+                    className="dash-summary-intro"
                     style={{
                         color: "#6b7280",
                         maxWidth: "650px",
@@ -90,7 +92,7 @@ export default function DashboardSummary({
                     from one centralized dashboard.
                 </p>
 
-                <div style={{
+                <div className="dash-summary-total" style={{
                         minWidth: "220px",
                         background: "#6B2C3E",
                         color: "#fff",

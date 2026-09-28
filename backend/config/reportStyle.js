@@ -3,7 +3,9 @@
 // This is the one place to restyle the files: change a color, a line of
 // header text or a logo here and every report type picks it up. Colors are
 // hex codes ("#RRGGBB"). Logos must be PNG or JPEG files in backend/assets/
-// (the backend can't read the frontend's public/ folder once deployed).
+// (the backend can't read the frontend's public/ folder once deployed, and
+// PDFs can't embed SVG). safeconnect-logo.png is a 600px render of
+// public/images/safeconnect-logo.svg -- re-render it if the logo changes.
 const path = require("path");
 
 const asset = (file) => path.join(__dirname, "..", "assets", file);

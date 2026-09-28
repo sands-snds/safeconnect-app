@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { timeAgo } from "../shared/timeUtils";
+import useIsMobile from "../hooks/useIsMobile";
 
 // notification_type (set by the backend services) -> admin tab + link label.
 const NOTIFICATION_TARGETS = {
@@ -65,6 +66,8 @@ const AdminHeader = ({
     onMarkOneRead,
     onNavigate,
     onLogout,
+    onToggleMobileMenu,
+    isSuperAdmin = false,
     adminUser
 }) => {
 
@@ -74,6 +77,9 @@ const notificationsRef = useRef(null);
 const userMenuRef = useRef(null);
 
     const adminName = adminUser?.fullName || adminUser?.username || "Administrator";
+    // On phones the sidebar is hidden, so the profile button opens it (as a
+    // drawer) instead of the small account dropdown.
+    const isMobile = useIsMobile();
 
     // Close whichever dropdown is open when clicking anywhere outside it.
     useEffect(() => {
@@ -100,10 +106,10 @@ const userMenuRef = useRef(null);
 
     return (
         <div
+            className="admin-header"
             style={{
                 background: "#ffffff",
                 borderBottom: "1px solid #e5e7eb",
-                padding: "18px 28px",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -153,9 +159,8 @@ const userMenuRef = useRef(null);
 
             {/* Left */}
             <div>
-                <h1 style={{
+                <h1 className="admin-header-title" style={{
                         margin: 0,
-                        fontSize: "28px",
                         fontWeight: 700,
                         color: "#111827"
                     }} >
@@ -368,10 +373,16 @@ const userMenuRef = useRef(null);
                 <div ref={userMenuRef} style={{ position: "relative" }}>
                     <button
                         onClick={() => {
-                            setShowUserMenu(!showUserMenu);
                             setShowNotifications(false);
+                            if (isMobile && onToggleMobileMenu) {
+                                setShowUserMenu(false);
+                                onToggleMobileMenu();
+                                return;
+                            }
+                            setShowUserMenu(!showUserMenu);
                         }}
-                        title={adminName}
+                        title={isMobile ? "Menu" : adminName}
+                        aria-label={isMobile ? "Open menu" : "Account menu"}
                         style={{
                             display: "flex",
                             alignItems: "center",
@@ -455,36 +466,39 @@ const userMenuRef = useRef(null);
                                         fontSize: 11,
                                         fontWeight: 600
                                     }}>
-                                        Administrator
+                                        {isSuperAdmin ? "Super Admin" : "Admin"}
                                     </span>
                                 </div>
                             </div>
 
                             <div style={{ borderTop: "1px solid #f3f4f6" }} />
 
-                            <button
-                                className="admin-user-menu-item"
-                                onClick={() => {
-                                    setShowUserMenu(false);
-                                    onNavigate?.("admin-logs");
-                                }}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 10,
-                                    width: "100%",
-                                    padding: "12px 16px",
-                                    border: "none",
-                                    background: "none",
-                                    cursor: "pointer",
-                                    fontSize: 13.5,
-                                    color: "#374151",
-                                    textAlign: "left"
-                                }}
-                            >
-                                <i className="bi bi-shield-lock-fill" />
-                                <span>Admin Logs</span>
-                            </button>
+                            {/* System tab: super admins only (like the sidebar). */}
+                            {isSuperAdmin && (
+                                <button
+                                    className="admin-user-menu-item"
+                                    onClick={() => {
+                                        setShowUserMenu(false);
+                                        onNavigate?.("admin-logs");
+                                    }}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 10,
+                                        width: "100%",
+                                        padding: "12px 16px",
+                                        border: "none",
+                                        background: "none",
+                                        cursor: "pointer",
+                                        fontSize: 13.5,
+                                        color: "#374151",
+                                        textAlign: "left"
+                                    }}
+                                >
+                                    <i className="bi bi-shield-lock-fill" />
+                                    <span>Admin Logs</span>
+                                </button>
+                            )}
 
                             <button
                                 className="admin-user-menu-item"
