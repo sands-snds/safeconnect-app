@@ -34,27 +34,27 @@ export default function DonationFooter() {
             <h5 className="footer-heading mb-3 text-md-start text-center">Contact Us</h5>
 
             {/* Horizontal Contact Info */}
-            <div className="d-flex flex-wrap justify-content-between text-white-50 small text-md-start text-center">
+            <div className="d-flex flex-wrap justify-content-between text-white-50 small text-md-start text-center gap-3">
               {/* Emergency Response Center */}
-              <div className="me-4 mb-2">
+              <div className="mb-2">
                 <i className="bi bi-geo-alt-fill me-2 text-danger"></i>
                 <strong>Emergency Response Center:</strong><br />
-                <span className="ms-4">Dasmariñas Emergency Operations</span>
+                <span>Dasmariñas Emergency Operations</span>
               </div>
 
               {/* Emergency Hotline */}
-              <div className="me-4 mb-2">
+              <div className="mb-2">
                 <i className="bi bi-telephone-fill me-2 text-danger"></i>
                 <strong>Emergency Hotline:</strong><br />
-                <span className="ms-4">(046) 435 0183 / (046) 481 0555</span><br />
-                <span className="ms-4">091772188255 / 09988435477</span>
+                <span>(046) 435 0183 / (046) 481 0555</span><br />
+                <span>091772188255 / 09988435477</span>
               </div>
 
               {/* Email Support */}
               <div className="mb-2">
                 <i className="bi bi-envelope-fill me-2 text-danger"></i>
                 <strong>Email Support:</strong><br />
-                <span className="ms-4">safeconnect.brgy.santafe@gmail.com</span>
+                <span>safeconnect.brgy.santafe@gmail.com</span>
               </div>
             </div>
           </div>

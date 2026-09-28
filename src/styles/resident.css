@@ -234,7 +234,7 @@ header {
     font-size: 1rem;
 }
 
-.hero-title {
+#residentHeroCarousel .hero-title {
     font-size: 4rem;
     font-weight: 800;
     color: white;
@@ -243,22 +243,24 @@ header {
     text-shadow: 0 2px 8px #7e1313a0;
 }
 
-.hero-subtitle {
-    font-size: 1.15rem;
+#residentHeroCarousel .hero-subtitle {
+    font-size: 1.5rem;
     color: white;
     max-width: 800px;
-    line-height: 1.8;
-    margin-bottom: 3rem;
+    line-height: 1.5;
+    margin: 0 auto 3rem;
     opacity: 0.95;
     font-weight: 400;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    font-size: 1.5rem;
-    line-height: 1.5;
     text-shadow: 0 2px 8px #7e1313a0;
     text-align: center;
-    transform: translateY(-40px);
+}
+
+@media (min-width: 992px) {
+    #residentHeroCarousel .hero-subtitle {
+        margin-left: 0;
+        margin-right: 0;
+        text-align: left;
+    }
 }
 
 .cta-buttons {
@@ -1161,7 +1163,7 @@ header {
 }
 
 @media (max-width: 768px) {
-    .hero-title {
+    #residentHeroCarousel .hero-title {
         font-size: 2.5rem;
         letter-spacing: 4px;
     }
@@ -1222,11 +1224,11 @@ header {
         margin: 1rem;
         padding: 6rem 1rem 3rem 1rem;
     }
-    .hero-title {
+    #residentHeroCarousel .hero-title {
         font-size: 2rem;
         letter-spacing: 2px;
     }
-    .hero-subtitle {
+    #residentHeroCarousel .hero-subtitle {
         font-size: 0.9rem;
     }
     .report-emergency-section,
@@ -1254,13 +1256,13 @@ header {
     .hero-content {
         padding: 4rem 0.3rem 2rem 0.3rem;
     }
-    .hero-title {
+    #residentHeroCarousel .hero-title {
         font-size: 1.2rem;
         letter-spacing: 1px;
         margin-top: 40px;
         margin-bottom: 10px;
     }
-    .hero-subtitle {
+    #residentHeroCarousel .hero-subtitle {
         font-size: 0.7rem;
         line-height: 1.35;
         padding: 0 2px;
@@ -1396,12 +1398,12 @@ header {
     font-size: 0.9rem;
   }
   
-  .hero-title {
+  #residentHeroCarousel .hero-title {
     font-size: 3.5rem;
     letter-spacing: 5px;
   }
   
-  .hero-subtitle {
+  #residentHeroCarousel .hero-subtitle {
     font-size: 1.2rem;
   }
 }
@@ -1457,13 +1459,13 @@ header {
     min-width: 180px;
   }
   
-  .hero-title {
+  #residentHeroCarousel .hero-title {
     font-size: 2.8rem;
     letter-spacing: 4px;
     margin-top: 60px;
   }
   
-  .hero-subtitle {
+  #residentHeroCarousel .hero-subtitle {
     font-size: 1.1rem;
     line-height: 1.6;
   }
@@ -1554,14 +1556,14 @@ header {
     margin-bottom: 1.5rem;
   }
   
-  .hero-title {
+  #residentHeroCarousel .hero-title {
     font-size: 2.2rem;
     letter-spacing: 3px;
     margin-top: 40px;
     margin-bottom: 1rem;
   }
   
-  .hero-subtitle {
+  #residentHeroCarousel .hero-subtitle {
     font-size: 0.95rem;
     line-height: 1.5;
     margin-bottom: 2rem;
@@ -1768,14 +1770,14 @@ header {
     font-size: 0.85rem;
   }
   
-  .hero-title {
+  #residentHeroCarousel .hero-title {
     font-size: 1.8rem;
     letter-spacing: 2px;
     margin-top: 30px;
     margin-bottom: 0.75rem;
   }
   
-  .hero-subtitle {
+  #residentHeroCarousel .hero-subtitle {
     font-size: 0.85rem;
     line-height: 1.4;
     margin-bottom: 1.75rem;
@@ -2002,14 +2004,14 @@ header {
     margin-bottom: 1rem;
   }
   
-  .hero-title {
+  #residentHeroCarousel .hero-title {
     font-size: 1.6rem;
     letter-spacing: 1.5px;
     margin-top: 25px;
     margin-bottom: 0.65rem;
   }
   
-  .hero-subtitle {
+  #residentHeroCarousel .hero-subtitle {
     font-size: 0.8rem;
     line-height: 1.35;
     margin-bottom: 1.5rem;
@@ -2144,13 +2146,13 @@ header {
     font-size: 0.65rem;
   }
   
-  .hero-title {
+  #residentHeroCarousel .hero-title {
     font-size: 1.4rem;
     letter-spacing: 1px;
     margin-top: 20px;
   }
   
-  .hero-subtitle {
+  #residentHeroCarousel .hero-subtitle {
     font-size: 0.75rem;
   }
   
