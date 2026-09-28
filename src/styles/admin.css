@@ -52,6 +52,9 @@
 
 .main-content {
   flex: 1;
+  /* Without this a flex item can't shrink below its widest content (e.g.
+     a long unbroken line), which pushed the page wider than a phone. */
+  min-width: 0;
   overflow-y: auto;
   padding: 20px;
 }
@@ -352,4 +355,180 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+/* ------------------------------------------------------------------ */
+/* Admin header / page body (were inline styles; desktop values).     */
+/* ------------------------------------------------------------------ */
+.admin-header {
+  padding: 18px 28px;
+}
+
+.admin-header-title {
+  font-size: 28px;
+}
+
+.admin-page-body {
+  padding: 24px 32px;
+}
+
+.dash-summary {
+  padding: 28px 32px;
+}
+
+.dash-summary-title {
+  font-size: 2rem;
+}
+
+.mobile-menu-drawer {
+  overflow-y: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Phones. The admin panel is meant for computers, but it should still */
+/* be usable on a phone: narrower margins, stacked filters and cards.  */
+/* ------------------------------------------------------------------ */
+@media (max-width: 768px) {
+  /* Page frame: .main-content already pads 20px; drop that and use a
+     slim margin so cards get the width. */
+  .main-content {
+    padding: 0;
+  }
+
+  .admin-header {
+    padding: 12px 14px;
+  }
+
+  .admin-header-title {
+    font-size: 20px;
+  }
+
+  .admin-page-body {
+    padding: 14px 12px 24px;
+  }
+
+  /* Search + filters: search on its own line, filters two per line, the
+     action button (New Announcement / Generate Report) full width. */
+  .lv-filters {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px !important;
+    align-items: end !important;
+  }
+
+  .lv-filters > * {
+    min-width: 0 !important;
+  }
+
+  .lv-search,
+  .lv-action {
+    grid-column: 1 / -1;
+  }
+
+  .lv-filters label {
+    font-size: 12px;
+  }
+
+  .lv-filters .form-input,
+  .lv-filters .form-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .lv-filters .lv-spacer,
+  .lv-action label[style*="hidden"] {
+    display: none;
+  }
+
+  .lv-action > div,
+  .lv-action button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Card lists: Announcements narrows them to 70% on desktop. */
+  .lv-cards {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .announcement-admin-card-body {
+    padding: 16px !important;
+  }
+
+  /* Report cards: title + "View details" on top, status control on its
+     own full-width line. The accent bar is pinned to the left edge so it
+     still spans the whole wrapped card. */
+  .report-card {
+    position: relative;
+  }
+
+  .report-card-row {
+    flex-wrap: wrap;
+    gap: 10px !important;
+    padding: 12px 12px 12px 24px !important;
+  }
+
+  .report-card-accent {
+    position: absolute;
+    left: 10px;
+    top: 12px;
+    bottom: 12px;
+  }
+
+  .report-card-main {
+    order: 1;
+    flex: 1 1 0 !important;
+  }
+
+  .report-card-toggle {
+    order: 2;
+    align-self: flex-start;
+  }
+
+  .report-card-status {
+    order: 3;
+    flex: 1 1 100% !important;
+  }
+
+  .report-card-status > div {
+    justify-content: space-between;
+  }
+
+  .report-card-subtitle {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .report-card-details {
+    padding: 14px 12px !important;
+  }
+
+  /* Dashboard summary card: welcome, Create Announcement, Total Reports. */
+  .dash-summary {
+    padding: 18px 16px;
+    margin-bottom: 16px !important;
+  }
+
+  .dash-summary-title {
+    font-size: 1.35rem;
+  }
+
+  .dash-summary-create {
+    width: 100%;
+  }
+
+  .dash-summary-intro {
+    display: none;
+  }
+
+  .dash-summary-total {
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  .dash-pie-wide {
+    width: 100% !important;
+  }
 }
