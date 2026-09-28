@@ -84,23 +84,6 @@ export default function MobileMenu({
 
                 <button
                     className="mobile-nav-item"
-                    onClick={(e)=>
-                        handleNavClick(
-                            e,
-                            "assistance-request"
-                        )
-                    }
-                >
-                    <i className="bi bi-life-preserver"></i>
-
-                    <span>
-                        Assistance
-                    </span>
-
-                </button>
-
-                <button
-                    className="mobile-nav-item"
                     onClick={openNewsPage}
                 >
                     <i className="bi bi-newspaper"></i>

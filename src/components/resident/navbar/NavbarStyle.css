@@ -653,7 +653,11 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     text-decoration: underline;
 }
 
-@media (max-width: 480px) {
+/* Matches the breakpoint where .mobile-header-actions itself turns on
+   (max-width: 768px, below) -- this used to only kick in below 480px, so
+   the dropdown used its fixed 340px desktop width on phones between
+   481-768px wide and could overflow off the right edge of the screen. */
+@media (max-width: 768px) {
     .mobile-header-actions .panel-dropdown {
         width: calc(100vw - 2rem);
         right: -0.5rem;

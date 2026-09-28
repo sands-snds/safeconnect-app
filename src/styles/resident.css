@@ -204,6 +204,17 @@ header {
     position: relative;
 }
 
+/* Matches the "text-lg-start" utility on .hero-content in ResidentHero.jsx --
+   without this, .hero-title/.hero-subtitle stayed horizontally *centered as
+   blocks* (align-items: center) even though their text became left-aligned
+   at the lg breakpoint, so each line started at a different x-position. */
+@media (min-width: 992px) {
+    .hero-content {
+        align-items: flex-start;
+        text-align: left;
+    }
+}
+
 .badge-pill {
     background-color: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
