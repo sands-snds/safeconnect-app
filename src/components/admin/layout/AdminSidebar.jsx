@@ -88,11 +88,14 @@ const AdminSidebar = ({
             borderRadius: "50%",
             overflow: "hidden",
             flexShrink: 0,
+            // The logo's inside is transparent; white keeps the maroon house
+            // visible against the maroon sidebar.
+            background: "#fff",
             boxShadow: "0 2px 8px rgba(0,0,0,.25)"
           }}
         >
           <img
-            src="/images/safe-connect-logo.jpg"
+            src="/images/safeconnect-logo.svg"
             alt="Safe Connect logo"
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />

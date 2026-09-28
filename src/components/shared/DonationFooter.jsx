@@ -12,15 +12,18 @@ export default function DonationFooter() {
                 style={{
                   width: "45px",
                   height: "45px",
-                  background: "#ff684d",
+                  background: "#fff",
                   borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  overflow: "hidden",
+                  flexShrink: 0,
                   marginRight: "10px",
                 }}
               >
-                <i className="bi bi-heart-fill text-white"></i>
+                <img
+                  src="/images/safeconnect-logo.svg"
+                  alt="Safe Connect logo"
+                  style={{ width: "100%", height: "100%", display: "block" }}
+                />
               </div>
               <span className="footer-logo-text text-white fw-bold fs-5">Safe Connect</span>
             </div>
