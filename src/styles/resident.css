@@ -2412,3 +2412,112 @@ body {
     padding-right: max(1rem, env(safe-area-inset-right));
   }
 }
+/* ============================================================
+   HERO SIZING (resident + landing) & SHARED FOOTER -- mobile fix
+   Heights used to be inline (80vh/100vh) so the hero filled the
+   whole phone screen; they live here now so mobile can shrink it.
+   ============================================================ */
+.resident-hero-slide {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 100%;
+}
+
+.resident-hero-overlay {
+    background: rgba(0, 0, 0, 0.45);
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.landing-hero {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .resident-hero-overlay {
+        min-height: 0;
+        height: clamp(280px, 48vh, 400px);
+        justify-content: center;
+    }
+
+    #residentHeroCarousel .hero-content {
+        margin: 0 auto;
+        padding: 1.5rem 3rem;          /* keep text clear of the arrows */
+        align-items: center;
+        text-align: center;
+    }
+
+    #residentHeroCarousel .hero-title {
+        font-size: clamp(1.5rem, 7vw, 2.2rem);
+        line-height: 1.25;
+        letter-spacing: 1px;
+        margin: 0 0 0.75rem;
+        text-align: center;
+        animation: none;
+    }
+
+    #residentHeroCarousel .hero-subtitle {
+        font-size: clamp(0.85rem, 3.6vw, 1rem);
+        line-height: 1.5;
+        margin: 0 auto;
+        padding: 0;
+        max-width: 32rem;
+        text-align: center;
+        animation: none;
+    }
+
+    #residentHeroCarousel .carousel-control-prev,
+    #residentHeroCarousel .carousel-control-next {
+        width: 2.75rem;
+    }
+
+    .landing-hero {
+        min-height: 0;
+        height: clamp(360px, 60vh, 480px);
+    }
+
+    .landing-hero .landing-hero-text {
+        padding-left: 2.5rem !important;
+        padding-right: 2.5rem !important;
+    }
+
+    .landing-hero .landing-hero-text h1 {
+        font-size: clamp(1.6rem, 7vw, 2.2rem) !important;
+    }
+
+    .landing-hero .landing-hero-text p.mt-3 {
+        font-size: clamp(0.9rem, 3.6vw, 1rem) !important;
+        line-height: 1.5 !important;
+    }
+
+    .landing-hero .landing-hero-text .btn {
+        min-width: 120px !important;
+        padding: 0.6rem 1.5rem !important;
+        font-size: 1rem !important;
+    }
+
+    .landing-hero .carousel-control-prev,
+    .landing-hero .carousel-control-next {
+        width: 2.5rem;
+    }
+
+    /* Shared footer */
+    .footer-section .footer-contact .footer-heading {
+        text-align: center !important;
+    }
+
+    .footer-section .footer-contact-list > div {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    .footer-section .footer-copy {
+        line-height: 1.8;
+    }
+}
