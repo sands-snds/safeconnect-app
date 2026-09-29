@@ -100,6 +100,7 @@ export default function MobileNavbar({
                         getCategoryIcon={getCategoryIcon}
                         getCategoryColor={getCategoryColor}
                         onViewAll={openNewsPage}
+                        onClose={() => setShowNotifications(false)}
                     />
 
                 </div>

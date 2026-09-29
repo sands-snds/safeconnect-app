@@ -29,9 +29,10 @@ class Report {
                 victim_name,
                 victim_contact,
                 victim_relationship,
+                victim_details,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 report.reportReference,
@@ -52,6 +53,7 @@ class Report {
                 report.victimName || null,
                 report.victimContact || null,
                 report.victimRelationship || null,
+                report.victimDetails || null,
                 "Received"
             ]
         );

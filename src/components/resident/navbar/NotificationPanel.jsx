@@ -25,7 +25,8 @@ export default function NotificationPanel({
     getCategoryIcon,
     getCategoryColor,
 
-    onViewAll
+    onViewAll,
+    onClose
 }) {
     const [tab, setTab] = useState('all');
 
@@ -45,11 +46,18 @@ export default function NotificationPanel({
                     <h4>Notifications</h4>
                     {unreadCount > 0 && <span className="panel-unread-badge">{unreadCount}</span>}
                 </div>
-                {unreadCount > 0 && (
-                    <button onClick={markAllAsRead}>
-                        <i className="bi bi-check2-all"></i> Mark all read
-                    </button>
-                )}
+                <div className="panel-header-actions">
+                    {unreadCount > 0 && (
+                        <button onClick={markAllAsRead}>
+                            <i className="bi bi-check2-all"></i> Mark all read
+                        </button>
+                    )}
+                    {onClose && (
+                        <button className="panel-close-btn" onClick={onClose} aria-label="Close notifications">
+                            <i className="bi bi-x-lg"></i>
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="panel-tabs">

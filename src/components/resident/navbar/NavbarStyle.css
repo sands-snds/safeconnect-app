@@ -352,6 +352,29 @@
     border-radius: 999px;
 }
 
+.panel-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Only relevant on the mobile full-screen layout (see the max-width: 768px
+   block below) -- there's no "outside" to tap to dismiss it there. */
+.panel-close-btn {
+    display: none;
+    border: none;
+    background: #f4f0f1;
+    color: #6B2C3E;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 .panel-header button {
     border: none;
     background: none;
@@ -393,6 +416,7 @@
 }
 
 .panel-list {
+    flex: 1;
     overflow-y: auto;
     padding-top: 8px;
 }
@@ -791,14 +815,43 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     text-decoration: underline;
 }
 
-/* Matches the breakpoint where .mobile-header-actions itself turns on
-   (max-width: 768px, below) -- this used to only kick in below 480px, so
-   the dropdown used its fixed 340px desktop width on phones between
-   481-768px wide and could overflow off the right edge of the screen. */
+/* On mobile the dropdown was positioned relative to the bell icon, which
+   sits to the LEFT of the hamburger button -- not flush with the screen's
+   right edge. A width of calc(100vw - 2rem) anchored there overshot past
+   the left edge of the viewport, cutting off everything on the left side
+   of each row (icons included). A full-screen takeover sidesteps that
+   positioning math entirely, and matches how Settings/My Reports/News
+   already behave on mobile. */
 @media (max-width: 768px) {
     .mobile-header-actions .panel-dropdown {
-        width: calc(100vw - 2rem);
-        right: -0.5rem;
+        position: fixed;
+        inset: 0;
+        top: 0;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: none;
+        border-radius: 0;
+        transform: translateY(20px);
+        z-index: 2000;
+    }
+
+    .mobile-header-actions .panel-dropdown.show {
+        transform: translateY(0);
+    }
+
+    .mobile-header-actions .panel-header {
+        padding-top: max(14px, env(safe-area-inset-top, 0px));
+    }
+
+    .mobile-header-actions .panel-close-btn {
+        display: flex;
+    }
+
+    .mobile-header-actions .panel-footer-link {
+        padding-bottom: max(11px, env(safe-area-inset-bottom, 0px));
+        border-radius: 0;
     }
 }
 

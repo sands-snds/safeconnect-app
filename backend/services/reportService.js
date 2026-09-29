@@ -29,7 +29,8 @@ class ReportService {
             reportFor: data.reportFor,
             victimName: data.victimName,
             victimContact: data.victimContact,
-            victimRelationship: data.victimRelationship
+            victimRelationship: data.victimRelationship,
+            victimDetails: data.victimDetails
         };
 
         const reportId = await Report.create(report);

@@ -120,6 +120,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
+  const [victimRelationshipOther, setVictimRelationshipOther] = useState('');
+  const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
 
   // Map pin, "Use my current location" and the Santa Fe boundary check
@@ -314,6 +316,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     setVictimName('');
     setVictimContact('');
     setVictimRelationship('');
+    setVictimRelationshipOther('');
+    setVictimDetails('');
 
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -355,6 +359,10 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
 
     if (reportFor === 'others' && !victimRelationship) {
       alert('Please select your relationship to them.');
+      return;
+    }
+    if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
+      alert('Please specify your relationship to them.');
       return;
     }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
@@ -447,7 +455,10 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
         victimContact: reportFor === 'others' ? victimContact.trim() : null,
-        victimRelationship: reportFor === 'others' ? victimRelationship : null
+        victimRelationship: reportFor === 'others'
+          ? (victimRelationship === 'Other' ? victimRelationshipOther.trim() : victimRelationship)
+          : null,
+        victimDetails: reportFor === 'others' ? victimDetails.trim() || null : null
       });
  
       if (!result.success) {
@@ -1025,7 +1036,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   <button
                     type="button"
                     className={`reportfor-btn ${reportFor === 'self' ? 'active' : ''}`}
-                    onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); }}
+                    onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails(''); }}
                     disabled={isSubmitting}
                   >
                     <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i> Reporting for Myself
@@ -1049,7 +1060,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   <label className="form-label">Your Relationship <span className="required">*</span></label>
                   <select
                     value={victimRelationship}
-                    onChange={(e) => setVictimRelationship(e.target.value)}
+                    onChange={(e) => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
                     disabled={isSubmitting}
                     className="form-select"
                     style={{ marginBottom: '10px' }}
@@ -1060,8 +1071,19 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     <option value="Neighbor">Neighbor</option>
                     <option value="Colleague">Colleague</option>
                     <option value="Stranger">Stranger</option>
-                    <option value="Other">Other</option>
+                    <option value="Other">Other (not listed — please specify)</option>
                   </select>
+                  {victimRelationship === 'Other' && (
+                    <input
+                      type="text"
+                      placeholder="Please specify your relationship to them"
+                      value={victimRelationshipOther}
+                      onChange={(e) => setVictimRelationshipOther(e.target.value)}
+                      disabled={isSubmitting}
+                      className="form-input"
+                      style={{ marginBottom: '10px' }}
+                    />
+                  )}
                   <div className="form-grid">
                     <div>
                       <label className="form-label">
@@ -1093,6 +1115,18 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                       />
                     </div>
                   </div>
+                  <label className="form-label" style={{ marginTop: '10px' }}>
+                    Additional Details <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span>
+                  </label>
+                  <textarea
+                    placeholder="If you don't know their name, describe them or their location — e.g. 'elderly woman near the covered court, wearing a red jacket'"
+                    value={victimDetails}
+                    onChange={(e) => setVictimDetails(e.target.value)}
+                    disabled={isSubmitting}
+                    className="form-textarea"
+                    rows={2}
+                    style={{ minHeight: '60px' }}
+                  />
                 </div>
               )}
 

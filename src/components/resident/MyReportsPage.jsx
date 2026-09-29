@@ -941,6 +941,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                 if (r.specialNeeds) detailItems.push({ label: 'Special Needs', value: r.specialNeeds });
                 if (r.suspectInfo) detailItems.push({ label: 'Suspect Info', value: r.suspectInfo });
                 if (r.report_for === 'others' && r.victim_contact) detailItems.push({ label: 'Their Contact', value: r.victim_contact });
+                if (r.report_for === 'others' && r.victim_details) detailItems.push({ label: 'Additional Details', value: r.victim_details });
 
                 const hasMoreDetails = !!description || detailItems.length > 0 || hasCoords || !!r.photo_url;
 

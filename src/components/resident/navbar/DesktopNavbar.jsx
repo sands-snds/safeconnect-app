@@ -115,6 +115,7 @@ export default function DesktopNavbar({
                     getCategoryIcon={getCategoryIcon}
                     getCategoryColor={getCategoryColor}
                     onViewAll={openNewsPage}
+                    onClose={toggleNotifications}
                 />
 
             </div>

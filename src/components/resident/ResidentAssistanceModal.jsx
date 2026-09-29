@@ -99,6 +99,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
+  const [victimRelationshipOther, setVictimRelationshipOther] = useState('');
+  const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
 
   useEffect(() => {
@@ -177,6 +179,10 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       alert('Please select your relationship to them.');
       return;
     }
+    if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
+      alert('Please specify your relationship to them.');
+      return;
+    }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
       alert('Please enter the name of the person you are requesting for.');
       return;
@@ -237,7 +243,10 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
         victimContact: reportFor === 'others' ? victimContact.trim() : null,
-        victimRelationship: reportFor === 'others' ? victimRelationship : null
+        victimRelationship: reportFor === 'others'
+          ? (victimRelationship === 'Other' ? victimRelationshipOther.trim() : victimRelationship)
+          : null,
+        victimDetails: reportFor === 'others' ? victimDetails.trim() || null : null
       });
       if (!result.success) {
         throw new Error(result.message || 'Failed to submit request');
@@ -258,6 +267,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       });
       setReportFor('self');
       setVictimName(''); setVictimContact(''); setVictimRelationship('');
+      setVictimRelationshipOther(''); setVictimDetails('');
       setGpsCoords(null);
       setLocationError('');
       setShowSuccessPopup(true);
@@ -373,7 +383,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
             </label>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button type="button"
-                onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); }}
+                onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails(''); }}
                 style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'self' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'self' ? '#fef2f2' : '#fff', color: reportFor === 'self' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
                 <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i>Myself
               </button>
@@ -390,7 +400,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 <i className="bi bi-person-exclamation"></i> Person You Are Requesting For
               </label>
               <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Your Relationship <span style={{ color: '#dc3545' }}>*</span></label>
-              <select value={victimRelationship} onChange={e => setVictimRelationship(e.target.value)}
+              <select value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
                 <option value="">Select relationship</option>
                 <option value="Family Member">Family Member</option>
@@ -398,8 +408,13 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 <option value="Neighbor">Neighbor</option>
                 <option value="Colleague">Colleague</option>
                 <option value="Stranger">Stranger</option>
-                <option value="Other">Other</option>
+                <option value="Other">Other (not listed — please specify)</option>
               </select>
+              {victimRelationship === 'Other' && (
+                <input type="text" placeholder="Please specify your relationship to them"
+                  value={victimRelationshipOther} onChange={e => setVictimRelationshipOther(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }} />
+              )}
               <div className="rf-2col" style={{ gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
@@ -418,6 +433,14 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
                 </div>
               </div>
+              <label style={{ display: 'block', margin: '10px 0 6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
+                Additional Details <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span>
+              </label>
+              <textarea
+                placeholder="If you don't know their name, describe them or their location — e.g. 'elderly woman near the covered court, wearing a red jacket'"
+                value={victimDetails} onChange={e => setVictimDetails(e.target.value)}
+                rows={2}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', minHeight: '60px', fontFamily: 'inherit', resize: 'vertical' }} />
             </div>
           )}
           {/* ── END ADDED ── */}

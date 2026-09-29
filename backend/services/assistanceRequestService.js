@@ -22,7 +22,8 @@ class AssistanceRequestService {
             reportFor: data.reportFor,
             victimName: data.victimName,
             victimContact: data.victimContact,
-            victimRelationship: data.victimRelationship
+            victimRelationship: data.victimRelationship,
+            victimDetails: data.victimDetails
         });
 
         await NotificationService.create({
