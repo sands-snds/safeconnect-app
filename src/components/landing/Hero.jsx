@@ -394,36 +394,38 @@ function Hero() {
                                 {error      && <div className="alert alert-danger"  role="alert">{error}</div>}
                                 {successMsg && <div className="alert alert-success" role="alert">{successMsg}</div>}
 
-                                <div className="mb-3">
-                                    <label htmlFor="siEmail" className="form-label fw-bold">Email Address</label>
-                                    <input type="email" className="form-control" id="siEmail" placeholder="Enter your email" value={siEmail} onChange={e => setSiEmail(e.target.value)} />
-                                </div>
-                                <div className="mb-2">
-                                    <label htmlFor="siPassword" className="form-label fw-bold">Password</label>
-                                    <div style={{ position:'relative' }}>
-                                        <input type={showSiPw?'text':'password'} className="form-control" id="siPassword" placeholder="Enter your password" value={siPassword} onChange={e => setSiPassword(e.target.value)} style={{ paddingRight:'36px' }} />
-                                        <PasswordToggleButton visible={showSiPw} onToggle={() => setShowSiPw(v=>!v)} />
+                                <form onSubmit={handleSignIn}>
+                                    <div className="mb-3">
+                                        <label htmlFor="siEmail" className="form-label fw-bold">Email Address</label>
+                                        <input type="email" className="form-control" id="siEmail" placeholder="Enter your email" value={siEmail} onChange={e => setSiEmail(e.target.value)} />
                                     </div>
-                                </div>
+                                    <div className="mb-2">
+                                        <label htmlFor="siPassword" className="form-label fw-bold">Password</label>
+                                        <div style={{ position:'relative' }}>
+                                            <input type={showSiPw?'text':'password'} className="form-control" id="siPassword" placeholder="Enter your password" value={siPassword} onChange={e => setSiPassword(e.target.value)} style={{ paddingRight:'36px' }} />
+                                            <PasswordToggleButton visible={showSiPw} onToggle={() => setShowSiPw(v=>!v)} />
+                                        </div>
+                                    </div>
 
-                                {/* Forgot password link */}
-                                <div className="text-end mb-3">
-                                    <button type="button" className="btn btn-link p-0 text-decoration-none" style={{ fontSize:'0.85rem',color:'#6B2C3E' }}
-                                        onClick={() => { setShowSignIn(false); setShowForgot(true); clearErr(); setForgotStep('email'); setFpEmail(siEmail); }}>
-                                        Forgot password?
+                                    {/* Forgot password link */}
+                                    <div className="text-end mb-3">
+                                        <button type="button" className="btn btn-link p-0 text-decoration-none" style={{ fontSize:'0.85rem',color:'#6B2C3E' }}
+                                            onClick={() => { setShowSignIn(false); setShowForgot(true); clearErr(); setForgotStep('email'); setFpEmail(siEmail); }}>
+                                            Forgot password?
+                                        </button>
+                                    </div>
+
+                                    <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
+                                        {isSubmitting ? 'Signing In...' : 'Sign In'}
                                     </button>
-                                </div>
-
-                                <button onClick={handleSignIn} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
-                                    {isSubmitting ? 'Signing In...' : 'Sign In'}
-                                </button>
-                                <div className="text-center">
-                                    <p className="mb-0">Don't have an account?{' '}
-                                        <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold"
-                                            onClick={() => { setShowSignIn(false); setShowSignUp(true); clearErr(); }}
-                                            style={{ color:'#6B2C3E' }}>Sign Up</button>
-                                    </p>
-                                </div>
+                                    <div className="text-center">
+                                        <p className="mb-0">Don't have an account?{' '}
+                                            <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold"
+                                                onClick={() => { setShowSignIn(false); setShowSignUp(true); clearErr(); }}
+                                                style={{ color:'#6B2C3E' }}>Sign Up</button>
+                                        </p>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -445,7 +447,7 @@ function Hero() {
                                 {error && <div className="alert alert-danger" role="alert">{error}</div>}
 
                                 {signUpStep === 'form' && (
-                                    <>
+                                    <form onSubmit={handleSignUpSubmit}>
                                         <div className="row">
                                             <div className="col-md-4 mb-3">
                                                 <label className="form-label fw-bold">First Name</label>
@@ -503,7 +505,7 @@ function Hero() {
                                                 </p>
                                             )}
                                         </div>
-                                        <button onClick={handleSignUpSubmit} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
+                                        <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
                                             {isSubmitting ? 'Sending verification code...' : 'Continue'}
                                         </button>
                                         <div className="text-center">
@@ -513,11 +515,11 @@ function Hero() {
                                                     style={{ color:'#6B2C3E' }}>Sign In</button>
                                             </p>
                                         </div>
-                                    </>
+                                    </form>
                                 )}
 
                                 {signUpStep === 'otp' && (
-                                    <div style={{ maxWidth:'420px',margin:'0 auto' }}>
+                                    <form style={{ maxWidth:'420px',margin:'0 auto' }} onSubmit={handleVerifySignupOtp}>
                                         <div style={{ textAlign:'center',marginBottom:'24px' }}>
                                             <div style={{ width:'64px',height:'64px',borderRadius:'50%',background:'#fdf0f3',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
                                                 <i className="bi bi-envelope-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
@@ -529,7 +531,7 @@ function Hero() {
                                             </p>
                                         </div>
                                         <OtpBoxes otp={otp} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} refs={otpRefs} />
-                                        <button onClick={handleVerifySignupOtp} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting||otp.join('').length<6}>
+                                        <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting||otp.join('').length<6}>
                                             {isSubmitting ? 'Verifying...' : 'Verify & Create Account'}
                                         </button>
                                         <div className="text-center mb-3">
@@ -544,7 +546,7 @@ function Hero() {
                                                 ← Back to registration
                                             </button>
                                         </div>
-                                    </div>
+                                    </form>
                                 )}
                             </div>
                         </div>

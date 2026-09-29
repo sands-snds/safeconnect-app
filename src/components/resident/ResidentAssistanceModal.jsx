@@ -18,6 +18,10 @@ const SPECIAL_NEEDS_OPTIONS = [
   'Pets'
 ];
 const URGENCY_OPTIONS = ['Low', 'Medium', 'High', 'Critical'];
+
+// Not everyone in the barangay knows the person they're requesting for by
+// name — these relationships make the name field optional instead of required.
+const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_assistance';
 const REPORT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
 
@@ -95,6 +99,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
+  const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
 
   useEffect(() => {
     if (!editingReport) return;
@@ -168,12 +173,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       alert('Please pin the location on the map, or enter the house/lot number and street.');
       return;
     }
-    if (reportFor === 'others' && !victimName.trim()) {
-      alert('Please enter the name of the person you are requesting for.');
-      return;
-    }
     if (reportFor === 'others' && !victimRelationship) {
       alert('Please select your relationship to them.');
+      return;
+    }
+    if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
+      alert('Please enter the name of the person you are requesting for.');
       return;
     }
     const currentUser = getCurrentUser();
@@ -384,9 +389,25 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
                 <i className="bi bi-person-exclamation"></i> Person You Are Requesting For
               </label>
-              <div className="rf-2col" style={{ gap: '12px', marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Your Relationship <span style={{ color: '#dc3545' }}>*</span></label>
+              <select value={victimRelationship} onChange={e => setVictimRelationship(e.target.value)}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
+                <option value="">Select relationship</option>
+                <option value="Family Member">Family Member</option>
+                <option value="Friend">Friend</option>
+                <option value="Neighbor">Neighbor</option>
+                <option value="Colleague">Colleague</option>
+                <option value="Stranger">Stranger</option>
+                <option value="Other">Other</option>
+              </select>
+              <div className="rf-2col" style={{ gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Their Name <span style={{ color: '#dc3545' }}>*</span></label>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
+                    Their Name{' '}
+                    {isVictimNameOptional
+                      ? <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span>
+                      : <span style={{ color: '#dc3545' }}>*</span>}
+                  </label>
                   <input type="text" placeholder="Full name" value={victimName} onChange={e => setVictimName(e.target.value)}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
                 </div>
@@ -397,17 +418,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
                 </div>
               </div>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Your Relationship <span style={{ color: '#dc3545' }}>*</span></label>
-              <select value={victimRelationship} onChange={e => setVictimRelationship(e.target.value)}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }}>
-                <option value="">Select relationship</option>
-                <option value="Family Member">Family Member</option>
-                <option value="Friend">Friend</option>
-                <option value="Neighbor">Neighbor</option>
-                <option value="Colleague">Colleague</option>
-                <option value="Stranger">Stranger</option>
-                <option value="Other">Other</option>
-              </select>
             </div>
           )}
           {/* ── END ADDED ── */}

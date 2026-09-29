@@ -302,11 +302,12 @@
     top: calc(100% + 0.5rem);
     right: 0;
     background-color: white;
-    border-radius: 12px;
+    border-radius: 14px;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
-    width: 340px;
-    max-height: 420px;
-    overflow-y: auto;
+    width: 360px;
+    max-height: 500px;
+    display: flex;
+    flex-direction: column;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -326,6 +327,13 @@
     justify-content: space-between;
     padding: 14px 18px;
     border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+.panel-header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .panel-header h4 {
@@ -335,6 +343,15 @@
     color: #1f2937;
 }
 
+.panel-unread-badge {
+    background: #6B2C3E;
+    color: white;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 999px;
+}
+
 .panel-header button {
     border: none;
     background: none;
@@ -342,13 +359,56 @@
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.panel-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 10px 18px 0;
+    flex-shrink: 0;
+}
+
+.panel-tab {
+    border: none;
+    background: #f4f0f1;
+    color: #6b7280;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 5px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.panel-tab:hover {
+    color: #6B2C3E;
+}
+
+.panel-tab.active {
+    background: #6B2C3E;
+    color: white;
+}
+
+.panel-list {
+    overflow-y: auto;
+    padding-top: 8px;
 }
 
 .notification-empty {
-    padding: 24px 18px;
+    padding: 32px 18px;
     text-align: center;
     color: #9ca3af;
     font-size: 0.85rem;
+}
+
+.notification-empty i {
+    display: block;
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    color: #d1d5db;
 }
 
 .notification-item {
@@ -358,6 +418,10 @@
     border-bottom: 1px solid #f5f5f5;
     cursor: pointer;
     transition: background-color 0.15s;
+}
+
+.notification-item.unread {
+    background-color: #fdfaf8;
 }
 
 .notification-item:hover {
@@ -372,8 +436,6 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: rgba(107, 44, 62, 0.1);
-    color: #6B2C3E;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -381,14 +443,16 @@
     font-size: 0.95rem;
 }
 
-.notification-item.unread .notification-icon {
-    background: #6B2C3E;
-    color: white;
-}
-
 .notification-text {
     flex: 1;
     min-width: 0;
+}
+
+.n-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
 .notification-text .n-title {
@@ -396,6 +460,18 @@
     font-weight: 700;
     color: #1f2937;
     margin: 0 0 2px;
+}
+
+.n-tag {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #6B2C3E;
+    background: rgba(107, 44, 62, 0.1);
+    padding: 1px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 2px;
 }
 
 .notification-text .n-message {
@@ -421,6 +497,68 @@
     background: #dc3545;
     flex-shrink: 0;
     margin-top: 4px;
+}
+
+.panel-footer-link {
+    flex-shrink: 0;
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    background: #faf7f8;
+    color: #6B2C3E;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 11px;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 0 0 14px 14px;
+    transition: background-color 0.15s;
+}
+
+.panel-footer-link:hover {
+    background: #f4eef0;
+}
+
+.notification-skeleton { padding: 4px 0; }
+
+.skeleton-row {
+    display: flex;
+    gap: 10px;
+    padding: 12px 18px;
+}
+
+.skeleton-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e5e5e5 37%, #f0f0f0 63%);
+    background-size: 400% 100%;
+    animation: notif-skeleton-shimmer 1.4s ease infinite;
+    flex-shrink: 0;
+}
+
+.skeleton-lines {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+}
+
+.skeleton-bar {
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e5e5e5 37%, #f0f0f0 63%);
+    background-size: 400% 100%;
+    animation: notif-skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes notif-skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
 }
 
 

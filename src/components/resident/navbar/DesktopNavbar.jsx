@@ -36,6 +36,7 @@ export default function DesktopNavbar({
     formatRelativeTime,
     describeWeatherCode,
     getCategoryIcon,
+    getCategoryColor,
 
     handleHomeClick,
     handleNavClick,
@@ -112,6 +113,8 @@ export default function DesktopNavbar({
                     formatRelativeTime={formatRelativeTime}
                     describeWeatherCode={describeWeatherCode}
                     getCategoryIcon={getCategoryIcon}
+                    getCategoryColor={getCategoryColor}
+                    onViewAll={openNewsPage}
                 />
 
             </div>

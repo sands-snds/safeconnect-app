@@ -73,6 +73,26 @@ const getCategoryIcon = (category) => {
   return map[category] || 'bi-megaphone-fill';
 };
 
+// Color-codes each notification by category so, e.g., a general emergency
+// alert and a personal "your report status changed" update don't look
+// visually identical just because both use a triangle icon.
+const getCategoryColor = (category) => {
+  const map = {
+    'Emergency Alert': '#dc2626',
+    'Weather Advisory': '#3b82f6',
+    'Evacuation': '#f97316',
+    'Community Event': '#8b5cf6',
+    'Community Update': '#0ea5e9',
+    'Announcement': '#6B2C3E',
+    'General': '#6B2C3E',
+    // Personal notifications (report status-change replies)
+    'emergency_status': '#dc2626',
+    'assistance_status': '#0d9488',
+    'petty_crime_status': '#7c3aed'
+  };
+  return map[category] || '#6B2C3E';
+};
+
 function ResidentNavbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -314,6 +334,7 @@ function ResidentNavbar() {
               formatRelativeTime={formatRelativeTime}
               describeWeatherCode={describeWeatherCode}
               getCategoryIcon={getCategoryIcon}
+              getCategoryColor={getCategoryColor}
 
               handleHomeClick={handleHomeClick}
               handleNavClick={handleNavClick}
@@ -359,6 +380,7 @@ function ResidentNavbar() {
               formatRelativeTime={formatRelativeTime}
               describeWeatherCode={describeWeatherCode}
               getCategoryIcon={getCategoryIcon}
+              getCategoryColor={getCategoryColor}
 
               toggleMobileMenu={toggleMobileMenu}
 

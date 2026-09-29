@@ -11,30 +11,35 @@ export default function Contact() {
   return (
     <section id="contact" style={{ margin: 0, padding: 0 }}>
       <style>{`
-        .ct-outer { padding: 90px 0; background: #faf8f9; }
+        .ct-outer { padding: 90px 0; background: #fff; }
         .ct-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
-        .ct-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 24px; }
-        @media(max-width:768px){ .ct-row{ grid-template-columns:1fr; } }
-        .ct-card { background: #fff; border-radius: 20px; padding: 24px; display: flex; gap: 18px; align-items: flex-start; border: 1.5px solid #f0f0f0; transition: box-shadow 0.2s, transform 0.2s; }
-        .ct-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.09); transform: translateY(-3px); }
-        .ct-icon-wrap { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+        .ct-intro { max-width: 620px; margin: 0 auto 56px; text-align: center; }
+        .ct-intro h2 { margin: 0 0 16px; font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 900; color: #111; line-height: 1.15; letter-spacing: -0.02em; }
+        .ct-intro p { margin: 0; color: #888; line-height: 1.75; font-size: 1rem; }
+
+        .ct-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; max-width: 900px; margin-left: auto; margin-right: auto; }
+        @media (max-width: 768px) { .ct-row { grid-template-columns: 1fr; } }
+
+        .ct-card { background: #faf8f9; border-radius: 20px; padding: 22px 24px; display: flex; gap: 16px; align-items: flex-start; border: 1.5px solid #f0f0f0; transition: box-shadow 0.2s, transform 0.2s; }
+        .ct-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-3px); }
+        .ct-icon-wrap { width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .ct-call { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; text-decoration: none; margin-top: 12px; transition: opacity 0.15s; }
         .ct-call:hover { opacity: 0.8; }
-        .ct-banner { border-radius: 20px; padding: 28px 32px; background: #6B2C3E; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+
+        .ct-banner { border-radius: 20px; padding: 28px 32px; background: #6B2C3E; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; max-width: 900px; margin: 28px auto 0; }
       `}</style>
       <div className="ct-outer">
         <div className="container">
 
-          <div className="ct-badge">
-            <i className="bi bi-telephone-fill" /> Emergency Contacts
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24, marginBottom: 40 }}>
-            <h2 style={{ margin: 0, fontSize: 'clamp(1.8rem,3.5vw,2.6rem)', fontWeight: 900, color: '#111', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
-              Help is always<br />one call away.
-            </h2>
-            <p style={{ margin: 0, maxWidth: 340, color: '#888', lineHeight: 1.75, fontSize: '0.93rem' }}>
-              Save these numbers now. In an emergency, every second counts. You can also tap the floating call button anywhere on this page.
+          <div className="ct-intro">
+            <div className="ct-badge" style={{ margin: '0 auto 18px' }}>
+              <i className="bi bi-telephone-fill" /> Emergency Contacts
+            </div>
+            <h2>Help is always one call away.</h2>
+            <p>
+              Save these numbers now. In an emergency, every second counts — you can also tap
+              the floating call button anywhere on this page.
             </p>
           </div>
 
@@ -42,7 +47,7 @@ export default function Contact() {
             {HOTLINES.map(h => (
               <div key={h.title} className="ct-card">
                 <div className="ct-icon-wrap" style={{ background: h.color + '15' }}>
-                  <i className={`bi ${h.icon}`} style={{ fontSize: 24, color: h.color }} />
+                  <i className={`bi ${h.icon}`} style={{ fontSize: 22, color: h.color }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

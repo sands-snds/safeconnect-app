@@ -23,6 +23,10 @@ const SPECIAL_NEEDS_OPTIONS = [
   'Pregnant',
   'Pets'
 ];
+
+// Not everyone in the barangay knows the person they're reporting for by
+// name — these relationships make the name field optional instead of required.
+const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
  
 // Accepted media for the required photo/video attachment.
 // Images are restricted to JPG/JPEG only.
@@ -116,7 +120,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
- 
+  const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
+
   // Map pin, "Use my current location" and the Santa Fe boundary check
   // (../shared/location/useLocationPin.js). A new pin fills in the address.
   const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
@@ -348,12 +353,12 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       return;
     }
 
-    if (reportFor === 'others' && !victimName.trim()) {
-      alert('Please enter the name of the person you are reporting for.');
-      return;
-    }
     if (reportFor === 'others' && !victimRelationship) {
       alert('Please select your relationship to them.');
+      return;
+    }
+    if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
+      alert('Please enter the name of the person you are reporting for.');
       return;
     }
 
@@ -1041,9 +1046,30 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   <div className="victim-box-label">
                     <i className="bi bi-person-exclamation"></i> Person You Are Reporting For
                   </div>
-                  <div className="form-grid" style={{ marginBottom: '10px' }}>
+                  <label className="form-label">Your Relationship <span className="required">*</span></label>
+                  <select
+                    value={victimRelationship}
+                    onChange={(e) => setVictimRelationship(e.target.value)}
+                    disabled={isSubmitting}
+                    className="form-select"
+                    style={{ marginBottom: '10px' }}
+                  >
+                    <option value="">Select relationship</option>
+                    <option value="Family Member">Family Member</option>
+                    <option value="Friend">Friend</option>
+                    <option value="Neighbor">Neighbor</option>
+                    <option value="Colleague">Colleague</option>
+                    <option value="Stranger">Stranger</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <div className="form-grid">
                     <div>
-                      <label className="form-label">Their Name <span className="required">*</span></label>
+                      <label className="form-label">
+                        Their Name{' '}
+                        {isVictimNameOptional
+                          ? <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span>
+                          : <span className="required">*</span>}
+                      </label>
                       <input
                         type="text"
                         placeholder="Full name"
@@ -1067,21 +1093,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                       />
                     </div>
                   </div>
-                  <label className="form-label">Your Relationship <span className="required">*</span></label>
-                  <select
-                    value={victimRelationship}
-                    onChange={(e) => setVictimRelationship(e.target.value)}
-                    disabled={isSubmitting}
-                    className="form-select"
-                  >
-                    <option value="">Select relationship</option>
-                    <option value="Family Member">Family Member</option>
-                    <option value="Friend">Friend</option>
-                    <option value="Neighbor">Neighbor</option>
-                    <option value="Colleague">Colleague</option>
-                    <option value="Stranger">Stranger</option>
-                    <option value="Other">Other</option>
-                  </select>
                 </div>
               )}
 
