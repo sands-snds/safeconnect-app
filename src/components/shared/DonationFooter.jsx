@@ -6,7 +6,7 @@ export default function DonationFooter() {
       <div className="container">
         <div className="row align-items-center">
           {/* Brand Section */}
-          <div className="col-12 col-md-3 mb-4 d-flex justify-content-md-start justify-content-center align-items-center">
+          <div className="col-12 col-md-3 mb-3 mb-md-4 d-flex justify-content-start align-items-center footer-brand">
             <div className="d-flex align-items-center">
               <div
                 style={{
@@ -30,11 +30,11 @@ export default function DonationFooter() {
           </div>
 
           {/* Contact Us */}
-          <div className="col-12 col-md-9 mb-4 mt-4">
+          <div className="col-12 col-md-9 mb-4 mt-md-4 footer-contact">
             <h5 className="footer-heading mb-3 text-md-start text-center">Contact Us</h5>
 
             {/* Horizontal Contact Info */}
-            <div className="d-flex flex-wrap justify-content-between text-white-50 small text-md-start text-center gap-3">
+            <div className="d-flex flex-column flex-md-row flex-md-wrap align-items-center align-items-md-start justify-content-md-between text-white-50 small text-md-start text-center gap-3 footer-contact-list">
               {/* Emergency Response Center */}
               <div className="mb-2">
                 <i className="bi bi-geo-alt-fill me-2 text-danger"></i>
@@ -65,7 +65,7 @@ export default function DonationFooter() {
         {/* Bottom Section */}
         <div className="row align-items-center">
           <div className="col-12 text-center">
-            <p className="mb-0 small text-white-50">
+            <p className="mb-0 small text-white-50 footer-copy">
               © 2025 Safe Connect. All rights reserved. |{" "}
               <a href="#privacy" className="footer-link ms-2 text-white-50 text-decoration-none">
                 Privacy Policy
