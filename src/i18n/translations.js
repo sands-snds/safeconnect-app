@@ -602,8 +602,8 @@ export const translations = {
       eyebrow: 'Barangay Santa Fe Safe Connect',
       titleLine1: 'MANATILING',
       titleHighlight: 'LIGTAS',
-      titleLine2: 'MANATILING ALAM',
-      subtitle: 'Maging handa kapag kailangan ito nang husto. Kumuha ng real-time na update, humingi ng tulong agad, at maghanap ng ligtas na evacuation center — lahat sa iisang lugar.',
+      titleLine2: 'MANATILING MAY ALAM',
+      subtitle: 'Maging bahagi ng aming pangkat sa pagtugon sa mga emergency at tumulong sa pagliligtas ng buhay sa oras ng pangangailangan. Ang bawat pagkilos mo ay maaaring magbigay ng pag-asa sa panahon ng krisis.',
       signIn: 'Mag-sign In',
       signUp: 'Mag-sign Up'
     },
@@ -809,7 +809,7 @@ export const translations = {
       emergency: 'Emergency',
       news: 'Balita',
       notifications: 'Mga Abiso',
-      myReports: 'Aking mga Ulat',
+      myReports: 'Aking Mga Ulat',
       settings: 'Mga Setting',
       logout: 'Mag-logout'
     },
@@ -861,7 +861,7 @@ export const translations = {
     },
     emergencyReportSection: {
       title: 'Mag-report ng Insidente',
-      subtitle: 'Mahalaga ang bawat segundo. Piliin ang uri ng insidente sa ibaba at abutin agad ang aming response team, 24/7.',
+      subtitle: 'Bawat segundo ay mahalaga. Piliin ang uri ng insidente sa ibaba upang agad na makipag-ugnayan sa aming pangkat na handang tumugon, 24/7.',
       reportButton: 'I-report',
       cards: {
         emergency: {
@@ -870,12 +870,12 @@ export const translations = {
           description: 'Sunog, baha, lindol, o anumang nagbabantang buhay na sitwasyon ngayon'
         },
         assistance: {
-          title: 'Humiling ng Tulong',
+          title: 'Humingi ng Tulong',
           badge: 'Mataas',
           description: 'Humiling ng tulong, rescue, o suporta para sa hindi kritikal na sitwasyon'
         },
         pettyCrime: {
-          title: 'Mag-report ng Petty Crime',
+          title: 'Mag-report ng Krimen',
           badge: 'Katamtaman',
           description: 'Pagnanakaw, bandalismo, gulo, o iba pang maliliit na paglabag'
         }
@@ -1029,7 +1029,7 @@ export const translations = {
       reportSubmittedBody: 'Matagumpay na naisumite ang iyong petty crime report. Susuriin ito ng aming team sa lalong madaling panahon.'
     },
     myReports: {
-      title: 'Aking mga Ulat',
+      title: 'Aking Mga Ulat',
       subtitle: 'Subaybayan at pamahalaan ang lahat ng iyong naisumite',
       noAccount: 'Hindi namin matukoy ang iyong account. Mangyaring mag-sign in muli.',
       loadError: 'Hindi ma-load ang iyong mga ulat ngayon. Subukan muli sa ibang pagkakataon.',
@@ -1041,12 +1041,12 @@ export const translations = {
         all: 'Lahat',
         emergency: 'Emergency',
         assistance: 'Tulong',
-        pettyCrime: 'Petty Crime'
+        pettyCrime: 'Krimen'
       },
       types: {
         emergency: 'Emergency',
         assistance: 'Tulong',
-        pettyCrime: 'Petty Crime'
+        pettyCrime: 'Krimen'
       },
       status: {
         received: 'Natanggap',
