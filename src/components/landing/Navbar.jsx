@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
+import LanguageToggle from '../shared/LanguageToggle';
 // Removed: useNavigate
 
 function Navbar() {
+  const { t } = useLanguage();
   // Removed: navigate
   // Removed: showAdminModal, adminEmail, adminPassword, error, setShowAdminModal, setAdminEmail, setAdminPassword, setError
   
@@ -364,30 +367,30 @@ function Navbar() {
               </div>
               <span>Safe Connect</span>
             </button>
-            
+
             {/* Desktop Navigation */}
             <div className="nav-links">
               <button className="nav-item active" onClick={handleHomeClick}>
                 <i className="bi bi-house-door-fill"></i>
-                <span>Home</span>
+                <span>{t('nav.home')}</span>
               </button>
-              
+
               <button className="nav-item" onClick={(e) => handleNavClick(e, 'services')}>
                 <i className="bi bi-list-check"></i>
-                <span>Services</span>
+                <span>{t('nav.services')}</span>
               </button>
-              
+
               <button className="nav-item" onClick={(e) => handleNavClick(e, 'contact')}>
                 <i className="bi bi-telephone-fill"></i>
-                <span>Contact</span>
+                <span>{t('nav.contact')}</span>
               </button>
-              
+
               <button className="nav-item" onClick={(e) => handleNavClick(e, 'about')}>
                 <i className="bi bi-info-circle-fill"></i>
-                <span>About Us</span>
+                <span>{t('nav.about')}</span>
               </button>
-              
-              {/* Removed: Admin dropdown wrapper */}
+
+              <LanguageToggle variant="light" />
             </div>
             
             {/* Mobile Menu Toggle */}
@@ -419,25 +422,27 @@ function Navbar() {
               
               <button className="mobile-nav-item active" onClick={handleHomeClick}>
                 <i className="bi bi-house-door-fill"></i>
-                <span>Home</span>
+                <span>{t('nav.home')}</span>
               </button>
-              
+
               <button className="mobile-nav-item" onClick={(e) => handleNavClick(e, 'services')}>
                 <i className="bi bi-list-check"></i>
-                <span>Services</span>
+                <span>{t('nav.services')}</span>
               </button>
-              
+
               <button className="mobile-nav-item" onClick={(e) => handleNavClick(e, 'contact')}>
                 <i className="bi bi-telephone-fill"></i>
-                <span>Contact</span>
+                <span>{t('nav.contact')}</span>
               </button>
-              
+
               <button className="mobile-nav-item" onClick={(e) => handleNavClick(e, 'about')}>
                 <i className="bi bi-info-circle-fill"></i>
-                <span>About Us</span>
+                <span>{t('nav.about')}</span>
               </button>
-              
-              {/* Removed: Mobile Admin section */}
+
+              <div style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+                <LanguageToggle variant="light" />
+              </div>
             </div>
           </div>
         </div>

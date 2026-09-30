@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 const hostnameOf = (url) => {
     try {
@@ -11,6 +12,7 @@ const hostnameOf = (url) => {
 // Shown for article links with no image (or one that fails to load), so the
 // card shows which site the article is from instead of an empty box.
 const MediaPlaceholder = ({ announcement }) => {
+    const { t } = useLanguage();
     const site = announcement.sourceSite || hostnameOf(announcement.sourceUrl);
 
     return (
@@ -21,12 +23,12 @@ const MediaPlaceholder = ({ announcement }) => {
             className="news-card-media news-card-placeholder"
         >
             <i className="bi bi-newspaper" />
-            <span className="news-card-placeholder-site">{site || "External article"}</span>
+            <span className="news-card-placeholder-site">{site || t('news.externalArticle')}</span>
             {announcement.sourceTitle && (
                 <span className="news-card-placeholder-title">{announcement.sourceTitle}</span>
             )}
             <span className="news-card-placeholder-cta">
-                Open article <i className="bi bi-box-arrow-up-right" />
+                {t('news.openArticle')} <i className="bi bi-box-arrow-up-right" />
             </span>
         </a>
     );
@@ -36,6 +38,7 @@ export default function AnnouncementCard({
     announcement,
     formatNewsDate
 }) {
+    const { t } = useLanguage();
     const photo =
         announcement.imageUrl ||
         announcement.sourceImage;
@@ -96,9 +99,9 @@ export default function AnnouncementCard({
                     >
                         <i className="bi bi-box-arrow-up-right"></i>
                         {" "}
-                        Read full article
+                        {t('news.readFullArticle')}
                         {(announcement.sourceSite || hostnameOf(announcement.sourceUrl)) &&
-                            ` on ${announcement.sourceSite || hostnameOf(announcement.sourceUrl)}`}
+                            ` ${t('news.on')} ${announcement.sourceSite || hostnameOf(announcement.sourceUrl)}`}
                     </a>
                 )}
             </div>

@@ -3,22 +3,27 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AdminPage from './pages/AdminPage';
 import ResidentPage from './pages/ResidentPage';
+import { LanguageProvider } from './i18n/LanguageContext';
+import LanguageGate from './components/shared/LanguageGate';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './App.css';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          
-          <Route path="/resident" element={<ResidentPage />} />
-        </Routes>
-      </div>
-    </Router>
+    <LanguageProvider>
+      <LanguageGate />
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+
+            <Route path="/resident" element={<ResidentPage />} />
+          </Routes>
+        </div>
+      </Router>
+    </LanguageProvider>
   );
 }
 

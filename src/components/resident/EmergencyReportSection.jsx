@@ -1,43 +1,17 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
 import ResidentAssistanceModal from './ResidentAssistanceModal';
 import ResidentPettyCrimeModal from './ResidentPettyCrimeModal';
 
 const EMERGENCY_CONTACTS = [
-  {
-    id: 'police',
-    label: '911 Emergency',
-    sublabel: 'National Emergency Hotline',
-    number: '911',
-    icon: 'bi-shield-fill-exclamation',
-    color: '#dc2626',
-  },
-  {
-    id: 'dasma-police',
-    label: 'Dasmariñas Police',
-    sublabel: 'Dasmariñas City PNP',
-    number: '+63462420002',
-    icon: 'bi-shield-fill',
-    color: '#1d4ed8',
-  },
-  {
-    id: 'cdrmc',
-    label: 'CDRMC',
-    sublabel: 'Cavite Disaster Risk Management',
-    number: '+63462300345',
-    icon: 'bi-heart-pulse-fill',
-    color: '#059669',
-  },
-  {
-    id: 'barangay',
-    label: 'Barangay Santa Fe',
-    sublabel: 'Barangay Emergency Line',
-    number: '+639929474309',
-    icon: 'bi-house-fill',
-    color: '#7c3aed',
-  },
+  { id: 'police',       label: '911 Emergency',     sublabelKey: 'police',   number: '911',           icon: 'bi-shield-fill-exclamation', color: '#dc2626' },
+  { id: 'dasma-police', label: 'Dasmariñas Police',  sublabelKey: 'dasma',    number: '+63462420002',  icon: 'bi-shield-fill',             color: '#1d4ed8' },
+  { id: 'cdrmc',        label: 'CDRMC',              sublabelKey: 'cdrmc',    number: '+63462300345',  icon: 'bi-heart-pulse-fill',        color: '#059669' },
+  { id: 'barangay',     label: 'Barangay Santa Fe',  sublabelKey: 'barangay', number: '+639929474309', icon: 'bi-house-fill',              color: '#7c3aed' },
 ];
 
 function EmergencyCallButton() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   const handleCall = (number) => {
@@ -85,10 +59,10 @@ function EmergencyCallButton() {
               color: '#111',
               letterSpacing: '0.01em',
             }}>
-              Emergency Contacts
+              {t('emergencyContacts.title')}
             </p>
             <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#6b7280' }}>
-              Tap a contact to call immediately
+              {t('emergencyContacts.subtitle')}
             </p>
           </div>
 
@@ -130,7 +104,7 @@ function EmergencyCallButton() {
                     {contact.label}
                   </p>
                   <p style={{ margin: 0, fontSize: '11px', color: '#6b7280' }}>
-                    {contact.sublabel}
+                    {t(`emergencyContacts.sublabels.${contact.sublabelKey}`)}
                   </p>
                 </div>
                 <div style={{
@@ -146,7 +120,7 @@ function EmergencyCallButton() {
                   flexShrink: 0,
                 }}>
                   <i className="bi bi-telephone-fill" style={{ fontSize: '10px' }} />
-                  Call
+                  {t('emergencyContacts.call')}
                 </div>
               </button>
             ))}
@@ -207,39 +181,40 @@ function EmergencyCallButton() {
 
 function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrimeClick }) {
 
+  const { t } = useLanguage();
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showPettyCrimeModal, setShowPettyCrimeModal] = useState(false);
 
   const emergencies = [
     {
       id: 'emergency',
-      title: 'Report Emergency',
+      title: t('emergencyReportSection.cards.emergency.title'),
       image: '/images/emergency.jpg',
       gradientFrom: '#7f1d1d',
       gradientTo: '#dc2626',
-      badge: 'Critical',
+      badge: t('emergencyReportSection.cards.emergency.badge'),
       badgeClass: 'critical',
-      description: 'Fires, floods, earthquakes, or any life-threatening situation happening right now'
+      description: t('emergencyReportSection.cards.emergency.description')
     },
     {
       id: 'assistance',
-      title: 'Request Assistance',
+      title: t('emergencyReportSection.cards.assistance.title'),
       image: '/images/assistance.jpg',
       gradientFrom: '#7c2d12',
       gradientTo: '#ea580c',
-      badge: 'High',
+      badge: t('emergencyReportSection.cards.assistance.badge'),
       badgeClass: 'high',
-      description: 'Request help, rescue, or support for a non-critical situation'
+      description: t('emergencyReportSection.cards.assistance.description')
     },
     {
       id: 'petty-crime',
-      title: 'Report Petty Crimes',
+      title: t('emergencyReportSection.cards.pettyCrime.title'),
       image: '/images/crime.jpg',
       gradientFrom: '#450a0a',
       gradientTo: '#b91c1c',
-      badge: 'Medium',
+      badge: t('emergencyReportSection.cards.pettyCrime.badge'),
       badgeClass: 'medium',
-      description: 'Theft, vandalism, disturbances, or other minor offenses'
+      description: t('emergencyReportSection.cards.pettyCrime.description')
     },
   ];
 
@@ -261,10 +236,10 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
           <i className="bi bi-exclamation-octagon-fill"></i>
         </div>
 
-        <h2>Report an Incident</h2>
+        <h2>{t('emergencyReportSection.title')}</h2>
 
         <p>
-          Every second counts. Choose the type of incident below and reach our response team right away, 24/7.
+          {t('emergencyReportSection.subtitle')}
         </p>
       </div>
 
@@ -295,7 +270,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
                   className="report-btn"
                   onClick={() => handleCardClick(emergency)}
                 >
-                  Report
+                  {t('emergencyReportSection.reportButton')}
                 </button>
               </div>
             </div>

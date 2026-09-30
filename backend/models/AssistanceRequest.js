@@ -27,9 +27,10 @@ class AssistanceRequest {
                 victim_name,
                 victim_contact,
                 victim_relationship,
+                victim_details,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 request.reportReference,
@@ -49,6 +50,7 @@ class AssistanceRequest {
                 request.victimName || null,
                 request.victimContact || null,
                 request.victimRelationship || null,
+                request.victimDetails || null,
                 "Received"
             ]
         );

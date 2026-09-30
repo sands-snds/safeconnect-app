@@ -19,13 +19,13 @@ const POLL_INTERVAL_MS = 60 * 1000; // 1 minute
 const RAIN_ALERT_THRESHOLD = 40;
 
 const describeWeatherCode = (code) => {
-  if ([0].includes(code)) return { label: 'Clear sky', icon: 'bi-sun-fill' };
-  if ([1, 2, 3].includes(code)) return { label: 'Partly cloudy', icon: 'bi-cloud-sun-fill' };
-  if ([45, 48].includes(code)) return { label: 'Foggy', icon: 'bi-cloud-fog2-fill' };
-  if ([51, 53, 55, 56, 57].includes(code)) return { label: 'Drizzle', icon: 'bi-cloud-drizzle-fill' };
-  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { label: 'Rain', icon: 'bi-cloud-rain-fill' };
-  if ([95, 96, 99].includes(code)) return { label: 'Thunderstorm', icon: 'bi-cloud-lightning-rain-fill' };
-  return { label: 'Weather update', icon: 'bi-cloud-fill' };
+  if ([0].includes(code)) return { key: 'clear', label: 'Clear sky', icon: 'bi-sun-fill' };
+  if ([1, 2, 3].includes(code)) return { key: 'partlyCloudy', label: 'Partly cloudy', icon: 'bi-cloud-sun-fill' };
+  if ([45, 48].includes(code)) return { key: 'foggy', label: 'Foggy', icon: 'bi-cloud-fog2-fill' };
+  if ([51, 53, 55, 56, 57].includes(code)) return { key: 'drizzle', label: 'Drizzle', icon: 'bi-cloud-drizzle-fill' };
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { key: 'rain', label: 'Rain', icon: 'bi-cloud-rain-fill' };
+  if ([95, 96, 99].includes(code)) return { key: 'thunderstorm', label: 'Thunderstorm', icon: 'bi-cloud-lightning-rain-fill' };
+  return { key: 'update', label: 'Weather update', icon: 'bi-cloud-fill' };
 };
 
 const formatNewsDate = (dateStr) => {
@@ -71,6 +71,26 @@ const getCategoryIcon = (category) => {
     'petty_crime_status': 'bi-shield-fill-exclamation'
   };
   return map[category] || 'bi-megaphone-fill';
+};
+
+// Color-codes each notification by category so, e.g., a general emergency
+// alert and a personal "your report status changed" update don't look
+// visually identical just because both use a triangle icon.
+const getCategoryColor = (category) => {
+  const map = {
+    'Emergency Alert': '#dc2626',
+    'Weather Advisory': '#3b82f6',
+    'Evacuation': '#f97316',
+    'Community Event': '#8b5cf6',
+    'Community Update': '#0ea5e9',
+    'Announcement': '#6B2C3E',
+    'General': '#6B2C3E',
+    // Personal notifications (report status-change replies)
+    'emergency_status': '#dc2626',
+    'assistance_status': '#0d9488',
+    'petty_crime_status': '#7c3aed'
+  };
+  return map[category] || '#6B2C3E';
 };
 
 function ResidentNavbar() {
@@ -200,17 +220,19 @@ function ResidentNavbar() {
 
   // Clicking a notification: mark it read. For announcements, also open the
   // News page and scroll straight to that article. Personal notifications
-  // (e.g. "your report status changed") don't have a matching news article,
-  // so just mark them read and close the panel.
+  // (e.g. "your report status changed") don't have a matching news article --
+  // take the resident straight to My Reports instead, since that's where
+  // they can actually see the report the update is about.
   const handleNotificationClick = (id) => {
     markOneAsRead(id);
-    setShowNotifications(false);
-    setShowMobileMenu(false);
 
     if (typeof id === 'string' && id.startsWith('personal-')) {
+      openReportsPage();
       return;
     }
 
+    setShowNotifications(false);
+    setShowMobileMenu(false);
     setShowNewsPage(true);
     setTimeout(() => {
       const el = document.getElementById(`news-item-${id}`);
@@ -314,6 +336,7 @@ function ResidentNavbar() {
               formatRelativeTime={formatRelativeTime}
               describeWeatherCode={describeWeatherCode}
               getCategoryIcon={getCategoryIcon}
+              getCategoryColor={getCategoryColor}
 
               handleHomeClick={handleHomeClick}
               handleNavClick={handleNavClick}
@@ -359,6 +382,7 @@ function ResidentNavbar() {
               formatRelativeTime={formatRelativeTime}
               describeWeatherCode={describeWeatherCode}
               getCategoryIcon={getCategoryIcon}
+              getCategoryColor={getCategoryColor}
 
               toggleMobileMenu={toggleMobileMenu}
 

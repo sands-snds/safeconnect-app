@@ -1,6 +1,8 @@
 import React from "react";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 function ResidentHero() {
+  const { t } = useLanguage();
   const heroImages = [
     "/images/resident-background.jpg",
     "/images/resident-background2.jpg",
@@ -30,15 +32,14 @@ function ResidentHero() {
                 <div className="resident-hero-overlay">
                   <div className="container hero-content text-center text-lg-start">
                     <h3 className="hero-title">
-                      Barangay Sta. Fe<br />
-                      Safe Connect
+                      {t('residentHero.titleLine1')}<br />
+                      {t('residentHero.titleLine2')}
                     </h3>
 
                     <p className="hero-subtitle">
-                      Be part of our emergency response network and stand ready
-                      to save lives when it matters most.
+                      {t('residentHero.subtitleLine1')}
                       <br />
-                      Your action can bring hope in times of crisis.
+                      {t('residentHero.subtitleLine2')}
                     </p>
                   </div>
                 </div>
@@ -86,12 +87,12 @@ function ResidentHero() {
       <div className="emergency-banner text-center text-lg-start">
         <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
           <i className="bi bi-telephone-forward-fill me-2"></i>
-          <span>Emergency Hotline: 911</span>
+          <span>{t('residentHero.hotline')}</span>
         </div>
 
         <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
           <i className="bi bi-clock-fill me-2"></i>
-          Available 24/7 for immediate emergencies
+          {t('residentHero.available247')}
         </div>
       </div>
     </>

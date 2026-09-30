@@ -1,4 +1,6 @@
 import React from "react";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import LanguageToggle from "../../shared/LanguageToggle";
 
 export default function MobileMenu({
 
@@ -23,6 +25,8 @@ export default function MobileMenu({
     handleNavigation
 
 }) {
+
+    const { t } = useLanguage();
 
     return (
 
@@ -62,7 +66,7 @@ export default function MobileMenu({
                     onClick={handleHomeClick}
                 >
                     <i className="bi bi-house-door-fill"></i>
-                    <span>Home</span>
+                    <span>{t('residentNav.home')}</span>
                 </button>
 
                 <button
@@ -77,7 +81,7 @@ export default function MobileMenu({
                     <i className="bi bi-exclamation-triangle-fill"></i>
 
                     <span>
-                        Emergency
+                        {t('residentNav.emergency')}
                     </span>
 
                 </button>
@@ -89,7 +93,7 @@ export default function MobileMenu({
                     <i className="bi bi-newspaper"></i>
 
                     <span>
-                        News
+                        {t('residentNav.news')}
                     </span>
 
                 </button>
@@ -108,7 +112,7 @@ export default function MobileMenu({
                     <i className="bi bi-bell-fill"></i>
 
                     <span>
-                        Notifications
+                        {t('residentNav.notifications')}
                     </span>
 
                     {totalBadgeCount > 0 && (
@@ -132,7 +136,7 @@ export default function MobileMenu({
                     <i className="bi bi-file-earmark-text-fill"></i>
 
                     <span>
-                        My Reports
+                        {t('residentNav.myReports')}
                     </span>
 
                 </button>
@@ -144,10 +148,14 @@ export default function MobileMenu({
                     <i className="bi bi-gear-fill"></i>
 
                     <span>
-                        Settings
+                        {t('residentNav.settings')}
                     </span>
 
                 </button>
+
+                <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+                    <LanguageToggle variant="light" />
+                </div>
 
                 <div
                     className="mobile-user-section"
@@ -171,7 +179,7 @@ export default function MobileMenu({
                         <i className="bi bi-box-arrow-right"></i>
 
                         <span>
-                            Logout
+                            {t('residentNav.logout')}
                         </span>
 
                     </button>

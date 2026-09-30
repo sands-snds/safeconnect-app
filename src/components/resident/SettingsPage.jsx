@@ -7,6 +7,7 @@ import {
   changePassword,
   uploadProfilePhoto
 } from '../../Services/api';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,6 +29,7 @@ const formatMemberSince = (dateStr) => {
 };
 
 function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
+  const { t } = useLanguage();
   const fileInputRef = useRef(null);
 
   const [profile, setProfile] = useState(user || null);
@@ -107,11 +109,11 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     if (!file) return;
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setPhotoMessage({ type: 'error', text: 'Please choose a JPG, PNG, or WEBP image.' });
+      setPhotoMessage({ type: 'error', text: t('settings.photoTypeError') });
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      setPhotoMessage({ type: 'error', text: 'Photo must be under 5MB.' });
+      setPhotoMessage({ type: 'error', text: t('settings.photoSizeError') });
       return;
     }
 
@@ -136,13 +138,13 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         setProfile(p => ({ ...p, photoUrl: savedUrl }));
         setPhotoPreview(savedUrl);   // keep showing the new photo permanently
         setPendingFile(null);
-        setPhotoMessage({ type: 'success', text: 'Profile photo updated successfully.' });
+        setPhotoMessage({ type: 'success', text: t('settings.photoSuccess') });
         onProfileUpdate?.({ photoUrl: savedUrl });
       } else {
-        setPhotoMessage({ type: 'error', text: result.message || 'Could not upload photo.' });
+        setPhotoMessage({ type: 'error', text: result.message || t('settings.photoUploadError') });
       }
     } catch {
-      setPhotoMessage({ type: 'error', text: 'Could not reach the server. Please try again.' });
+      setPhotoMessage({ type: 'error', text: t('settings.serverError') });
     } finally {
       setUploadingPhoto(false);
     }
@@ -158,11 +160,11 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     setEmailMessage(null);
     const trimmed = emailInput.trim();
 
-    if (!trimmed) { setEmailMessage({ type: 'error', text: 'Email address cannot be empty.' }); return; }
-    if (!EMAIL_REGEX.test(trimmed)) { setEmailMessage({ type: 'error', text: 'Enter a valid email address.' }); return; }
+    if (!trimmed) { setEmailMessage({ type: 'error', text: t('settings.emailEmptyError') }); return; }
+    if (!EMAIL_REGEX.test(trimmed)) { setEmailMessage({ type: 'error', text: t('settings.emailInvalidError') }); return; }
     if (trimmed === profile?.email) { setEmailMessage(null); return; }
     if (!emailPassword) {
-      setEmailMessage({ type: 'error', text: 'Enter your current password to confirm this change.' });
+      setEmailMessage({ type: 'error', text: t('settings.emailPasswordRequired') });
       return;
     }
 
@@ -171,14 +173,14 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
       const result = await updateEmail(user.id, trimmed, emailPassword);
       if (result.success) {
         setProfile(p => ({ ...p, email: trimmed }));
-        setEmailMessage({ type: 'success', text: 'Email address updated.' });
+        setEmailMessage({ type: 'success', text: t('settings.emailUpdated') });
         setEmailPassword('');
         onProfileUpdate?.({ email: trimmed });
       } else {
-        setEmailMessage({ type: 'error', text: result.message || 'Could not update email address.' });
+        setEmailMessage({ type: 'error', text: result.message || t('settings.emailUpdateError') });
       }
     } catch {
-      setEmailMessage({ type: 'error', text: 'Could not reach the server. Please try again.' });
+      setEmailMessage({ type: 'error', text: t('settings.serverError') });
     } finally {
       setSavingEmail(false);
     }
@@ -188,7 +190,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     setContactMessage(null);
 
     if (contactInput.length !== 10) {
-      setContactMessage({ type: 'error', text: 'Enter a valid 10-digit mobile number.' });
+      setContactMessage({ type: 'error', text: t('settings.contactInvalidError') });
       return;
     }
     const fullContact = `+63${contactInput}`;
@@ -199,13 +201,13 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
       const result = await updateContact(user.id, fullContact);
       if (result.success) {
         setProfile(p => ({ ...p, contact: fullContact }));
-        setContactMessage({ type: 'success', text: 'Phone number updated.' });
+        setContactMessage({ type: 'success', text: t('settings.contactUpdated') });
         onProfileUpdate?.({ contact: fullContact });
       } else {
-        setContactMessage({ type: 'error', text: result.message || 'Could not update phone number.' });
+        setContactMessage({ type: 'error', text: result.message || t('settings.contactUpdateError') });
       }
     } catch {
-      setContactMessage({ type: 'error', text: 'Could not reach the server. Please try again.' });
+      setContactMessage({ type: 'error', text: t('settings.serverError') });
     } finally {
       setSavingContact(false);
     }
@@ -213,7 +215,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
   const handleSaveUsername = async () => {
     const trimmed = usernameInput.trim();
-    if (!trimmed) { setUsernameMessage({ type: 'error', text: 'Username cannot be empty.' }); return; }
+    if (!trimmed) { setUsernameMessage({ type: 'error', text: t('settings.usernameEmptyError') }); return; }
     if (trimmed === profile?.username) { setUsernameMessage(null); return; }
 
     setSavingUsername(true);
@@ -222,13 +224,13 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
       const result = await updateUsername(user.id, trimmed);
       if (result.success) {
         setProfile(p => ({ ...p, username: result.username || trimmed }));
-        setUsernameMessage({ type: 'success', text: 'Username updated.' });
+        setUsernameMessage({ type: 'success', text: t('settings.usernameUpdated') });
         onProfileUpdate?.({ username: result.username || trimmed });
       } else {
-        setUsernameMessage({ type: 'error', text: result.message || 'Could not update username.' });
+        setUsernameMessage({ type: 'error', text: result.message || t('settings.usernameUpdateError') });
       }
     } catch {
-      setUsernameMessage({ type: 'error', text: 'Could not reach the server. Please try again.' });
+      setUsernameMessage({ type: 'error', text: t('settings.serverError') });
     } finally {
       setSavingUsername(false);
     }
@@ -237,29 +239,29 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const handleSavePassword = async () => {
     setPasswordMessage(null);
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordMessage({ type: 'error', text: 'Fill in all three password fields.' }); return;
+      setPasswordMessage({ type: 'error', text: t('settings.passwordFillAll') }); return;
     }
     if (newPassword.length < 8) {
-      setPasswordMessage({ type: 'error', text: 'New password must be at least 8 characters.' }); return;
+      setPasswordMessage({ type: 'error', text: t('settings.passwordTooShort') }); return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordMessage({ type: 'error', text: 'New password and confirmation do not match.' }); return;
+      setPasswordMessage({ type: 'error', text: t('settings.passwordMismatch') }); return;
     }
     if (newPassword === currentPassword) {
-      setPasswordMessage({ type: 'error', text: 'New password must be different from your current password.' }); return;
+      setPasswordMessage({ type: 'error', text: t('settings.passwordSameAsCurrent') }); return;
     }
 
     setSavingPassword(true);
     try {
       const result = await changePassword(user.id, currentPassword, newPassword);
       if (result.success) {
-        setPasswordMessage({ type: 'success', text: 'Password updated.' });
+        setPasswordMessage({ type: 'success', text: t('settings.passwordUpdated') });
         setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
       } else {
-        setPasswordMessage({ type: 'error', text: result.message || 'Could not update password.' });
+        setPasswordMessage({ type: 'error', text: result.message || t('settings.passwordUpdateError') });
       }
     } catch {
-      setPasswordMessage({ type: 'error', text: 'Could not reach the server. Please try again.' });
+      setPasswordMessage({ type: 'error', text: t('settings.serverError') });
     } finally {
       setSavingPassword(false);
     }
@@ -336,8 +338,8 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
       <div className="settings-header">
         <div>
-          <h2><i className="bi bi-gear-fill" /> Settings</h2>
-          <p className="settings-header-sub">Manage your profile, contact details, and account security</p>
+          <h2><i className="bi bi-gear-fill" /> {t('settings.title')}</h2>
+          <p className="settings-header-sub">{t('settings.subtitle')}</p>
         </div>
         <button className="settings-close-btn" onClick={onClose} aria-label="Close settings">
           <i className="bi bi-x-lg" />
@@ -349,8 +351,8 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
           {/* ── Profile photo + name ── */}
           <div className="settings-card">
-            <h3><i className="bi bi-person-badge-fill" /> Profile Photo</h3>
-            <p className="settings-card-sub">This appears next to your name across SafeConnect.</p>
+            <h3><i className="bi bi-person-badge-fill" /> {t('settings.profilePhoto')}</h3>
+            <p className="settings-card-sub">{t('settings.profilePhotoSub')}</p>
 
             <div className="settings-photo-row">
               <div className="settings-avatar">
@@ -367,7 +369,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                     disabled={uploadingPhoto || loadingProfile}
                   >
                     <i className="bi bi-image me-1" />
-                    Choose Photo
+                    {t('settings.choosePhoto')}
                   </button>
 
                   {pendingFile && (
@@ -378,15 +380,15 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                         disabled={uploadingPhoto}
                       >
                         {uploadingPhoto
-                          ? <><i className="bi bi-arrow-repeat me-1" />Uploading...</>
-                          : <><i className="bi bi-check-lg me-1" />Save Photo</>}
+                          ? <><i className="bi bi-arrow-repeat me-1" />{t('settings.uploading')}</>
+                          : <><i className="bi bi-check-lg me-1" />{t('settings.savePhoto')}</>}
                       </button>
                       <button
                         className="settings-btn-cancel-photo"
                         onClick={handleCancelPhoto}
                         disabled={uploadingPhoto}
                       >
-                        Cancel
+                        {t('settings.cancel')}
                       </button>
                     </>
                   )}
@@ -395,11 +397,11 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                 {pendingFile && !photoMessage && (
                   <p className="settings-photo-pending-note">
                     <i className="bi bi-info-circle me-1" />
-                    Photo selected — click Save Photo to apply.
+                    {t('settings.photoPendingNote')}
                   </p>
                 )}
 
-                <span className="settings-photo-hint">JPG, PNG, or WEBP · Max 5MB</span>
+                <span className="settings-photo-hint">{t('settings.photoHint')}</span>
 
                 <input
                   ref={fileInputRef}
@@ -419,17 +421,17 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
             )}
 
             <div style={{ marginTop: '1.5rem' }}>
-              <div className="settings-readonly-row"><span>Full name</span><span>{profile?.fullName || '—'}</span></div>
+              <div className="settings-readonly-row"><span>{t('settings.fullName')}</span><span>{profile?.fullName || '—'}</span></div>
             </div>
           </div>
 
           {/* ── Contact Information ── */}
           <div className="settings-card">
-            <h3><i className="bi bi-person-lines-fill" /> Contact Information</h3>
-            <p className="settings-card-sub">Keep your email and phone number up to date so our team can reach you during an emergency.</p>
+            <h3><i className="bi bi-person-lines-fill" /> {t('settings.contactInfo')}</h3>
+            <p className="settings-card-sub">{t('settings.contactInfoSub')}</p>
 
             <div className="settings-field">
-              <label htmlFor="settings-email">Email address</label>
+              <label htmlFor="settings-email">{t('settings.emailAddress')}</label>
               <input
                 id="settings-email"
                 type="email"
@@ -441,19 +443,19 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
             </div>
             <div className="settings-field">
               <label htmlFor="settings-email-password">
-                Current password <span className="settings-field-hint">(required to change your email)</span>
+                {t('settings.currentPassword')} <span className="settings-field-hint">{t('settings.emailPasswordHint')}</span>
               </label>
               <input
                 id="settings-email-password"
                 type="password"
                 value={emailPassword}
                 onChange={e => setEmailPassword(e.target.value)}
-                placeholder="Enter your current password"
+                placeholder={t('settings.currentPasswordPlaceholder')}
                 disabled={loadingProfile}
               />
             </div>
             <button className="settings-btn-primary" onClick={handleSaveEmail} disabled={savingEmail || loadingProfile}>
-              {savingEmail ? 'Saving...' : 'Save email'}
+              {savingEmail ? t('settings.saving') : t('settings.saveEmail')}
             </button>
             {emailMessage && (
               <div className={`settings-inline-message ${emailMessage.type}`}>{emailMessage.text}</div>
@@ -462,7 +464,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
             <hr className="settings-divider" />
 
             <div className="settings-field">
-              <label htmlFor="settings-contact">Phone number</label>
+              <label htmlFor="settings-contact">{t('settings.phoneNumber')}</label>
               <div className="settings-phone-row">
                 <span className="settings-phone-prefix">+63</span>
                 <input
@@ -478,7 +480,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
               </div>
             </div>
             <button className="settings-btn-primary" onClick={handleSaveContact} disabled={savingContact || loadingProfile}>
-              {savingContact ? 'Saving...' : 'Save phone number'}
+              {savingContact ? t('settings.saving') : t('settings.savePhoneNumber')}
             </button>
             {contactMessage && (
               <div className={`settings-inline-message ${contactMessage.type}`}>{contactMessage.text}</div>
@@ -487,21 +489,21 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
           {/* ── Username ── */}
           <div className="settings-card">
-            <h3><i className="bi bi-at" /> Username</h3>
-            <p className="settings-card-sub">This is how you'll be identified across SafeConnect.</p>
+            <h3><i className="bi bi-at" /> {t('settings.username')}</h3>
+            <p className="settings-card-sub">{t('settings.usernameSub')}</p>
             <div className="settings-field">
-              <label htmlFor="settings-username">Username</label>
+              <label htmlFor="settings-username">{t('settings.username')}</label>
               <input
                 id="settings-username"
                 type="text"
                 value={usernameInput}
                 onChange={e => setUsernameInput(e.target.value)}
-                placeholder="Enter a username"
+                placeholder={t('settings.usernamePlaceholder')}
                 disabled={loadingProfile}
               />
             </div>
             <button className="settings-btn-primary" onClick={handleSaveUsername} disabled={savingUsername || loadingProfile}>
-              {savingUsername ? 'Saving...' : 'Save username'}
+              {savingUsername ? t('settings.saving') : t('settings.saveUsername')}
             </button>
             {usernameMessage && (
               <div className={`settings-inline-message ${usernameMessage.type}`}>{usernameMessage.text}</div>
@@ -510,22 +512,22 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
           {/* ── Password ── */}
           <div className="settings-card">
-            <h3><i className="bi bi-lock-fill" /> Password</h3>
-            <p className="settings-card-sub">Choose a new password with at least 8 characters.</p>
+            <h3><i className="bi bi-lock-fill" /> {t('settings.password')}</h3>
+            <p className="settings-card-sub">{t('settings.passwordSub')}</p>
             <div className="settings-field">
-              <label htmlFor="settings-current-password">Current password</label>
-              <input id="settings-current-password" type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Enter your current password" />
+              <label htmlFor="settings-current-password">{t('settings.currentPassword')}</label>
+              <input id="settings-current-password" type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder={t('settings.currentPasswordPlaceholder')} />
             </div>
             <div className="settings-field">
-              <label htmlFor="settings-new-password">New password</label>
-              <input id="settings-new-password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="At least 8 characters" />
+              <label htmlFor="settings-new-password">{t('settings.newPassword')}</label>
+              <input id="settings-new-password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={t('settings.newPasswordPlaceholder')} />
             </div>
             <div className="settings-field">
-              <label htmlFor="settings-confirm-password">Confirm new password</label>
-              <input id="settings-confirm-password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Re-enter your new password" />
+              <label htmlFor="settings-confirm-password">{t('settings.confirmNewPassword')}</label>
+              <input id="settings-confirm-password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder={t('settings.confirmNewPasswordPlaceholder')} />
             </div>
             <button className="settings-btn-primary" onClick={handleSavePassword} disabled={savingPassword}>
-              {savingPassword ? 'Saving...' : 'Update password'}
+              {savingPassword ? t('settings.saving') : t('settings.updatePassword')}
             </button>
             {passwordMessage && (
               <div className={`settings-inline-message ${passwordMessage.type}`}>{passwordMessage.text}</div>
@@ -534,14 +536,14 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
           {/* ── Account Information ── */}
           <div className="settings-card">
-            <h3><i className="bi bi-info-circle-fill" /> Account Information</h3>
-            <p className="settings-card-sub">Details about your SafeConnect account.</p>
+            <h3><i className="bi bi-info-circle-fill" /> {t('settings.accountInfo')}</h3>
+            <p className="settings-card-sub">{t('settings.accountInfoSub')}</p>
             <div className="settings-readonly-row">
-              <span>Account type</span>
+              <span>{t('settings.accountType')}</span>
               <span>{profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : '—'}</span>
             </div>
             <div className="settings-readonly-row">
-              <span>Account status</span>
+              <span>{t('settings.accountStatus')}</span>
               <span>
                 {profile?.status
                   ? <span className="settings-status-badge">{profile.status}</span>
@@ -549,7 +551,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
               </span>
             </div>
             <div className="settings-readonly-row">
-              <span>Member since</span>
+              <span>{t('settings.memberSince')}</span>
               <span>{formatMemberSince(profile?.createdAt)}</span>
             </div>
           </div>

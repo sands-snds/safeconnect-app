@@ -37,6 +37,7 @@ export default function MobileNavbar({
     formatRelativeTime,
     describeWeatherCode,
     getCategoryIcon,
+    getCategoryColor,
 
     toggleMobileMenu,
 
@@ -97,6 +98,9 @@ export default function MobileNavbar({
                         formatRelativeTime={formatRelativeTime}
                         describeWeatherCode={describeWeatherCode}
                         getCategoryIcon={getCategoryIcon}
+                        getCategoryColor={getCategoryColor}
+                        onViewAll={openNewsPage}
+                        onClose={() => setShowNotifications(false)}
                     />
 
                 </div>

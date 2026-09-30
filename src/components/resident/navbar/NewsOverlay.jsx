@@ -1,4 +1,5 @@
 import React from "react";
+import { useLanguage } from "../../../i18n/LanguageContext";
 import AnnouncementCard from "./AnnouncementCard";
 import WeatherCard from "./WeatherCard";
 
@@ -18,6 +19,8 @@ const NewsOverlay = ({
     RAIN_ALERT_THRESHOLD
 }) => {
 
+    const { t } = useLanguage();
+
     return (
         <div
             className={`news-fullscreen ${isOpen ? "show" : ""}`}
@@ -26,7 +29,7 @@ const NewsOverlay = ({
                 <h2>
                     <i className="bi bi-newspaper"></i>
                     {" "}
-                    Latest News
+                    {t('news.latestNews')}
                 </h2>
 
                 <button
@@ -45,7 +48,7 @@ const NewsOverlay = ({
                     announcements.length === 0 &&
                     !weather && (
                         <div className="news-state-message">
-                            Loading news...
+                            {t('news.loading')}
                         </div>
                     )}
 
@@ -63,8 +66,7 @@ const NewsOverlay = ({
                     announcements.length === 0 &&
                     !weather && (
                         <div className="news-state-message">
-                            No announcements yet.
-                            Check back soon.
+                            {t('news.empty')}
                         </div>
                     )}
 
