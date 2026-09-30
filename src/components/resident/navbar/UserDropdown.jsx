@@ -1,4 +1,5 @@
 import React from "react";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 export default function UserDropdown({
   username,
@@ -10,6 +11,7 @@ export default function UserDropdown({
   onOpenSettings,
   onLogout,
 }) {
+  const { t } = useLanguage();
   // photoUrl is already a full URL — api.js resolves it before storing
   const resolved = photoUrl || null;
 
@@ -58,19 +60,19 @@ export default function UserDropdown({
 
         <button className="resident-dropdown-item" onClick={onOpenReports}>
           <i className="bi bi-file-earmark-text-fill" />
-          <span>My Reports</span>
+          <span>{t('residentNav.myReports')}</span>
         </button>
 
         <button className="resident-dropdown-item" onClick={onOpenSettings}>
           <i className="bi bi-gear-fill" />
-          <span>Settings</span>
+          <span>{t('residentNav.settings')}</span>
         </button>
 
         <div className="resident-dropdown-divider" />
 
         <button className="resident-dropdown-item" onClick={onLogout}>
           <i className="bi bi-box-arrow-right" />
-          <span>Logout</span>
+          <span>{t('residentNav.logout')}</span>
         </button>
 
       </div>

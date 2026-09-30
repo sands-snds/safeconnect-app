@@ -5,9 +5,21 @@ import {
   deleteAssistanceRequest,
   deletePettyCrimeReport
 } from '../../Services/api';
+import { useLanguage } from '../../i18n/LanguageContext';
 import ResidentEmergencyModal from "./ResidentEmergencyModal";
 import ResidentAssistanceModal from "./ResidentAssistanceModal";
 import ResidentPettyCrimeModal from "./ResidentPettyCrimeModal";
+
+const TYPE_LABEL_KEYS = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
+const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYPE_LABEL_KEYS[type]}`) : type);
+
+const STATUS_LABEL_KEYS = {
+  Received: 'received', Pending: 'pending', 'In Progress': 'inProgress',
+  Resolved: 'resolved', Completed: 'completed', Rejected: 'rejected', Cancelled: 'cancelled'
+};
+const statusLabel = (status, t) => (STATUS_LABEL_KEYS[status] ? t(`myReports.status.${STATUS_LABEL_KEYS[status]}`) : status);
+
+const STAGE_KEYS = ['received', 'inProgress', 'resolved'];
 
 // Per-type accent color/icon so the three report kinds are easy to tell
 // apart at a glance across the overview bar, tabs, and cards.
@@ -77,8 +89,10 @@ const getRelativeTime = (dateStr) => {
 };
 
 const FILTERS = ['All', 'Emergency', 'Assistance', 'Petty Crime'];
+const FILTER_LABEL_KEYS = { All: 'all', Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 
 function MyReportsPage({ isOpen, onClose, userId }) {
+  const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -101,7 +115,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
   const loadReports = async () => {
     if (!userId) {
-      setError('We could not identify your account. Please sign in again.');
+      setError(t('myReports.noAccount'));
       setLoading(false);
       return;
     }
@@ -111,7 +125,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
       const data = await fetchMyReports(userId);
       setReports(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Could not load your reports right now. Please try again later.');
+      setError(t('myReports.loadError'));
     } finally {
       setLoading(false);
     }
@@ -173,7 +187,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
   };
 
   const handleDelete = async (report) => {
-    if (!window.confirm(`Delete this ${report.type.toLowerCase()} report? This cannot be undone.`)) return;
+    if (!window.confirm(t('myReports.confirmDelete', { type: typeLabel(report.type, t).toLowerCase() }))) return;
 
     let result;
     if (report.type === 'Emergency') {
@@ -187,7 +201,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
     if (result?.success) {
       await loadReports();
     } else {
-      alert('Failed to delete report.');
+      alert(t('myReports.deleteFailed'));
     }
   };
 
@@ -801,8 +815,8 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
       <div className="myreports-header">
         <div>
-          <h2><i className="bi bi-file-earmark-text-fill"></i> My Reports</h2>
-          <p className="myreports-header-sub">Track and manage everything you've submitted</p>
+          <h2><i className="bi bi-file-earmark-text-fill"></i> {t('myReports.title')}</h2>
+          <p className="myreports-header-sub">{t('myReports.subtitle')}</p>
         </div>
         <button className="myreports-close-btn" onClick={onClose} aria-label="Close my reports">
           <i className="bi bi-x-lg"></i>
@@ -816,7 +830,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
             <div className="mr-overview">
               <div className="mr-overview-total">
                 <span className="mr-overview-total-num">{stats.total}</span>
-                <span className="mr-overview-total-label">Total Reports</span>
+                <span className="mr-overview-total-label">{t('myReports.totalReports')}</span>
               </div>
               <div className="mr-overview-bar-wrap">
                 <div className="mr-overview-bar">
@@ -826,10 +840,10 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                   {stats.other > 0 && <div className="mr-seg other" style={{ width: `${(stats.other / stats.total) * 100}%` }} />}
                 </div>
                 <div className="mr-overview-legend">
-                  <span><i className="dot pending"></i>Pending ({stats.pending})</span>
-                  <span><i className="dot progress"></i>In Progress ({stats.inProgress})</span>
-                  <span><i className="dot resolved"></i>Resolved ({stats.resolved})</span>
-                  {stats.other > 0 && <span><i className="dot other"></i>Other ({stats.other})</span>}
+                  <span><i className="dot pending"></i>{t('myReports.status.pending')} ({stats.pending})</span>
+                  <span><i className="dot progress"></i>{t('myReports.status.inProgress')} ({stats.inProgress})</span>
+                  <span><i className="dot resolved"></i>{t('myReports.status.resolved')} ({stats.resolved})</span>
+                  {stats.other > 0 && <span><i className="dot other"></i>{t('myReports.other')} ({stats.other})</span>}
                 </div>
               </div>
             </div>
@@ -843,7 +857,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                   className={`mr-tab ${activeFilter === f ? 'active' : ''}`}
                   onClick={() => setActiveFilter(f)}
                 >
-                  {f}
+                  {t(`myReports.filters.${FILTER_LABEL_KEYS[f]}`)}
                   {counts[f] > 0 && <span className="count">{counts[f]}</span>}
                 </button>
               ))}
@@ -855,14 +869,14 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                   <i className="bi bi-search"></i>
                   <input
                     type="text"
-                    placeholder="Search by title, description, location, or reference..."
+                    placeholder={t('myReports.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
                 <select className="mr-sort" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
-                  <option value="newest">Newest first</option>
-                  <option value="oldest">Oldest first</option>
+                  <option value="newest">{t('myReports.newestFirst')}</option>
+                  <option value="oldest">{t('myReports.oldestFirst')}</option>
                 </select>
                 <button className="mr-refresh-btn" onClick={loadReports} disabled={loading} aria-label="Refresh reports" title="Refresh">
                   <i className={`bi bi-arrow-clockwise ${loading ? 'spin' : ''}`}></i>
@@ -873,7 +887,9 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
           {!loading && !error && reports.length > 0 && isSearchOrFilterActive && (
             <p className="mr-result-count">
-              Showing {filteredReports.length} of {reports.length} report{reports.length === 1 ? '' : 's'}
+              {reports.length === 1
+                ? t('myReports.showingCountSingular', { shown: filteredReports.length, total: reports.length })
+                : t('myReports.showingCountPlural', { shown: filteredReports.length, total: reports.length })}
             </p>
           )}
 
@@ -897,7 +913,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
             <div className="myreports-empty">
               <div className="myreports-empty-icon error"><i className="bi bi-exclamation-circle"></i></div>
               <p className="myreports-empty-title">{error}</p>
-              <button className="myreports-retry-btn" onClick={loadReports}>Try again</button>
+              <button className="myreports-retry-btn" onClick={loadReports}>{t('myReports.tryAgain')}</button>
             </div>
           )}
 
@@ -906,17 +922,17 @@ function MyReportsPage({ isOpen, onClose, userId }) {
               <div className="myreports-empty-icon"><i className="bi bi-inbox"></i></div>
               <p className="myreports-empty-title">
                 {searchQuery.trim()
-                  ? 'No reports match your search.'
+                  ? t('myReports.noSearchMatch')
                   : activeFilter === 'All'
-                    ? "You haven't submitted any reports yet."
-                    : `You haven't submitted any ${activeFilter} reports yet.`}
+                    ? t('myReports.emptyAll')
+                    : t('myReports.emptyFiltered', { type: typeLabel(activeFilter, t) })}
               </p>
               {(searchQuery.trim() || activeFilter !== 'All') && (
                 <button
                   className="myreports-clear-search"
                   onClick={() => { setSearchQuery(''); setActiveFilter('All'); }}
                 >
-                  Clear filters
+                  {t('myReports.clearFilters')}
                 </button>
               )}
             </div>
@@ -935,13 +951,13 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                 const canEditOrDelete = r.status === 'Pending' || r.status === 'Received';
 
                 const detailItems = [];
-                if (r.contact_number) detailItems.push({ label: 'Contact Number', value: r.contact_number });
-                if (r.type === 'Emergency' && r.peopleAffected) detailItems.push({ label: 'People Affected', value: r.peopleAffected });
-                if (r.type === 'Assistance' && r.number_of_people_needing_help) detailItems.push({ label: 'People Needing Help', value: r.number_of_people_needing_help });
-                if (r.specialNeeds) detailItems.push({ label: 'Special Needs', value: r.specialNeeds });
-                if (r.suspectInfo) detailItems.push({ label: 'Suspect Info', value: r.suspectInfo });
-                if (r.report_for === 'others' && r.victim_contact) detailItems.push({ label: 'Their Contact', value: r.victim_contact });
-                if (r.report_for === 'others' && r.victim_details) detailItems.push({ label: 'Additional Details', value: r.victim_details });
+                if (r.contact_number) detailItems.push({ label: t('myReports.detail.contactNumber'), value: r.contact_number });
+                if (r.type === 'Emergency' && r.peopleAffected) detailItems.push({ label: t('myReports.detail.peopleAffected'), value: r.peopleAffected });
+                if (r.type === 'Assistance' && r.number_of_people_needing_help) detailItems.push({ label: t('myReports.detail.peopleNeedingHelp'), value: r.number_of_people_needing_help });
+                if (r.specialNeeds) detailItems.push({ label: t('myReports.detail.specialNeeds'), value: r.specialNeeds });
+                if (r.suspectInfo) detailItems.push({ label: t('myReports.detail.suspectInfo'), value: r.suspectInfo });
+                if (r.report_for === 'others' && r.victim_contact) detailItems.push({ label: t('reportForm.theirContact'), value: r.victim_contact });
+                if (r.report_for === 'others' && r.victim_details) detailItems.push({ label: t('reportForm.additionalDetails'), value: r.victim_details });
 
                 const hasMoreDetails = !!description || detailItems.length > 0 || hasCoords || !!r.photo_url;
 
@@ -952,11 +968,11 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                         <i className={`bi ${theme.icon}`}></i>
                       </div>
                       <div className="mr-card-heading">
-                        <p className="mr-card-type" style={{ color: theme.accent }}>{r.type}</p>
-                        <h3 className="mr-card-title">{r.title || 'Untitled report'}</h3>
+                        <p className="mr-card-type" style={{ color: theme.accent }}>{typeLabel(r.type, t)}</p>
+                        <h3 className="mr-card-title">{r.title || t('myReports.untitledReport')}</h3>
                       </div>
                       <span className="mr-status-pill" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
-                        {r.status}
+                        {statusLabel(r.status, t)}
                       </span>
                     </div>
 
@@ -967,14 +983,14 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                             {i > 0 && <div className={`mr-stepper-line ${i <= stageIdx ? 'done' : ''}`} />}
                             <div className={`mr-stepper-step ${i <= stageIdx ? 'done' : ''} ${i === stageIdx ? 'current' : ''}`}>
                               <span className="mr-stepper-dot"></span>
-                              <span className="mr-stepper-label">{label}</span>
+                              <span className="mr-stepper-label">{t(`myReports.status.${STAGE_KEYS[i]}`)}</span>
                             </div>
                           </React.Fragment>
                         ))}
                       </div>
                     ) : (
                       <div className="mr-terminal-badge">
-                        <i className="bi bi-x-circle-fill"></i> {r.status}
+                        <i className="bi bi-x-circle-fill"></i> {statusLabel(r.status, t)}
                       </div>
                     )}
 
@@ -994,7 +1010,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                           title="Click to copy"
                         >
                           <i className={`bi ${copiedKey === key ? 'bi-check2' : 'bi-hash'}`}></i>
-                          {copiedKey === key ? 'Copied!' : r.report_reference}
+                          {copiedKey === key ? t('myReports.copied') : r.report_reference}
                         </span>
                       )}
                     </div>
@@ -1002,7 +1018,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                     {r.report_for === 'others' && r.victim_name && (
                       <div className="mr-onbehalf">
                         <i className="bi bi-people-fill"></i>
-                        Reported on behalf of <strong>&nbsp;{r.victim_name}</strong>
+                        {t('myReports.onBehalfOf')} <strong>&nbsp;{r.victim_name}</strong>
                         {r.victim_relationship ? ` (${r.victim_relationship})` : ''}
                       </div>
                     )}
@@ -1011,12 +1027,12 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                       <div className="mr-badges">
                         {r.type === 'Emergency' && r.severity && (
                           <span className="mr-mini-badge" style={{ background: getLevelStyle(r.severity).bg, color: getLevelStyle(r.severity).color }}>
-                            Severity: {r.severity}
+                            {t('myReports.severity')}: {r.severity}
                           </span>
                         )}
                         {r.type === 'Assistance' && r.urgency && (
                           <span className="mr-mini-badge" style={{ background: getLevelStyle(r.urgency).bg, color: getLevelStyle(r.urgency).color }}>
-                            Urgency: {r.urgency}
+                            {t('assistanceModal.urgency')}: {r.urgency}
                           </span>
                         )}
                       </div>
@@ -1035,14 +1051,14 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                             ))}
                             {hasCoords && (
                               <div className="mr-detail-item">
-                                <span className="mr-detail-label">Map</span>
+                                <span className="mr-detail-label">{t('myReports.map')}</span>
                                 <span className="mr-detail-value">
                                   <a
                                     href={`https://www.google.com/maps?q=${r.latitude},${r.longitude}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    <i className="bi bi-box-arrow-up-right"></i> Open in Google Maps
+                                    <i className="bi bi-box-arrow-up-right"></i> {t('myReports.openInMaps')}
                                   </a>
                                 </span>
                               </div>
@@ -1065,17 +1081,17 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                       {hasMoreDetails ? (
                         <button className="mr-toggle-btn" onClick={() => toggleExpanded(key)}>
                           <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
-                          {isExpanded ? 'Hide Details' : 'View Details'}
+                          {isExpanded ? t('myReports.hideDetails') : t('myReports.viewDetails')}
                         </button>
                       ) : <span />}
 
                       {canEditOrDelete && (
                         <div className="mr-actions">
                           <button className="mr-edit-btn" onClick={() => handleEdit(r)}>
-                            <i className="bi bi-pencil"></i> Edit
+                            <i className="bi bi-pencil"></i> {t('myReports.edit')}
                           </button>
                           <button className="mr-delete-btn" onClick={() => handleDelete(r)}>
-                            <i className="bi bi-trash"></i> Delete
+                            <i className="bi bi-trash"></i> {t('myReports.delete')}
                           </button>
                         </div>
                       )}

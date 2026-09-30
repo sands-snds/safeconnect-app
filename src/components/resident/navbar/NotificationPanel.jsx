@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 export default function NotificationPanel({
     show,
@@ -28,6 +29,7 @@ export default function NotificationPanel({
     onViewAll,
     onClose
 }) {
+    const { t } = useLanguage();
     const [tab, setTab] = useState('all');
 
     if (!show) return null;
@@ -43,13 +45,13 @@ export default function NotificationPanel({
         <div className="panel-dropdown show">
             <div className="panel-header">
                 <div className="panel-header-title">
-                    <h4>Notifications</h4>
+                    <h4>{t('notificationPanel.title')}</h4>
                     {unreadCount > 0 && <span className="panel-unread-badge">{unreadCount}</span>}
                 </div>
                 <div className="panel-header-actions">
                     {unreadCount > 0 && (
                         <button onClick={markAllAsRead}>
-                            <i className="bi bi-check2-all"></i> Mark all read
+                            <i className="bi bi-check2-all"></i> {t('notificationPanel.markAllRead')}
                         </button>
                     )}
                     {onClose && (
@@ -62,10 +64,10 @@ export default function NotificationPanel({
 
             <div className="panel-tabs">
                 <button className={`panel-tab ${tab === 'all' ? 'active' : ''}`} onClick={() => setTab('all')}>
-                    All
+                    {t('notificationPanel.all')}
                 </button>
                 <button className={`panel-tab ${tab === 'unread' ? 'active' : ''}`} onClick={() => setTab('unread')}>
-                    Unread{unreadCount > 0 ? ` (${unreadCount})` : ''}
+                    {t('notificationPanel.unread')}{unreadCount > 0 ? ` (${unreadCount})` : ''}
                 </button>
             </div>
 
@@ -76,12 +78,11 @@ export default function NotificationPanel({
                             <i className={`bi ${describeWeatherCode(weather.code).icon}`} />
                         </div>
                         <div className="notification-text">
-                            <p className="n-title">Weather Advisory</p>
+                            <p className="n-title">{t('notificationPanel.weatherAdvisory')}</p>
                             <p className="n-message">
-                                It's possible to rain today ({weather.rainChance}% chance).
-                                High {weather.tMax}°C, low {weather.tMin}°C.
+                                {t('notificationPanel.weatherBody', { chance: weather.rainChance, tMax: weather.tMax, tMin: weather.tMin })}
                             </p>
-                            <span className="n-time">Today</span>
+                            <span className="n-time">{t('notificationPanel.today')}</span>
                         </div>
                         <span className="unread-dot"></span>
                     </div>
@@ -111,7 +112,7 @@ export default function NotificationPanel({
                 {isEmpty && (
                     <div className="notification-empty">
                         <i className={`bi ${tab === 'unread' ? 'bi-check2-circle' : 'bi-bell-slash'}`}></i>
-                        <p>{tab === 'unread' ? "You're all caught up!" : 'No notifications yet.'}</p>
+                        <p>{tab === 'unread' ? t('notificationPanel.caughtUp') : t('notificationPanel.noNotifications')}</p>
                     </div>
                 )}
 
@@ -133,7 +134,7 @@ export default function NotificationPanel({
                             <div className="notification-text">
                                 <div className="n-title-row">
                                     <p className="n-title">{n.title}</p>
-                                    {n.isPersonal && <span className="n-tag">Your Report</span>}
+                                    {n.isPersonal && <span className="n-tag">{t('notificationPanel.yourReport')}</span>}
                                 </div>
                                 <p className="n-message">{n.message}</p>
                                 <span className="n-time">{formatRelativeTime(n.date)}</span>
@@ -147,7 +148,7 @@ export default function NotificationPanel({
 
             {onViewAll && (
                 <button className="panel-footer-link" onClick={onViewAll}>
-                    View all announcements <i className="bi bi-arrow-right"></i>
+                    {t('notificationPanel.viewAll')} <i className="bi bi-arrow-right"></i>
                 </button>
             )}
         </div>

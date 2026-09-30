@@ -1,22 +1,17 @@
 import React from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const FEATURES = [
-  {
-    icon: 'bi-exclamation-octagon-fill',
-    label: 'Emergency Reports',
-    color: '#ef4444',
-    gradient: 'linear-gradient(135deg, #dc2626 0%, #f97316 100%)',
-    desc: 'Report fires, floods, or any life-threatening situation happening right now — help is one tap away.',
-    size: 'featured'
-  },
-  { icon: 'bi-hand-heart-fill', label: 'Assistance Requests', color: '#f97316', desc: 'Request rescue, relief goods, or support during or after a disaster.', size: 'small' },
-  { icon: 'bi-eye-slash-fill', label: 'Crime Reports', color: '#8b5cf6', desc: 'Report theft, vandalism, or suspicious activity in your area.', size: 'small' },
-  { icon: 'bi-megaphone-fill', label: 'Announcements', color: '#0ea5e9', desc: 'Read the latest barangay alerts, updates, and community news.', size: 'small' },
-  { icon: 'bi-cloud-lightning-rain-fill', label: 'Live Weather', color: '#14b8a6', desc: 'Check real-time weather conditions before heading out.', size: 'small' },
-  { icon: 'bi-person-badge-fill', label: 'Your Profile', color: '#6366f1', desc: 'Manage your name, photo, and account password anytime.', size: 'wide' },
+  { key: 'emergencyReports',  icon: 'bi-exclamation-octagon-fill',      color: '#ef4444', gradient: 'linear-gradient(135deg, #dc2626 0%, #f97316 100%)', size: 'featured' },
+  { key: 'assistanceRequests',icon: 'bi-hand-heart-fill',               color: '#f97316', size: 'small' },
+  { key: 'crimeReports',      icon: 'bi-eye-slash-fill',                color: '#8b5cf6', size: 'small' },
+  { key: 'announcements',     icon: 'bi-megaphone-fill',                color: '#0ea5e9', size: 'small' },
+  { key: 'liveWeather',       icon: 'bi-cloud-lightning-rain-fill',     color: '#14b8a6', size: 'small' },
+  { key: 'yourProfile',       icon: 'bi-person-badge-fill',             color: '#6366f1', size: 'wide' },
 ];
 
 export default function Services() {
+  const { t } = useLanguage();
   return (
     <section id="services" style={{ margin: 0, padding: 0 }}>
       <style>{`
@@ -98,49 +93,46 @@ export default function Services() {
 
           <div className="svc-intro">
             <div className="svc-badge">
-              <i className="bi bi-stars" /> What You Can Do
+              <i className="bi bi-stars" /> {t('services.badge')}
             </div>
-            <h2>Everything you need, in one place.</h2>
-            <p>
-              From reporting an emergency to checking the weather — here's what's waiting for
-              you the moment you sign in.
-            </p>
+            <h2>{t('services.title')}</h2>
+            <p>{t('services.subtitle')}</p>
           </div>
 
           <div className="svc-bento">
             {FEATURES.map((item) => {
               if (item.size === 'featured') {
                 return (
-                  <div key={item.label} className="svc-tile featured" style={{ background: item.gradient }}>
+                  <div key={item.key} className="svc-tile featured" style={{ background: item.gradient }}>
                     <i className={`bi ${item.icon} svc-tile-watermark`} />
                     <div className="svc-tile-icon light"><i className={`bi ${item.icon}`} /></div>
-                    <h3>{item.label}</h3>
-                    <p>{item.desc}</p>
+                    <h3>{t(`services.features.${item.key}.label`)}</h3>
+                    <p>{t(`services.features.${item.key}.desc`)}</p>
                   </div>
                 );
               }
               if (item.size === 'wide') {
                 return (
-                  <div key={item.label} className="svc-tile wide">
+                  <div key={item.key} className="svc-tile wide">
                     <div className="svc-wide-inner">
                       <div className="svc-tile-icon" style={{ background: `${item.color}18`, color: item.color }}>
                         <i className={`bi ${item.icon}`} />
                       </div>
                       <div>
-                        <h3>{item.label}</h3>
-                        <p>{item.desc}</p>
+                        <h3>{t(`services.features.${item.key}.label`)}</h3>
+                        <p>{t(`services.features.${item.key}.desc`)}</p>
                       </div>
                     </div>
                   </div>
                 );
               }
               return (
-                <div key={item.label} className="svc-tile small">
+                <div key={item.key} className="svc-tile small">
                   <div className="svc-tile-icon" style={{ background: `${item.color}18`, color: item.color }}>
                     <i className={`bi ${item.icon}`} />
                   </div>
-                  <h3>{item.label}</h3>
-                  <p>{item.desc}</p>
+                  <h3>{t(`services.features.${item.key}.label`)}</h3>
+                  <p>{t(`services.features.${item.key}.desc`)}</p>
                 </div>
               );
             })}

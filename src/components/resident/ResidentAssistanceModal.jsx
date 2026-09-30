@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
+import { useLanguage } from '../../i18n/LanguageContext';
 const SERVICE_AREA = {
   barangay: 'Santa Fe',
   city: 'Dasmariñas',
@@ -11,13 +12,18 @@ const SERVICE_AREA = {
   lng: 120.9644
 };
 const SPECIAL_NEEDS_OPTIONS = [
-  'Elderly',
-  'Children',
-  'Persons with disabilities',
-  'Pregnant',
-  'Pets'
+  { key: 'elderly', value: 'Elderly' },
+  { key: 'children', value: 'Children' },
+  { key: 'pwd', value: 'Persons with disabilities' },
+  { key: 'pregnant', value: 'Pregnant' },
+  { key: 'pets', value: 'Pets' }
 ];
-const URGENCY_OPTIONS = ['Low', 'Medium', 'High', 'Critical'];
+const URGENCY_OPTIONS = [
+  { key: 'low', value: 'Low' },
+  { key: 'medium', value: 'Medium' },
+  { key: 'high', value: 'High' },
+  { key: 'critical', value: 'Critical' }
+];
 
 // Not everyone in the barangay knows the person they're requesting for by
 // name — these relationships make the name field optional instead of required.
@@ -60,6 +66,7 @@ const formatRemaining = (ms) => {
   return `${minutes}m`;
 };
 function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated }) {
+  const { t } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     assistanceType: '',
@@ -156,7 +163,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
-        alert(`Please wait ${formatRemaining(remaining)} before submitting another assistance request.`);
+        alert(t('assistanceModal.cooldownAlert', { time: formatRemaining(remaining) }));
         return;
       }
     }
@@ -168,23 +175,27 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 
     if (isEditing) {
       if (!formData.location.trim()) {
-        alert('Please provide a location.');
+        alert(t('reportForm.provideLocation'));
         return;
       }
     } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
-      alert('Please pin the location on the map, or enter the house/lot number and street.');
+      alert(t('reportForm.pinLocation'));
       return;
     }
     if (reportFor === 'others' && !victimRelationship) {
-      alert('Please select your relationship to them.');
+      alert(t('reportForm.selectRelationship'));
       return;
     }
     if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
-      alert('Please specify your relationship to them.');
+      alert(t('reportForm.specifyRelationship'));
       return;
     }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
-      alert('Please enter the name of the person you are requesting for.');
+      alert(t('assistanceModal.enterNameRequesting'));
+      return;
+    }
+    if (reportFor === 'others' && !victimDetails.trim()) {
+      alert(t('assistanceModal.provideDetailsRequesting'));
       return;
     }
     const currentUser = getCurrentUser();
@@ -207,9 +218,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           urgency: formData.urgency || null
         });
         if (!result.success) {
-          throw new Error(result.message || 'Failed to update request');
+          throw new Error(result.message || t('assistanceModal.updateFailed'));
         }
-        alert('Assistance request updated successfully.');
+        alert(t('assistanceModal.updateSuccess'));
         onUpdated && onUpdated();
         onClose();
         return;
@@ -249,7 +260,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         victimDetails: reportFor === 'others' ? victimDetails.trim() || null : null
       });
       if (!result.success) {
-        throw new Error(result.message || 'Failed to submit request');
+        throw new Error(result.message || t('assistanceModal.submitFailed'));
       }
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
       setCooldownRemaining(REPORT_COOLDOWN_MS);
@@ -273,7 +284,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('There was an error submitting your request. Please try again.');
+      alert(t('assistanceModal.submitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -352,7 +363,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
             fontWeight: '700',
             color: '#1f2937',
             flex: 1
-          }}>{isEditing ? 'Edit Assistance Request' : 'Request Assistance'}</h2>
+          }}>{isEditing ? t('assistanceModal.editTitle') : t('assistanceModal.requestTitle')}</h2>
 <button
             onClick={onClose}
             type="button"
@@ -379,65 +390,65 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           {/* ── ADDED: Reporting For toggle ── */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-              Who are you requesting for?
+              {t('assistanceModal.whoRequestingFor')}
             </label>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button type="button"
                 onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails(''); }}
                 style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'self' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'self' ? '#fef2f2' : '#fff', color: reportFor === 'self' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
-                <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i>Myself
+                <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i>{t('assistanceModal.myself')}
               </button>
               <button type="button"
                 onClick={() => setReportFor('others')}
                 style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'others' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'others' ? '#fef2f2' : '#fff', color: reportFor === 'others' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
-                <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i>Someone Else
+                <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i>{t('assistanceModal.someoneElse')}
               </button>
             </div>
           </div>
           {reportFor === 'others' && (
             <div style={{ marginBottom: '16px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', padding: '14px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
-                <i className="bi bi-person-exclamation"></i> Person You Are Requesting For
+                <i className="bi bi-person-exclamation"></i> {t('assistanceModal.personBoxLabel')}
               </label>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Your Relationship <span style={{ color: '#dc3545' }}>*</span></label>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.relationship')} <span style={{ color: '#dc3545' }}>*</span></label>
               <select value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
-                <option value="">Select relationship</option>
-                <option value="Family Member">Family Member</option>
-                <option value="Friend">Friend</option>
-                <option value="Neighbor">Neighbor</option>
-                <option value="Colleague">Colleague</option>
-                <option value="Stranger">Stranger</option>
-                <option value="Other">Other (not listed — please specify)</option>
+                <option value="">{t('reportForm.relationshipPlaceholder')}</option>
+                <option value="Family Member">{t('reportForm.relationshipOptions.family')}</option>
+                <option value="Friend">{t('reportForm.relationshipOptions.friend')}</option>
+                <option value="Neighbor">{t('reportForm.relationshipOptions.neighbor')}</option>
+                <option value="Colleague">{t('reportForm.relationshipOptions.colleague')}</option>
+                <option value="Stranger">{t('reportForm.relationshipOptions.stranger')}</option>
+                <option value="Other">{t('reportForm.relationshipOptions.other')}</option>
               </select>
               {victimRelationship === 'Other' && (
-                <input type="text" placeholder="Please specify your relationship to them"
+                <input type="text" placeholder={t('reportForm.relationshipOtherPlaceholder')}
                   value={victimRelationshipOther} onChange={e => setVictimRelationshipOther(e.target.value)}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }} />
               )}
               <div className="rf-2col" style={{ gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-                    Their Name{' '}
+                    {t('reportForm.theirName')}{' '}
                     {isVictimNameOptional
-                      ? <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span>
+                      ? <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span>
                       : <span style={{ color: '#dc3545' }}>*</span>}
                   </label>
-                  <input type="text" placeholder="Full name" value={victimName} onChange={e => setVictimName(e.target.value)}
+                  <input type="text" placeholder={t('reportForm.namePlaceholder')} value={victimName} onChange={e => setVictimName(e.target.value)}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>Their Contact <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span></label>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.theirContact')} <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span></label>
                   <input type="tel" inputMode="numeric" placeholder="09XXXXXXXXX" maxLength={11} value={victimContact}
                     onChange={e => setVictimContact(e.target.value.replace(/\D/g, '').slice(0, 11))}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
                 </div>
               </div>
               <label style={{ display: 'block', margin: '10px 0 6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-                Additional Details <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span>
+                {t('reportForm.additionalDetails')} <span style={{ color: '#dc3545' }}>*</span>
               </label>
               <textarea
-                placeholder="If you don't know their name, describe them or their location — e.g. 'elderly woman near the covered court, wearing a red jacket'"
+                placeholder={t('reportForm.additionalDetailsPlaceholder')}
                 value={victimDetails} onChange={e => setVictimDetails(e.target.value)}
                 rows={2}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', minHeight: '60px', fontFamily: 'inherit', resize: 'vertical' }} />
@@ -460,7 +471,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 className="bi bi-list-check"
                 style={{ color: '#374151', fontSize: '14px' }}
 ></i>
-              Assistance Type <span style={{ color: '#dc3545' }}>*</span>
+              {t('assistanceModal.assistanceType')} <span style={{ color: '#dc3545' }}>*</span>
 </label>
 <select
               name="assistanceType"
@@ -477,12 +488,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 outline: 'none'
               }}
 >
-<option value="">Select assistance type</option>
+<option value="">{t('assistanceModal.selectType')}</option>
 <option value="Food and Water">
-                Food and Water
+                {t('assistanceModal.typeFoodWater')}
 </option>
 <option value="Medical Aid">
-                Medical Aid
+                {t('assistanceModal.typeMedicalAid')}
 </option>
 </select>
 </div>
@@ -500,7 +511,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 className="bi bi-exclamation-diamond-fill"
                 style={{ color: '#374151', fontSize: '14px' }}
 ></i>
-              Urgency
+              {t('assistanceModal.urgency')}
 </label>
 <select
               name="urgency"
@@ -516,9 +527,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 outline: 'none'
               }}
 >
-<option value="">Select urgency (optional)</option>
+<option value="">{t('assistanceModal.selectUrgency')}</option>
               {URGENCY_OPTIONS.map((opt) => (
-<option key={opt} value={opt}>{opt}</option>
+<option key={opt.key} value={opt.value}>{t(`assistanceModal.urgencyOptions.${opt.key}`)}</option>
               ))}
 </select>
 </div>
@@ -540,7 +551,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 margin: 0
               }}>
 <i className="bi bi-geo-alt-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
-                Current Address <span style={{ color: '#dc3545' }}>*</span>
+                {t('assistanceModal.currentAddress')} <span style={{ color: '#dc3545' }}>*</span>
 </label>
 {!isEditing && (
 <button
@@ -565,11 +576,11 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 >
                 {isLocating ? (
 <>
-<i className="bi bi-arrow-repeat"></i> Locating...
+<i className="bi bi-arrow-repeat"></i> {t('reportForm.locating')}
 </>
                 ) : (
 <>
-<i className="bi bi-crosshair"></i> Use my current location
+<i className="bi bi-crosshair"></i> {t('reportForm.useCurrentLocation')}
 </>
                 )}
 </button>
@@ -581,7 +592,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
-                  placeholder="Full address"
+                  placeholder={t('reportForm.fullAddress')}
                   required
                   disabled={isSubmitting}
                   style={{
@@ -603,7 +614,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 name="houseNumber"
                 value={formData.houseNumber}
                 onChange={handleChange}
-                placeholder="House / Lot / Block No."
+                placeholder={t('reportForm.houseNumberPlaceholder')}
                 required={!gpsCoords}
                 disabled={isSubmitting}
                 style={{
@@ -622,7 +633,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 name="street"
                 value={formData.street}
                 onChange={handleChange}
-                placeholder="Street"
+                placeholder={t('reportForm.streetPlaceholder')}
                 required={!gpsCoords}
                 disabled={isSubmitting}
                 style={{
@@ -642,7 +653,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               name="floorUnit"
               value={formData.floorUnit}
               onChange={handleChange}
-              placeholder="Floor / Unit / Room (Optional)"
+              placeholder={t('reportForm.floorUnitPlaceholder')}
               disabled={isSubmitting}
               style={{
                 width: '100%',
@@ -661,7 +672,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               name="landmark"
               value={formData.landmark}
               onChange={handleChange}
-              placeholder="Landmark / directions (e.g. beside the covered court, blue gate)"
+              placeholder={t('reportForm.landmarkPlaceholder')}
               disabled={isSubmitting}
               style={{
                 width: '100%',
@@ -683,7 +694,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 </div>
             )}
 <div style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
-              Requests are limited to Barangay Santa Fe, Dasmariñas, Cavite, Philippines
+              {t('assistanceModal.serviceAreaNote')}
 </div>
 <div ref={locationSectionRef}>
   <LocationPickerMap
@@ -706,14 +717,14 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               fontSize: '13px'
             }}>
 <i className="bi bi-chat-left-text-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
-              Describe Your Situation <span style={{ color: '#dc3545' }}>*</span>
+              {t('assistanceModal.describeSituation')} <span style={{ color: '#dc3545' }}>*</span>
 </label>
 <textarea
               name="situation"
               value={formData.situation}
               onChange={handleChange}
               rows="4"
-              placeholder="Please provide details about what kind of help you need..."
+              placeholder={t('assistanceModal.situationPlaceholder')}
               required
               style={{
                 width: '100%',
@@ -740,14 +751,14 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               fontSize: '13px'
             }}>
 <i className="bi bi-info-circle-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
-              Special Needs / Considerations
+              {t('emergencyModal.specialNeeds')}
 </label>
 <div className="rf-2col" style={{
               gap: '8px'
             }}>
               {SPECIAL_NEEDS_OPTIONS.map((option) => (
 <label
-                  key={option}
+                  key={option.key}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -762,8 +773,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 >
 <input
                     type="checkbox"
-                    checked={formData.special.includes(option)}
-                    onChange={() => handleSpecialToggle(option)}
+                    checked={formData.special.includes(option.value)}
+                    onChange={() => handleSpecialToggle(option.value)}
                     style={{
                       width: '16px',
                       height: '16px',
@@ -772,7 +783,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                       accentColor: '#dc3545'
                     }}
                   />
-                  {option}
+                  {t(`emergencyModal.specialNeedsOptions.${option.key}`)}
 </label>
               ))}
 </div>
@@ -803,7 +814,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 }}
               />
 <span>
-                I confirm that the information provided is accurate and consent to be contacted by the response team.
+                {t('reportForm.consent')}
 </span>
 </label>
 </div>
@@ -818,7 +829,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               borderRadius: '8px',
               marginBottom: '8px'
             }}>
-<i className="bi bi-clock-history"></i> You can submit another assistance request in {formatRemaining(cooldownRemaining)}.
+<i className="bi bi-clock-history"></i> {t('assistanceModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}
 </div>
           )}
 <div style={{
@@ -850,7 +861,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               onMouseEnter={(e) => !isSubmitting && (e.target.style.background = '#4b5563')}
               onMouseLeave={(e) => e.target.style.background = '#6b7280'}
 >
-<i className="bi bi-x-circle-fill"></i> Cancel
+<i className="bi bi-x-circle-fill"></i> {t('reportForm.cancel')}
 </button>
 <button
               type="submit"
@@ -876,11 +887,11 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 >
               {isSubmitting ? (
 <>
-<i className="bi bi-hourglass-split"></i> {isEditing ? 'Saving...' : 'Submitting...'}
+<i className="bi bi-hourglass-split"></i> {isEditing ? t('reportForm.saving') : t('reportForm.submitting')}
 </>
               ) : (
 <>
-<i className="bi bi-send-fill"></i> {isEditing ? 'Save Changes' : 'Submit Request'}
+<i className="bi bi-send-fill"></i> {isEditing ? t('reportForm.saveChanges') : t('assistanceModal.submitRequest')}
 </>
               )}
 </button>
@@ -937,10 +948,10 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         <i className="bi bi-check-lg"></i>
       </div>
       <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 700, color: '#1f2937' }}>
-        Request Submitted
+        {t('assistanceModal.requestSubmitted')}
       </h3>
       <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#4b5563', lineHeight: 1.5 }}>
-        Your assistance request has been submitted successfully. Our team will contact you soon.
+        {t('assistanceModal.requestSubmittedBody')}
       </p>
       <button
         type="button"
@@ -957,7 +968,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           width: '100%'
         }}
       >
-        Done
+        {t('assistanceModal.done')}
       </button>
     </div>
   </div>

@@ -1,36 +1,20 @@
 import React from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const STEPS = [
-  {
-    icon: 'bi-send-fill',
-    title: 'Submit a report',
-    body: 'Open SafeConnect and report an emergency, request assistance, or flag a petty crime — your location and photos are attached automatically.',
-    color: '#dc2626',
-    bg: '#fef2f2'
-  },
-  {
-    icon: 'bi-bell-fill',
-    title: 'Your barangay responds',
-    body: 'Your report reaches the barangay response team the moment you send it, any hour of the day.',
-    color: '#d97706',
-    bg: '#fffbeb'
-  },
-  {
-    icon: 'bi-check-circle-fill',
-    title: 'Stay updated',
-    body: 'Follow your report in real time — from received, to in progress, to resolved.',
-    color: '#0d9488',
-    bg: '#f0fdfa'
-  },
+  { key: 'submit',      icon: 'bi-send-fill',          color: '#dc2626', bg: '#fef2f2' },
+  { key: 'respond',     icon: 'bi-bell-fill',           color: '#d97706', bg: '#fffbeb' },
+  { key: 'stayUpdated', icon: 'bi-check-circle-fill',   color: '#0d9488', bg: '#f0fdfa' },
 ];
 
 const STATS = [
-  { icon: 'bi-clock-history', value: '24/7', label: 'Always On' },
-  { icon: 'bi-geo-alt-fill', value: 'GPS', label: 'Tagged Reports' },
-  { icon: 'bi-lightning-charge-fill', value: 'Live', label: 'Status Updates' },
+  { key: 'alwaysOn',    icon: 'bi-clock-history',            value: '24/7' },
+  { key: 'gpsTagged',   icon: 'bi-geo-alt-fill',              value: 'GPS' },
+  { key: 'liveUpdates', icon: 'bi-lightning-charge-fill',     value: 'Live' },
 ];
 
 export default function About() {
+  const { t } = useLanguage();
   return (
     <section id="about" style={{ margin: 0, padding: 0, position: 'relative' }}>
       <style>{`
@@ -191,21 +175,18 @@ export default function About() {
 
           <div className="ab-intro">
             <div className="ab-badge">
-              <i className="bi bi-info-circle-fill" /> About SafeConnect
+              <i className="bi bi-info-circle-fill" /> {t('about.badge')}
             </div>
-            <h2>One app. <span className="ab-highlight">A safer</span> Barangay Santa Fe.</h2>
-            <p>
-              SafeConnect connects every resident directly to the barangay's emergency response
-              team — report incidents, request help, and stay informed, all in one place.
-            </p>
+            <h2>{t('about.titlePrefix')} <span className="ab-highlight">{t('about.titleHighlight')}</span> {t('about.titleSuffix')}</h2>
+            <p>{t('about.intro')}</p>
 
             <div className="ab-stats">
               {STATS.map((s) => (
-                <div className="ab-stat-chip" key={s.label}>
+                <div className="ab-stat-chip" key={s.key}>
                   <i className={`bi ${s.icon}`} />
                   <div>
                     <strong>{s.value}</strong>
-                    <span>{s.label}</span>
+                    <span>{t(`about.stats.${s.key}`)}</span>
                   </div>
                 </div>
               ))}
@@ -214,7 +195,7 @@ export default function About() {
 
           <div className="ab-steps-wrap">
             {STEPS.map((step, i) => (
-              <div className={`ab-step-row ${i % 2 === 1 ? 'reverse' : ''}`} key={step.title}>
+              <div className={`ab-step-row ${i % 2 === 1 ? 'reverse' : ''}`} key={step.key}>
                 <div className="ab-step-visual" style={{ background: step.bg }}>
                   <span className="ab-step-num" style={{ color: `${step.color}25` }}>0{i + 1}</span>
                   <div className="ab-step-icon" style={{ background: step.color }}>
@@ -222,8 +203,8 @@ export default function About() {
                   </div>
                 </div>
                 <div className="ab-step-text">
-                  <h3>{step.title}</h3>
-                  <p>{step.body}</p>
+                  <h3>{t(`about.steps.${step.key}.title`)}</h3>
+                  <p>{t(`about.steps.${step.key}.body`)}</p>
                 </div>
               </div>
             ))}

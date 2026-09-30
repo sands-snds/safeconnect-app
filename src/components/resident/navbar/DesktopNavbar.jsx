@@ -1,4 +1,6 @@
 import React from "react";
+import { useLanguage } from "../../../i18n/LanguageContext";
+import LanguageToggle from "../../shared/LanguageToggle";
 
 import NotificationPanel from "./NotificationPanel";
 import UserDropdown from "./UserDropdown";
@@ -47,6 +49,8 @@ export default function DesktopNavbar({
 
 }) {
 
+    const { t } = useLanguage();
+
     return (
 
         <div className="resident-nav-links">
@@ -56,7 +60,7 @@ export default function DesktopNavbar({
                 onClick={handleHomeClick}
             >
                 <i className="bi bi-house-door-fill"></i>
-                <span>Home</span>
+                <span>{t('residentNav.home')}</span>
             </button>
 
             <button
@@ -66,7 +70,7 @@ export default function DesktopNavbar({
                 }
             >
                 <i className="bi bi-exclamation-triangle-fill"></i>
-                <span>Emergency</span>
+                <span>{t('residentNav.emergency')}</span>
             </button>
 
             <button
@@ -74,7 +78,7 @@ export default function DesktopNavbar({
                 onClick={openNewsPage}
             >
                 <i className="bi bi-newspaper"></i>
-                <span>News</span>
+                <span>{t('residentNav.news')}</span>
             </button>
 
             <div
@@ -119,6 +123,8 @@ export default function DesktopNavbar({
                 />
 
             </div>
+
+            <LanguageToggle variant="light" className="resident-lang-toggle" />
 
             <UserDropdown
                 username={username}

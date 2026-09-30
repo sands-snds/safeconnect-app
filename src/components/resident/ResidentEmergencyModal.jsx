@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createEmergencyReport, updateEmergencyReport } from '../../Services/api';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
+import { useLanguage } from '../../i18n/LanguageContext';
  
  
 // Fixed service area — form only accepts reports from this barangay
@@ -17,11 +18,11 @@ const SERVICE_AREA = {
 const PEOPLE_AFFECTED_OPTIONS = ['1-10', '11-20', '21-30', '31-40'];
  
 const SPECIAL_NEEDS_OPTIONS = [
-  'Elderly',
-  'Children',
-  'Persons with disabilities',
-  'Pregnant',
-  'Pets'
+  { key: 'elderly', value: 'Elderly' },
+  { key: 'children', value: 'Children' },
+  { key: 'pwd', value: 'Persons with disabilities' },
+  { key: 'pregnant', value: 'Pregnant' },
+  { key: 'pets', value: 'Pets' }
 ];
 
 // Not everyone in the barangay knows the person they're reporting for by
@@ -94,6 +95,7 @@ const formatRemaining = (ms) => {
 };
  
 function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, editingReport, onUpdated }) {
+  const { t } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     emergencyType: '',
@@ -215,17 +217,17 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         ALLOWED_MEDIA_TYPES.includes(file.type) || ALLOWED_MEDIA_EXTENSIONS.test(file.name);
  
       if (!isAllowed) {
-        alert('Only JPG/JPEG images or MP4/MOV/WEBM videos are allowed.');
+        alert(t('reportForm.mediaTypeError'));
         e.target.value = '';
         setFormData((prev) => ({ ...prev, media: null, mediaPreviewUrl: null, mediaType: null }));
         return;
       }
- 
+
       const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|webm)$/i.test(file.name);
       const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
- 
+
       if (file.size > maxSize) {
-        alert(`File is too large (max ${isVideo ? '50MB for videos' : '20MB for images'}).`);
+        alert(isVideo ? t('reportForm.mediaTooLargeVideo') : t('reportForm.mediaTooLargeImage'));
         e.target.value = '';
         setFormData((prev) => ({ ...prev, media: null, mediaPreviewUrl: null, mediaType: null }));
         return;
@@ -328,11 +330,11 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
-        alert(`Please wait ${formatRemaining(remaining)} before submitting another emergency report.`);
+        alert(t('emergencyModal.cooldownAlert', { time: formatRemaining(remaining) }));
         return;
       }
     }
- 
+
     // The map already shows why; bring it into view.
     if (isOutsideSantaFe) {
       locationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -341,32 +343,36 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
 
     if (isEditing) {
       if (!formData.location.trim()) {
-        alert('Please provide a location.');
+        alert(t('reportForm.provideLocation'));
         return;
       }
     } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
-      alert('Please pin the location on the map, or enter the house/lot number and street.');
+      alert(t('reportForm.pinLocation'));
       return;
     }
- 
+
     // Media is required when filing a new report, but an edit already has a
     // photo/video on file — only require a new one if the resident chooses
     // to replace it.
     if (!isEditing && !formData.media) {
-      alert('Please attach a photo or video of the incident. This is required.');
+      alert(t('emergencyModal.mediaRequired'));
       return;
     }
 
     if (reportFor === 'others' && !victimRelationship) {
-      alert('Please select your relationship to them.');
+      alert(t('reportForm.selectRelationship'));
       return;
     }
     if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
-      alert('Please specify your relationship to them.');
+      alert(t('reportForm.specifyRelationship'));
       return;
     }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
-      alert('Please enter the name of the person you are reporting for.');
+      alert(t('reportForm.enterName'));
+      return;
+    }
+    if (reportFor === 'others' && !victimDetails.trim()) {
+      alert(t('reportForm.provideDetails'));
       return;
     }
 
@@ -402,9 +408,9 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           ...(mediaUrl ? { photoUrl: mediaUrl, mediaType: formData.mediaType || null } : {})
         });
         if (!result.success) {
-          throw new Error(result.message || 'Failed to update report');
+          throw new Error(result.message || t('reportForm.updateFailed'));
         }
-        alert('Emergency report updated successfully.');
+        alert(t('emergencyModal.updateSuccess'));
         onUpdated && onUpdated();
         onClose();
         return;
@@ -462,7 +468,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       });
  
       if (!result.success) {
-        throw new Error(result.message || 'Failed to submit report');
+        throw new Error(result.message || t('reportForm.submitFailed'));
       }
  
       // Start this modal's own 1-hour cooldown for the currently logged-in account
@@ -480,7 +486,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
  
     } catch (error) {
       console.error('Error submitting report:', error);
-      alert('Failed to submit report. Please try again or call emergency hotline: 911');
+      alert(t('emergencyModal.submitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -1017,7 +1023,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               <div className="header-icon">
                 <i className="bi bi-exclamation-triangle-fill"></i>
               </div>
-              <h2 className="modal-title">{isEditing ? `Edit ${type || 'Emergency'} Report` : `Report ${type || 'an Emergency'}`}</h2>
+              <h2 className="modal-title">{isEditing ? t('emergencyModal.editTitle', { type: type || t('emergencyModal.defaultTypeEdit') }) : t('emergencyModal.reportTitle', { type: type || t('emergencyModal.defaultTypeReport') })}</h2>
               <button
                 className="close-button"
                 onClick={onClose}
@@ -1031,7 +1037,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
             <form className="modal-form" onSubmit={handleSubmit}>
 
               <div className="form-group">
-                <label className="form-label">Who are you reporting for?</label>
+                <label className="form-label">{t('reportForm.reportingFor')}</label>
                 <div className="reportfor-toggle">
                   <button
                     type="button"
@@ -1039,7 +1045,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails(''); }}
                     disabled={isSubmitting}
                   >
-                    <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i> Reporting for Myself
+                    <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i> {t('reportForm.self')}
                   </button>
                   <button
                     type="button"
@@ -1047,7 +1053,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     onClick={() => setReportFor('others')}
                     disabled={isSubmitting}
                   >
-                    <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i> Reporting for Others
+                    <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i> {t('reportForm.others')}
                   </button>
                 </div>
               </div>
@@ -1055,9 +1061,9 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               {reportFor === 'others' && (
                 <div className="victim-box">
                   <div className="victim-box-label">
-                    <i className="bi bi-person-exclamation"></i> Person You Are Reporting For
+                    <i className="bi bi-person-exclamation"></i> {t('reportForm.personBoxLabel')}
                   </div>
-                  <label className="form-label">Your Relationship <span className="required">*</span></label>
+                  <label className="form-label">{t('reportForm.relationship')} <span className="required">*</span></label>
                   <select
                     value={victimRelationship}
                     onChange={(e) => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
@@ -1065,18 +1071,18 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     className="form-select"
                     style={{ marginBottom: '10px' }}
                   >
-                    <option value="">Select relationship</option>
-                    <option value="Family Member">Family Member</option>
-                    <option value="Friend">Friend</option>
-                    <option value="Neighbor">Neighbor</option>
-                    <option value="Colleague">Colleague</option>
-                    <option value="Stranger">Stranger</option>
-                    <option value="Other">Other (not listed — please specify)</option>
+                    <option value="">{t('reportForm.relationshipPlaceholder')}</option>
+                    <option value="Family Member">{t('reportForm.relationshipOptions.family')}</option>
+                    <option value="Friend">{t('reportForm.relationshipOptions.friend')}</option>
+                    <option value="Neighbor">{t('reportForm.relationshipOptions.neighbor')}</option>
+                    <option value="Colleague">{t('reportForm.relationshipOptions.colleague')}</option>
+                    <option value="Stranger">{t('reportForm.relationshipOptions.stranger')}</option>
+                    <option value="Other">{t('reportForm.relationshipOptions.other')}</option>
                   </select>
                   {victimRelationship === 'Other' && (
                     <input
                       type="text"
-                      placeholder="Please specify your relationship to them"
+                      placeholder={t('reportForm.relationshipOtherPlaceholder')}
                       value={victimRelationshipOther}
                       onChange={(e) => setVictimRelationshipOther(e.target.value)}
                       disabled={isSubmitting}
@@ -1087,14 +1093,14 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   <div className="form-grid">
                     <div>
                       <label className="form-label">
-                        Their Name{' '}
+                        {t('reportForm.theirName')}{' '}
                         {isVictimNameOptional
-                          ? <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span>
+                          ? <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span>
                           : <span className="required">*</span>}
                       </label>
                       <input
                         type="text"
-                        placeholder="Full name"
+                        placeholder={t('reportForm.namePlaceholder')}
                         value={victimName}
                         onChange={(e) => setVictimName(e.target.value)}
                         disabled={isSubmitting}
@@ -1102,7 +1108,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                       />
                     </div>
                     <div>
-                      <label className="form-label">Their Contact <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span></label>
+                      <label className="form-label">{t('reportForm.theirContact')} <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span></label>
                       <input
                         type="tel"
                         inputMode="numeric"
@@ -1116,10 +1122,10 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     </div>
                   </div>
                   <label className="form-label" style={{ marginTop: '10px' }}>
-                    Additional Details <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional)</span>
+                    {t('reportForm.additionalDetails')} <span className="required">*</span>
                   </label>
                   <textarea
-                    placeholder="If you don't know their name, describe them or their location — e.g. 'elderly woman near the covered court, wearing a red jacket'"
+                    placeholder={t('reportForm.additionalDetailsPlaceholder')}
                     value={victimDetails}
                     onChange={(e) => setVictimDetails(e.target.value)}
                     disabled={isSubmitting}
@@ -1137,9 +1143,9 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                       className="bi bi-exclamation-circle-fill"
                       style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}
                     ></i>
-                    Emergency Type <span className="required">*</span>
+                    {t('emergencyModal.emergencyType')} <span className="required">*</span>
                   </label>
- 
+
                   <select
                     name="emergencyType"
                     value={formData.emergencyType}
@@ -1148,17 +1154,17 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     disabled={isSubmitting}
                     className="form-select"
                   >
-                    <option value="">Select emergency type</option>
-                    <option value="Fire Emergency">Fire</option>
-                    <option value="Flood Emergency">Flood</option>
-                    <option value="Earthquake">Earthquake</option>
+                    <option value="">{t('emergencyModal.selectType')}</option>
+                    <option value="Fire Emergency">{t('emergencyModal.typeFire')}</option>
+                    <option value="Flood Emergency">{t('emergencyModal.typeFlood')}</option>
+                    <option value="Earthquake">{t('emergencyModal.typeEarthquake')}</option>
                   </select>
                 </div>
- 
+
                 <div className="address-label-row">
                   <label className="form-label" style={{ marginBottom: 0 }}>
                     <i className="bi bi-geo-alt-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
-                    Address <span className="required">*</span>
+                    {t('reportForm.address')} <span className="required">*</span>
                   </label>
                   <button
                     type="button"
@@ -1168,23 +1174,23 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   >
                     {isLocating ? (
                       <>
-                        <i className="bi bi-arrow-repeat loading-spinner"></i> Locating...
+                        <i className="bi bi-arrow-repeat loading-spinner"></i> {t('reportForm.locating')}
                       </>
                     ) : (
                       <>
-                        <i className="bi bi-crosshair"></i> Use my current location
+                        <i className="bi bi-crosshair"></i> {t('reportForm.useCurrentLocation')}
                       </>
                     )}
                   </button>
                 </div>
- 
+
                 {isEditing ? (
                   <input
                     type="text"
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
-                    placeholder="Full address"
+                    placeholder={t('reportForm.fullAddress')}
                     required
                     disabled={isSubmitting}
                     className="form-input"
@@ -1198,7 +1204,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                         name="houseNumber"
                         value={formData.houseNumber}
                         onChange={handleChange}
-                        placeholder="House / Lot / Block No."
+                        placeholder={t('reportForm.houseNumberPlaceholder')}
                         required={!gpsCoords}
                         disabled={isSubmitting}
                         className="form-input"
@@ -1208,19 +1214,19 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                         name="street"
                         value={formData.street}
                         onChange={handleChange}
-                        placeholder="Street"
+                        placeholder={t('reportForm.streetPlaceholder')}
                         required={!gpsCoords}
                         disabled={isSubmitting}
                         className="form-input"
                       />
                     </div>
- 
+
                     <input
                       type="text"
                       name="floorUnit"
                       value={formData.floorUnit}
                       onChange={handleChange}
-                      placeholder="Floor / Unit / Room (Optional)"
+                      placeholder={t('reportForm.floorUnitPlaceholder')}
                       disabled={isSubmitting}
                       className="form-input"
                       style={{ marginTop: '10px' }}
@@ -1230,22 +1236,22 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                       name="landmark"
                       value={formData.landmark}
                       onChange={handleChange}
-                      placeholder="Landmark / directions (e.g. beside the covered court, blue gate)"
+                      placeholder={t('reportForm.landmarkPlaceholder')}
                       disabled={isSubmitting}
                       className="form-input"
                       style={{ marginTop: '10px' }}
                     />
                   </>
                 )}
- 
+
                 {locationError && (
                   <div className="location-error">
                     <i className="bi bi-exclamation-triangle-fill"></i> {locationError}
                   </div>
                 )}
- 
+
                 <div className="location-fixed-area">
-                  Reports are limited to Barangay Santa Fe, Dasmariñas, Cavite, Philippines
+                  {t('reportForm.serviceAreaNote')}
                 </div>
  
                 <div ref={locationSectionRef}>
@@ -1262,25 +1268,25 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               <div className="form-group">
                 <label className="form-label">
                   <i className="bi bi-card-text" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
-                  Incident Details <span className="required">*</span>
+                  {t('emergencyModal.incidentDetails')} <span className="required">*</span>
                 </label>
                 <textarea
                   name="details"
                   value={formData.details}
                   onChange={handleChange}
                   rows="5"
-                  placeholder="Describe the emergency situation..."
+                  placeholder={t('emergencyModal.incidentDetailsPlaceholder')}
                   required
                   disabled={isSubmitting}
                   className="form-textarea"
                 ></textarea>
               </div>
- 
+
               <div className="form-grid">
                 <div className="form-group">
                   <label className="form-label">
                     <i className="bi bi-people-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
-                    Number of People Affected
+                    {t('reportForm.peopleAffected')}
                   </label>
                   <select
                     name="people"
@@ -1289,7 +1295,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     disabled={isSubmitting}
                     className="form-select"
                   >
-                    <option value="">Select range</option>
+                    <option value="">{t('reportForm.selectRange')}</option>
                     {PEOPLE_AFFECTED_OPTIONS.map((range) => (
                       <option key={range} value={range}>{range}</option>
                     ))}
@@ -1298,7 +1304,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                 <div className="form-group">
                   <label className="form-label">
                     <i className="bi bi-camera-video-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
-                    Photo or Video {!isEditing && <span className="required">*</span>}
+                    {t('reportForm.photoOrVideo')} {!isEditing && <span className="required">*</span>}
                   </label>
                   <input
                     type="file"
@@ -1312,8 +1318,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   />
                   <div className="media-hint">
                     {isEditing
-                      ? 'Optional. Attach a new file only if you want to replace the one already on record. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).'
-                      : 'Required. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).'}
+                      ? t('reportForm.mediaHintEdit')
+                      : t('reportForm.mediaHintRequired')}
                   </div>
                   {formData.mediaPreviewUrl && (
                     <>
@@ -1330,17 +1336,17 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                         onClick={removeMedia}
                         disabled={isSubmitting}
                       >
-                        <i className="bi bi-trash3-fill"></i> Remove
+                        <i className="bi bi-trash3-fill"></i> {t('reportForm.remove')}
                       </button>
                     </>
                   )}
                 </div>
               </div>
- 
+
               <div className="form-group">
                 <label className="form-label">
                   <i className="bi bi-info-circle-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
-                  Special Needs / Considerations
+                  {t('emergencyModal.specialNeeds')}
                 </label>
                 <div style={{
               display: 'grid',
@@ -1349,7 +1355,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
             }}>
               {SPECIAL_NEEDS_OPTIONS.map((option) => (
                 <label
-                  key={option}
+                  key={option.key}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -1364,8 +1370,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                 >
                   <input
                     type="checkbox"
-                    checked={formData.special.includes(option)}
-                    onChange={() => handleSpecialToggle(option)}
+                    checked={formData.special.includes(option.value)}
+                    onChange={() => handleSpecialToggle(option.value)}
                     style={{
                       width: '16px',
                       height: '16px',
@@ -1374,7 +1380,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                       accentColor: '#dc3545'
                     }}
                   />
-                  {option}
+                  {t(`emergencyModal.specialNeedsOptions.${option.key}`)}
                 </label>
               ))}
             </div>
@@ -1406,7 +1412,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     }}
                   />
                   <span>
-                    I confirm that the information provided is accurate and consent to be contacted by the response team.
+                    {t('reportForm.consent')}
                   </span>
                 </label>
               </div>
@@ -1419,7 +1425,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               }}>
                 {!isEditing && cooldownRemaining > 0 && (
                   <div className="cooldown-banner">
-                    <i className="bi bi-clock-history"></i> You can submit another emergency report in {formatRemaining(cooldownRemaining)}.
+                    <i className="bi bi-clock-history"></i> {t('emergencyModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}
                   </div>
                 )}
                 <button
@@ -1445,7 +1451,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   onMouseEnter={(e) => !isSubmitting && (e.target.style.background = '#4b5563')}
                   onMouseLeave={(e) => e.target.style.background = '#6b7280'}
                 >
-                  <i className="bi bi-x-circle-fill"></i> Cancel
+                  <i className="bi bi-x-circle-fill"></i> {t('reportForm.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -1471,11 +1477,11 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                 >
                   {isSubmitting ? (
                     <>
-                      <i className="bi bi-hourglass-split loading-spinner"></i> {isEditing ? 'Saving...' : 'Submitting...'}
+                      <i className="bi bi-hourglass-split loading-spinner"></i> {isEditing ? t('reportForm.saving') : t('reportForm.submitting')}
                     </>
                   ) : (
                     <>
-                      <i className="bi bi-send-fill"></i> {isEditing ? 'Save Changes' : 'Submit Report'}
+                      <i className="bi bi-send-fill"></i> {isEditing ? t('reportForm.saveChanges') : t('reportForm.submitReport')}
                     </>
                   )}
                 </button>
@@ -1492,11 +1498,10 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               <i className="bi bi-check-lg"></i>
             </div>
             <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 700, color: '#1f2937' }}>
-              Report Submitted
+              {t('emergencyModal.reportSubmitted')}
             </h3>
             <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#4b5563', lineHeight: 1.5 }}>
-              Our team will respond shortly. Would you also like to request assistance
-              (food, water, medical aid, etc.) related to this emergency? This step is optional.
+              {t('emergencyModal.assistancePromptBody')}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <button
@@ -1513,7 +1518,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   cursor: 'pointer'
                 }}
               >
-                No, thanks
+                {t('emergencyModal.noThanks')}
               </button>
               <button
                 type="button"
@@ -1529,7 +1534,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   cursor: 'pointer'
                 }}
               >
-                Request Assistance
+                {t('emergencyModal.requestAssistance')}
               </button>
             </div>
           </div>

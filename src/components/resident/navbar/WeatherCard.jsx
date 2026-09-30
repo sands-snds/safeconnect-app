@@ -1,4 +1,5 @@
 import React from "react";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 export default function WeatherCard({
     weather,
@@ -6,6 +7,8 @@ export default function WeatherCard({
     describeWeatherCode,
     RAIN_ALERT_THRESHOLD
 }) {
+
+    const { t } = useLanguage();
 
     if (!weather) {
         return null;
@@ -24,7 +27,7 @@ export default function WeatherCard({
             <div className="news-card-content">
 
                 <span className="news-card-category">
-                    Weather Advisory
+                    {t('notificationPanel.weatherAdvisory')}
                 </span>
 
                 <div className="news-card-date">
@@ -43,11 +46,11 @@ export default function WeatherCard({
 
                     {" "}
 
-                    {weatherInfo.label}
+                    {t(`weather.codes.${weatherInfo.key}`)}
 
                     {" "}
 
-                    today
+                    {t('weather.today')}
 
                 </h3>
 
@@ -56,14 +59,14 @@ export default function WeatherCard({
                     {weather.rainChance >=
                     RAIN_ALERT_THRESHOLD
 
-                        ? `It's possible to rain today — ${weather.rainChance}% chance of precipitation.`
+                        ? t('weather.rainLikely', { chance: weather.rainChance })
 
-                        : `Low chance of rain today (${weather.rainChance}%).`
+                        : t('weather.rainUnlikely', { chance: weather.rainChance })
                     }
 
                     {" "}
 
-                    Expect a high of
+                    {t('weather.expectHigh')}
 
                     {" "}
 
@@ -71,7 +74,7 @@ export default function WeatherCard({
 
                     {" "}
 
-                    and a low of
+                    {t('weather.expectLow')}
 
                     {" "}
 

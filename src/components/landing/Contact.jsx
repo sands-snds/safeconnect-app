@@ -1,12 +1,14 @@
 import React from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const HOTLINES = [
-  { title: 'Barangay Santa Fe', sub: 'Primary line', phone: '+63 992 947 4309', icon: 'bi-house-fill',              color: '#6B2C3E', note: 'Emergencies, coordination & general inquiries' },
-  { title: 'Dasmariñas PNP',   sub: 'City police',   phone: '+63 46 242 0002',  icon: 'bi-shield-fill',             color: '#3b82f6', note: 'Crime, public safety & law enforcement' },
-  { title: 'CDRMC Cavite',     sub: 'Disaster mgmt', phone: '+63 46 230 0345',  icon: 'bi-heart-pulse-fill',        color: '#10b981', note: 'Provincial disaster risk management & response' },
+  { key: 'barangay', phone: '+63 992 947 4309', icon: 'bi-house-fill',       color: '#6B2C3E' },
+  { key: 'dasma',     phone: '+63 46 242 0002',  icon: 'bi-shield-fill',      color: '#3b82f6' },
+  { key: 'cdrmc',     phone: '+63 46 230 0345',  icon: 'bi-heart-pulse-fill', color: '#10b981' },
 ];
 
 export default function Contact() {
+  const { t } = useLanguage();
   return (
     <section id="contact" style={{ margin: 0, padding: 0 }}>
       <style>{`
@@ -120,13 +122,10 @@ export default function Contact() {
 
           <div className="ct-intro">
             <div className="ct-badge">
-              <i className="bi bi-telephone-fill" /> Emergency Contacts
+              <i className="bi bi-telephone-fill" /> {t('contact.badge')}
             </div>
-            <h2>Help is always one call away.</h2>
-            <p>
-              Save these numbers now. In an emergency, every second counts — you can also tap
-              the floating call button anywhere on this page.
-            </p>
+            <h2>{t('contact.title')}</h2>
+            <p>{t('contact.subtitle')}</p>
           </div>
 
           <div className="ct-split">
@@ -136,25 +135,25 @@ export default function Contact() {
               <div className="ct-sos-icon">
                 <i className="bi bi-telephone-fill" />
               </div>
-              <p className="ct-sos-eyebrow">Life-threatening emergency?</p>
-              <p className="ct-sos-label">Police, fire, and medical response — nationwide, 24/7.</p>
+              <p className="ct-sos-eyebrow">{t('contact.sosEyebrow')}</p>
+              <p className="ct-sos-label">{t('contact.sosLabel')}</p>
               <a href="tel:911" className="ct-sos-btn">
-                <i className="bi bi-telephone-outbound-fill" /> Call 911 Now
+                <i className="bi bi-telephone-outbound-fill" /> {t('contact.sosButton')}
               </a>
             </div>
 
             <div className="ct-list">
               {HOTLINES.map((h) => (
-                <a key={h.title} href={`tel:${h.phone.replace(/\s/g, '')}`} className="ct-row">
+                <a key={h.key} href={`tel:${h.phone.replace(/\s/g, '')}`} className="ct-row">
                   <div className="ct-row-icon" style={{ background: `${h.color}15`, color: h.color }}>
                     <i className={`bi ${h.icon}`} />
                   </div>
                   <div className="ct-row-text">
                     <div className="ct-row-top">
-                      <strong>{h.title}</strong>
-                      <span className="ct-row-badge" style={{ color: h.color, background: `${h.color}15` }}>{h.sub}</span>
+                      <strong>{t(`contact.hotlines.${h.key}.title`)}</strong>
+                      <span className="ct-row-badge" style={{ color: h.color, background: `${h.color}15` }}>{t(`contact.hotlines.${h.key}.sub`)}</span>
                     </div>
-                    <p>{h.note}</p>
+                    <p>{t(`contact.hotlines.${h.key}.note`)}</p>
                   </div>
                   <div className="ct-row-phone" style={{ color: h.color }}>
                     {h.phone} <i className="bi bi-arrow-up-right-circle-fill" />
@@ -171,11 +170,11 @@ export default function Contact() {
               <i className="bi bi-phone-fill" style={{ color: '#fff', fontSize: 22 }} />
             </div>
             <div style={{ position: 'relative', zIndex: 1, flex: 1, minWidth: 200 }}>
-              <p style={{ margin: '0 0 4px', fontWeight: 800, color: '#fff', fontSize: '1rem' }}>Signed in? Report through SafeConnect.</p>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: '0.85rem', lineHeight: 1.65 }}>Submit emergency reports, assistance requests, and petty crime reports — GPS and photos captured automatically.</p>
+              <p style={{ margin: '0 0 4px', fontWeight: 800, color: '#fff', fontSize: '1rem' }}>{t('contact.bannerTitle')}</p>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: '0.85rem', lineHeight: 1.65 }}>{t('contact.bannerDesc')}</p>
             </div>
             <a href="#home" style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, background: '#fff', color: '#6B2C3E', fontWeight: 800, fontSize: '0.87rem', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' }}>
-              Open SafeConnect <i className="bi bi-arrow-right" />
+              {t('contact.bannerCta')} <i className="bi bi-arrow-right" />
             </a>
           </div>
 

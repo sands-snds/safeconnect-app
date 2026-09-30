@@ -1,25 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { signinUser, setAuthToken } from '../../Services/api';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
 
 const NAME_ALLOWED_REGEX = /[^a-zA-Z\s]/g;
 const DIGITS_ONLY_REGEX  = /[^0-9]/g;
 const PASSWORD_REQUIREMENTS = [
-    { label: 'at least 8 characters',    test: (pw) => pw.length >= 8 },
-    { label: 'an uppercase letter',       test: (pw) => /[A-Z]/.test(pw) },
-    { label: 'a number',                  test: (pw) => /[0-9]/.test(pw) },
-    { label: 'a symbol (e.g. ! @ # $ %)', test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+    { key: 'length',    test: (pw) => pw.length >= 8 },
+    { key: 'uppercase', test: (pw) => /[A-Z]/.test(pw) },
+    { key: 'number',    test: (pw) => /[0-9]/.test(pw) },
+    { key: 'symbol',    test: (pw) => /[^A-Za-z0-9]/.test(pw) },
 ];
 const getMissingRequirements = (pw) =>
-    PASSWORD_REQUIREMENTS.filter(r => !r.test(pw)).map(r => r.label);
+    PASSWORD_REQUIREMENTS.filter(r => !r.test(pw)).map(r => r.key);
 
 const EMERGENCY_CONTACTS = [
-    { id:'police',   label:'911 Emergency',     sublabel:'National Emergency Hotline',       number:'911',           icon:'bi-shield-fill-exclamation', color:'#dc2626' },
-    { id:'dasma',    label:'Dasmariñas Police',  sublabel:'Dasmariñas City PNP',              number:'+63462420002',  icon:'bi-shield-fill',             color:'#1d4ed8' },
-    { id:'cdrmc',    label:'CDRMC',              sublabel:'Cavite Disaster Risk Management',  number:'+63462300345',  icon:'bi-heart-pulse-fill',        color:'#059669' },
-    { id:'barangay', label:'Barangay Santa Fe',  sublabel:'Barangay Emergency Line',          number:'+63567341876', icon:'bi-house-fill',              color:'#7c3aed' },
+    { id:'police',   label:'911 Emergency',     sublabelKey:'police',   number:'911',           icon:'bi-shield-fill-exclamation', color:'#dc2626' },
+    { id:'dasma',    label:'Dasmariñas Police',  sublabelKey:'dasma',    number:'+63462420002',  icon:'bi-shield-fill',             color:'#1d4ed8' },
+    { id:'cdrmc',    label:'CDRMC',              sublabelKey:'cdrmc',    number:'+63462300345',  icon:'bi-heart-pulse-fill',        color:'#059669' },
+    { id:'barangay', label:'Barangay Santa Fe',  sublabelKey:'barangay', number:'+63567341876', icon:'bi-house-fill',              color:'#7c3aed' },
 ];
 
 const apiPost = async (path, body) => {
@@ -33,6 +34,7 @@ const apiPost = async (path, body) => {
 
 // ── EmergencyCallButton ───────────────────────────────────────────────────────
 function EmergencyCallButton() {
+    const { t } = useLanguage();
     const [showContacts, setShowContacts] = useState(false);
     const handleCall = (n) => { window.location.href = `tel:${n}`; setShowContacts(false); };
     return (
@@ -40,8 +42,8 @@ function EmergencyCallButton() {
             {showContacts && <div onClick={() => setShowContacts(false)} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:1050,backdropFilter:'blur(2px)' }} />}
             {showContacts && (
                 <div style={{ position:'fixed',bottom:'96px',right:'24px',zIndex:1051,background:'#fff',borderRadius:'16px',boxShadow:'0 8px 32px rgba(0,0,0,0.22)',padding:'16px',width:'280px',animation:'slideUpFade 0.22s ease' }}>
-                    <p style={{ margin:'0 0 2px',fontWeight:700,fontSize:'14px',color:'#111' }}>Emergency Contacts</p>
-                    <p style={{ margin:'0 0 12px',fontSize:'12px',color:'#6b7280' }}>Tap a contact to call immediately</p>
+                    <p style={{ margin:'0 0 2px',fontWeight:700,fontSize:'14px',color:'#111' }}>{t('emergencyContacts.title')}</p>
+                    <p style={{ margin:'0 0 12px',fontSize:'12px',color:'#6b7280' }}>{t('emergencyContacts.subtitle')}</p>
                     <div style={{ display:'flex',flexDirection:'column',gap:'8px' }}>
                         {EMERGENCY_CONTACTS.map(c => (
                             <button key={c.id} onClick={() => handleCall(c.number)}
@@ -53,10 +55,10 @@ function EmergencyCallButton() {
                                 </div>
                                 <div style={{ flex:1 }}>
                                     <p style={{ margin:0,fontWeight:600,fontSize:'13px',color:'#111' }}>{c.label}</p>
-                                    <p style={{ margin:0,fontSize:'11px',color:'#6b7280' }}>{c.sublabel}</p>
+                                    <p style={{ margin:0,fontSize:'11px',color:'#6b7280' }}>{t(`emergencyContacts.sublabels.${c.sublabelKey}`)}</p>
                                 </div>
                                 <div style={{ display:'flex',alignItems:'center',gap:'4px',background:c.color,color:'#fff',borderRadius:'20px',padding:'4px 10px',fontSize:'11px',fontWeight:600 }}>
-                                    <i className="bi bi-telephone-fill" style={{ fontSize:'10px' }} />Call
+                                    <i className="bi bi-telephone-fill" style={{ fontSize:'10px' }} />{t('emergencyContacts.call')}
                                 </div>
                             </button>
                         ))}
@@ -97,6 +99,7 @@ function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs }) {
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
+    const { t } = useLanguage();
     // Modal visibility
     const [showSignIn,    setShowSignIn]    = useState(false);
     const [showSignUp,    setShowSignUp]    = useState(false);
@@ -171,7 +174,7 @@ function Hero() {
     const resetOtp = () => { setOtp(['','','','','','']); };
 
     const PasswordToggleButton = ({ visible, onToggle }) => (
-        <button type="button" onClick={onToggle} aria-label={visible?'Hide password':'Show password'}
+        <button type="button" onClick={onToggle} aria-label={visible?t('auth.hidePassword'):t('auth.showPassword')}
             style={{ position:'absolute',right:'10px',top:'50%',transform:'translateY(-50%)',background:'none',border:'none',padding:0,display:'flex',alignItems:'center',color:'#6B2C3E',cursor:'pointer' }}>
             {visible ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
@@ -195,11 +198,11 @@ function Hero() {
     // ── Sign in ───────────────────────────────────────────────────────────────
     const handleSignIn = async (e) => {
         e.preventDefault(); clearErr();
-        if (!siEmail.trim() || !siPassword) { setError('Please enter both email and password'); return; }
+        if (!siEmail.trim() || !siPassword) { setError(t('auth.bothEmailPassword')); return; }
         setIsSubmitting(true);
         try {
             const result = await signinUser(siEmail.trim(), siPassword);
-            if (!result.success) { setError(result.message || 'Invalid email or password.'); return; }
+            if (!result.success) { setError(result.message || t('auth.invalidCredentials')); return; }
             setAuthToken(result.token, result.isAdmin);
             if (result.isAdmin) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
@@ -219,7 +222,7 @@ function Hero() {
             }));
             localStorage.setItem('residentName', result.user.fullName);
             window.location.href = '/resident';
-        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
 
@@ -227,12 +230,12 @@ function Hero() {
     const handleSignUpSubmit = async (e) => {
         e.preventDefault(); clearErr();
         if (!suFirst||!suLast||!suUsername||!suContact||!suEmail||!suPassword||!suConfirm) {
-            setError('Please fill in all required fields'); return;
+            setError(t('auth.fillRequired')); return;
         }
-        if (suContact.length !== 10) { setError('Contact number must be exactly 10 digits'); return; }
-        if (suPassword !== suConfirm) { setError('Passwords do not match'); return; }
+        if (suContact.length !== 10) { setError(t('auth.contactDigits')); return; }
+        if (suPassword !== suConfirm) { setError(t('auth.passwordMismatch')); return; }
         const missing = getMissingRequirements(suPassword);
-        if (missing.length > 0) { setError(`Password is missing: ${missing.join(', ')}`); return; }
+        if (missing.length > 0) { setError(t('auth.passwordMissing', { list: missing.map(k => t(`pwReq.${k}`)).join(', ') })); return; }
 
         const fullName = [suFirst, suMiddle, suLast].filter(Boolean).join(' ');
         setIsSubmitting(true);
@@ -241,9 +244,9 @@ function Hero() {
                 fullName, username: suUsername,
                 contact: `+63${suContact}`, email: suEmail, password: suPassword,
             });
-            if (!result.success) { setError(result.message || 'Failed to send verification code.'); return; }
+            if (!result.success) { setError(result.message || t('auth.otpSendFailed')); return; }
             setOtpEmail(suEmail); resetOtp(); setSignUpStep('otp'); setResendCooldown(60);
-        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
 
@@ -251,18 +254,18 @@ function Hero() {
     const handleVerifySignupOtp = async (e) => {
         e.preventDefault(); clearErr();
         const code = otp.join('');
-        if (code.length < 6) { setError('Please enter the complete 6-digit code.'); return; }
+        if (code.length < 6) { setError(t('auth.otpIncomplete')); return; }
         setIsSubmitting(true);
         try {
             const result = await apiPost('verify-otp', { email: otpEmail, otp: code });
-            if (!result.success) { setError(result.message || 'Incorrect or expired code.'); return; }
+            if (!result.success) { setError(result.message || t('auth.otpInvalid')); return; }
             setSuFirst(''); setSuMiddle(''); setSuLast('');
             setSuUsername(''); setSuContact(''); setSuEmail('');
             setSuPassword(''); setSuConfirm('');
             resetOtp(); setSignUpStep('form');
             setShowSignUp(false); setShowSignIn(true);
-            setSuccessMsg('Account created successfully! Please sign in.');
-        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+            setSuccessMsg(t('signUp.accountCreated'));
+        } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
 
@@ -271,22 +274,22 @@ function Hero() {
         clearErr(); setIsSubmitting(true);
         try {
             const result = await apiPost('resend-otp', { email: otpEmail });
-            if (!result.success) { setError(result.message || 'Could not resend code.'); return; }
+            if (!result.success) { setError(result.message || t('auth.resendFailed')); return; }
             resetOtp(); setResendCooldown(60);
-        } catch { setError('Could not reach the server.'); }
+        } catch { setError(t('auth.serverErrorShort')); }
         finally { setIsSubmitting(false); }
     };
 
     // ── Forgot password: step 1 — enter email ────────────────────────────────
     const handleForgotEmail = async (e) => {
         e.preventDefault(); clearErr();
-        if (!fpEmail.trim()) { setError('Please enter your email address.'); return; }
+        if (!fpEmail.trim()) { setError(t('auth.emailRequired')); return; }
         setIsSubmitting(true);
         try {
             const result = await apiPost('forgot-password', { email: fpEmail.trim() });
-            if (!result.success) { setError(result.message || 'Something went wrong.'); return; }
+            if (!result.success) { setError(result.message || t('auth.genericError')); return; }
             setOtpEmail(fpEmail.trim()); resetOtp(); setForgotStep('otp'); setResendCooldown(60);
-        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
 
@@ -294,13 +297,13 @@ function Hero() {
     const handleVerifyResetOtp = async (e) => {
         e.preventDefault(); clearErr();
         const code = otp.join('');
-        if (code.length < 6) { setError('Please enter the complete 6-digit code.'); return; }
+        if (code.length < 6) { setError(t('auth.otpIncomplete')); return; }
         setIsSubmitting(true);
         try {
             const result = await apiPost('verify-reset-otp', { email: otpEmail, otp: code });
-            if (!result.success) { setError(result.message || 'Incorrect or expired code.'); return; }
+            if (!result.success) { setError(result.message || t('auth.otpInvalid')); return; }
             resetOtp(); setForgotStep('reset');
-        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
 
@@ -309,34 +312,34 @@ function Hero() {
         clearErr(); setIsSubmitting(true);
         try {
             const result = await apiPost('resend-reset-otp', { email: otpEmail });
-            if (!result.success) { setError(result.message || 'Could not resend code.'); return; }
+            if (!result.success) { setError(result.message || t('auth.resendFailed')); return; }
             resetOtp(); setResendCooldown(60);
-        } catch { setError('Could not reach the server.'); }
+        } catch { setError(t('auth.serverErrorShort')); }
         finally { setIsSubmitting(false); }
     };
 
     // ── Forgot password: step 3 — set new password ───────────────────────────
     const handleResetPassword = async (e) => {
         e.preventDefault(); clearErr();
-        if (!fpNewPw || !fpConfirmPw) { setError('Please fill in both password fields.'); return; }
-        if (fpNewPw !== fpConfirmPw) { setError('Passwords do not match.'); return; }
+        if (!fpNewPw || !fpConfirmPw) { setError(t('auth.fillBothPasswordFields')); return; }
+        if (fpNewPw !== fpConfirmPw) { setError(t('auth.passwordMismatchPeriod')); return; }
         const missing = getMissingRequirements(fpNewPw);
-        if (missing.length > 0) { setError(`Password is missing: ${missing.join(', ')}`); return; }
+        if (missing.length > 0) { setError(t('auth.passwordMissing', { list: missing.map(k => t(`pwReq.${k}`)).join(', ') })); return; }
         setIsSubmitting(true);
         try {
             const result = await apiPost('reset-password', { email: otpEmail, newPassword: fpNewPw });
-            if (!result.success) { setError(result.message || 'Could not reset password.'); return; }
+            if (!result.success) { setError(result.message || t('auth.couldNotResetPassword')); return; }
             setForgotStep('done');
-        } catch { setError('Could not reach the server. Please check your connection and try again.'); }
+        } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
 
     // ── Modal header title helpers ────────────────────────────────────────────
     const forgotTitle = {
-        email: 'Forgot Password',
-        otp:   'Check Your Email',
-        reset: 'Create New Password',
-        done:  'Password Reset',
+        email: t('forgotPassword.titleEmail'),
+        otp:   t('forgotPassword.titleOtp'),
+        reset: t('forgotPassword.titleReset'),
+        done:  t('forgotPassword.titleDone'),
     }[forgotStep];
 
     return (
@@ -363,18 +366,17 @@ function Hero() {
                     <div className="row align-items-center">
                         <div className="col-lg-8 mb-4 mb-lg-0 text-center text-lg-start" style={{ paddingLeft:'clamp(20px,5vw,60px)',paddingRight:'clamp(20px,5vw,60px)' }}>
                             <p style={{ fontSize:'clamp(0.85rem,1.5vw,1rem)',fontWeight:600,letterSpacing:'0.12em',textTransform:'uppercase',color:'#FFC107',marginBottom:'8px' }}>
-                                Barangay Santa Fe Safe Connect
+                                {t('hero.eyebrow')}
                             </p>
                             <h1 className="fw-bold" style={{ fontSize:'clamp(2rem,5vw,3.5rem)',lineHeight:'1.2' }}>
-                                STAY <span style={{ color:'#FFC107' }}>SAFE</span> STAY INFORMED
+                                {t('hero.titleLine1')} <span style={{ color:'#FFC107' }}>{t('hero.titleHighlight')}</span> {t('hero.titleLine2')}
                             </h1>
                             <p className="mt-3" style={{ fontSize:'clamp(1rem,2vw,1.25rem)',lineHeight:'1.6' }}>
-                                Be prepared when it matters most. Get real-time updates, request help instantly,
-                                and find safe evacuation centers — all in one place.
+                                {t('hero.subtitle')}
                             </p>
                             <div className="d-flex gap-3 flex-wrap mt-4 justify-content-center justify-content-lg-start">
-                                <button className="btn btn-danger btn-lg fw-bold shadow" onClick={() => { clearErr(); setShowSignIn(true); }} style={{ fontSize:'1.1rem',minWidth:'150px',padding:'0.75rem 2rem' }}>Sign In</button>
-                                <button className="btn btn-outline-light btn-lg fw-bold" onClick={() => { clearErr(); setShowSignUp(true); }} style={{ fontSize:'1.1rem',minWidth:'150px',padding:'0.75rem 2rem' }}>Sign Up</button>
+                                <button className="btn btn-danger btn-lg fw-bold shadow" onClick={() => { clearErr(); setShowSignIn(true); }} style={{ fontSize:'1.1rem',minWidth:'150px',padding:'0.75rem 2rem' }}>{t('hero.signIn')}</button>
+                                <button className="btn btn-outline-light btn-lg fw-bold" onClick={() => { clearErr(); setShowSignUp(true); }} style={{ fontSize:'1.1rem',minWidth:'150px',padding:'0.75rem 2rem' }}>{t('hero.signUp')}</button>
                             </div>
                         </div>
                     </div>
@@ -387,7 +389,7 @@ function Hero() {
                     <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header" style={{ backgroundColor:'#6B2C3E',color:'white' }}>
-                                <h5 className="modal-title fw-bold" style={{ color:'white' }}>Sign In</h5>
+                                <h5 className="modal-title fw-bold" style={{ color:'white' }}>{t('signIn.title')}</h5>
                                 <button type="button" className="btn-close btn-close-white" onClick={closeAll} />
                             </div>
                             <div className="modal-body p-4">
@@ -396,13 +398,13 @@ function Hero() {
 
                                 <form onSubmit={handleSignIn}>
                                     <div className="mb-3">
-                                        <label htmlFor="siEmail" className="form-label fw-bold">Email Address</label>
-                                        <input type="email" className="form-control" id="siEmail" placeholder="Enter your email" value={siEmail} onChange={e => setSiEmail(e.target.value)} />
+                                        <label htmlFor="siEmail" className="form-label fw-bold">{t('signIn.email')}</label>
+                                        <input type="email" className="form-control" id="siEmail" placeholder={t('signIn.emailPlaceholder')} value={siEmail} onChange={e => setSiEmail(e.target.value)} />
                                     </div>
                                     <div className="mb-2">
-                                        <label htmlFor="siPassword" className="form-label fw-bold">Password</label>
+                                        <label htmlFor="siPassword" className="form-label fw-bold">{t('signIn.password')}</label>
                                         <div style={{ position:'relative' }}>
-                                            <input type={showSiPw?'text':'password'} className="form-control" id="siPassword" placeholder="Enter your password" value={siPassword} onChange={e => setSiPassword(e.target.value)} style={{ paddingRight:'36px' }} />
+                                            <input type={showSiPw?'text':'password'} className="form-control" id="siPassword" placeholder={t('signIn.passwordPlaceholder')} value={siPassword} onChange={e => setSiPassword(e.target.value)} style={{ paddingRight:'36px' }} />
                                             <PasswordToggleButton visible={showSiPw} onToggle={() => setShowSiPw(v=>!v)} />
                                         </div>
                                     </div>
@@ -411,18 +413,18 @@ function Hero() {
                                     <div className="text-end mb-3">
                                         <button type="button" className="btn btn-link p-0 text-decoration-none" style={{ fontSize:'0.85rem',color:'#6B2C3E' }}
                                             onClick={() => { setShowSignIn(false); setShowForgot(true); clearErr(); setForgotStep('email'); setFpEmail(siEmail); }}>
-                                            Forgot password?
+                                            {t('signIn.forgotPassword')}
                                         </button>
                                     </div>
 
                                     <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
-                                        {isSubmitting ? 'Signing In...' : 'Sign In'}
+                                        {isSubmitting ? t('signIn.submitting') : t('signIn.submit')}
                                     </button>
                                     <div className="text-center">
-                                        <p className="mb-0">Don't have an account?{' '}
+                                        <p className="mb-0">{t('signIn.noAccount')}{' '}
                                             <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold"
                                                 onClick={() => { setShowSignIn(false); setShowSignUp(true); clearErr(); }}
-                                                style={{ color:'#6B2C3E' }}>Sign Up</button>
+                                                style={{ color:'#6B2C3E' }}>{t('signIn.signUpLink')}</button>
                                         </p>
                                     </div>
                                 </form>
@@ -439,7 +441,7 @@ function Hero() {
                         <div className="modal-content" style={{ width:'100%',maxWidth:'900px' }}>
                             <div className="modal-header" style={{ backgroundColor:'#6B2C3E',color:'white' }}>
                                 <h5 className="modal-title fw-bold" style={{ color:'white' }}>
-                                    {signUpStep === 'otp' ? 'Verify Your Email' : 'Create Account'}
+                                    {signUpStep === 'otp' ? t('signUp.verifyTitle') : t('signUp.createTitle')}
                                 </h5>
                                 <button type="button" className="btn-close btn-close-white" onClick={closeAll} />
                             </div>
@@ -450,69 +452,69 @@ function Hero() {
                                     <form onSubmit={handleSignUpSubmit}>
                                         <div className="row">
                                             <div className="col-md-4 mb-3">
-                                                <label className="form-label fw-bold">First Name</label>
-                                                <input type="text" className="form-control" placeholder="First name" value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                                                <label className="form-label fw-bold">{t('signUp.firstName')}</label>
+                                                <input type="text" className="form-control" placeholder={t('signUp.firstNamePlaceholder')} value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                                             </div>
                                             <div className="col-md-4 mb-3">
-                                                <label className="form-label fw-bold">Middle Name</label>
-                                                <input type="text" className="form-control" placeholder="(Optional)" value={suMiddle} onChange={e => setSuMiddle(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                                                <label className="form-label fw-bold">{t('signUp.middleName')}</label>
+                                                <input type="text" className="form-control" placeholder={t('signUp.middlePlaceholder')} value={suMiddle} onChange={e => setSuMiddle(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                                             </div>
                                             <div className="col-md-4 mb-3">
-                                                <label className="form-label fw-bold">Last Name</label>
-                                                <input type="text" className="form-control" placeholder="Last name" value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                                                <label className="form-label fw-bold">{t('signUp.lastName')}</label>
+                                                <input type="text" className="form-control" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                                             </div>
                                         </div>
                                         <div className="mb-3">
-                                            <label className="form-label fw-bold">Username</label>
-                                            <input type="text" className="form-control" placeholder="Choose a username" value={suUsername} onChange={e => setSuUsername(e.target.value)} />
+                                            <label className="form-label fw-bold">{t('signUp.username')}</label>
+                                            <input type="text" className="form-control" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
                                         </div>
                                         <div className="mb-3">
-                                            <label className="form-label fw-bold">Contact Number</label>
+                                            <label className="form-label fw-bold">{t('signUp.contactNumber')}</label>
                                             <div className="input-group">
                                                 <span className="input-group-text">+63</span>
                                                 <input type="tel" className="form-control" placeholder="9XXXXXXXXX" value={suContact} onChange={e => setSuContact(e.target.value.replace(DIGITS_ONLY_REGEX,'').slice(0,10))} maxLength={10} inputMode="numeric" />
                                             </div>
                                         </div>
                                         <div className="mb-3">
-                                            <label className="form-label fw-bold">Email Address</label>
-                                            <input type="email" className="form-control" placeholder="Enter your email" value={suEmail} onChange={e => setSuEmail(e.target.value)} />
+                                            <label className="form-label fw-bold">{t('signUp.email')}</label>
+                                            <input type="email" className="form-control" placeholder={t('signUp.emailPlaceholder')} value={suEmail} onChange={e => setSuEmail(e.target.value)} />
                                         </div>
                                         <div className="mb-3">
-                                            <label className="form-label fw-bold">Password</label>
+                                            <label className="form-label fw-bold">{t('signUp.password')}</label>
                                             <div style={{ position:'relative' }}>
-                                                <input type={showSuPw?'text':'password'} className="form-control" placeholder="Min. 8 characters" value={suPassword} onChange={e => setSuPassword(e.target.value)} style={{ paddingRight:'36px' }} />
+                                                <input type={showSuPw?'text':'password'} className="form-control" placeholder={t('signUp.passwordPlaceholder')} value={suPassword} onChange={e => setSuPassword(e.target.value)} style={{ paddingRight:'36px' }} />
                                                 <PasswordToggleButton visible={showSuPw} onToggle={() => setShowSuPw(v=>!v)} />
                                             </div>
                                             {suPassword && (
                                                 <ul className="list-unstyled mb-0 mt-2" style={{ fontSize:'0.85rem' }}>
                                                     {PASSWORD_REQUIREMENTS.map(req => {
                                                         const met = req.test(suPassword);
-                                                        return <li key={req.label} style={{ color:met?'#198754':'#dc3545' }}>{met?'✓':'✗'} {req.label}</li>;
+                                                        return <li key={req.key} style={{ color:met?'#198754':'#dc3545' }}>{met?'✓':'✗'} {t(`pwReq.${req.key}`)}</li>;
                                                     })}
                                                 </ul>
                                             )}
                                         </div>
                                         <div className="mb-4">
-                                            <label className="form-label fw-bold">Confirm Password</label>
+                                            <label className="form-label fw-bold">{t('signUp.confirmPassword')}</label>
                                             <div style={{ position:'relative' }}>
-                                                <input type={showSuConfPw?'text':'password'} className="form-control" placeholder="Confirm your password" value={suConfirm} onChange={e => setSuConfirm(e.target.value)}
+                                                <input type={showSuConfPw?'text':'password'} className="form-control" placeholder={t('signUp.confirmPasswordPlaceholder')} value={suConfirm} onChange={e => setSuConfirm(e.target.value)}
                                                     style={{ paddingRight:'36px',borderColor:suConfirm?(suPassword===suConfirm?'#198754':'#dc3545'):undefined }} />
                                                 <PasswordToggleButton visible={showSuConfPw} onToggle={() => setShowSuConfPw(v=>!v)} />
                                             </div>
                                             {suConfirm && (
                                                 <p style={{ margin:'6px 0 0',fontSize:'0.85rem',fontWeight:600,color:suPassword===suConfirm?'#198754':'#dc3545' }}>
-                                                    {suPassword===suConfirm?'✓ Passwords match':'✗ Passwords do not match'}
+                                                    {suPassword===suConfirm?t('signUp.passwordsMatch'):t('signUp.passwordsNoMatch')}
                                                 </p>
                                             )}
                                         </div>
                                         <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
-                                            {isSubmitting ? 'Sending verification code...' : 'Continue'}
+                                            {isSubmitting ? t('signUp.submitting') : t('signUp.submit')}
                                         </button>
                                         <div className="text-center">
-                                            <p className="mb-0">Already have an account?{' '}
+                                            <p className="mb-0">{t('signUp.haveAccount')}{' '}
                                                 <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold"
                                                     onClick={() => { setShowSignUp(false); setShowSignIn(true); clearErr(); setSignUpStep('form'); }}
-                                                    style={{ color:'#6B2C3E' }}>Sign In</button>
+                                                    style={{ color:'#6B2C3E' }}>{t('signUp.signInLink')}</button>
                                             </p>
                                         </div>
                                     </form>
@@ -524,26 +526,25 @@ function Hero() {
                                             <div style={{ width:'64px',height:'64px',borderRadius:'50%',background:'#fdf0f3',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
                                                 <i className="bi bi-envelope-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
                                             </div>
-                                            <h6 className="fw-bold mb-2">Check your email</h6>
+                                            <h6 className="fw-bold mb-2">{t('signUp.otpHeading')}</h6>
                                             <p style={{ color:'#666',fontSize:'0.9rem',margin:0 }}>
-                                                We sent a 6-digit code to <strong>{otpEmail}</strong>.
-                                                Enter it below to verify your email and create your account.
+                                                {t('signUp.otpBody', { email: otpEmail })}
                                             </p>
                                         </div>
                                         <OtpBoxes otp={otp} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} refs={otpRefs} />
                                         <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting||otp.join('').length<6}>
-                                            {isSubmitting ? 'Verifying...' : 'Verify & Create Account'}
+                                            {isSubmitting ? t('signUp.verifying') : t('signUp.verify')}
                                         </button>
                                         <div className="text-center mb-3">
-                                            <p style={{ fontSize:'0.875rem',color:'#666',marginBottom:'6px' }}>Didn't receive the code?</p>
+                                            <p style={{ fontSize:'0.875rem',color:'#666',marginBottom:'6px' }}>{t('signUp.didntReceive')}</p>
                                             <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold" onClick={handleResendSignupOtp} disabled={resendCooldown>0||isSubmitting}
                                                 style={{ color:resendCooldown>0?'#aaa':'#6B2C3E',fontSize:'0.875rem' }}>
-                                                {resendCooldown>0?`Resend code in ${resendCooldown}s`:'Resend code'}
+                                                {resendCooldown>0?t('signUp.resendIn',{s:resendCooldown}):t('signUp.resend')}
                                             </button>
                                         </div>
                                         <div className="text-center">
                                             <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={() => { setSignUpStep('form'); clearErr(); }} style={{ color:'#888',fontSize:'0.85rem' }}>
-                                                ← Back to registration
+                                                {t('signUp.backToRegistration')}
                                             </button>
                                         </div>
                                     </form>
@@ -575,19 +576,19 @@ function Hero() {
                                                 <i className="bi bi-lock-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
                                             </div>
                                             <p style={{ color:'#666',fontSize:'0.9rem',margin:0 }}>
-                                                Enter your registered email address and we'll send you a verification code to reset your password.
+                                                {t('forgotPassword.step1Desc')}
                                             </p>
                                         </div>
                                         <div className="mb-4">
-                                            <label className="form-label fw-bold">Email Address</label>
-                                            <input type="email" className="form-control" placeholder="Enter your registered email" value={fpEmail} onChange={e => setFpEmail(e.target.value)} />
+                                            <label className="form-label fw-bold">{t('forgotPassword.email')}</label>
+                                            <input type="email" className="form-control" placeholder={t('forgotPassword.emailPlaceholder')} value={fpEmail} onChange={e => setFpEmail(e.target.value)} />
                                         </div>
                                         <button onClick={handleForgotEmail} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
-                                            {isSubmitting ? 'Sending code...' : 'Send Reset Code'}
+                                            {isSubmitting ? t('forgotPassword.sendingCode') : t('forgotPassword.sendCode')}
                                         </button>
                                         <div className="text-center">
                                             <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={() => { setShowForgot(false); setShowSignIn(true); clearErr(); }} style={{ color:'#6B2C3E',fontSize:'0.875rem',fontWeight:600 }}>
-                                                ← Back to Sign In
+                                                {t('forgotPassword.backToSignIn')}
                                             </button>
                                         </div>
                                     </>
@@ -600,25 +601,25 @@ function Hero() {
                                             <div style={{ width:'64px',height:'64px',borderRadius:'50%',background:'#fdf0f3',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
                                                 <i className="bi bi-envelope-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
                                             </div>
-                                            <h6 className="fw-bold mb-2">Check your email</h6>
+                                            <h6 className="fw-bold mb-2">{t('forgotPassword.step2Heading')}</h6>
                                             <p style={{ color:'#666',fontSize:'0.9rem',margin:0 }}>
-                                                We sent a 6-digit reset code to <strong>{otpEmail}</strong>.
+                                                {t('forgotPassword.step2Desc', { email: otpEmail })}
                                             </p>
                                         </div>
                                         <OtpBoxes otp={otp} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} refs={otpRefs} />
                                         <button onClick={handleVerifyResetOtp} className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting||otp.join('').length<6}>
-                                            {isSubmitting ? 'Verifying...' : 'Verify Code'}
+                                            {isSubmitting ? t('forgotPassword.verifying') : t('forgotPassword.verifyCode')}
                                         </button>
                                         <div className="text-center mb-3">
-                                            <p style={{ fontSize:'0.875rem',color:'#666',marginBottom:'6px' }}>Didn't receive the code?</p>
+                                            <p style={{ fontSize:'0.875rem',color:'#666',marginBottom:'6px' }}>{t('forgotPassword.didntReceive')}</p>
                                             <button type="button" className="btn btn-link p-0 text-decoration-none fw-bold" onClick={handleResendResetOtp} disabled={resendCooldown>0||isSubmitting}
                                                 style={{ color:resendCooldown>0?'#aaa':'#6B2C3E',fontSize:'0.875rem' }}>
-                                                {resendCooldown>0?`Resend code in ${resendCooldown}s`:'Resend code'}
+                                                {resendCooldown>0?t('forgotPassword.resendIn',{s:resendCooldown}):t('forgotPassword.resend')}
                                             </button>
                                         </div>
                                         <div className="text-center">
                                             <button type="button" className="btn btn-link p-0 text-decoration-none" onClick={() => { setForgotStep('email'); clearErr(); }} style={{ color:'#888',fontSize:'0.85rem' }}>
-                                                ← Use a different email
+                                                {t('forgotPassword.useDifferentEmail')}
                                             </button>
                                         </div>
                                     </div>
@@ -632,39 +633,39 @@ function Hero() {
                                                 <i className="bi bi-shield-lock-fill" style={{ fontSize:'28px',color:'#6B2C3E' }} />
                                             </div>
                                             <p style={{ color:'#666',fontSize:'0.9rem',margin:0 }}>
-                                                Create a new password for <strong>{otpEmail}</strong>.
+                                                {t('forgotPassword.step3Desc', { email: otpEmail })}
                                             </p>
                                         </div>
                                         <div className="mb-3">
-                                            <label className="form-label fw-bold">New Password</label>
+                                            <label className="form-label fw-bold">{t('forgotPassword.newPassword')}</label>
                                             <div style={{ position:'relative' }}>
-                                                <input type={showFpNewPw?'text':'password'} className="form-control" placeholder="Min. 8 characters" value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} style={{ paddingRight:'36px' }} />
+                                                <input type={showFpNewPw?'text':'password'} className="form-control" placeholder={t('forgotPassword.newPasswordPlaceholder')} value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} style={{ paddingRight:'36px' }} />
                                                 <PasswordToggleButton visible={showFpNewPw} onToggle={() => setShowFpNewPw(v=>!v)} />
                                             </div>
                                             {fpNewPw && (
                                                 <ul className="list-unstyled mb-0 mt-2" style={{ fontSize:'0.85rem' }}>
                                                     {PASSWORD_REQUIREMENTS.map(req => {
                                                         const met = req.test(fpNewPw);
-                                                        return <li key={req.label} style={{ color:met?'#198754':'#dc3545' }}>{met?'✓':'✗'} {req.label}</li>;
+                                                        return <li key={req.key} style={{ color:met?'#198754':'#dc3545' }}>{met?'✓':'✗'} {t(`pwReq.${req.key}`)}</li>;
                                                     })}
                                                 </ul>
                                             )}
                                         </div>
                                         <div className="mb-4">
-                                            <label className="form-label fw-bold">Confirm New Password</label>
+                                            <label className="form-label fw-bold">{t('forgotPassword.confirmNewPassword')}</label>
                                             <div style={{ position:'relative' }}>
-                                                <input type={showFpConfPw?'text':'password'} className="form-control" placeholder="Confirm your new password" value={fpConfirmPw} onChange={e => setFpConfirmPw(e.target.value)}
+                                                <input type={showFpConfPw?'text':'password'} className="form-control" placeholder={t('forgotPassword.confirmNewPasswordPlaceholder')} value={fpConfirmPw} onChange={e => setFpConfirmPw(e.target.value)}
                                                     style={{ paddingRight:'36px',borderColor:fpConfirmPw?(fpNewPw===fpConfirmPw?'#198754':'#dc3545'):undefined }} />
                                                 <PasswordToggleButton visible={showFpConfPw} onToggle={() => setShowFpConfPw(v=>!v)} />
                                             </div>
                                             {fpConfirmPw && (
                                                 <p style={{ margin:'6px 0 0',fontSize:'0.85rem',fontWeight:600,color:fpNewPw===fpConfirmPw?'#198754':'#dc3545' }}>
-                                                    {fpNewPw===fpConfirmPw?'✓ Passwords match':'✗ Passwords do not match'}
+                                                    {fpNewPw===fpConfirmPw?t('signUp.passwordsMatch'):t('signUp.passwordsNoMatch')}
                                                 </p>
                                             )}
                                         </div>
                                         <button onClick={handleResetPassword} className="btn w-100 fw-bold" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
-                                            {isSubmitting ? 'Saving...' : 'Save New Password'}
+                                            {isSubmitting ? t('forgotPassword.saving') : t('forgotPassword.save')}
                                         </button>
                                     </>
                                 )}
@@ -675,13 +676,13 @@ function Hero() {
                                         <div style={{ width:'72px',height:'72px',borderRadius:'50%',background:'#d1fae5',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px' }}>
                                             <i className="bi bi-check-lg" style={{ fontSize:'32px',color:'#059669' }} />
                                         </div>
-                                        <h6 className="fw-bold mb-2" style={{ color:'#111' }}>Password reset successfully!</h6>
+                                        <h6 className="fw-bold mb-2" style={{ color:'#111' }}>{t('forgotPassword.step4Title')}</h6>
                                         <p style={{ color:'#666',fontSize:'0.9rem',marginBottom:'24px' }}>
-                                            Your password has been updated. You can now sign in with your new password.
+                                            {t('forgotPassword.step4Desc')}
                                         </p>
                                         <button className="btn w-100 fw-bold" style={{ backgroundColor:'#6B2C3E',color:'white' }}
                                             onClick={() => { setShowForgot(false); setShowSignIn(true); clearErr(); setForgotStep('email'); setFpEmail(''); setFpNewPw(''); setFpConfirmPw(''); }}>
-                                            Sign In Now
+                                            {t('forgotPassword.signInNow')}
                                         </button>
                                     </div>
                                 )}
