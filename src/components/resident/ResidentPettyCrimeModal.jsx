@@ -13,7 +13,7 @@ const CRIME_TYPES = [
   { key: 'other', value: 'Other' }
 ];
 const SERVICE_AREA = {
-  barangay: 'Santa Fe',
+  barangay: 'Sta. Fe',
   city: 'Dasmariñas',
   province: 'Cavite',
   country: 'Philippines',

@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from '../components/landing/Navbar';
-import Hero from '../components/landing/Hero';
+import Hero, { EMERGENCY_CONTACTS } from '../components/landing/Hero';
 import Services from '../components/landing/Services';
 import Contact from '../components/landing/Contact';
 import About from '../components/landing/About';
@@ -14,7 +14,7 @@ function LandingPage() {
       <Services />
       <Contact />
       <About />
-      <Footer />
+      <Footer emergencyContacts={EMERGENCY_CONTACTS} />
     </div>
   );
 }

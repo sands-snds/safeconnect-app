@@ -7,7 +7,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
  
 // Fixed service area — form only accepts reports from this barangay
 const SERVICE_AREA = {
-  barangay: 'Santa Fe',
+  barangay: 'Sta. Fe',
   city: 'Dasmariñas',
   province: 'Cavite',
   country: 'Philippines',

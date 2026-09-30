@@ -4,7 +4,7 @@ import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 const SERVICE_AREA = {
-  barangay: 'Santa Fe',
+  barangay: 'Sta. Fe',
   city: 'Dasmariñas',
   province: 'Cavite',
   country: 'Philippines',
@@ -494,6 +494,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 </option>
 <option value="Medical Aid">
                 {t('assistanceModal.typeMedicalAid')}
+</option>
+<option value="Transport Vehicle">
+                {t('assistanceModal.typeTransportVehicle')}
 </option>
 </select>
 </div>

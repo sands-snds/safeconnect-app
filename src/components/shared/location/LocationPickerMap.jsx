@@ -219,7 +219,7 @@ const LocationPickerMap = ({
         </div>
       ) : (
         <div style={{ marginTop: '6px', fontSize: '15px', color: '#6b7280' }}>
-          The dashed line marks Barangay Santa Fe. Reports can only be made from inside it.
+          The dashed line marks Barangay Sta. Fe. Reports can only be made from inside it.
         </div>
       )}
     </div>

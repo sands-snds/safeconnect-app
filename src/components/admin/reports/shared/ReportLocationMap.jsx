@@ -44,7 +44,7 @@ const ReportLocationMap = ({ latitude, longitude }) => {
       <div style={{ marginTop: "6px", fontSize: "12px", color: "#6b7280" }}>
         {lat.toFixed(6)}, {lng.toFixed(6)}
         {outside && (
-          <span style={{ color: "#b91c1c", fontWeight: 600 }}> · Outside Barangay Santa Fe</span>
+          <span style={{ color: "#b91c1c", fontWeight: 600 }}> · Outside Barangay Sta. Fe</span>
         )}
       </div>
     </div>

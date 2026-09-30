@@ -28,7 +28,7 @@ export const translations = {
       tl: 'Tagalog'
     },
     hero: {
-      eyebrow: 'Barangay Santa Fe Safe Connect',
+      eyebrow: 'Barangay Sta. Fe Safe Connect',
       titleLine1: 'STAY',
       titleHighlight: 'SAFE',
       titleLine2: 'STAY INFORMED',
@@ -44,6 +44,7 @@ export const translations = {
         police: 'National Emergency Hotline',
         dasma: 'Dasmariñas City PNP',
         cdrmc: 'Cavite Disaster Risk Management',
+        dswd: 'Social Welfare & Development',
         barangay: 'Barangay Emergency Line'
       }
     },
@@ -154,7 +155,7 @@ export const translations = {
       badge: 'About SafeConnect',
       titlePrefix: 'One app.',
       titleHighlight: 'A safer',
-      titleSuffix: 'Barangay Santa Fe.',
+      titleSuffix: 'Barangay Sta. Fe.',
       intro: "SafeConnect connects every resident directly to the barangay's emergency response team — report incidents, request help, and stay informed, all in one place.",
       stats: {
         alwaysOn: 'Always On',
@@ -215,7 +216,7 @@ export const translations = {
       sosLabel: 'Police, fire, and medical response — nationwide, 24/7.',
       sosButton: 'Call 911 Now',
       hotlines: {
-        barangay: { title: 'Barangay Santa Fe', sub: 'Primary line', note: 'Emergencies, coordination & general inquiries' },
+        barangay: { title: 'Barangay Sta. Fe', sub: 'Primary line', note: 'Emergencies, coordination & general inquiries' },
         dasma:    { title: 'Dasmariñas PNP',    sub: 'City police',  note: 'Crime, public safety & law enforcement' },
         cdrmc:    { title: 'CDRMC Cavite',      sub: 'Disaster mgmt',note: 'Provincial disaster risk management & response' }
       },
@@ -224,7 +225,11 @@ export const translations = {
       bannerCta: 'Open SafeConnect'
     },
     footer: {
+      description: 'A community emergency platform connecting residents with their barangay for faster reporting and assistance.',
       contactUs: 'Contact Us',
+      barangayOfficials: 'Barangay Officials',
+      socials: 'Socials',
+      createdBy: 'Created by Group Tres · BS Information Technology',
       responseCenter: 'Emergency Response Center',
       responseCenterValue: 'Dasmariñas Emergency Operations',
       emergencyHotline: 'Emergency Hotline',
@@ -340,7 +345,7 @@ export const translations = {
       streetPlaceholder: 'Street',
       floorUnitPlaceholder: 'Floor / Unit / Room (Optional)',
       landmarkPlaceholder: 'Landmark / directions (e.g. beside the covered court, blue gate)',
-      serviceAreaNote: 'Reports are limited to Barangay Santa Fe, Dasmariñas, Cavite, Philippines',
+      serviceAreaNote: 'Reports are limited to Barangay Sta. Fe, Dasmariñas, Cavite, Philippines',
       peopleAffected: 'Number of People Affected',
       selectRange: 'Select range',
       photoOrVideo: 'Photo or Video',
@@ -406,6 +411,7 @@ export const translations = {
       selectType: 'Select assistance type',
       typeFoodWater: 'Food and Water',
       typeMedicalAid: 'Medical Aid',
+      typeTransportVehicle: 'Transport Vehicle',
       urgency: 'Urgency',
       selectUrgency: 'Select urgency (optional)',
       urgencyOptions: {
@@ -415,7 +421,7 @@ export const translations = {
         critical: 'Critical'
       },
       currentAddress: 'Current Address',
-      serviceAreaNote: 'Requests are limited to Barangay Santa Fe, Dasmariñas, Cavite, Philippines',
+      serviceAreaNote: 'Requests are limited to Barangay Sta. Fe, Dasmariñas, Cavite, Philippines',
       describeSituation: 'Describe Your Situation',
       situationPlaceholder: 'Please provide details about what kind of help you need...',
       cooldownAlert: 'Please wait {{time}} before submitting another assistance request.',
@@ -599,7 +605,7 @@ export const translations = {
       tl: 'Tagalog'
     },
     hero: {
-      eyebrow: 'Barangay Santa Fe Safe Connect',
+      eyebrow: 'Barangay Sta. Fe Safe Connect',
       titleLine1: 'MANATILING',
       titleHighlight: 'LIGTAS',
       titleLine2: 'MANATILING MAY ALAM',
@@ -615,6 +621,7 @@ export const translations = {
         police: 'Pambansang Emergency Hotline',
         dasma: 'Dasmariñas City PNP',
         cdrmc: 'Cavite Disaster Risk Management',
+        dswd: 'Kagawaran ng Kapakanang Panlipunan',
         barangay: 'Linya ng Emergency ng Barangay'
       }
     },
@@ -725,7 +732,7 @@ export const translations = {
       badge: 'Tungkol sa SafeConnect',
       titlePrefix: 'Isang app.',
       titleHighlight: 'Mas ligtas na',
-      titleSuffix: 'Barangay Santa Fe.',
+      titleSuffix: 'Barangay Sta. Fe.',
       intro: 'Direktang ikinokonekta ng SafeConnect ang bawat residente sa emergency response team ng barangay — mag-report ng insidente, humingi ng tulong, at manatiling updated, lahat sa iisang lugar.',
       stats: {
         alwaysOn: 'Laging Bukas',
@@ -786,7 +793,7 @@ export const translations = {
       sosLabel: 'Pulis, bumbero, at medikal na tugon — sa buong bansa, 24/7.',
       sosButton: 'Tumawag sa 911 Ngayon',
       hotlines: {
-        barangay: { title: 'Barangay Santa Fe', sub: 'Pangunahing linya', note: 'Emergency, koordinasyon, at pangkalahatang katanungan' },
+        barangay: { title: 'Barangay Sta. Fe', sub: 'Pangunahing linya', note: 'Emergency, koordinasyon, at pangkalahatang katanungan' },
         dasma:    { title: 'Dasmariñas PNP',    sub: 'Pulis ng lungsod', note: 'Krimen, kaligtasan ng publiko, at pagpapatupad ng batas' },
         cdrmc:    { title: 'CDRMC Cavite',      sub: 'Disaster mgmt',   note: 'Panlalawigang disaster risk management at tugon' }
       },
@@ -795,7 +802,11 @@ export const translations = {
       bannerCta: 'Buksan ang SafeConnect'
     },
     footer: {
+      description: 'Isang community emergency platform na nag-uugnay sa mga residente at sa kanilang barangay para sa mas mabilis na pag-uulat at tulong.',
       contactUs: 'Makipag-ugnayan',
+      barangayOfficials: 'Mga Opisyal ng Barangay',
+      socials: 'Socials',
+      createdBy: 'Ginawa ng Group Tres · BS Information Technology',
       responseCenter: 'Emergency Response Center',
       responseCenterValue: 'Dasmariñas Emergency Operations',
       emergencyHotline: 'Emergency Hotline',
@@ -911,7 +922,7 @@ export const translations = {
       streetPlaceholder: 'Kalye',
       floorUnitPlaceholder: 'Floor / Unit / Room (Opsyonal)',
       landmarkPlaceholder: 'Landmark / direksyon (hal. tabi ng covered court, blue gate)',
-      serviceAreaNote: 'Limitado lang ang mga report sa Barangay Santa Fe, Dasmariñas, Cavite, Philippines',
+      serviceAreaNote: 'Limitado lang ang mga report sa Barangay Sta. Fe, Dasmariñas, Cavite, Philippines',
       peopleAffected: 'Bilang ng mga Apektadong Tao',
       selectRange: 'Piliin ang saklaw',
       photoOrVideo: 'Larawan o Video',
@@ -977,6 +988,7 @@ export const translations = {
       selectType: 'Piliin ang uri ng tulong',
       typeFoodWater: 'Pagkain at Tubig',
       typeMedicalAid: 'Medikal na Tulong',
+      typeTransportVehicle: 'Sasakyang Pang-transportasyon',
       urgency: 'Pagkaagaran',
       selectUrgency: 'Piliin ang pagkaagaran (opsyonal)',
       urgencyOptions: {
@@ -986,7 +998,7 @@ export const translations = {
         critical: 'Kritikal'
       },
       currentAddress: 'Kasalukuyang Address',
-      serviceAreaNote: 'Limitado lang ang mga kahilingan sa Barangay Santa Fe, Dasmariñas, Cavite, Philippines',
+      serviceAreaNote: 'Limitado lang ang mga kahilingan sa Barangay Sta. Fe, Dasmariñas, Cavite, Philippines',
       describeSituation: 'Ilarawan ang Iyong Sitwasyon',
       situationPlaceholder: 'Magbigay ng detalye tungkol sa uri ng tulong na kailangan mo...',
       cooldownAlert: 'Maghintay ng {{time}} bago magsumite ng isa pang kahilingan ng tulong.',

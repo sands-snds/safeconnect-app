@@ -2520,4 +2520,33 @@ body {
     .footer-section .footer-copy {
         line-height: 1.8;
     }
+
+    .footer-section .footer-contact-list {
+        text-align: center;
+    }
+
+    /* Room for the floating call button so it doesn't cover the credits */
+    .footer-section {
+        padding-bottom: 88px !important;
+    }
+
+    .footer-section .footer-about {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* Shared footer (DonationFooter.jsx) */
+.footer-section .footer-about {
+    max-width: 320px;
+    line-height: 1.6;
+}
+
+.footer-section .footer-phone:hover,
+.footer-section .footer-link:hover {
+    color: #fff !important;
+}
+
+.footer-section .footer-credits {
+    margin-top: 4px;
 }

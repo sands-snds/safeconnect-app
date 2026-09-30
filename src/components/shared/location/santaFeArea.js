@@ -79,4 +79,4 @@ export const isWithinSantaFe = (lat, lng) =>
   || distanceToBoundaryM(lat, lng, SANTA_FE_BOUNDARY) <= BOUNDARY_TOLERANCE_M;
 
 export const OUTSIDE_SANTA_FE_MESSAGE =
-  "The pinned location is outside the jurisdiction of Barangay Santa Fe. Please move the pin to where the incident is happening inside Santa Fe.";
+  "The pinned location is outside the jurisdiction of Barangay Sta. Fe. Please move the pin to where the incident is happening inside Sta. Fe.";

@@ -21,7 +21,7 @@ const reverseGeocode = async (lat, lng) => {
   return {
     houseNumber,
     street,
-    fullAddress: `${line ? line + ', ' : ''}Barangay Santa Fe, Dasmariñas, Cavite, Philippines`
+    fullAddress: `${line ? line + ', ' : ''}Barangay Sta. Fe, Dasmariñas, Cavite, Philippines`
   };
 };
 

@@ -3,11 +3,13 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import ResidentAssistanceModal from './ResidentAssistanceModal';
 import ResidentPettyCrimeModal from './ResidentPettyCrimeModal';
 
-const EMERGENCY_CONTACTS = [
+// Also listed in the footer (ResidentPage passes it to DonationFooter).
+export const EMERGENCY_CONTACTS = [
   { id: 'police',       label: '911 Emergency',     sublabelKey: 'police',   number: '911',           icon: 'bi-shield-fill-exclamation', color: '#dc2626' },
   { id: 'dasma-police', label: 'Dasmariñas Police',  sublabelKey: 'dasma',    number: '+63462420002',  icon: 'bi-shield-fill',             color: '#1d4ed8' },
   { id: 'cdrmc',        label: 'CDRMC',              sublabelKey: 'cdrmc',    number: '+63462300345',  icon: 'bi-heart-pulse-fill',        color: '#059669' },
-  { id: 'barangay',     label: 'Barangay Santa Fe',  sublabelKey: 'barangay', number: '+639929474309', icon: 'bi-house-fill',              color: '#7c3aed' },
+  { id: 'dswd',         label: 'DSWD',               sublabelKey: 'dswd',     number: '+63464165393',  icon: 'bi-people-fill',             color: '#ea580c' },
+  { id: 'barangay',     label: 'Barangay Sta. Fe',   sublabelKey: 'barangay', number: '+639929474309', icon: 'bi-house-fill',              color: '#7c3aed' },
 ];
 
 function EmergencyCallButton() {
