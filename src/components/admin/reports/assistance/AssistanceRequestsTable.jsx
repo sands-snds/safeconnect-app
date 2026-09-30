@@ -5,6 +5,7 @@ import ReportCard from "../../shared/ReportCard";
 
 import AssistanceRequestDetails from "./AssistanceRequestDetails";
 import StatusSelect from "../../shared/StatusSelect";
+import ArchiveButton from "../shared/ArchiveButton";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 
 const STATUS_OPTIONS = [
@@ -17,7 +18,8 @@ const AssistanceRequestsTable = ({
   data,
   filters,
   setFilters,
-  onUpdateStatus
+  onUpdateStatus,
+  onArchive
 }) => {
   const [expandedRowId, setExpandedRowId] = useState(null);
 
@@ -40,12 +42,15 @@ const AssistanceRequestsTable = ({
       tag={<ReportForTag report={request} />}
       subtitle={`${request.requester} · ${request.location} · ${request.date}`}
       statusControl={
-        <StatusSelect
-          value={request.status}
-          reportId={request.id}
-          reportType="assistance"
-          onUpdateStatus={onUpdateStatus}
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <StatusSelect
+            value={request.status}
+            reportId={request.id}
+            reportType="assistance"
+            onUpdateStatus={onUpdateStatus}
+          />
+          <ArchiveButton report={request} reportType="assistance" onArchive={onArchive} />
+        </div>
       }
       expanded={expandedRowId === request.id}
       onToggle={() => toggleDetails(request.id)}

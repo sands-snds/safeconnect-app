@@ -96,3 +96,7 @@ AdminActivity.ensureTable().catch((err) =>
 Log.ensureColumns().catch((err) =>
   console.error("Could not add signin_logs columns:", err.message)
 );
+
+// Adds the report archive columns/setting, then auto-archives old resolved
+// reports now and every 6 hours.
+require("./services/archiveService").startScheduler();

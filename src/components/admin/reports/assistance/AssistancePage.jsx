@@ -6,7 +6,8 @@ const AssistancePage = ({
     assistanceRequests,
     filters,
     setFilters,
-    onUpdateStatus
+    onUpdateStatus,
+    onArchive
 }) => {
     return (
         <AssistanceRequestsTable
@@ -14,6 +15,7 @@ const AssistancePage = ({
             filters={filters}
             setFilters={setFilters}
             onUpdateStatus={onUpdateStatus}
+            onArchive={onArchive}
         />
     );
 };

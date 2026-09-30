@@ -127,8 +127,9 @@ class PettyCrime {
 
     static async updateStatus(id, status) {
         const [result] = await db.query(
-            `UPDATE petty_crimes SET status = ? WHERE id = ?`,
-            [status, id]
+            // resolved_at starts the auto-archive countdown (services/archiveService.js).
+            `UPDATE petty_crimes SET status = ?, resolved_at = IF(? = 'Resolved', NOW(), resolved_at) WHERE id = ?`,
+            [status, status, id]
         );
         return result.affectedRows;
     }

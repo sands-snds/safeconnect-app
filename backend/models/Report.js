@@ -148,8 +148,9 @@ class Report {
 
     static async updateStatus(id, status) {
         const [result] = await db.query(
-            `UPDATE emergency_reports SET status = ? WHERE id = ?`,
-            [status, id]
+            // resolved_at starts the auto-archive countdown (services/archiveService.js).
+            `UPDATE emergency_reports SET status = ?, resolved_at = IF(? = 'Resolved', NOW(), resolved_at) WHERE id = ?`,
+            [status, status, id]
         );
         return result.affectedRows;
     }

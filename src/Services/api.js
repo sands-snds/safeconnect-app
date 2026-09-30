@@ -289,7 +289,8 @@ export const fetchEmergencyReports = async () => {
         reportFor: r.report_for || 'self',
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
-        victimRelationship: r.victim_relationship || ''
+        victimRelationship: r.victim_relationship || '',
+        archivedAt: r.archived_at || null
     }));
 };
 
@@ -357,7 +358,8 @@ export const fetchAssistanceRequests = async () => {
         reportFor: r.report_for || 'self',
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
-        victimRelationship: r.victim_relationship || ''
+        victimRelationship: r.victim_relationship || '',
+        archivedAt: r.archived_at || null
     }));
 };
 
@@ -422,7 +424,8 @@ export const fetchPettyCrimes = async () => {
         reportFor: r.report_for || 'self',
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
-        victimRelationship: r.victim_relationship || ''
+        victimRelationship: r.victim_relationship || '',
+        archivedAt: r.archived_at || null
     }));
 };
 
@@ -461,6 +464,36 @@ export const deletePettyCrimeReport = async (id) => {
         headers: authHeaders(),
     });
     return res.json();
+};
+
+// ── Report archive ────────────────────────────────────────────────────────────
+// type: "emergency" | "assistance" | "pettyCrime". Only Resolved reports can
+// be archived; restoring puts one back in the normal list.
+const setReportArchived = async (type, id, archived) => {
+    const res = await apiFetch(`${API_ENDPOINTS.REPORTS}/${type}/${id}/${archived ? "archive" : "restore"}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+    });
+    return res.json().catch(() => ({ success: false }));
+};
+
+export const archiveReport = (type, id) => setReportArchived(type, id, true);
+export const restoreReport = (type, id) => setReportArchived(type, id, false);
+
+// Months after resolution before a report is archived automatically (0 = off).
+export const fetchArchiveSettings = async () => {
+    const res = await apiFetch(`${API_ENDPOINTS.REPORTS}/archive-settings`, { headers: authHeaders() });
+    const data = await res.json().catch(() => null);
+    return data?.success ? data.months : null;
+};
+
+export const updateArchiveSettings = async (months) => {
+    const res = await apiFetch(`${API_ENDPOINTS.REPORTS}/archive-settings`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ months }),
+    });
+    return res.json().catch(() => ({ success: false }));
 };
 
 // ── Announcements ─────────────────────────────────────────────────────────────

@@ -6,7 +6,8 @@ const PettyCrimePage = ({
     pettyCrimeReports,
     filters,
     setFilters,
-    onUpdateStatus
+    onUpdateStatus,
+    onArchive
 }) => {
     return (
         <PettyCrimeReportsTable
@@ -14,6 +15,7 @@ const PettyCrimePage = ({
             filters={filters}
             setFilters={setFilters}
             onUpdateStatus={onUpdateStatus}
+            onArchive={onArchive}
         />
     );
 };

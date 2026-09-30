@@ -14,7 +14,9 @@ import {
     fetchNotifications,
     markNotificationRead,
     updateUserRole as updateUserRoleApi,
-    markAllNotificationsRead
+    markAllNotificationsRead,
+    archiveReport,
+    restoreReport
 } from "../../../Services/api";
 
 import {
@@ -206,6 +208,21 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         return true;
     };
 
+    // archived: true to archive a Resolved report, false to restore it.
+    // Returns { success, message }.
+    const setReportArchived = async (id, type, archived) => {
+        const result = archived ? await archiveReport(type, id) : await restoreReport(type, id);
+        if (!result?.success) return result;
+
+        const archivedAt = archived ? new Date().toISOString() : null;
+        const update = list => list.map(item => item.id === id ? { ...item, archivedAt } : item);
+
+        if (type === "emergency") setEmergencyReports(update);
+        if (type === "assistance") setAssistanceRequests(update);
+        if (type === "pettyCrime") setPettyCrimeReports(update);
+        return result;
+    };
+
     // Returns { success, message } so the Users table can show the reason
     // when the backend refuses (e.g. changing your own role).
     const updateUserRole = async (id, role) => {
@@ -276,6 +293,7 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         handleRefresh,
         updateStatus,
         updateUserRole,
+        setReportArchived,
         handleFormSubmit
     };
 }

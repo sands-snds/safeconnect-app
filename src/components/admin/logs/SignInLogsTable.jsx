@@ -28,7 +28,12 @@ const SignInLogsTable = ({
     </tr>
   );
 
+  // The backend only returns the last 90 days (Log.getSigninLogs).
   return (
+    <>
+    <p className="text-gray-500 text-sm" style={{ margin: '0 0 12px' }}>
+      Showing sign-ins from the last 90 days.
+    </p>
     <ListView
       data={data}
       filterType="signins"
@@ -40,6 +45,7 @@ const SignInLogsTable = ({
       exportType="signinLogs"
       itemLabel="sign-ins"
     />
+    </>
   );
 };
 

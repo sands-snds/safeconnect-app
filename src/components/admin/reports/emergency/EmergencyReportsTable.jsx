@@ -5,6 +5,7 @@ import ReportCard from "../../shared/ReportCard";
 
 import EmergencyReportDetails from "./EmergencyReportDetails";
 import StatusSelect from "../../shared/StatusSelect";
+import ArchiveButton from "../shared/ArchiveButton";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 
 const STATUS_OPTIONS = [
@@ -18,6 +19,7 @@ const EmergencyReportsTable = ({
   filters,
   setFilters,
   onUpdateStatus,
+  onArchive,
   getSeverityColor
 }) => {
   const [expandedRowId, setExpandedRowId] = useState(null);
@@ -41,12 +43,15 @@ const EmergencyReportsTable = ({
       tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
       statusControl={
-        <StatusSelect
-          value={report.status}
-          reportId={report.id}
-          reportType="emergency"
-          onUpdateStatus={onUpdateStatus}
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <StatusSelect
+            value={report.status}
+            reportId={report.id}
+            reportType="emergency"
+            onUpdateStatus={onUpdateStatus}
+          />
+          <ArchiveButton report={report} reportType="emergency" onArchive={onArchive} />
+        </div>
       }
       expanded={expandedRowId === report.id}
       onToggle={() => toggleDetails(report.id)}

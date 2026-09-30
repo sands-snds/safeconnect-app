@@ -52,6 +52,8 @@ CREATE TABLE emergency_reports (
   status VARCHAR(50) DEFAULT 'Received',
   assigned_to INT(11) DEFAULT NULL,
   assigned_at TIMESTAMP NULL DEFAULT NULL,
+  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
+  archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_emergency_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -77,6 +79,8 @@ CREATE TABLE assistance_requests (
   describe_your_situation TEXT NOT NULL,
   special_needs TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received', -- Received -> In Progress -> Resolved (forward-only)
+  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
+  archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_assistance_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -99,6 +103,8 @@ CREATE TABLE petty_crimes (
   description TEXT NOT NULL,
   suspect_info TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received',
+  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
+  archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_pettycrime_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -174,6 +180,17 @@ CREATE TABLE admin_activity_logs (
   KEY admin_id (admin_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+-- system_settings (also auto-created by the backend on start)
+-- report_auto_archive_months: 0 (off), 6 or 12
+-- --------------------------------------------------------
+CREATE TABLE system_settings (
+  setting_key VARCHAR(100) NOT NULL,
+  setting_value VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (setting_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO system_settings (setting_key, setting_value) VALUES ('report_auto_archive_months', '12');
 
 -- --------------------------------------------------------
 -- admin account

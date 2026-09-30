@@ -5,6 +5,7 @@ import ReportCard from "../../shared/ReportCard";
 
 import PettyCrimeReportDetails from "./PettyCrimeReportDetails";
 import StatusSelect from "../../shared/StatusSelect";
+import ArchiveButton from "../shared/ArchiveButton";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 
 const STATUS_OPTIONS = [
@@ -17,7 +18,8 @@ const PettyCrimeReportsTable = ({
   data,
   filters,
   setFilters,
-  onUpdateStatus
+  onUpdateStatus,
+  onArchive
 }) => {
   const [expandedRowId, setExpandedRowId] = useState(null);
 
@@ -35,12 +37,15 @@ const PettyCrimeReportsTable = ({
       tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
       statusControl={
-        <StatusSelect
-          value={report.status}
-          reportId={report.id}
-          reportType="pettyCrime"
-          onUpdateStatus={onUpdateStatus}
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <StatusSelect
+            value={report.status}
+            reportId={report.id}
+            reportType="pettyCrime"
+            onUpdateStatus={onUpdateStatus}
+          />
+          <ArchiveButton report={report} reportType="pettyCrime" onArchive={onArchive} />
+        </div>
       }
       expanded={expandedRowId === report.id}
       onToggle={() => toggleDetails(report.id)}

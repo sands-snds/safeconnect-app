@@ -52,6 +52,7 @@ const AdminPage = () => {
     handleRefresh,
     updateStatus,
     updateUserRole,
+    setReportArchived,
     handleFormSubmit
   } = useAdminData({ isSuperAdmin });
 
@@ -245,6 +246,9 @@ useEffect(() => {
                   setFilters={setFilters}
 
                   onUpdateStatus={updateStatus}
+                  onArchive={setReportArchived}
+                  onRefresh={() => handleRefresh(activeView)}
+                  isSuperAdmin={isSuperAdmin}
 
                   getSeverityColor={getSeverityColor}
               />

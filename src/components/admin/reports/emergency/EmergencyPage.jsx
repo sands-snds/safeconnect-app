@@ -7,6 +7,7 @@ const EmergencyPage = ({
     filters,
     setFilters,
     onUpdateStatus,
+    onArchive,
     getSeverityColor
 }) => {
     return (
@@ -15,6 +16,7 @@ const EmergencyPage = ({
             filters={filters}
             setFilters={setFilters}
             onUpdateStatus={onUpdateStatus}
+            onArchive={onArchive}
             getSeverityColor={getSeverityColor}
         />
     );
