@@ -32,6 +32,25 @@ const PhoneLink = ({ number, children }) => (
   </a>
 );
 
+const FooterLogo = ({ size }) => (
+  <div
+    style={{
+      width: `${size}px`,
+      height: `${size}px`,
+      background: "#fff",
+      borderRadius: "50%",
+      overflow: "hidden",
+      flexShrink: 0,
+    }}
+  >
+    <img
+      src="/images/safeconnect-logo.svg"
+      alt="Safe Connect logo"
+      style={{ width: "100%", height: "100%", display: "block" }}
+    />
+  </div>
+);
+
 // emergencyContacts: the same list the page's floating call button uses
 // (EMERGENCY_CONTACTS in Hero.jsx / EmergencyReportSection.jsx), so the
 // footer hotlines always match the button.
@@ -40,35 +59,32 @@ export default function DonationFooter({ emergencyContacts = [] }) {
   return (
     <footer className="footer-section bg-dark text-white py-4">
       <div className="container">
-        <div className="row">
-          {/* Brand Section */}
-          <div className="col-12 col-lg-3 mb-4 footer-brand">
-            <div className="d-flex align-items-center justify-content-center justify-content-lg-start gap-3">
-              <div
-                style={{
-                  width: "64px",
-                  height: "64px",
-                  background: "#fff",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  flexShrink: 0,
-                }}
-              >
-                <img
-                  src="/images/safeconnect-logo.svg"
-                  alt="Safe Connect logo"
-                  style={{ width: "100%", height: "100%", display: "block" }}
-                />
-              </div>
+        <div className="row align-items-lg-center">
+          {/* Brand Section, desktop: large logo on its own on the left,
+              name + description beside it. */}
+          <div className="d-none d-lg-flex col-lg-4 align-items-center gap-4 footer-brand">
+            <FooterLogo size={96} />
+            <div>
+              <div className="footer-logo-text text-white fs-2 lh-sm">Safe Connect</div>
+              <p className="footer-about small text-white-50 mt-3 mb-0">
+                {t("footer.description")}
+              </p>
+            </div>
+          </div>
+
+          {/* Brand Section, phones/tablets: logo + name centered, description below. */}
+          <div className="col-12 d-lg-none mb-4 footer-brand">
+            <div className="d-flex align-items-center justify-content-center gap-3">
+              <FooterLogo size={64} />
               <span className="footer-logo-text text-white fw-bold fs-4">Safe Connect</span>
             </div>
-            <p className="footer-about small text-white-50 mt-3 mb-0 text-center text-lg-start">
+            <p className="footer-about small text-white-50 mt-3 mb-0 text-center">
               {t("footer.description")}
             </p>
           </div>
 
           {/* Contact Us */}
-          <div className="col-12 col-lg-9 footer-contact">
+          <div className="col-12 col-lg-8 footer-contact">
             <h5 className="footer-heading mb-3 text-lg-start text-center">{t("footer.contactUs")}</h5>
 
             <div className="row small text-white-50 footer-contact-list">
@@ -78,9 +94,9 @@ export default function DonationFooter({ emergencyContacts = [] }) {
                   <i className="bi bi-people-fill me-2 text-danger"></i>
                   {t("footer.barangayOfficials")}
                 </p>
-                <div className="row row-cols-1 row-cols-sm-2 g-2">
+                <div className="footer-officials">
                   {BARANGAY_OFFICIALS.map((o) => (
-                    <div className="col" key={o.name}>
+                    <div key={o.name}>
                       <div className="text-white-50">{o.name}</div>
                       <PhoneLink number={o.number} />
                     </div>

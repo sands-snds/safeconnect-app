@@ -2550,3 +2550,19 @@ body {
 .footer-section .footer-credits {
     margin-top: 4px;
 }
+
+/* Officials: one column on phones, two content-sized columns from 576px up
+   (so a long name doesn't wrap and leave a gap in the other column). */
+.footer-section .footer-officials {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+@media (min-width: 576px) {
+    .footer-section .footer-officials {
+        grid-template-columns: repeat(2, auto);
+        justify-content: start;
+        column-gap: 32px;
+    }
+}
