@@ -369,7 +369,8 @@ function Hero() {
                                 {t('hero.eyebrow')}
                             </p>
                             <h1 className="fw-bold" style={{ fontSize:'clamp(2rem,5vw,3.5rem)',lineHeight:'1.2' }}>
-                                {t('hero.titleLine1')} <span style={{ color:'#FFC107' }}>{t('hero.titleHighlight')}</span> {t('hero.titleLine2')}
+                                {t('hero.titleLine1')} <span style={{ color:'#FFC107' }}>{t('hero.titleHighlight')}</span><br />
+                                {t('hero.titleLine2')}
                             </h1>
                             <p className="mt-3" style={{ fontSize:'clamp(1rem,2vw,1.25rem)',lineHeight:'1.6' }}>
                                 {t('hero.subtitle')}

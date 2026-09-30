@@ -442,7 +442,7 @@ export const translations = {
         suspiciousActivity: 'Suspicious Activity',
         trespassing: 'Trespassing',
         harassment: 'Harassment',
-        other: 'Other'
+        other: 'Other (not listed — please specify in the description)'
       },
       description: 'Description',
       descriptionPlaceholder: 'Describe what happened...',
@@ -1013,7 +1013,7 @@ export const translations = {
         suspiciousActivity: 'Kahina-hinalang Aktibidad',
         trespassing: 'Pagpasok nang Walang Pahintulot',
         harassment: 'Panliligalig',
-        other: 'Iba pa'
+        other: 'Iba pa (wala sa listahan — pakispesipiko sa deskripsyon)'
       },
       description: 'Deskripsyon',
       descriptionPlaceholder: 'Ilarawan ang nangyari...',
