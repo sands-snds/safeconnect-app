@@ -1,396 +1,284 @@
 # SafeConnect
 
-***A Web-Based Community Disaster Response System***
+***A Web-Based Community Disaster Response System for Barangay Santa Fe, Dasmariñas, Cavite***
 
-**SafeConnect** is an online platform designed to strengthen community preparedness and response during disasters and emergencies. It lets residents report emergencies, request assistance, report petty crimes, and stay informed through announcements — while giving barangay/community administrators a dashboard to manage and respond to everything coming in.
+SafeConnect is a web app that helps a barangay prepare for and respond to emergencies. Residents use it to report emergencies, request assistance, report petty crimes and read barangay announcements. Barangay staff use an admin panel to follow up each report, publish announcements, manage accounts and review activity logs.
+
+> **How does it work inside?** This README covers what the app does and how to run it. For how every component works, and how the backend and frontend connect, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
 ---
 
 ## Table of Contents
 
-1. [Project Overview](#1-project-overview)
-2. [Installation](#2-installation)
-3. [Folder Structure](#3-folder-structure)
-4. [Application Features](#4-application-features)
-5. [Component Documentation](#5-component-documentation)
-6. [Backend Documentation](#6-backend-documentation)
-7. [Database Documentation](#7-database-documentation)
-8. [API Reference](#8-api-reference)
+1. [Features](#1-features)
+2. [Technology](#2-technology)
+3. [How It Fits Together](#3-how-it-fits-together)
+4. [Getting Started (Local Setup)](#4-getting-started-local-setup)
+5. [Environment Variables](#5-environment-variables)
+6. [Deployment (Azure)](#6-deployment-azure)
+7. [Folder Structure](#7-folder-structure)
+8. [User Roles](#8-user-roles)
+9. [Data Retention](#9-data-retention)
+10. [Known Issues](#10-known-issues)
 
 ---
 
-## 1. Project Overview
+## 1. Features
 
-### Purpose
-SafeConnect gives a community two connected surfaces:
-- **Residents** can sign up, sign in, submit emergency reports, request assistance, report petty crimes, browse announcements, and manage their own submitted reports and profile.
-- **Admins** get a dashboard to view live statistics, manage every report type, publish announcements, manage registered users, and review sign-in/admin activity logs.
+### For residents
+| Feature | What it does |
+|---|---|
+| **Sign up with email verification** | A 6-digit code is emailed to the resident. The account is created only after the code is entered. |
+| **Sign in / forgot password** | Signing in sends an email alert. Forgotten passwords are reset with an emailed code. |
+| **Emergency report** | Report a fire, flood, medical emergency or similar, with a required photo or video and a map pin. Can be filed for yourself or for someone else. |
+| **Assistance request** | Ask for food, water, medical supplies, shelter and so on, with an urgency level. |
+| **Petty crime report** | Report theft, vandalism and similar incidents, with optional suspect details. |
+| **Location pin** | A map of Barangay Santa Fe. Residents tap the map or use their GPS location. Pins outside the barangay are rejected, and the address fills in automatically. |
+| **My Reports** | See every report you have submitted and its status (Received → In Progress → Resolved), and edit or delete your reports. |
+| **Notifications** | A bell showing new announcements, plus personal updates when an admin changes the status of one of your reports. |
+| **News / announcements** | The barangay's announcements, including previews of linked news articles. |
+| **Weather** | A forecast card for Santa Fe, from Open-Meteo. |
+| **Profile settings** | Change your photo, username, contact number, email or password. |
+| **English / Tagalog** | Visitors pick a language on their first visit and can switch at any time. |
+| **Spam protection** | Each report type has a 1-hour cooldown per account. |
 
-### Technology Used
+### For admins (barangay staff)
+| Feature | What it does |
+|---|---|
+| **Dashboard** | Totals, a "reports over time" chart, status pie charts and the latest reports. |
+| **Report management** | Emergency, Assistance and Petty Crime tabs with search, filters and pagination. Each card shows the full details, the photo and the map pin. |
+| **Status workflow** | A report can only move forward (Received → In Progress → Resolved). The resident gets an automatic update at each step. |
+| **Archiving** | Resolved reports can be archived by hand, or automatically after 6 months or 1 year. Archived reports can be restored. |
+| **Announcements** | Create, edit and delete announcements, with an image or a pasted news link (a preview is generated). Every active resident is emailed. |
+| **Generate Report** | Download PDF or Excel reports, filtered by status and date range. |
+| **Notifications** | A bell that alerts admins to new reports and announcements. |
+| **Users** *(super admin)* | List all accounts and change their role or status. |
+| **Sign-in Logs** *(super admin)* | Every sign-in attempt from the last 90 days, with IP address, device and approximate location. |
+| **Admin Logs** *(super admin)* | Which admins are online, and a record of every admin action (logins, status changes, exports and more). |
+
+---
+
+## 2. Technology
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19 (Create React App), React Router 7, Bootstrap 5, Recharts, Leaflet/React-Leaflet (maps), SweetAlert2 |
+| Frontend | React 19 (Create React App), React Router 7, Bootstrap 5 + Bootstrap Icons, Recharts (charts), Leaflet / React-Leaflet (maps), SweetAlert2 |
 | Backend | Node.js, Express 5 |
-| Database | MySQL (via `mysql2`) |
-| Auth | JSON Web Tokens (`jsonwebtoken`) + `bcrypt` password hashing |
+| Database | MySQL 8 (via `mysql2`) |
+| Authentication | JSON Web Tokens (`jsonwebtoken`, valid for 7 days) + `bcrypt` password hashing |
+| Email | `nodemailer` over SMTP |
 | File uploads | `multer` (announcement images, profile photos) |
-| Exports | `exceljs`, `pdfkit` (admin data export) |
-| Security | `helmet`, `cors` |
-
-### Architecture
-This is a two-tier app: a React SPA (port 3000 in dev) talking to an Express REST API (port 5000 in dev) backed by MySQL. There is **no PHP** anywhere in the current codebase — an earlier PHP + XAMPP + phpMyAdmin version was migrated to this Node/Express/MySQL stack. The frontend never talks to the database directly; all data access goes through `src/Services/api.js`, which calls the Express routes documented below.
-
-Authentication is JWT-based: signing in returns a token (`backend/utils/jwt.js`), which the frontend stores (`localStorage`, key `authToken`) and attaches as `Authorization: Bearer <token>` to every protected request (see `authHeaders()` in `src/Services/api.js`). The backend enforces access with `verifyToken` / `verifyAdmin` / `verifySelfOrAdmin` middleware (`backend/middleware/authMiddleware.js`).
+| Exports | `pdfkit` (PDF), `exceljs` (Excel) |
+| Security | `helmet` (HTTP headers), `cors` (allowed origins) |
+| External services | OpenStreetMap tiles + Nominatim (maps, addresses), Esri World Imagery (satellite view), Open-Meteo (weather), ipapi.co (sign-in location) |
+| Hosting | Azure Static Web Apps (frontend), Azure App Service (backend), Azure Database for MySQL |
 
 ---
 
-## 2. Installation
+## 3. How It Fits Together
+
+```
+ Browser (React SPA)                     Node.js / Express API                MySQL
+┌───────────────────────┐   HTTPS/JSON  ┌──────────────────────────┐  SQL   ┌──────────────┐
+│ pages + components    │ ────────────► │ routes → middleware →    │ ─────► │ safeconnect  │
+│        │              │  Bearer JWT   │ controllers → services → │        │   database   │
+│ src/Services/api.js   │ ◄──────────── │ models                   │ ◄───── │              │
+└───────────────────────┘               └──────────────────────────┘        └──────────────┘
+                                               │  SMTP (emails)
+                                               │  ipapi.co (sign-in location)
+```
+
+- The React app **never talks to the database directly**. Every request goes through [src/Services/api.js](src/Services/api.js), which calls the Express API.
+- The API checks the JWT and the account's role on each protected request, then reads and writes MySQL.
+- There are three pages: `/` (public landing page), `/resident` (resident app) and `/admin` (admin panel).
+
+The full walkthrough is in [ARCHITECTURE.md](ARCHITECTURE.md). It covers every route, middleware, service, model and component, plus step-by-step flows such as "a resident submits a report".
+
+---
+
+## 4. Getting Started (Local Setup)
 
 ### Prerequisites
-- Node.js 18+ and npm
-- A running MySQL server (5.7+/8+)
+- **Node.js 18+** and npm
+- **MySQL 8** (the team uses a standalone MySQL server managed with **MySQL Workbench**)
+- An **SMTP account** for sign-up codes and emails (for example, a Gmail app password)
 
-### 1. Install dependencies
+### Step 1: Install dependencies
 ```bash
-# from the project root — installs the React app
+# from the project root (the React app)
 npm install
 
-# backend
+# the backend
 cd backend
 npm install
 ```
 
-### 2. Set up the database 
+### Step 2: Create the database
+In MySQL Workbench, open `database/safeconnect_db.sql` and run it (**File → Open SQL Script**, then **Execute**). You can also run it from a terminal:
 ```bash
 mysql -u root -p < database/safeconnect_db.sql
 ```
-This creates the `safeconnect` database and all tables (see [Database Documentation](#7-database-documentation)).
+This creates the `safeconnect` database and its tables. **Warning:** the script starts with `DROP DATABASE IF EXISTS safeconnect`, so running it again erases existing data.
 
-### 3. Configure environment variables (not Needed)
-Copy `backend/.env.example` to `backend/.env` and fill in your own values:
-```
-PORT=5000
+Some tables and columns are also created automatically when the backend starts (see [ARCHITECTURE.md → Automatic schema updates](ARCHITECTURE.md#automatic-schema-updates)). Existing databases therefore pick up new columns without a manual migration.
 
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_NAME=safeconnect
-DB_PORT=3306
+### Step 3: Configure the backend
+Copy `backend/.env.example` to `backend/.env` and fill in the values. See [Environment Variables](#5-environment-variables) for the list, including the `SMTP_*` settings. Never commit `backend/.env`.
 
-JWT_SECRET=a_long_random_string
-```
-`backend/.env` is gitignored — never commit real credentials.
-
-### 4. Run the backend
+### Step 4: Start the backend
 ```bash
 cd backend
-npm run dev      # nodemon, auto-restart
+npm run dev      # restarts automatically on changes (nodemon)
 # or
-npm start        # node server.js
+npm start        # plain node server.js
 ```
-The API listens on `http://localhost:5000` by default; static uploads are served from `http://localhost:5000/uploads`.
+The API runs at `http://localhost:5000`. Open `http://localhost:5000/api/health` to check the database connection.
 
-### 5. Run the frontend
+### Step 5: Start the frontend
 ```bash
 # from the project root
 npm start
 ```
-Opens `http://localhost:3000`. The frontend reads the API base URL from `REACT_APP_API_BASE` (defaults to `http://localhost:5000/api` if unset) — set it in a `.env` file at the project root if your backend runs elsewhere.
+This opens `http://localhost:3000`. By default the frontend calls `http://localhost:5000/api`.
+
+### Step 6: Create the first super admin
+New accounts are always **residents**. To make the first super admin:
+1. Sign up normally on the landing page (this needs SMTP for the verification code).
+2. In MySQL Workbench, promote the account:
+   ```sql
+   UPDATE registered_users SET role = 'super_admin' WHERE email_address = 'you@example.com';
+   ```
+3. Sign in again. Admin accounts are sent to `/admin` automatically.
+
+After that, the super admin can promote other users from **System → Users**.
+
+> The admin row inserted by `safeconnect_db.sql` stores its password as plain text. The backend compares passwords with bcrypt, so **that account cannot sign in**. Use the steps above instead.
+
+### Available scripts
+| Where | Command | What it does |
+|---|---|---|
+| root | `npm start` | React dev server on port 3000 |
+| root | `npm run build` | Production build into `build/` |
+| root | `npm test` | Runs the React tests |
+| backend | `npm run dev` | API with automatic restart (nodemon) |
+| backend | `npm start` | API with plain Node |
 
 ---
 
-## 3. Folder Structure
+## 5. Environment Variables
+
+### Backend: `backend/.env`
+| Variable | Example | Purpose |
+|---|---|---|
+| `PORT` | `5000` | Port the API listens on |
+| `DB_HOST`, `DB_PORT` | `localhost`, `3306` | MySQL server |
+| `DB_USER`, `DB_PASSWORD` | `root`, … | MySQL login |
+| `DB_NAME` | `safeconnect` | Database name |
+| `DB_SSL` | `false` | Set to `true` for Azure Database for MySQL, which requires SSL |
+| `JWT_SECRET` | a long random string | Signs sign-in tokens. Changing it signs everyone out. |
+| `ASSET_BASE` | `http://localhost:5000` | Public URL of the backend, used to build full photo URLs |
+| `ALLOWED_ORIGINS` | `https://<name>.azurestaticapps.net` | Extra frontend URLs allowed to call the API (comma-separated). `localhost:3000` is always allowed. |
+| `SMTP_HOST`, `SMTP_PORT` | `smtp.gmail.com`, `587` | Email server |
+| `SMTP_SECURE` | `false` | `true` for port 465 |
+| `SMTP_USER`, `SMTP_PASS` | … | Email login. `SMTP_USER` is also the "From" address. |
+
+> `backend/.env.example` doesn't list the `SMTP_*` variables yet. Add them by hand.
+
+### Frontend: `.env.local` in the project root (optional)
+| Variable | Default | Purpose |
+|---|---|---|
+| `REACT_APP_API_BASE` | `http://localhost:5000/api` | Where the API is |
+| `REACT_APP_ASSET_BASE` | `http://localhost:5000` | Where uploaded images are served from |
+
+These values are **baked in at build time**, so set them before running `npm run build`.
+
+---
+
+## 6. Deployment (Azure)
+
+| Part | Azure service | URL |
+|---|---|---|
+| Frontend | Static Web App | https://polite-plant-04bf1e000.3.azurestaticapps.net |
+| Backend | App Service (Node 22, Linux) | https://safeconnect-api-fhtsa.azurewebsites.net |
+| Database | Azure Database for MySQL Flexible Server | private: only Azure services can connect |
+
+- **Frontend:** deployed automatically by [.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml) on every push to the `pwa-setup` branch. It needs the repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. [public/staticwebapp.config.json](public/staticwebapp.config.json) sends every route to `index.html` so React Router works on refresh.
+- **Backend:** deployed by hand, as a zip of the `backend/` folder without `node_modules` or `.env` files, using `az webapp deploy`. Azure runs `npm install` during deployment. Its environment variables are set in the App Service configuration, not in a `.env` file.
+- **Uploads:** uploaded images live in `backend/uploads/` on the App Service. A zip deploy only replaces files that came from earlier deploys, so uploaded files survive. Back them up before any big change anyway.
+
+---
+
+## 7. Folder Structure
 
 ```
 safeconnect-app/
+├── README.md                  # this file
+├── ARCHITECTURE.md            # how every component works and connects
 ├── database/
-│   └── safeconnect_db.sql        # Full DB schema (source of truth)
-├── backend/
-│   ├── server.js                 # Express app entry point, route mounting
-│   ├── config/db.js              # MySQL connection pool
-│   ├── controllers/              # Request handlers, one per resource
-│   ├── models/                   # Direct SQL queries, one class per table (roughly)
-│   ├── routes/                   # Express routers, one per resource
-│   ├── services/                 # Business logic sitting between controllers and models
-│   │                                (reference-number generation, notifications, link previews)
-│   ├── middleware/                # authMiddleware.js (JWT/role checks), uploadMiddleware.js (multer)
-│   ├── utils/                     # jwt.js (token signing), reference.js (report reference numbers)
-│   └── uploads/                   # Uploaded announcement images & profile photos (gitignored)
-├── public/                        # Static assets (images, favicon, manifest)
-└── src/
-    ├── Services/api.js            # The ONLY place that talks to the backend
-    ├── pages/                     # Top-level routed pages: LandingPage, ResidentPage, AdminPage
+│   └── safeconnect_db.sql     # database schema + seed data
+├── backend/                   # Express API
+│   ├── server.js              # entry point: middleware, routes, startup jobs
+│   ├── config/                # db.js (MySQL pool), reportStyle.js (PDF/Excel look)
+│   ├── routes/                # URL → middleware → controller wiring
+│   ├── middleware/            # auth/role checks, activity logging, uploads
+│   ├── controllers/           # read the request, call services/models, send the response
+│   ├── services/              # business logic: emails, exports, archiving, notifications
+│   ├── models/                # SQL queries, one class per table
+│   ├── utils/                 # JWT, roles, status workflow, reference numbers, sign-in context
+│   ├── assets/                # logos embedded in PDF/Excel exports
+│   └── uploads/               # uploaded images (not committed)
+├── public/                    # index.html, manifest.json, icons, images
+└── src/                       # React app
+    ├── App.js                 # routes: / , /resident , /admin
+    ├── Services/api.js        # the ONLY file that calls the backend
+    ├── i18n/                  # English/Tagalog translations + language context
+    ├── pages/                 # LandingPage, ResidentPage, AdminPage
     ├── components/
-    │   ├── landing/                # Public marketing site (Hero, About, Services, Contact, Navbar)
-    │   ├── resident/                # Resident-facing UI (report modals, navbar, settings, my reports)
-    │   │   └── navbar/               # Navbar sub-features: announcements, notifications, weather
-    │   ├── admin/                   # Admin dashboard
-    │   │   ├── dashboard/              # Dashboard summary/charts/alerts/quick actions
-    │   │   ├── reports/                 # Emergency / Assistance / Petty Crime report management
-    │   │   ├── announcements/           # Announcement CRUD + link-preview UI
-    │   │   ├── users/                   # Registered users management
-    │   │   ├── logs/                    # Sign-in logs & admin logs
-    │   │   ├── layout/                  # AdminLayout, sidebar, header, stat cards
-    │   │   ├── hooks/                   # useAdminData, useAdminAuth, useAdminNavigation
-    │   │   ├── shared/                  # Reusable table/list/status components
-    │   │   └── AdminModals/             # Sign-in modal, generic add-record form modal
-    │   └── shared/                   # Cross-cutting components (footer)
-    └── styles/                     # Global and page-specific CSS
+    │   ├── landing/           # public site: Navbar, Hero (sign-in/up), Services, About, Contact
+    │   ├── resident/          # report modals, My Reports, Settings, navbar
+    │   │   └── navbar/        # desktop/mobile navbar, news, notifications, weather (+ hooks/)
+    │   ├── admin/
+    │   │   ├── dashboard/     # summary, charts, recent reports
+    │   │   ├── reports/       # emergency / assistance / pettyCrime tabs + shared pieces
+    │   │   ├── announcements/ # list + create/edit modal
+    │   │   ├── users/         # Users tab
+    │   │   ├── logs/          # Sign-in Logs + Admin Logs tabs
+    │   │   ├── layout/        # sidebar, header (notifications), stat cards
+    │   │   ├── hooks/         # useAdminData, useAdminAuth, useAdminNavigation, useIsMobile
+    │   │   ├── shared/        # ListView, ReportCard, StatusSelect, Pagination, export UI…
+    │   │   └── AdminModals/   # SignInModal, FormModal
+    │   └── shared/            # footer, language picker, location map (used by several pages)
+    └── styles/                # CSS files
 ```
 
 ---
 
-## 4. Application Features
+## 8. User Roles
 
-| Feature | Frontend Component(s) | Backend Route(s) | Database Table(s) |
-|---|---|---|---|
-| Sign up / Sign in (JWT) | `landing/Hero.jsx`, `admin/AdminModals/SignInModal.jsx` | `POST /api/auth/signup`, `POST /api/auth/signin` | `registered_users`, `signin_logs`, `admin_logs` |
-| Emergency reporting | `resident/ResidentEmergencyModal.jsx` | `/api/emergency-reports` | `emergency_reports` |
-| Assistance requests | `resident/ResidentAssistanceModal.jsx` | `/api/assistance-requests` | `assistance_requests` |
-| Petty crime reporting | `resident/ResidentPettyCrimeModal.jsx` | `/api/petty-crimes` | `petty_crimes` |
-| My Reports (view/edit/delete own) | `resident/MyReportsPage.jsx` | `GET /api/reports/user/:userId` + per-type routes | all three report tables |
-| Announcements (public feed) | `resident/navbar/AnnouncementCard.jsx`, `NewsOverlay.jsx` | `GET /api/announcements` | `announcements` |
-| Announcements (admin CRUD + link preview) | `admin/announcements/*` | `/api/announcements/*` | `announcements` |
-| Notifications bell (resident) | `resident/navbar/NotificationPanel.jsx`, `useNotifications.js` | derived from announcements client-side | `announcements` |
-| Weather widget | `resident/navbar/WeatherCard.jsx` | external (Open-Meteo) | — |
-| Profile settings (photo/username/password) | `resident/SettingsPage.jsx` | `/api/users/:id/photo`, `/username`, `/password` | `registered_users` |
-| Admin dashboard (stats, charts, alerts, recent reports) | `admin/dashboard/*` | `GET /api/dashboard`, plus statistics endpoints per report type | all report tables, `registered_users`, `announcements` |
-| Registered users management | `admin/users/*` | `GET /api/users`, `PUT`/`PATCH /api/users/:id` | `registered_users` |
-| Sign-in logs | `admin/logs/SignInLogsTable.jsx` | `GET /api/logs/signin` | `signin_logs` |
-| Admin logs | `admin/logs/AdminLogsTable.jsx` | `GET /api/logs/admin` | `admin_logs` |
-| Data export (Excel/PDF) | admin dashboard export actions | `/api/export/*` | varies |
-| System settings | *(backend scaffolding present; not yet wired to a frontend page)* | `/api/settings` | *(see `SystemSetting` model)* |
-| Role-based access | `authMiddleware.js` (`verifyToken`, `verifyAdmin`, `verifySelfOrAdmin`) | applied across all protected routes | `registered_users.role` |
+| Role | Where they land | What they can do |
+|---|---|---|
+| `resident` | `/resident` | Submit reports, and view, edit or delete their own reports; manage their profile |
+| `admin` | `/admin` | Everything in the admin panel **except** the System tabs: reports, statuses, archiving, announcements, exports |
+| `super_admin` | `/admin` | Everything, including **System → Users, Sign-in Logs and Admin Logs**, and changing the auto-archive period |
+
+The backend checks the role **against the database on every admin request**, not only against the token. A demotion or suspension therefore takes effect immediately.
 
 ---
 
-## 5. Component Documentation
+## 9. Data Retention
 
-> Grouped by area. Each entry lists purpose, key props/state, and which `Services/api.js` functions it calls.
-
-### Landing (public site) — `src/components/landing/`
-| Component | Purpose | Notes |
-|---|---|---|
-| `Hero.jsx` | Landing hero + sign-in/sign-up modals | Calls `signinUser`/`signupUser`, stores JWT via `setAuthToken`, redirects to `/resident` or `/admin` based on role |
-| `Navbar.jsx` | Public site navigation | Static |
-| `About.jsx`, `Services.jsx`, `Contact.jsx` | Marketing/info sections | Static, no API calls |
-
-### Resident — `src/components/resident/`
-| Component | Purpose | Key props / state | API calls |
-|---|---|---|---|
-| `ResidentHero.jsx` | Resident landing hero, entry points to report flows | `onReportEmergency`, `onRequestHelp` callbacks | none (presentational) |
-| `EmergencyReportSection.jsx` | Report-type picker section | `onReportClick` callback | none |
-| `ResidentEmergencyModal.jsx` | Submit/edit an emergency report; GPS + reverse geocoding + photo/video capture | `show`, `type`, `editingReport`, `onUpdated` | `createEmergencyReport`, `updateEmergencyReport` |
-| `ResidentAssistanceModal.jsx` | Submit/edit an assistance request | `show`, `type`, `editingReport` | `createAssistanceRequest`, `updateAssistanceRequest` |
-| `ResidentPettyCrimeModal.jsx` | Submit/edit a petty crime report | `show`, `editingReport` | `createPettyCrimeReport`, `updatePettyCrimeReport` |
-| `MyReportsPage.jsx` | Full-screen overlay listing all of the current user's reports across all 3 types, with edit/delete | `isOpen`, `userId` | `fetchMyReports`, `deleteEmergencyReport`, `deleteAssistanceRequest`, `deletePettyCrimeReport` |
-| `SettingsPage.jsx` | Profile photo, username, password management | `user`, `onProfileUpdate` | `fetchUserProfile`, `uploadProfilePhoto`, `updateUsername`, `changePassword` |
-| `ResidentNavbar.jsx` | Top navigation: announcements, notifications, weather, profile dropdown, logout | composes navbar/* hooks | clears JWT on logout |
-
-#### `src/components/resident/navbar/`
-| Component/Hook | Purpose |
+| Data | Rule |
 |---|---|
-| `DesktopNavbar.jsx` / `MobileNavbar.jsx` / `MobileMenu.jsx` | Responsive navbar layouts |
-| `AnnouncementCard.jsx`, `NewsOverlay.jsx` | Announcement feed display |
-| `NotificationPanel.jsx` | Notification list UI |
-| `UserDropdown.jsx` | Avatar/profile menu |
-| `WeatherCard.jsx` | Current weather (Open-Meteo API) |
-| `useAnnouncements.js` | Fetches/caches announcements | calls `fetchAnnouncements` |
-| `useNotifications.js` | Derives notification items from announcements |
-| `useResidentProfile.js` | Reads/writes the signed-in user from `sessionStorage` |
-| `useWeather.js` | Fetches weather by geolocation (Open-Meteo, external) |
-| `useClickOutside.js` | Generic outside-click-to-close hook |
-
-### Admin — `src/components/admin/`
-| Component | Purpose | API calls |
-|---|---|---|
-| `dashboard/Dashboard.jsx` | Composes the dashboard: summary cards, stats, alerts, charts, quick actions, recent reports | uses data already loaded by `useAdminData` |
-| `dashboard/DashboardSummary.jsx`, `DashboardCharts.jsx`, `PieChartCard.jsx` | Stat summaries and charts | — |
-| `dashboard/DashboardAlerts.jsx` | Pending-item alert banners per report type | — |
-| `dashboard/DashboardQuickActions.jsx` | Shortcut buttons to navigate to report/announcement pages | — |
-| `dashboard/DashboardRecentReports.jsx` | Combined recent-activity table across report types | — |
-| `reports/emergency/`, `reports/assistance/`, `reports/pettyCrime/` | Page + table + detail-view + status-select per report type | `fetchXReports` (via `useAdminData`), status updates via `updateStatus` |
-| `announcements/AnnouncementsPage.jsx` | Switches between the list view and the create/edit view | — |
-| `announcements/AnnouncementsTable.jsx` | Self-contained: fetches, filters, sorts, paginates, deletes announcements | `fetchAnnouncements`, `deleteAnnouncement` |
-| `announcements/CreateAnnouncementView.jsx` | Create/edit form incl. image upload and "paste a link" preview | `createAnnouncement`, `updateAnnouncement`, `fetchLinkPreview` |
-| `users/UsersPage.jsx`, `RegisteredUsersTable.jsx`, `UserStatusSelect.jsx` | List + status management for registered users | status update via `updateStatus` |
-| `logs/LogsPage.jsx`, `SignInLogsTable.jsx`, `AdminLogsTable.jsx` | Read-only log viewers | data passed down from `useAdminData` |
-| `layout/AdminLayout.jsx`, `AdminSidebar.jsx`, `AdminHeader.jsx`, `AdminStats.jsx` | Shell layout, navigation, top-line stat cards | — |
-| `AdminModals/SignInModal.jsx` | Admin sign-in gate | `signinUser`, stores JWT |
-| `AdminModals/FormModal.jsx` | Generic "Add New Report/Announcement" form (field sets defined per `type`) | used with `formUtils.js` builders |
-| `hooks/useAdminData.js` | Central data-fetching/mutation hook: loads all lists, exposes `updateStatus`, `handleFormSubmit` | calls nearly every `fetchX`/`createX`/`updateStatus` function |
-| `hooks/useAdminAuth.js` | Admin auth/session state, logout (clears JWT) | — |
-| `hooks/useAdminNavigation.js` | Active-view/sidebar navigation state | — |
-| `shared/formUtils.js` | Builds report-submission payloads from the generic `FormModal` fields | — |
-| `shared/chartUtils.js` | Color helpers for severity/status | — |
+| Resolved reports | Archived automatically once they have been resolved for **1 year** (default). A super admin can change this to 6 months or Off. Archived reports stay in the database, still count on the dashboard and in exports, and can be restored. |
+| Sign-in logs | Only the **last 90 days** are shown and exported. Older rows stay in the database but are hidden. |
+| Admin activity logs | The Admin Logs tab shows the latest 500 actions. |
+| Sign-up / reset codes | Held in server memory for 10 minutes. A server restart clears them. |
 
 ---
 
-## 6. Backend Documentation
+## 10. Known Issues
 
-All controllers live in `backend/controllers/`, models in `backend/models/`, routes in `backend/routes/`, mounted in `backend/server.js`.
-
-| Route file | Mounted at | Controller | Model(s) | Middleware |
-|---|---|---|---|---|
-| `authRoutes.js` | `/api/auth` | `authController.js` | `User.js` | none (public) |
-| `userRoutes.js` | `/api/users` | `userController.js` | `User.js` | `verifyToken` + `verifyAdmin` (list/status) or `verifySelfOrAdmin` (own profile) |
-| `emergencyReportRoutes.js` | `/api/emergency-reports` | `reportController.js` | `Report.js` | `verifyToken` (+`verifyAdmin` for list/status) |
-| `assistanceRequestRoutes.js` | `/api/assistance-requests` | `assistanceRequestController.js` | `AssistanceRequest.js` | same pattern |
-| `pettyCrimeRoutes.js` | `/api/petty-crimes` | `pettyCrimeController.js` | `PettyCrime.js` | same pattern |
-| `reportRoutes.js` | `/api/reports` | `myReportsController.js` | `Report.js`, `AssistanceRequest.js`, `PettyCrime.js` | `verifyToken` — cross-table "my reports" aggregator only |
-| `announcementRoutes.js` | `/api/announcements` | `announcementController.js` | `Announcement.js` | GET is public; create/update/delete/link-preview require `verifyAdmin` |
-| `logRoutes.js` | `/api/logs` | `logController.js` | `Log.js` | `verifyToken` + `verifyAdmin` |
-| `dashboardRoutes.js` | `/api/dashboard` | `dashboardController.js` | `Dashboard.js` | `verifyToken` + `verifyAdmin` |
-| `exportRoutes.js` | `/api/export` | `exportController.js` | (reads from report/user models) | `verifyToken` + `verifyAdmin` |
-| `systemSettingRoutes.js` | `/api/settings` | `systemSettingController.js` | `SystemSetting.js` | `verifyToken` + `verifyAdmin` |
-| `notificationRoutes.js` | `/api/notifications` | `notificationController.js` | `Notification.js` | `verifyToken` (currently no frontend caller — see note below) |
-
-**Services** (`backend/services/`) hold logic that doesn't belong directly in a controller or model: `reportService.js`, `assistanceRequestService.js`, `pettyCrimeService.js` (build DB records + trigger notifications), `announcementService.js` (create/update + Open Graph link-preview scraping), `notificationService.js`, `excelService.js`/`exportService.js`/`pdfService.js` (data export), `systemSettingService.js`.
-
-**Utils** (`backend/utils/`): `jwt.js` (sign JWTs with `{id, role}` payload, 7-day expiry), `reference.js` (shared `SC-<year>-<sequence>` report reference number generator used by all three report types).
-
-> **Known gap:** `notifications` table and `/api/notifications` route exist and work, but nothing in the current frontend calls them — the resident notification bell is currently derived client-side from the announcements feed instead (`useNotifications.js`). Wiring up a real admin/resident notification-center UI against `/api/notifications` is a natural next step, not something broken.
-
----
-
-## 7. Database Documentation
-
-Schema source of truth: `database/safeconnect_db.sql`. Database name: `safeconnect`.
-
-### `registered_users`
-| Column | Type | Notes |
-|---|---|---|
-| id | INT, PK, AI | |
-| full_name | VARCHAR(255) | |
-| username | VARCHAR(100) | UNIQUE |
-| contact_number | VARCHAR(20) | |
-| email_address | VARCHAR(255) | UNIQUE |
-| password | VARCHAR(255) | bcrypt hash |
-| role | VARCHAR(20) | `resident` (default) or `admin` |
-| photo_url | TEXT | relative path, e.g. `/uploads/x.jpg` |
-| status | VARCHAR(50) | `Active` / `Inactive` / `Suspended` |
-| created_at | TIMESTAMP | |
-
-### `emergency_reports`
-| Column | Notes |
-|---|---|
-| id, report_reference | PK, generated `SC-YYYY-NNNNNN` reference |
-| reporter_id | FK → `registered_users.id` (nullable, `ON DELETE SET NULL`) |
-| time | submission timestamp |
-| emergency_type, severity | e.g. Fire / Flood / Medical, Low–Critical |
-| reporter_name, contact_number | denormalized for fast display without a join |
-| location, latitude, longitude | |
-| incident_details, number_of_people_affected, special_needs | |
-| photo_url, media_type | base64 data URL or uploaded file reference; image or video |
-| status | Received / Dispatched / In Progress / Resolved / Cancelled |
-| assigned_to, assigned_at | FK → `registered_users.id`, optional responder assignment |
-
-### `assistance_requests`
-| Column | Notes |
-|---|---|
-| id, report_reference, reporter_id | as above |
-| timestamp | |
-| request_assistance_type | Food & Water / Medical Supplies / Shelter / etc. |
-| full_name, contact_number, email_address | |
-| current_location, latitude, longitude | |
-| number_of_people_needing_help, urgency_level | |
-| describe_your_situation, special_needs | |
-| status | Pending / In Progress / Resolved / Cancelled |
-
-### `petty_crimes`
-| Column | Notes |
-|---|---|
-| id, report_reference, reporter_id | as above |
-| timestamp | |
-| crime_type, reporter_name, contact_number | |
-| location, latitude, longitude | |
-| description, suspect_info | |
-| status | Received / In Progress / Resolved / Cancelled |
-
-### `announcements`
-| Column | Notes |
-|---|---|
-| id, title, category, message, date_posted | |
-| image_path | uploaded image, relative path |
-| source_url, source_title, source_image, source_site | populated by the "paste a link" preview feature |
-| created_by | FK → `registered_users.id` |
-| created_at | |
-
-### `notifications`
-| Column | Notes |
-|---|---|
-| id, title, message, notification_type, reference_id, is_read, created_at | Generic notification log; currently populated on report/announcement creation but not yet surfaced in the UI (see backend docs note above) |
-
-### `signin_logs`
-Every sign-in attempt (success or failure), for every role: `id, full_name, email_address, status, timestamp`.
-
-### `admin_logs`
-Successful admin sign-ins specifically: `id, email_address, login_time`.
-
-### Relationships
-- `registered_users.id` ← `emergency_reports.reporter_id` / `.assigned_to`, `assistance_requests.reporter_id`, `petty_crimes.reporter_id`, `announcements.created_by` (all nullable, `ON DELETE SET NULL` — deleting a user doesn't delete their historical reports).
-
----
-
-## 8. API Reference
-
-All endpoints are prefixed with `/api`. 🔒 = requires `Authorization: Bearer <token>`. 🔒👑 = requires an admin token.
-
-### Auth
-| Endpoint | Purpose | Used by |
-|---|---|---|
-| `POST /auth/signup` | Create a resident account | `Hero.jsx` |
-| `POST /auth/signin` | Sign in; returns `{ success, token, isAdmin, user }` | `Hero.jsx`, admin `SignInModal.jsx` |
-
-### Emergency Reports (`/emergency-reports`)
-| Endpoint | Purpose |
-|---|---|
-| `POST /` 🔒 | Submit a new emergency report |
-| `GET /` 🔒👑 | List all emergency reports |
-| `GET /statistics` 🔒👑 | Aggregate counts by status |
-| `GET /:id` 🔒 | Get one report |
-| `PUT /:id` 🔒 | Edit a report (resident editing their own, or admin) |
-| `PUT /:id/status`, `PATCH /:id/status` 🔒👑 | Update status |
-| `DELETE /:id` 🔒 | Delete a report |
-
-### Assistance Requests (`/assistance-requests`) and Petty Crimes (`/petty-crimes`)
-Same route shape as Emergency Reports above, on their respective base paths.
-
-### My Reports (`/reports`)
-| Endpoint | Purpose |
-|---|---|
-| `GET /user/:userId` 🔒 | Combined list of the user's reports across all three types, newest first |
-
-### Announcements (`/announcements`)
-| Endpoint | Purpose |
-|---|---|
-| `GET /` | Public — list all announcements |
-| `GET /link-preview?url=` 🔒👑 | Fetch Open Graph title/image/site for a pasted link |
-| `POST /` 🔒👑 | Create (multipart form: `title, category, message, date, source_url?, image?`) |
-| `PUT /:id` 🔒👑 | Update (same fields, plus `remove_image`) |
-| `DELETE /:id` 🔒👑 | Delete |
-
-### Users (`/users`)
-| Endpoint | Purpose |
-|---|---|
-| `GET /` 🔒👑 | List all registered users |
-| `PUT /:id`, `PATCH /:id/status` 🔒👑 | Update a user's status |
-| `GET /:id` 🔒 (self or admin) | Get one profile |
-| `POST /:id/photo` 🔒 (self or admin) | Upload profile photo (multipart, field `photo`) |
-| `PATCH /:id/username` 🔒 (self or admin) | Change username |
-| `PATCH /:id/password` 🔒 (self or admin) | Change password (`{currentPassword, newPassword}`) |
-
-### Logs (`/logs`)
-| Endpoint | Purpose |
-|---|---|
-| `GET /signin` 🔒👑 | All sign-in attempts |
-| `GET /admin` 🔒👑 | All admin sign-ins |
-
-### Dashboard, Export, Settings, Notifications
-| Endpoint | Purpose |
-|---|---|
-| `GET /dashboard` 🔒👑 | Combined dashboard stats |
-| `/export/*` 🔒👑 | Excel/PDF data export |
-| `/settings/*` 🔒👑 | System settings (backend scaffolding; no frontend page yet) |
-| `/notifications/*` 🔒 | Notification log (backend ready; no frontend caller yet) |
+- **`database/safeconnect_db.sql` is missing some columns the code uses:** `report_for`, `victim_name`, `victim_contact`, `victim_relationship` and `victim_details` on the three report tables. A database created only from this file will fail when a report is submitted. `victim_details` is also missing from the current local database.
+- **The seed admin account cannot sign in** (its password is not hashed). See [Step 6](#step-6-create-the-first-super-admin).
+- **`backend/.env.example` doesn't list the `SMTP_*` variables.**
+- **Report photos and videos are stored as base64 text** in the report tables (`photo_url`, `LONGTEXT`). This works, but makes those rows large, and the admin report lists download every report's media on each refresh.
