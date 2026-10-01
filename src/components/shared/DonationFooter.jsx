@@ -139,7 +139,7 @@ export default function DonationFooter({ emergencyContacts = [] }) {
                     rel="noopener noreferrer"
                     className="footer-link text-white-50"
                   >
-                    Facebook: SafeConnect – Brgy. Sta. Fe
+                    Facebook: Barangay Sta. Fe
                   </a>
                 </div>
               </div>
