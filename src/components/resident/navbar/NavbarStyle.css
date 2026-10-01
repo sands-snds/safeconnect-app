@@ -240,6 +240,12 @@
     color: #6B2C3E;
 }
 
+.resident-dropdown-item.active {
+    background-color: rgba(107, 44, 62, 0.08);
+    color: #6B2C3E;
+    font-weight: 700;
+}
+
 .resident-dropdown-item i {
     font-size: 1.15rem;
     opacity: 0.7;
@@ -592,9 +598,17 @@
 
 .news-fullscreen {
     position: fixed;
-    inset: 0;
+    /* Sits below the always-visible navbar instead of covering it --
+       --resident-navbar-height is set from its real rendered height in
+       ResidentNavbar.jsx, so this stays flush at any screen size. */
+    top: var(--resident-navbar-height, 76px);
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: #f7f5f6;
-    z-index: 2000;
+    /* Below the navbar's own dropdowns (notifications, user menu, mobile
+       drawer) so they still render on top of this panel when both are open. */
+    z-index: 900;
     display: flex;
     flex-direction: column;
     opacity: 0;

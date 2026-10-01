@@ -7,6 +7,8 @@ import UserDropdown from "./UserDropdown";
 
 export default function DesktopNavbar({
 
+    activeView,
+
     username,
     photoUrl,
 
@@ -56,7 +58,7 @@ export default function DesktopNavbar({
         <div className="resident-nav-links">
 
             <button
-                className="resident-nav-item active"
+                className={`resident-nav-item ${activeView === 'home' ? 'active' : ''}`}
                 onClick={handleHomeClick}
             >
                 <i className="bi bi-house-door-fill"></i>
@@ -74,7 +76,7 @@ export default function DesktopNavbar({
             </button>
 
             <button
-                className="resident-nav-item"
+                className={`resident-nav-item ${activeView === 'news' ? 'active' : ''}`}
                 onClick={openNewsPage}
             >
                 <i className="bi bi-newspaper"></i>
@@ -127,6 +129,7 @@ export default function DesktopNavbar({
             <LanguageToggle variant="light" className="resident-lang-toggle" />
 
             <UserDropdown
+                activeView={activeView}
                 username={username}
                 photoUrl={photoUrl}
                 dropdownRef={dropdownRef}

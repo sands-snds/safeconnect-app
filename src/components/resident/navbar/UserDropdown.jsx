@@ -2,6 +2,7 @@ import React from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 
 export default function UserDropdown({
+  activeView,
   username,
   photoUrl,
   showDropdown,
@@ -58,12 +59,12 @@ export default function UserDropdown({
 
         <div className="resident-dropdown-divider" />
 
-        <button className="resident-dropdown-item" onClick={onOpenReports}>
+        <button className={`resident-dropdown-item ${activeView === 'reports' ? 'active' : ''}`} onClick={onOpenReports}>
           <i className="bi bi-file-earmark-text-fill" />
           <span>{t('residentNav.myReports')}</span>
         </button>
 
-        <button className="resident-dropdown-item" onClick={onOpenSettings}>
+        <button className={`resident-dropdown-item ${activeView === 'settings' ? 'active' : ''}`} onClick={onOpenSettings}>
           <i className="bi bi-gear-fill" />
           <span>{t('residentNav.settings')}</span>
         </button>

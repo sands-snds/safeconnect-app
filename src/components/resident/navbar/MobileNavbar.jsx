@@ -5,6 +5,8 @@ import MobileMenu from "./MobileMenu";
 
 export default function MobileNavbar({
 
+    activeView,
+
     username,
     photoUrl,
 
@@ -118,6 +120,7 @@ export default function MobileNavbar({
 
             {/* Mobile Drawer */}
             <MobileMenu
+                activeView={activeView}
                 username={username}
                 photoUrl={photoUrl}
                 mobileMenuRef={mobileMenuRef}

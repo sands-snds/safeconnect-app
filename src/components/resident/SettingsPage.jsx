@@ -276,8 +276,10 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     <div className={`settings-fullscreen ${isOpen ? 'show' : ''}`}>
       <style>{`
         .settings-fullscreen {
-          position: fixed; inset: 0; background: #f7f5f6;
-          z-index: 2000; display: flex; flex-direction: column;
+          /* Sits below the always-visible navbar instead of covering it. */
+          position: fixed; top: var(--resident-navbar-height, 76px); left: 0; right: 0; bottom: 0;
+          background: #f7f5f6;
+          z-index: 900; display: flex; flex-direction: column;
           opacity: 0; visibility: hidden; transform: translateY(20px);
           transition: all 0.3s ease;
         }

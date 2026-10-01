@@ -4,6 +4,8 @@ import LanguageToggle from "../../shared/LanguageToggle";
 
 export default function MobileMenu({
 
+    activeView,
+
     username,
 
     mobileMenuRef,
@@ -62,7 +64,7 @@ export default function MobileMenu({
                 </button>
 
                 <button
-                    className="mobile-nav-item active"
+                    className={`mobile-nav-item ${activeView === 'home' ? 'active' : ''}`}
                     onClick={handleHomeClick}
                 >
                     <i className="bi bi-house-door-fill"></i>
@@ -87,7 +89,7 @@ export default function MobileMenu({
                 </button>
 
                 <button
-                    className="mobile-nav-item"
+                    className={`mobile-nav-item ${activeView === 'news' ? 'active' : ''}`}
                     onClick={openNewsPage}
                 >
                     <i className="bi bi-newspaper"></i>
@@ -130,7 +132,7 @@ export default function MobileMenu({
                 </button>
 
                 <button
-                    className="mobile-nav-item"
+                    className={`mobile-nav-item ${activeView === 'reports' ? 'active' : ''}`}
                     onClick={openReportsPage}
                 >
                     <i className="bi bi-file-earmark-text-fill"></i>
@@ -142,7 +144,7 @@ export default function MobileMenu({
                 </button>
 
                 <button
-                    className="mobile-nav-item"
+                    className={`mobile-nav-item ${activeView === 'settings' ? 'active' : ''}`}
                     onClick={openSettingsPage}
                 >
                     <i className="bi bi-gear-fill"></i>

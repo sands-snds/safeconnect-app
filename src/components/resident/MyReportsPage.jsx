@@ -212,9 +212,13 @@ function MyReportsPage({ isOpen, onClose, userId }) {
       <style>{`
         .myreports-fullscreen {
           position: fixed;
-          inset: 0;
+          /* Sits below the always-visible navbar instead of covering it. */
+          top: var(--resident-navbar-height, 76px);
+          left: 0;
+          right: 0;
+          bottom: 0;
           background: #f5f2f3;
-          z-index: 2000;
+          z-index: 900;
           display: flex;
           flex-direction: column;
           opacity: 0;

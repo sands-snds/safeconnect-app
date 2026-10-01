@@ -103,17 +103,43 @@ function ResidentNavbar() {
   const [showReportsPage, setShowReportsPage] = useState(false);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
 
+  // Which nav item should read as "active". News/My Reports/Settings now
+  // render as a panel below the (always-visible) navbar instead of a
+  // full-screen takeover, so this drives the highlight instead of a
+  // hardcoded "active" class on Home.
+  const activeView = showNewsPage ? 'news' : showReportsPage ? 'reports' : showSettingsPage ? 'settings' : 'home';
+
   const {
     currentUser,
     username,
     updateProfile
   } = useResidentProfile();
 
+  const navRef = useRef(null);
   const dropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const notificationsRef = useRef(null);
   const mobileNotificationsRef = useRef(null);
   const navigate = useNavigate();
+
+  // Exposes the navbar's real rendered height as a CSS variable so the
+  // News/My Reports/Settings panels can sit flush below it (position:
+  // fixed; top: var(--resident-navbar-height)) instead of covering it.
+  useEffect(() => {
+    const navEl = navRef.current;
+    if (!navEl) return;
+    const setHeightVar = () => {
+      document.documentElement.style.setProperty('--resident-navbar-height', `${navEl.offsetHeight}px`);
+    };
+    setHeightVar();
+    const ro = new ResizeObserver(setHeightVar);
+    ro.observe(navEl);
+    window.addEventListener('resize', setHeightVar);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', setHeightVar);
+    };
+  }, []);
 
   const {
     announcements,
@@ -193,8 +219,12 @@ function ResidentNavbar() {
     }
   };
 
+  // Only one of News / My Reports / Settings shows at a time -- they're
+  // tabs below the navbar now, not independent overlays.
   const openNewsPage = () => {
     setShowNewsPage(true);
+    setShowReportsPage(false);
+    setShowSettingsPage(false);
     setShowMobileMenu(false);
     setShowDropdown(false);
     setShowNotifications(false);
@@ -205,6 +235,8 @@ function ResidentNavbar() {
 
   const openReportsPage = () => {
     setShowReportsPage(true);
+    setShowNewsPage(false);
+    setShowSettingsPage(false);
     setShowMobileMenu(false);
     setShowDropdown(false);
     setShowNotifications(false);
@@ -214,12 +246,23 @@ function ResidentNavbar() {
 
   const openSettingsPage = () => {
     setShowSettingsPage(true);
+    setShowNewsPage(false);
+    setShowReportsPage(false);
     setShowMobileMenu(false);
     setShowDropdown(false);
     setShowNotifications(false);
   };
 
   const closeSettingsPage = () => setShowSettingsPage(false);
+
+  // Shared by Home and the Emergency anchor link: returns to the normal
+  // dashboard view so the navbar's own nav items are the only "back"
+  // affordance a resident needs (no more hunting for the X button).
+  const closeAllPanels = () => {
+    setShowNewsPage(false);
+    setShowReportsPage(false);
+    setShowSettingsPage(false);
+  };
 
   // Clicking a notification: mark it read. For announcements, also open the
   // News page and scroll straight to that article. Personal notifications
@@ -241,8 +284,7 @@ function ResidentNavbar() {
     }
 
     setShowNotifications(false);
-    setShowMobileMenu(false);
-    setShowNewsPage(true);
+    openNewsPage();
     setTimeout(() => {
       const el = document.getElementById(`news-item-${newsId}`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -252,8 +294,7 @@ function ResidentNavbar() {
   const handleWeatherNotificationClick = () => {
     dismissWeatherNotice();
     setShowNotifications(false);
-    setShowMobileMenu(false);
-    setShowNewsPage(true);
+    openNewsPage();
     setTimeout(() => {
       document
         .getElementById("news-item-weather")
@@ -279,6 +320,7 @@ function ResidentNavbar() {
   };
 
   const scrollToSection = (sectionId) => {
+    closeAllPanels();
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -292,6 +334,7 @@ function ResidentNavbar() {
   };
 
   const handleHomeClick = () => {
+    closeAllPanels();
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
@@ -300,7 +343,7 @@ function ResidentNavbar() {
 
   return (
     <>
-      <nav className="resident-navbar">
+      <nav className="resident-navbar" ref={navRef}>
         <div className="container-fluid px-3 px-sm-4">
           <div className="navbar-container">
             {/* Brand */}
@@ -313,6 +356,7 @@ function ResidentNavbar() {
 
             {/* Desktop Navigation */}
             <DesktopNavbar
+              activeView={activeView}
               username={username}
               photoUrl={currentUser?.photoUrl}
 
@@ -359,6 +403,7 @@ function ResidentNavbar() {
 
             {/* Mobile Navigation */}
             <MobileNavbar
+              activeView={activeView}
               username={username}
               photoUrl={currentUser?.photoUrl}
 
