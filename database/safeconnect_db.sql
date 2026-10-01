@@ -149,6 +149,36 @@ CREATE TABLE notifications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
+-- announcement_likes / announcement_comments
+-- News "Like" and "Comment" -- shared across residents.
+-- Also auto-created by the backend on start.
+-- --------------------------------------------------------
+CREATE TABLE announcement_likes (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  announcement_id INT(11) NOT NULL,
+  user_id INT(11) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_announcement_user (announcement_id, user_id),
+  KEY user_id (user_id),
+  CONSTRAINT fk_like_announcement FOREIGN KEY (announcement_id) REFERENCES announcements (id) ON DELETE CASCADE,
+  CONSTRAINT fk_like_user FOREIGN KEY (user_id) REFERENCES registered_users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE announcement_comments (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  announcement_id INT(11) NOT NULL,
+  user_id INT(11) NOT NULL,
+  comment_text TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY announcement_id (announcement_id),
+  KEY user_id (user_id),
+  CONSTRAINT fk_comment_announcement FOREIGN KEY (announcement_id) REFERENCES announcements (id) ON DELETE CASCADE,
+  CONSTRAINT fk_comment_user FOREIGN KEY (user_id) REFERENCES registered_users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
 -- signin_logs
 -- --------------------------------------------------------
 CREATE TABLE signin_logs (

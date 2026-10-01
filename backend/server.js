@@ -5,6 +5,8 @@ require("dotenv").config();
 const db = require("./config/db");
 const AdminActivity = require("./models/AdminActivity");
 const Log = require("./models/Log");
+const AnnouncementLike = require("./models/AnnouncementLike");
+const AnnouncementComment = require("./models/AnnouncementComment");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const logRoutes = require("./routes/logRoutes");
@@ -95,6 +97,14 @@ AdminActivity.ensureTable().catch((err) =>
 // Adds the IP / device / location columns to signin_logs if missing.
 Log.ensureColumns().catch((err) =>
   console.error("Could not add signin_logs columns:", err.message)
+);
+
+// Creates the News Like/Comment tables on existing databases (no manual migration needed).
+AnnouncementLike.ensureTable().catch((err) =>
+  console.error("Could not create announcement_likes table:", err.message)
+);
+AnnouncementComment.ensureTable().catch((err) =>
+  console.error("Could not create announcement_comments table:", err.message)
 );
 
 // Adds the report archive columns/setting, then auto-archives old resolved

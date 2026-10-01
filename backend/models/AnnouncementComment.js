@@ -2,6 +2,26 @@ const db = require("../config/db");
 
 class AnnouncementComment {
 
+    // Created on server start so existing databases (including Azure) pick
+    // it up without a manual migration -- same pattern as AdminActivity.
+    // Also listed in database/safeconnect_db.sql.
+    static async ensureTable() {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS announcement_comments (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                announcement_id INT(11) NOT NULL,
+                user_id INT(11) NOT NULL,
+                comment_text TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY announcement_id (announcement_id),
+                KEY user_id (user_id),
+                CONSTRAINT fk_comment_announcement FOREIGN KEY (announcement_id) REFERENCES announcements (id) ON DELETE CASCADE,
+                CONSTRAINT fk_comment_user FOREIGN KEY (user_id) REFERENCES registered_users (id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+        `);
+    }
+
     static async create(announcementId, userId, text) {
         const [result] = await db.query(
             `INSERT INTO announcement_comments (announcement_id, user_id, comment_text) VALUES (?, ?, ?)`,

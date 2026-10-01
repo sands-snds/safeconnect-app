@@ -2,6 +2,25 @@ const db = require("../config/db");
 
 class AnnouncementLike {
 
+    // Created on server start so existing databases (including Azure) pick
+    // it up without a manual migration -- same pattern as AdminActivity.
+    // Also listed in database/safeconnect_db.sql.
+    static async ensureTable() {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS announcement_likes (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                announcement_id INT(11) NOT NULL,
+                user_id INT(11) NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uniq_announcement_user (announcement_id, user_id),
+                KEY user_id (user_id),
+                CONSTRAINT fk_like_announcement FOREIGN KEY (announcement_id) REFERENCES announcements (id) ON DELETE CASCADE,
+                CONSTRAINT fk_like_user FOREIGN KEY (user_id) REFERENCES registered_users (id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+        `);
+    }
+
     // Toggles the current user's like on an announcement. Returns the new
     // liked state (true = now liked, false = now unliked).
     static async toggle(announcementId, userId) {
