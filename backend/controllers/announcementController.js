@@ -3,6 +3,7 @@ const AnnouncementService = require("../services/announcementService");
 const AnnouncementLike = require("../models/AnnouncementLike");
 const AnnouncementComment = require("../models/AnnouncementComment");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const { isAdminRole } = require("../utils/roles");
 
 exports.createAnnouncement = async (req, res) => {
@@ -71,9 +72,11 @@ exports.getComments = async (req, res) => {
         const rows = await AnnouncementComment.findByAnnouncement(req.params.id);
         const comments = rows.map((c) => ({
             id: c.id,
+            parentId: c.parent_id || null,
             text: c.comment_text,
             author: c.full_name || c.username || "Resident",
             userId: c.user_id,
+            isAdmin: isAdminRole(c.role),
             date: c.created_at
         }));
         res.json(comments);
@@ -93,16 +96,43 @@ exports.createComment = async (req, res) => {
             return res.status(400).json({ success: false, message: "Comment is too long." });
         }
 
-        const id = await AnnouncementComment.create(req.params.id, req.user.id, text);
+        // Replies are one level deep: replying to a reply attaches to the
+        // top-level comment it belongs to.
+        let parent = null;
+        if (req.body.parentId) {
+            parent = await AnnouncementComment.findById(req.body.parentId);
+            if (!parent || String(parent.announcement_id) !== String(req.params.id)) {
+                return res.status(400).json({ success: false, message: "The comment you're replying to no longer exists." });
+            }
+            if (parent.parent_id) parent = await AnnouncementComment.findById(parent.parent_id);
+        }
+
+        const id = await AnnouncementComment.create(req.params.id, req.user.id, text, parent ? parent.id : null);
         const author = await User.findById(req.user.id);
+        const authorName = author?.full_name || author?.username || "Resident";
+        const isAdmin = isAdminRole(author?.role);
+
+        // Let the resident know when the barangay replies to their comment.
+        if (parent && isAdmin && String(parent.user_id) !== String(req.user.id)) {
+            const announcement = await Announcement.findById(req.params.id);
+            Notification.create({
+                userId: parent.user_id,
+                title: "Barangay replied to your comment",
+                message: announcement?.title ? `On "${announcement.title}": ${text}` : text,
+                notificationType: "comment_reply",
+                referenceId: Number(req.params.id)
+            }).catch((err) => console.error("Comment reply notification failed:", err));
+        }
 
         res.status(201).json({
             success: true,
             comment: {
                 id,
+                parentId: parent ? parent.id : null,
                 text,
-                author: author?.full_name || author?.username || "Resident",
+                author: authorName,
                 userId: req.user.id,
+                isAdmin,
                 date: new Date().toISOString()
             }
         });

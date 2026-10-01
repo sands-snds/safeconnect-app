@@ -84,6 +84,7 @@ export default function useNotifications(
             message: item.message,
             date: item.createdAt,
             category: item.type,
+            referenceId: item.referenceId,
             unread: !item.isRead,
             isPersonal: true
         }));

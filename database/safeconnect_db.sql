@@ -169,6 +169,7 @@ CREATE TABLE announcement_comments (
   id INT(11) NOT NULL AUTO_INCREMENT,
   announcement_id INT(11) NOT NULL,
   user_id INT(11) NOT NULL,
+  parent_id INT(11) DEFAULT NULL, -- the comment this replies to (NULL = top-level)
   comment_text TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),

@@ -1498,3 +1498,23 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-weight: 700;
     flex-shrink: 0;
 }
+/* Replies (e.g. from the barangay) sit indented under the comment they answer. */
+.news-comment-reply {
+    margin-left: 40px;
+}
+
+.news-comment-avatar-admin {
+    background: #6B2C3E !important;
+    color: #fff !important;
+}
+
+.news-comment-admin {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(107, 44, 62, 0.1);
+    color: #6B2C3E;
+    padding: 1px 8px;
+    border-radius: 999px;
+}

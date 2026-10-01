@@ -541,11 +541,12 @@ export const fetchAnnouncementComments = async (id) => {
     return res.json();
 };
 
-export const postAnnouncementComment = async (id, text) => {
+// parentId: reply to that comment (omit for a top-level comment).
+export const postAnnouncementComment = async (id, text, parentId = null) => {
     const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}/comments`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ text }),
+        body: JSON.stringify(parentId ? { text, parentId } : { text }),
     });
     return res.json();
 };

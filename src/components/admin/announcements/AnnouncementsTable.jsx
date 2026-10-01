@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ListView, { allOption } from "../shared/ListView";
 import AnnouncementModal from "./AnnouncementModal";
 import ResultPopup from "../shared/ResultPopup";
+import AnnouncementComments from "./AnnouncementComments";
+import AnnouncementShareButton from "./AnnouncementShareButton";
 import { fetchAnnouncements, deleteAnnouncement } from "../../../Services/api";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -170,6 +172,17 @@ const AnnouncementsTable = ({
     setCurrentPage(1);
   }, [currentFilters.search, currentFilters.status, sortOrder]);
 
+  // Which cards have their comments panel open ({ [id]: true }).
+  const [openComments, setOpenComments] = useState({});
+
+  const toggleComments = (id) =>
+    setOpenComments((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const changeCommentCount = (id, delta) =>
+    setData((prev) => prev.map((a) =>
+      a.id === id ? { ...a, commentCount: Math.max(0, (a.commentCount || 0) + delta) } : a
+    ));
+
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this announcement?")) return;
 
@@ -250,6 +263,23 @@ const AnnouncementsTable = ({
           )}
 
           <div className="announcement-admin-card-actions">
+            <div className="announcement-admin-card-engage">
+              <button
+                type="button"
+                className={`button button-secondary ${openComments[announcement.id] ? "is-active" : ""}`}
+                style={{ fontSize: 12.5, padding: '8px 18px' }}
+                onClick={() => toggleComments(announcement.id)}
+                aria-expanded={!!openComments[announcement.id]}
+              >
+                <i className="bi bi-chat-left-text"></i> Comments
+                {announcement.commentCount > 0 && (
+                  <span className="announcement-admin-count">{announcement.commentCount}</span>
+                )}
+              </button>
+
+              <AnnouncementShareButton announcement={announcement} />
+            </div>
+
             <button
               type="button"
               className="button button-secondary"
@@ -268,6 +298,13 @@ const AnnouncementsTable = ({
               <i className="bi bi-trash"></i> Delete
             </button>
           </div>
+
+          {openComments[announcement.id] && (
+            <AnnouncementComments
+              announcementId={announcement.id}
+              onCountChange={(delta) => changeCommentCount(announcement.id, delta)}
+            />
+          )}
         </div>
       </div>
     );
@@ -353,11 +390,37 @@ const AnnouncementsTable = ({
 
         .announcement-admin-card-actions {
           display: flex;
+          flex-wrap: wrap;
           justify-content: flex-end;
           gap: 8px;
           margin-top: auto;
           padding-top: 14px;
           border-top: 1px solid #f3f4f6;
+        }
+
+        .announcement-admin-card-engage {
+          display: flex;
+          gap: 8px;
+          margin-right: auto;
+        }
+
+        .announcement-admin-card-actions .is-active {
+          border-color: #6B2C3E;
+          color: #6B2C3E;
+        }
+
+        .announcement-admin-count {
+          display: inline-block;
+          min-width: 20px;
+          margin-left: 6px;
+          padding: 0 6px;
+          border-radius: 999px;
+          background: rgba(107, 44, 62, 0.1);
+          color: #6B2C3E;
+          font-size: 11px;
+          font-weight: 700;
+          line-height: 18px;
+          text-align: center;
         }
       `}</style>
 

@@ -68,7 +68,9 @@ const getCategoryIcon = (category) => {
     // Personal notifications (report status-change replies)
     'emergency_status': 'bi-exclamation-triangle-fill',
     'assistance_status': 'bi-hand-index-thumb-fill',
-    'petty_crime_status': 'bi-shield-fill-exclamation'
+    'petty_crime_status': 'bi-shield-fill-exclamation',
+    // Barangay replied to the resident's comment on an announcement
+    'comment_reply': 'bi-chat-left-text-fill'
   };
   return map[category] || 'bi-megaphone-fill';
 };
@@ -88,7 +90,8 @@ const getCategoryColor = (category) => {
     // Personal notifications (report status-change replies)
     'emergency_status': '#dc2626',
     'assistance_status': '#0d9488',
-    'petty_crime_status': '#7c3aed'
+    'petty_crime_status': '#7c3aed',
+    'comment_reply': '#6B2C3E'
   };
   return map[category] || '#6B2C3E';
 };
@@ -222,20 +225,26 @@ function ResidentNavbar() {
   // News page and scroll straight to that article. Personal notifications
   // (e.g. "your report status changed") don't have a matching news article --
   // take the resident straight to My Reports instead, since that's where
-  // they can actually see the report the update is about.
+  // they can actually see the report the update is about. The exception is
+  // "Barangay replied to your comment", which opens the announcement it's on.
   const handleNotificationClick = (id) => {
     markOneAsRead(id);
 
+    let newsId = id;
     if (typeof id === 'string' && id.startsWith('personal-')) {
-      openReportsPage();
-      return;
+      const note = notifications.find((n) => n.id === id);
+      if (note?.category !== 'comment_reply' || !note.referenceId) {
+        openReportsPage();
+        return;
+      }
+      newsId = note.referenceId;
     }
 
     setShowNotifications(false);
     setShowMobileMenu(false);
     setShowNewsPage(true);
     setTimeout(() => {
-      const el = document.getElementById(`news-item-${id}`);
+      const el = document.getElementById(`news-item-${newsId}`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 300);
   };

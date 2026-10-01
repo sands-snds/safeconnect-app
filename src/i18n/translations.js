@@ -295,7 +295,8 @@ export const translations = {
       noComments: 'No comments yet. Be the first to share your thoughts.',
       loadingComments: 'Loading comments...',
       commentPlaceholder: 'Write a comment...',
-      deleteComment: 'Delete comment'
+      deleteComment: 'Delete comment',
+      adminBadge: 'Barangay Admin'
     },
     residentHero: {
       titleLine1: 'Barangay Sta. Fe',
@@ -884,7 +885,8 @@ export const translations = {
       noComments: 'Wala pang komento. Maging una na mag-iwan ng iyong saloobin.',
       loadingComments: 'Naglo-load ng mga komento...',
       commentPlaceholder: 'Sumulat ng komento...',
-      deleteComment: 'Burahin ang komento'
+      deleteComment: 'Burahin ang komento',
+      adminBadge: 'Barangay Admin'
     },
     residentHero: {
       titleLine1: 'Barangay Sta. Fe',

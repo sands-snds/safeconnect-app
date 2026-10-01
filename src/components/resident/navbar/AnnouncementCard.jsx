@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import {
     toggleAnnouncementLike,
@@ -167,16 +167,30 @@ export default function AnnouncementCard({
         }
     };
 
+    // Deleting a comment also removes its replies (the backend does the same).
     const handleDeleteComment = async (commentId) => {
         const prevComments = comments;
-        setComments((list) => (list || []).filter((c) => c.id !== commentId));
-        setCommentCount((c) => Math.max(0, c - 1));
+        const removed = (comments || []).filter((c) => c.id === commentId || c.parentId === commentId).length;
+        setComments((list) => (list || []).filter((c) => c.id !== commentId && c.parentId !== commentId));
+        setCommentCount((c) => Math.max(0, c - removed));
         const result = await deleteAnnouncementComment(commentId);
         if (!result?.success) {
             setComments(prevComments);
-            setCommentCount((c) => c + 1);
+            setCommentCount((c) => c + removed);
         }
     };
+
+    // Top-level comments, each followed by its replies (e.g. from the barangay).
+    const orderedComments = useMemo(() => {
+        if (!comments) return [];
+        const replies = {};
+        comments.forEach((c) => {
+            if (c.parentId) (replies[c.parentId] = replies[c.parentId] || []).push(c);
+        });
+        return comments
+            .filter((c) => !c.parentId)
+            .flatMap((c) => [c, ...(replies[c.id] || [])]);
+    }, [comments]);
 
     const handleShare = async () => {
         const shareUrl = announcement.sourceUrl || window.location.href;
@@ -316,12 +330,18 @@ export default function AnnouncementCard({
                             </p>
                         )}
 
-                        {!commentsLoading && comments && comments.map((c) => (
-                            <div className="news-comment" key={c.id}>
-                                <div className="news-comment-avatar" style={{ background: colorForName(c.author) }}>{initialsOf(c.author)}</div>
+                        {!commentsLoading && orderedComments.map((c) => (
+                            <div className={`news-comment ${c.parentId ? 'news-comment-reply' : ''}`} key={c.id}>
+                                <div
+                                    className={`news-comment-avatar ${c.isAdmin ? 'news-comment-avatar-admin' : ''}`}
+                                    style={c.isAdmin ? undefined : { background: colorForName(c.author) }}
+                                >
+                                    {c.isAdmin ? <i className="bi bi-shield-check" /> : initialsOf(c.author)}
+                                </div>
                                 <div className="news-comment-body">
                                     <div className="news-comment-head">
                                         <span className="news-comment-author">{c.author}</span>
+                                        {c.isAdmin && <span className="news-comment-admin">{t('news.adminBadge')}</span>}
                                         <span className="news-comment-time">{formatCommentTime(c.date)}</span>
                                     </div>
                                     <p className="news-comment-text">{c.text}</p>
