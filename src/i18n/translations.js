@@ -278,12 +278,23 @@ export const translations = {
     },
     news: {
       latestNews: 'Latest News',
+      headerSubtitle: 'Barangay alerts, updates, and community news',
+      articleCountSingular: '{{count}} update',
+      articleCountPlural: '{{count}} updates',
       loading: 'Loading news...',
       empty: 'No announcements yet. Check back soon.',
       externalArticle: 'External article',
       openArticle: 'Open article',
       readFullArticle: 'Read full article',
-      on: 'on'
+      on: 'on',
+      like: 'Like',
+      liked: 'Liked',
+      comment: 'Comment',
+      share: 'Share',
+      copied: 'Copied!',
+      noComments: 'No comments yet. Be the first to share your thoughts.',
+      commentPlaceholder: 'Write a comment...',
+      deleteComment: 'Delete comment'
     },
     residentHero: {
       titleLine1: 'Barangay Sta. Fe',
@@ -855,12 +866,23 @@ export const translations = {
     },
     news: {
       latestNews: 'Pinakabagong Balita',
+      headerSubtitle: 'Mga alerto, update, at balita ng barangay',
+      articleCountSingular: '{{count}} update',
+      articleCountPlural: '{{count}} na update',
       loading: 'Naglo-load ng balita...',
       empty: 'Wala pang anunsyo. Bumalik ulit sa ibang pagkakataon.',
       externalArticle: 'Panlabas na artikulo',
       openArticle: 'Buksan ang artikulo',
       readFullArticle: 'Basahin ang buong artikulo',
-      on: 'sa'
+      on: 'sa',
+      like: 'Gusto',
+      liked: 'Nagustuhan',
+      comment: 'Komento',
+      share: 'Ibahagi',
+      copied: 'Nakopya!',
+      noComments: 'Wala pang komento. Maging una na mag-iwan ng iyong saloobin.',
+      commentPlaceholder: 'Sumulat ng komento...',
+      deleteComment: 'Burahin ang komento'
     },
     residentHero: {
       titleLine1: 'Barangay Sta. Fe',

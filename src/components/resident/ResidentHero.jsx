@@ -30,7 +30,7 @@ function ResidentHero() {
               >
                 {/* Dark Overlay */}
                 <div className="resident-hero-overlay">
-                  <div className="container hero-content text-center text-lg-start">
+                  <div className="container hero-content text-center">
                     <h3 className="hero-title">
                       {t('residentHero.titleLine1')}<br />
                       {t('residentHero.titleLine2')}

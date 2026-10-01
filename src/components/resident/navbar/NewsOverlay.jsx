@@ -20,26 +20,39 @@ const NewsOverlay = ({
 }) => {
 
     const { t } = useLanguage();
+    const articleCount = announcements.length;
 
     return (
         <div
             className={`news-fullscreen ${isOpen ? "show" : ""}`}
         >
             <div className="news-fullscreen-header">
-                <h2>
-                    <i className="bi bi-newspaper"></i>
-                    {" "}
-                    {t('news.latestNews')}
-                </h2>
+                <div className="news-header-left">
+                    <div className="news-header-icon">
+                        <i className="bi bi-newspaper" />
+                    </div>
+                    <div>
+                        <h2>{t('news.latestNews')}</h2>
+                        <p className="news-header-sub">{t('news.headerSubtitle')}</p>
+                    </div>
+                </div>
 
-                <button
-                    className="news-close-btn"
-                    onClick={onClose}
-                    aria-label="Close news"
-                >
-                    <i className="bi bi-x-lg"></i>
-                </button>
-
+                <div className="news-header-right">
+                    {articleCount > 0 && (
+                        <span className="news-header-count">
+                            {articleCount === 1
+                                ? t('news.articleCountSingular', { count: articleCount })
+                                : t('news.articleCountPlural', { count: articleCount })}
+                        </span>
+                    )}
+                    <button
+                        className="news-close-btn"
+                        onClick={onClose}
+                        aria-label="Close news"
+                    >
+                        <i className="bi bi-x-lg"></i>
+                    </button>
+                </div>
             </div>
 
             <div className="news-fullscreen-body">

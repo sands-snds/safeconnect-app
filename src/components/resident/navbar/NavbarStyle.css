@@ -610,23 +610,84 @@
 }
 
 .news-fullscreen-header {
+    position: relative;
     background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
-    padding: 1.25rem clamp(1.5rem, 5vw, 4rem);
+    padding: 1.4rem clamp(1.5rem, 5vw, 4rem);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.news-fullscreen-header::before {
+    content: '';
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    top: -140px;
+    right: 10%;
+    pointer-events: none;
+}
+
+.news-header-left {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+}
+
+.news-header-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: #FFC107;
     flex-shrink: 0;
 }
 
 .news-fullscreen-header h2 {
     color: white;
     font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-    font-weight: 700;
+    font-weight: 800;
     margin: 0;
+    line-height: 1.25;
+}
+
+.news-header-sub {
+    margin: 0.15rem 0 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.news-header-right {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.news-header-count {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
 }
 
 .news-close-btn {
@@ -642,6 +703,7 @@
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
+    flex-shrink: 0;
 }
 
 .news-close-btn:hover {
@@ -813,6 +875,180 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .news-card-source-link:hover {
     text-decoration: underline;
+}
+
+/* =====================================================
+   LIKE / COMMENT / SHARE ENGAGEMENT BAR
+===================================================== */
+
+.news-card-engagement {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f0eaec;
+}
+
+.news-engage-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: none;
+    background: #f7f5f6;
+    color: #6b7280;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.news-engage-btn i {
+    font-size: 0.95rem;
+}
+
+.news-engage-btn:hover {
+    background: #efe6e9;
+    color: #6B2C3E;
+}
+
+.news-engage-btn.active {
+    background: rgba(107, 44, 62, 0.1);
+    color: #6B2C3E;
+}
+
+.news-engage-btn.liked {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+.news-comments {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px dashed #efe6e9;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.news-comments-empty {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.news-comment {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.news-comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #6B2C3E;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.news-comment-body {
+    flex: 1;
+    min-width: 0;
+    background: #f7f5f6;
+    border-radius: 12px;
+    padding: 0.55rem 0.85rem;
+}
+
+.news-comment-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.news-comment-author {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.news-comment-time {
+    font-size: 0.7rem;
+    color: #9ca3af;
+}
+
+.news-comment-text {
+    margin: 0.15rem 0 0;
+    font-size: 0.85rem;
+    color: #374151;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.news-comment-delete {
+    border: none;
+    background: none;
+    color: #c6c0c2;
+    cursor: pointer;
+    padding: 4px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+
+.news-comment-delete:hover {
+    color: #dc2626;
+}
+
+.news-comment-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.news-comment-form input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #e5d9dc;
+    font-size: 0.85rem;
+    outline: none;
+    background: #fff;
+}
+
+.news-comment-form input:focus {
+    border-color: #6B2C3E;
+}
+
+.news-comment-form button {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: #6B2C3E;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.news-comment-form button:hover:not(:disabled) {
+    background: #54202f;
+}
+
+.news-comment-form button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 /* On mobile the dropdown was positioned relative to the bell icon, which
