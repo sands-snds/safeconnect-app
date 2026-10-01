@@ -1,19 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import {
-    isLiked,
-    toggleLike,
-    getComments,
-    addComment,
-    deleteComment,
-    getCurrentResidentName
-} from "./newsEngagement";
+    toggleAnnouncementLike,
+    fetchAnnouncementComments,
+    postAnnouncementComment,
+    deleteAnnouncementComment
+} from "../../../Services/api";
 
 const hostnameOf = (url) => {
     try {
         return new URL(url).hostname.replace(/^www\./, "");
     } catch {
         return "";
+    }
+};
+
+// Matches the category colors used in the notification bell (ResidentNavbar)
+// so a post reads the same way wherever a resident sees it.
+const CATEGORY_THEME = {
+    'Emergency Alert':   { color: '#dc2626', icon: 'bi-exclamation-triangle-fill' },
+    'Weather Advisory':  { color: '#3b82f6', icon: 'bi-cloud-rain-fill' },
+    'Evacuation':        { color: '#f97316', icon: 'bi-signpost-split-fill' },
+    'Community Event':   { color: '#8b5cf6', icon: 'bi-calendar-event-fill' },
+    'Community Update':  { color: '#0ea5e9', icon: 'bi-info-circle-fill' },
+    'Announcement':      { color: '#6B2C3E', icon: 'bi-megaphone-fill' },
+    'General':           { color: '#6B2C3E', icon: 'bi-megaphone-fill' }
+};
+const themeFor = (category) => CATEGORY_THEME[category] || { color: '#6B2C3E', icon: 'bi-megaphone-fill' };
+
+const getCurrentUserId = () => {
+    try {
+        const raw = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        return raw.id ?? raw.user_id ?? raw.userId ?? null;
+    } catch {
+        return null;
     }
 };
 
@@ -56,6 +76,9 @@ export default function AnnouncementCard({
     formatNewsDate
 }) {
     const { t } = useLanguage();
+    const theme = themeFor(announcement.category);
+    const currentUserId = getCurrentUserId();
+
     const photo =
         announcement.imageUrl ||
         announcement.sourceImage;
@@ -65,32 +88,84 @@ export default function AnnouncementCard({
     const [imageFailed, setImageFailed] = useState(false);
     const showImage = photo && !imageFailed;
 
-    const [liked, setLiked] = useState(() => isLiked(announcement.id));
+    const [liked, setLiked] = useState(!!announcement.likedByMe);
+    const [likeCount, setLikeCount] = useState(announcement.likeCount || 0);
+    const [likeBusy, setLikeBusy] = useState(false);
+
     const [showComments, setShowComments] = useState(false);
-    const [comments, setComments] = useState(() => getComments(announcement.id));
+    const [comments, setComments] = useState(null); // null = not loaded yet
+    const [commentsLoading, setCommentsLoading] = useState(false);
+    const [commentCount, setCommentCount] = useState(announcement.commentCount || 0);
     const [commentDraft, setCommentDraft] = useState("");
+    const [postingComment, setPostingComment] = useState(false);
+
     const [shareFeedback, setShareFeedback] = useState(false);
 
-    useEffect(() => {
-        setLiked(isLiked(announcement.id));
-        setComments(getComments(announcement.id));
-    }, [announcement.id]);
-
-    const handleToggleLike = () => {
-        setLiked(toggleLike(announcement.id));
+    const handleToggleLike = async () => {
+        if (likeBusy) return;
+        const wasLiked = liked;
+        setLikeBusy(true);
+        setLiked(!wasLiked);
+        setLikeCount((c) => Math.max(0, c + (wasLiked ? -1 : 1)));
+        try {
+            const result = await toggleAnnouncementLike(announcement.id);
+            if (result?.success) {
+                setLiked(result.liked);
+                setLikeCount(result.count);
+            } else {
+                setLiked(wasLiked);
+                setLikeCount((c) => Math.max(0, c + (wasLiked ? 1 : -1)));
+            }
+        } catch {
+            setLiked(wasLiked);
+            setLikeCount((c) => Math.max(0, c + (wasLiked ? 1 : -1)));
+        } finally {
+            setLikeBusy(false);
+        }
     };
 
-    const handlePostComment = (e) => {
+    const handleToggleComments = async () => {
+        const next = !showComments;
+        setShowComments(next);
+        if (next && comments === null) {
+            setCommentsLoading(true);
+            try {
+                const data = await fetchAnnouncementComments(announcement.id);
+                setComments(Array.isArray(data) ? data : []);
+            } catch {
+                setComments([]);
+            } finally {
+                setCommentsLoading(false);
+            }
+        }
+    };
+
+    const handlePostComment = async (e) => {
         e.preventDefault();
         const text = commentDraft.trim();
-        if (!text) return;
-        const next = addComment(announcement.id, text, getCurrentResidentName());
-        setComments(next);
-        setCommentDraft("");
+        if (!text || postingComment) return;
+        setPostingComment(true);
+        try {
+            const result = await postAnnouncementComment(announcement.id, text);
+            if (result?.success) {
+                setComments((prev) => [...(prev || []), result.comment]);
+                setCommentCount((c) => c + 1);
+                setCommentDraft("");
+            }
+        } finally {
+            setPostingComment(false);
+        }
     };
 
-    const handleDeleteComment = (commentId) => {
-        setComments(deleteComment(announcement.id, commentId));
+    const handleDeleteComment = async (commentId) => {
+        const prevComments = comments;
+        setComments((list) => (list || []).filter((c) => c.id !== commentId));
+        setCommentCount((c) => Math.max(0, c - 1));
+        const result = await deleteAnnouncementComment(commentId);
+        if (!result?.success) {
+            setComments(prevComments);
+            setCommentCount((c) => c + 1);
+        }
     };
 
     const handleShare = async () => {
@@ -121,6 +196,7 @@ export default function AnnouncementCard({
         <div
             id={`news-item-${announcement.id}`}
             className="news-card"
+            style={{ '--news-accent': theme.color }}
         >
             {showImage ? (
                 <div className="news-card-media">
@@ -140,14 +216,14 @@ export default function AnnouncementCard({
             ) : null}
 
             <div className="news-card-content">
-                <span className="news-card-category">
-                    {announcement.category}
-                </span>
-
-                <div className="news-card-date">
-                    {formatNewsDate(
-                        announcement.date
-                    )}
+                <div className="news-card-top-row">
+                    <span className="news-card-category" style={{ background: `${theme.color}18`, color: theme.color }}>
+                        <i className={`bi ${theme.icon}`} />
+                        {announcement.category}
+                    </span>
+                    <span className="news-card-date">
+                        <i className="bi bi-clock" /> {formatNewsDate(announcement.date)}
+                    </span>
                 </div>
 
                 <h3>
@@ -182,15 +258,17 @@ export default function AnnouncementCard({
                     >
                         <i className={`bi ${liked ? 'bi-heart-fill' : 'bi-heart'}`} />
                         {liked ? t('news.liked') : t('news.like')}
+                        {likeCount > 0 && <span className="news-engage-count">{likeCount}</span>}
                     </button>
 
                     <button
                         type="button"
                         className={`news-engage-btn ${showComments ? 'active' : ''}`}
-                        onClick={() => setShowComments((v) => !v)}
+                        onClick={handleToggleComments}
                     >
                         <i className="bi bi-chat-left-text" />
-                        {t('news.comment')}{comments.length > 0 ? ` (${comments.length})` : ''}
+                        {t('news.comment')}
+                        {commentCount > 0 && <span className="news-engage-count">{commentCount}</span>}
                     </button>
 
                     <button
@@ -205,11 +283,15 @@ export default function AnnouncementCard({
 
                 {showComments && (
                     <div className="news-comments">
-                        {comments.length === 0 && (
+                        {commentsLoading && (
+                            <p className="news-comments-empty">{t('news.loadingComments')}</p>
+                        )}
+
+                        {!commentsLoading && comments && comments.length === 0 && (
                             <p className="news-comments-empty">{t('news.noComments')}</p>
                         )}
 
-                        {comments.map((c) => (
+                        {!commentsLoading && comments && comments.map((c) => (
                             <div className="news-comment" key={c.id}>
                                 <div className="news-comment-avatar">{initialsOf(c.author)}</div>
                                 <div className="news-comment-body">
@@ -219,7 +301,7 @@ export default function AnnouncementCard({
                                     </div>
                                     <p className="news-comment-text">{c.text}</p>
                                 </div>
-                                {c.mine && (
+                                {currentUserId != null && String(c.userId) === String(currentUserId) && (
                                     <button
                                         type="button"
                                         className="news-comment-delete"
@@ -238,9 +320,10 @@ export default function AnnouncementCard({
                                 value={commentDraft}
                                 onChange={(e) => setCommentDraft(e.target.value)}
                                 placeholder={t('news.commentPlaceholder')}
-                                maxLength={500}
+                                maxLength={1000}
+                                disabled={postingComment}
                             />
-                            <button type="submit" disabled={!commentDraft.trim()}>
+                            <button type="submit" disabled={!commentDraft.trim() || postingComment}>
                                 <i className="bi bi-send-fill" />
                             </button>
                         </form>

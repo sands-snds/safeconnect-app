@@ -31,6 +31,21 @@ const verifyToken = (req, res, next) => {
     });
 };
 
+// Like verifyToken, but never blocks the request -- used on public GET
+// routes that enrich their response when the caller happens to be signed
+// in (e.g. "did I like this announcement?") without requiring sign-in to
+// view the page at all.
+const attachUserIfPresent = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return next();
+
+    const token = authHeader.split(" ")[1];
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (!err) req.user = decoded;
+        next();
+    });
+};
+
 // Checks the role against the database rather than trusting the token's
 // role claim -- tokens last 7 days, so otherwise a demoted/suspended admin
 // would keep admin access (and a newly promoted one wouldn't get it) until
@@ -158,6 +173,7 @@ const verifySelfOrAnyAdmin = async (req, res, next) => {
 
 module.exports = {
     verifyToken,
+    attachUserIfPresent,
     verifyAdmin,
     verifySuperAdmin,
     verifySelfOrAdmin,

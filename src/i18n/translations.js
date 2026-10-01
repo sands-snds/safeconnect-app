@@ -293,6 +293,7 @@ export const translations = {
       share: 'Share',
       copied: 'Copied!',
       noComments: 'No comments yet. Be the first to share your thoughts.',
+      loadingComments: 'Loading comments...',
       commentPlaceholder: 'Write a comment...',
       deleteComment: 'Delete comment'
     },
@@ -875,12 +876,13 @@ export const translations = {
       openArticle: 'Buksan ang artikulo',
       readFullArticle: 'Basahin ang buong artikulo',
       on: 'sa',
-      like: 'Gusto',
-      liked: 'Nagustuhan',
+      like: 'Suportahan',
+      liked: 'Sinuportahan',
       comment: 'Komento',
       share: 'Ibahagi',
       copied: 'Nakopya!',
       noComments: 'Wala pang komento. Maging una na mag-iwan ng iyong saloobin.',
+      loadingComments: 'Naglo-load ng mga komento...',
       commentPlaceholder: 'Sumulat ng komento...',
       deleteComment: 'Burahin ang komento'
     },

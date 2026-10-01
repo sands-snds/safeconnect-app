@@ -498,7 +498,9 @@ export const updateArchiveSettings = async (months) => {
 
 // ── Announcements ─────────────────────────────────────────────────────────────
 export const fetchAnnouncements = async () => {
-    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}`);
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}`, {
+        headers: authHeaders(),
+    });
     const data = await res.json();
     if (!Array.isArray(data)) return data;
 
@@ -518,8 +520,42 @@ export const fetchAnnouncements = async () => {
         sourceUrl: a.source_url || null,
         sourceTitle: a.source_title || null,
         sourceImage: a.source_image || null,
-        sourceSite: a.source_site || null
+        sourceSite: a.source_site || null,
+        likeCount: a.likeCount || 0,
+        commentCount: a.commentCount || 0,
+        likedByMe: !!a.likedByMe
     }));
+};
+
+// Toggles the signed-in resident's like on an announcement.
+export const toggleAnnouncementLike = async (id) => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}/like`, {
+        method: "POST",
+        headers: authHeaders(),
+    });
+    return res.json();
+};
+
+export const fetchAnnouncementComments = async (id) => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}/comments`);
+    return res.json();
+};
+
+export const postAnnouncementComment = async (id, text) => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}/comments`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ text }),
+    });
+    return res.json();
+};
+
+export const deleteAnnouncementComment = async (commentId) => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/comments/${commentId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    });
+    return res.json();
 };
 
 export const createAnnouncement = async (formData) => {

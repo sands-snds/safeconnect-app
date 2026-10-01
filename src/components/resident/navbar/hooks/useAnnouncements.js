@@ -27,7 +27,10 @@ export default function useAnnouncements() {
                 sourceUrl: item.sourceUrl || "",
                 sourceTitle: item.sourceTitle || "",
                 sourceImage: item.sourceImage || "",
-                sourceSite: item.sourceSite || ""
+                sourceSite: item.sourceSite || "",
+                likeCount: item.likeCount || 0,
+                commentCount: item.commentCount || 0,
+                likedByMe: !!item.likedByMe
             }));
 
             formatted.sort((a, b) =>
