@@ -1498,9 +1498,58 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-weight: 700;
     flex-shrink: 0;
 }
-/* Replies (e.g. from the barangay) sit indented under the comment they answer. */
-.news-comment-reply {
-    margin-left: 40px;
+/* YouTube-style threads: replies (e.g. from the barangay) hang under the
+   comment they answer, lined up with its text, with a show/hide toggle. */
+.news-thread {
+    display: flex;
+    flex-direction: column;
+}
+
+.news-replies {
+    margin-left: calc(32px + 0.6rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.25rem;
+}
+
+.news-replies-toggle {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: none;
+    background: none;
+    padding: 0.3rem 0.7rem;
+    margin-left: -0.7rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #6B2C3E;
+    cursor: pointer;
+}
+
+.news-replies-toggle:hover {
+    background: rgba(107, 44, 62, 0.08);
+}
+
+.news-comment-reply .news-comment-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.6rem;
+}
+
+/* Replies drop the card box so they read as part of the comment above. */
+.news-comment-reply .news-comment-body {
+    background: transparent;
+    border: none;
+    padding: 0.1rem 0 0;
+}
+
+.news-reply-mention {
+    color: #6B2C3E;
+    font-weight: 600;
+    margin-right: 0.3rem;
 }
 
 .news-comment-avatar-admin {

@@ -142,6 +142,8 @@ These run on every start, so local and Azure databases stay in sync without manu
 |---|---|
 | `AdminActivity.ensureTable()` | Table `admin_activity_logs` exists |
 | `Log.ensureColumns()` | `signin_logs` has `ip_address`, `device` and `location` |
+| `AnnouncementLike.ensureTable()` | Table `announcement_likes` exists |
+| `AnnouncementComment.ensureTable()` | Table `announcement_comments` exists, including the `parent_id` column used for replies |
 | `archiveService.startScheduler()` | The three report tables have `resolved_at` and `archived_at`; table `system_settings` exists with `report_auto_archive_months` (default `12`). It then runs auto-archive immediately and every 6 hours. |
 
 ### 3.2 The request pipeline
@@ -278,11 +280,15 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 #### Announcements: `announcementRoutes.js` → `announcementController.js`
 | Method | Path | Access | Purpose | Called from |
 |---|---|---|---|---|
-| GET | `/announcements` | public | All announcements, newest first | `fetchAnnouncements()`: resident news, admin table |
+| GET | `/announcements` | public | All announcements, newest first, each with `likeCount`, `commentCount` and `likedByMe`. `attachUserIfPresent` reads the token if one is sent, without requiring it. | `fetchAnnouncements()`: resident news, admin table |
 | GET | `/announcements/link-preview?url=` | admin | Title, image and site name of a news link | `fetchLinkPreview()` |
 | POST | `/announcements` | admin | Create (multipart: `title, category, message, date, source_*`, optional `image`). Emails all active residents. | `createAnnouncement()` |
 | PUT | `/announcements/:id` | admin | Edit (plus `remove_image=1` to drop the image) | `updateAnnouncement()` |
 | DELETE | `/announcements/:id` | admin | Delete | `deleteAnnouncement()` |
+| GET | `/announcements/:id/comments` | public | All comments, oldest first: `{ id, parentId, text, author, userId, isAdmin, date }` | `fetchAnnouncementComments()`: `AnnouncementCard`, admin `AnnouncementComments` |
+| POST | `/announcements/:id/comments` | user | Post a comment `{ text }`, or a reply `{ text, parentId }`. A reply to a reply attaches to the top-level comment. When an admin replies, the comment's author gets a `comment_reply` notification. | `postAnnouncementComment()` |
+| DELETE | `/announcements/comments/:commentId` | the comment's author, or admin | Delete a comment and its replies | `deleteAnnouncementComment()` |
+| POST | `/announcements/:id/like` | user | Like or unlike (toggle); returns `{ liked, count }` | `toggleAnnouncementLike()` (residents only) |
 
 #### Notifications: `notificationRoutes.js` → `notificationController.js`
 | Method | Path | Access | Purpose | Called from |
@@ -327,7 +333,7 @@ Controllers read the request, validate it, call services or models, and pick the
 | `pettyCrimeController.js` | The same for petty crimes (`petty_crime_status` notifications). |
 | `myReportsController.js` | Loads the caller's reports from all three tables in parallel and converts each to one shape (`type`, `title`, `description`, `date`, `location`, `status`, plus the type-specific fields the edit forms need), sorted newest first. |
 | `archiveController.js` | Reads and changes the auto-archive period (only 0, 6 or 12 are allowed; saving applies it immediately), and archives or restores a single report. |
-| `announcementController.js` | Create and edit with the uploaded image path (`/uploads/<file>`), public list, delete, and link previews (returns 422 if the link can't be read). |
+| `announcementController.js` | Create and edit with the uploaded image path (`/uploads/<file>`), public list (with like and comment counts), delete, and link previews (returns 422 if the link can't be read). Also likes and comments: checks comment text (1–1,000 characters), attaches replies to their top-level comment, marks admin comments with `isAdmin`, and notifies a resident when an admin replies to them. |
 | `notificationController.js` | Admin (shared) and resident (personal) notification lists, unread counts and marking as read. |
 | `logController.js` | Sign-in logs; admin logs merged with in-memory presence (`online`, `last_seen`; a latest action of "Logged out" means offline); logout recording. |
 | `dashboardController.js` | Returns `Dashboard.getStatistics()`. |
@@ -362,6 +368,8 @@ Each model is a class of `static async` methods that run parameterized SQL throu
 | `AssistanceRequest.js` | `assistance_requests` | The same set |
 | `PettyCrime.js` | `petty_crimes` | The same set |
 | `Announcement.js` | `announcements` | `create`, `findAll`, `findById`, `update` (keeps the old image if no new one is given), `clearImage`, `delete` |
+| `AnnouncementComment.js` | `announcement_comments` | `ensureTable` (also adds `parent_id` to older databases), `create(announcementId, userId, text, parentId)`, `findByAnnouncement` (joins the author's name and role), `findById`, `delete` (also deletes replies), `countsForAll` |
+| `AnnouncementLike.js` | `announcement_likes` | `ensureTable`, `toggle`, `countFor`, `countsForAll`, `likedAnnouncementIdsFor(userId)` |
 | `Notification.js` | `notifications` | `create`; staff: `findAll`, `unreadCount`, `markAsRead`, `markAllAsRead` (all where `user_id IS NULL`); personal: `findByUser`, `unreadCountForUser`, `markAsReadForUser`, `markAllAsReadForUser` |
 | `Log.js` | `signin_logs` | `ensureColumns`, `logSignin(name, email, status, { ip, device })`, `setSigninLocation`, `getSigninLogs()` (last 90 days, joined with the account's current role) |
 | `AdminActivity.js` | `admin_activity_logs` | `ensureTable`, `record(admin, action, details)`, `getRecent(500)`, `getAdminSummaries()` (each admin account with its last login and latest action) |
@@ -401,7 +409,14 @@ registered_users (id)
    ├──< assistance_requests.reporter_id    (ON DELETE SET NULL)
    ├──< petty_crimes.reporter_id           (ON DELETE SET NULL)
    ├──< announcements.created_by           (ON DELETE SET NULL)
+   ├──< announcement_comments.user_id      (ON DELETE CASCADE)
+   ├──< announcement_likes.user_id         (ON DELETE CASCADE)
    └──< notifications.user_id              (ON DELETE CASCADE; NULL = staff notification)
+
+announcements (id)
+   ├──< announcement_comments.announcement_id  (ON DELETE CASCADE)
+   └──< announcement_likes.announcement_id     (ON DELETE CASCADE)
+announcement_comments.parent_id → announcement_comments.id  (a reply; NULL = top-level comment)
 
 signin_logs          matched to accounts by email_address (no foreign key)
 admin_activity_logs  admin_id (no foreign key, so entries survive account changes)
@@ -428,8 +443,14 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 **`announcements`**
 `id`, `title`, `category`, `message`, `date_posted`, `image_path`, `source_url`, `source_title`, `source_image`, `source_site` (the link preview), `created_by`, `created_at`.
 
+**`announcement_comments`**
+`id`, `announcement_id`, `user_id`, `parent_id` (the comment this one replies to; NULL for a top-level comment), `comment_text`, `created_at`. Replies are one level deep.
+
+**`announcement_likes`**
+`id`, `announcement_id`, `user_id`, `created_at`. One like per user per announcement (unique key).
+
 **`notifications`**
-`id`, `user_id` (NULL means a staff notification; otherwise it belongs to that resident), `title`, `message`, `notification_type` (`emergency`, `assistance`, `petty_crime`, `announcement`, `*_status`), `reference_id` (the report or announcement id), `is_read`, `created_at`.
+`id`, `user_id` (NULL means a staff notification; otherwise it belongs to that resident), `title`, `message`, `notification_type` (`emergency`, `assistance`, `petty_crime`, `announcement`, `*_status`, `comment_reply`), `reference_id` (the report or announcement id), `is_read`, `created_at`.
 
 **`signin_logs`**
 `id`, `full_name`, `email_address`, `status` (`Success` / `Failed`), `ip_address`, `device`, `location`, `timestamp`.
@@ -508,6 +529,15 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
    - `AnnouncementService.create`: inserts the row, creates the staff notification, and **emails every active resident** in the background
 4. **Residents:** `useAnnouncements` polls `GET /announcements` every minute. The news appears in the **NewsOverlay** and the bell (announcements count as read or unread per browser, in `localStorage`).
 
+### A resident comments and the barangay replies
+1. **Resident, `AnnouncementCard.jsx`**: opening **Comment** loads `GET /announcements/:id/comments`. Posting calls `postAnnouncementComment(id, text)`, which sends `POST /announcements/:id/comments`.
+2. **Admin, `AnnouncementComments.jsx`** (opened with **Comments** on an announcement card): the admin clicks **Reply** under the resident's comment, types the reply and clicks **Reply**. This calls `postAnnouncementComment(id, text, parentId)`.
+3. **Backend, `createComment`**:
+   - checks that `parentId` belongs to the same announcement (a reply to a reply attaches to the top-level comment)
+   - inserts the row with `parent_id`
+   - because the author is an admin, creates a personal `comment_reply` notification for the resident, with `reference_id` set to the announcement
+4. **Resident:** the bell shows "Barangay replied to your comment". Clicking it opens the News page at that announcement. The reply appears under the comment with an @mention and a "Barangay Admin" tag, with a "Hide replies" toggle.
+
 ### Generating a PDF or Excel report
 1. **`GenerateReportButton`** or **`GenerateReportModal`**: the admin picks the status, date range and format.
 2. `exportReport(type, format, filters)` calls `GET /export/pdf/emergency?status=Resolved&from=…&to=…&tzOffset=-480`.
@@ -571,11 +601,11 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 
 | Component | What it does | API calls |
 |---|---|---|
-| `ResidentNavbar.jsx` | The resident's top bar and the hub of the resident app. It uses the navbar hooks to load **announcements, notifications, weather and the profile**, polls every minute, switches between desktop and mobile layouts, and opens **NewsOverlay**, **MyReportsPage** and **SettingsPage** as overlays. Clicking a notification marks it read and opens the related news article or My Reports. Logout clears the resident token and storage. | `clearAuthToken` (the hooks do the fetching) |
+| `ResidentNavbar.jsx` | The resident's top bar and the hub of the resident app. It uses the navbar hooks to load **announcements, notifications, weather and the profile**, polls every minute, switches between desktop and mobile layouts, and opens **NewsOverlay**, **MyReportsPage** and **SettingsPage** as overlays. Clicking a notification marks it read and opens the related news article or My Reports. A `comment_reply` notification opens the announcement the reply is on. Logout clears the resident token and storage. | `clearAuthToken` (the hooks do the fetching) |
 | `ResidentHero.jsx` | A welcome banner at the top of the resident page. | No |
 | `EmergencyReportSection.jsx` | Cards for **Report Emergency**, **Request Assistance** and **Report Petty Crime** that open the matching modal, plus an emergency call button. | No |
 | `ResidentEmergencyModal.jsx` | The emergency report form: type (sets the severity automatically), details, people affected, special needs, **required photo or video** (JPG up to 20 MB, video up to 50 MB, converted to base64), a **map pin inside Santa Fe**, and self or someone-else fields. It applies a 1-hour cooldown per account, runs in **edit mode** when opened from My Reports with `editingReport`, and shows the reference number on success. | `createEmergencyReport`, `updateEmergencyReport` |
-| `ResidentAssistanceModal.jsx` | The assistance request form: type, urgency, situation, people needing help, special needs, the map pin and self or someone-else fields. Same cooldown and edit mode. | `createAssistanceRequest`, `updateAssistanceRequest` |
+| `ResidentAssistanceModal.jsx` | The assistance request form: type (Food and Water, Medical Aid or Transport Vehicle), urgency, situation, people needing help, special needs, the map pin and self or someone-else fields. Same cooldown and edit mode. | `createAssistanceRequest`, `updateAssistanceRequest` |
 | `ResidentPettyCrimeModal.jsx` | The petty crime form: crime type (with an "Other" option), description, suspect information, the map pin and the victim fields. Same cooldown and edit mode. | `createPettyCrimeReport`, `updatePettyCrimeReport` |
 | `MyReportsPage.jsx` | A full-screen list of **every report the resident has submitted**. It has an overview bar, tabs by type, search and filters, a status progress stepper on each card, reference copy-to-clipboard, **edit** (reopens the matching modal with the data filled in) and **delete** (with confirmation). | `fetchMyReports`, `delete…` for each type |
 | `SettingsPage.jsx` | Profile settings: photo (preview, then Save), username, contact (+63 format), email (requires the current password) and password. Successful changes update the navbar right away (`onProfileUpdate`). | `fetchUserProfile`, `uploadProfilePhoto`, `updateUsername`, `updateContact`, `updateEmail`, `changePassword` |
@@ -587,7 +617,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `MobileNavbar.jsx` / `MobileMenu.jsx` | The phone bar and its slide-out menu with the same features. |
 | `NotificationPanel.jsx` | The notification dropdown list, with category colors and "mark all read". |
 | `NewsOverlay.jsx` | A full-screen news feed built from `AnnouncementCard`s. It can scroll to a specific article. |
-| `AnnouncementCard.jsx` | One announcement: its image, the linked article's preview image, or a placeholder showing the source site. |
+| `AnnouncementCard.jsx` | One announcement: its image, the linked article's preview image, or a placeholder showing the source site. Its action bar has **Like**, **Comment** and **Share**. Comments are shown as YouTube-style threads: replies (from the barangay) sit under the comment they answer, with an @mention, a smaller avatar, a "Barangay Admin" tag and a "N replies / Hide replies" toggle. Residents can delete their own comments. |
 | `UserDropdown.jsx` | The avatar menu: My Reports, Settings, Logout. |
 | `WeatherCard.jsx` | Shows the forecast from `useWeather`. |
 | `NavbarStyle.css` | Styles for all of the above. |
@@ -646,7 +676,9 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `AnnouncementsPage.jsx` | The tab wrapper. |
-| `AnnouncementsTable.jsx` | Manages itself: fetches, searches, sorts and paginates a card grid, and handles edit and delete with a `ResultPopup`. It opens the create modal right away when reached from the dashboard shortcut. |
+| `AnnouncementsTable.jsx` | Manages itself: fetches, searches, sorts and paginates a card grid, and handles edit and delete with a `ResultPopup`. It opens the create modal right away when reached from the dashboard shortcut. Each card also has **Comments** (with a count) and **Share**. |
+| `AnnouncementComments.jsx` | The comments panel under a card: residents' comments as YouTube-style threads, **Reply** (opens a reply box under the comment, with Cancel and Reply), a "N replies / Hide replies" toggle, **Delete** for moderation (removes replies too), and a box to comment as the barangay. Keeps the card's count in sync. |
+| `AnnouncementShareButton.jsx` | The **Share** menu: the device's share sheet (where the browser supports it), **Share on Facebook**, or **Copy announcement** (title, message and link). Links to the news article for link announcements, otherwise to the public SafeConnect site. |
 | `AnnouncementModal.jsx` | A popup around `CreateAnnouncementView` (Esc or clicking outside closes it). |
 | `CreateAnnouncementView.jsx` | The create and edit form: image upload with preview and remove, a **pasted link with automatic preview**, and multipart submission. Form contents are kept if the session expires. |
 | `constants.js` | Announcement categories. |
@@ -684,7 +716,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 
 | Component | What it does |
 |---|---|
-| `DonationFooter.jsx` | The site footer (translated), used on the landing and resident pages. |
+| `DonationFooter.jsx` | The site footer (translated), used on the landing and resident pages. It shows the SafeConnect logo and description, the barangay officials and their numbers, the emergency hotlines, the support email and the Facebook page, and the "Created by Group Tres" credit. The hotlines come from the `emergencyContacts` prop: each page passes the same `EMERGENCY_CONTACTS` list its floating call button uses (`Hero.jsx` / `EmergencyReportSection.jsx`). |
 | `LanguageGate.jsx` | A full-screen **English / Tagalog** picker, shown until a language is chosen. |
 | `LanguageToggle.jsx` | A small EN/TL switch for the navbars and menus. |
 | `location/LocationPickerMap.jsx` | A Leaflet map of Barangay Santa Fe with its boundary. Tap or drag to pin; Map/Satellite switch (OpenStreetMap / Esri imagery); `readOnly` mode for admin details. |

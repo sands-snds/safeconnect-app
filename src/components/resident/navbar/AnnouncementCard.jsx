@@ -180,8 +180,9 @@ export default function AnnouncementCard({
         }
     };
 
-    // Top-level comments, each followed by its replies (e.g. from the barangay).
-    const orderedComments = useMemo(() => {
+    // Top-level comments with their replies (e.g. from the barangay), shown
+    // as YouTube-style threads under each comment.
+    const threads = useMemo(() => {
         if (!comments) return [];
         const replies = {};
         comments.forEach((c) => {
@@ -189,8 +190,44 @@ export default function AnnouncementCard({
         });
         return comments
             .filter((c) => !c.parentId)
-            .flatMap((c) => [c, ...(replies[c.id] || [])]);
+            .map((c) => ({ ...c, replies: replies[c.id] || [] }));
     }, [comments]);
+
+    // Replies are shown by default; this holds the threads the resident collapsed.
+    const [collapsedReplies, setCollapsedReplies] = useState({});
+
+    // replyingTo: the commenter a reply answers, shown as an @mention.
+    const renderComment = (c, replyingTo) => (
+        <div className={`news-comment ${replyingTo ? 'news-comment-reply' : ''}`} key={c.id}>
+            <div
+                className={`news-comment-avatar ${c.isAdmin ? 'news-comment-avatar-admin' : ''}`}
+                style={c.isAdmin ? undefined : { background: colorForName(c.author) }}
+            >
+                {c.isAdmin ? <i className="bi bi-shield-check" /> : initialsOf(c.author)}
+            </div>
+            <div className="news-comment-body">
+                <div className="news-comment-head">
+                    <span className="news-comment-author">{c.author}</span>
+                    {c.isAdmin && <span className="news-comment-admin">{t('news.adminBadge')}</span>}
+                    <span className="news-comment-time">{formatCommentTime(c.date)}</span>
+                </div>
+                <p className="news-comment-text">
+                    {replyingTo && <span className="news-reply-mention">@{replyingTo}</span>}
+                    {c.text}
+                </p>
+            </div>
+            {currentUserId != null && String(c.userId) === String(currentUserId) && (
+                <button
+                    type="button"
+                    className="news-comment-delete"
+                    onClick={() => handleDeleteComment(c.id)}
+                    aria-label={t('news.deleteComment')}
+                >
+                    <i className="bi bi-trash3" />
+                </button>
+            )}
+        </div>
+    );
 
     const handleShare = async () => {
         const shareUrl = announcement.sourceUrl || window.location.href;
@@ -330,34 +367,32 @@ export default function AnnouncementCard({
                             </p>
                         )}
 
-                        {!commentsLoading && orderedComments.map((c) => (
-                            <div className={`news-comment ${c.parentId ? 'news-comment-reply' : ''}`} key={c.id}>
-                                <div
-                                    className={`news-comment-avatar ${c.isAdmin ? 'news-comment-avatar-admin' : ''}`}
-                                    style={c.isAdmin ? undefined : { background: colorForName(c.author) }}
-                                >
-                                    {c.isAdmin ? <i className="bi bi-shield-check" /> : initialsOf(c.author)}
+                        {!commentsLoading && threads.map((thread) => {
+                            const showReplies = !collapsedReplies[thread.id];
+                            const count = thread.replies.length;
+                            return (
+                                <div className="news-thread" key={thread.id}>
+                                    {renderComment(thread, null)}
+
+                                    {count > 0 && (
+                                        <div className="news-replies">
+                                            <button
+                                                type="button"
+                                                className="news-replies-toggle"
+                                                onClick={() => setCollapsedReplies((prev) => ({ ...prev, [thread.id]: showReplies }))}
+                                                aria-expanded={showReplies}
+                                            >
+                                                <i className={`bi ${showReplies ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                {showReplies
+                                                    ? t('news.hideReplies')
+                                                    : count === 1 ? t('news.viewOneReply') : t('news.viewReplies', { count })}
+                                            </button>
+                                            {showReplies && thread.replies.map((r) => renderComment(r, thread.author))}
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="news-comment-body">
-                                    <div className="news-comment-head">
-                                        <span className="news-comment-author">{c.author}</span>
-                                        {c.isAdmin && <span className="news-comment-admin">{t('news.adminBadge')}</span>}
-                                        <span className="news-comment-time">{formatCommentTime(c.date)}</span>
-                                    </div>
-                                    <p className="news-comment-text">{c.text}</p>
-                                </div>
-                                {currentUserId != null && String(c.userId) === String(currentUserId) && (
-                                    <button
-                                        type="button"
-                                        className="news-comment-delete"
-                                        onClick={() => handleDeleteComment(c.id)}
-                                        aria-label={t('news.deleteComment')}
-                                    >
-                                        <i className="bi bi-trash3" />
-                                    </button>
-                                )}
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         <form className="news-comment-form" onSubmit={handlePostComment}>
                             <input

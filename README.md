@@ -35,8 +35,8 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | **Petty crime report** | Report theft, vandalism and similar incidents, with optional suspect details. |
 | **Location pin** | A map of Barangay Santa Fe. Residents tap the map or use their GPS location. Pins outside the barangay are rejected, and the address fills in automatically. |
 | **My Reports** | See every report you have submitted and its status (Received → In Progress → Resolved), and edit or delete your reports. |
-| **Notifications** | A bell showing new announcements, plus personal updates when an admin changes the status of one of your reports. |
-| **News / announcements** | The barangay's announcements, including previews of linked news articles. |
+| **Notifications** | A bell showing new announcements, plus personal updates when an admin changes the status of one of your reports or replies to your comment. |
+| **News / announcements** | The barangay's announcements, including previews of linked news articles. Residents can like, comment on and share each one. The barangay's replies appear under the comment they answer, YouTube-style, tagged "Barangay Admin". |
 | **Weather** | A forecast card for Santa Fe, from Open-Meteo. |
 | **Profile settings** | Change your photo, username, contact number, email or password. |
 | **English / Tagalog** | Visitors pick a language on their first visit and can switch at any time. |
@@ -50,6 +50,8 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | **Status workflow** | A report can only move forward (Received → In Progress → Resolved). The resident gets an automatic update at each step. |
 | **Archiving** | Resolved reports can be archived by hand, or automatically after 6 months or 1 year. Archived reports can be restored. |
 | **Announcements** | Create, edit and delete announcements, with an image or a pasted news link (a preview is generated). Every active resident is emailed. |
+| **Announcement comments** | Read residents' comments on each announcement, comment as the barangay, **reply** to a resident (shown as a thread under their comment; the resident is notified), and delete comments for moderation. |
+| **Share** | Share an announcement on Facebook, through the device's share menu, or by copying its text. |
 | **Generate Report** | Download PDF or Excel reports, filtered by status and date range. |
 | **Notifications** | A bell that alerts admins to new reports and announcements. |
 | **Users** *(super admin)* | List all accounts and change their role or status. |
@@ -281,4 +283,5 @@ The backend checks the role **against the database on every admin request**, not
 - **`database/safeconnect_db.sql` is missing some columns the code uses:** `report_for`, `victim_name`, `victim_contact`, `victim_relationship` and `victim_details` on the three report tables. A database created only from this file will fail when a report is submitted. `victim_details` is also missing from the current local database.
 - **The seed admin account cannot sign in** (its password is not hashed). See [Step 6](#step-6-create-the-first-super-admin).
 - **`backend/.env.example` doesn't list the `SMTP_*` variables.**
+- **`backend/.env` is committed to git** even though `.gitignore` lists it. It holds real passwords, and each teammate's local database password overwrites the others' when they pull. Stop tracking it with `git rm --cached backend/.env`, and change the passwords that are already in the history.
 - **Report photos and videos are stored as base64 text** in the report tables (`photo_url`, `LONGTEXT`). This works, but makes those rows large, and the admin report lists download every report's media on each refresh.

@@ -296,7 +296,10 @@ export const translations = {
       loadingComments: 'Loading comments...',
       commentPlaceholder: 'Write a comment...',
       deleteComment: 'Delete comment',
-      adminBadge: 'Barangay Admin'
+      adminBadge: 'Barangay Admin',
+      viewOneReply: '1 reply',
+      viewReplies: '{{count}} replies',
+      hideReplies: 'Hide replies'
     },
     residentHero: {
       titleLine1: 'Barangay Sta. Fe',
@@ -886,7 +889,10 @@ export const translations = {
       loadingComments: 'Naglo-load ng mga komento...',
       commentPlaceholder: 'Sumulat ng komento...',
       deleteComment: 'Burahin ang komento',
-      adminBadge: 'Barangay Admin'
+      adminBadge: 'Barangay Admin',
+      viewOneReply: '1 sagot',
+      viewReplies: '{{count}} na sagot',
+      hideReplies: 'Itago ang mga sagot'
     },
     residentHero: {
       titleLine1: 'Barangay Sta. Fe',
