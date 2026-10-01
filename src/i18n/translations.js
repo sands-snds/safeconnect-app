@@ -831,14 +831,14 @@ export const translations = {
       home: 'Home',
       emergency: 'Emergency',
       news: 'Balita',
-      notifications: 'Mga Abiso',
+      notifications: 'Abiso',
       myReports: 'Aking Mga Ulat',
       settings: 'Mga Setting',
       logout: 'Mag-logout'
     },
     notificationPanel: {
-      title: 'Mga Abiso',
-      markAllRead: 'Markahan lahat bilang nabasa',
+      title: 'Abiso',
+      markAllRead: 'Nabasa na lahat',
       all: 'Lahat',
       unread: 'Hindi Nabasa',
       weatherAdvisory: 'Babala sa Panahon',
