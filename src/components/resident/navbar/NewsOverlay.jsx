@@ -5,7 +5,6 @@ import WeatherCard from "./WeatherCard";
 
 const NewsOverlay = ({
     isOpen,
-    onClose,
 
     weather,
     announcements,
@@ -45,13 +44,6 @@ const NewsOverlay = ({
                                 : t('news.articleCountPlural', { count: articleCount })}
                         </span>
                     )}
-                    <button
-                        className="news-close-btn"
-                        onClick={onClose}
-                        aria-label="Close news"
-                    >
-                        <i className="bi bi-x-lg"></i>
-                    </button>
                 </div>
             </div>
 

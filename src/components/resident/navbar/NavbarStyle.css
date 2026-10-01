@@ -625,28 +625,15 @@
 
 .news-fullscreen-header {
     position: relative;
-    background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
-    padding: 1.4rem clamp(1.5rem, 5vw, 4rem);
+    background: #fff;
+    padding: 1.1rem clamp(1.5rem, 5vw, 4rem);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
+    border-bottom: 1px solid #f0e8ea;
     flex-shrink: 0;
-    overflow: hidden;
-}
-
-.news-fullscreen-header::before {
-    content: '';
-    position: absolute;
-    width: 260px;
-    height: 260px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-    top: -140px;
-    right: 10%;
-    pointer-events: none;
 }
 
 .news-header-left {
@@ -658,22 +645,22 @@
 }
 
 .news-header-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.16);
-    backdrop-filter: blur(6px);
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
+    box-shadow: 0 4px 12px rgba(107, 44, 62, 0.22);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     color: #FFC107;
     flex-shrink: 0;
 }
 
 .news-fullscreen-header h2 {
-    color: white;
-    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+    color: #1a1416;
+    font-size: clamp(1.15rem, 2.5vw, 1.45rem);
     font-weight: 800;
     margin: 0;
     line-height: 1.25;
@@ -681,7 +668,7 @@
 
 .news-header-sub {
     margin: 0.15rem 0 0;
-    color: rgba(255, 255, 255, 0.72);
+    color: #938c8f;
     font-size: 0.82rem;
     font-weight: 500;
 }
@@ -695,33 +682,13 @@
 }
 
 .news-header-count {
-    background: rgba(255, 255, 255, 0.14);
-    color: #fff;
+    background: rgba(107, 44, 62, 0.08);
+    color: #6B2C3E;
     font-size: 0.78rem;
     font-weight: 700;
     padding: 6px 14px;
     border-radius: 999px;
     white-space: nowrap;
-}
-
-.news-close-btn {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: white;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-    flex-shrink: 0;
-}
-
-.news-close-btn:hover {
-    background: rgba(255, 255, 255, 0.28);
 }
 
 .news-fullscreen-body {

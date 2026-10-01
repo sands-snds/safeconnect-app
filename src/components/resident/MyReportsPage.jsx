@@ -234,49 +234,42 @@ function MyReportsPage({ isOpen, onClose, userId }) {
         }
 
         .myreports-header {
-          background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
-          padding: 1.25rem clamp(1.5rem, 5vw, 4rem);
+          background: #fff;
+          padding: 1.1rem clamp(1.5rem, 5vw, 4rem);
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+          gap: 0.9rem;
+          border-bottom: 1px solid #f0e8ea;
+          flex-shrink: 0;
+        }
+
+        .myreports-header-icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 13px;
+          background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
+          box-shadow: 0 4px 12px rgba(107, 44, 62, 0.22);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.2rem;
+          color: #FFC107;
           flex-shrink: 0;
         }
 
         .myreports-header h2 {
-          color: white;
-          font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-          font-weight: 700;
+          color: #1a1416;
+          font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+          font-weight: 800;
           margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.6rem;
+          line-height: 1.25;
         }
 
         .myreports-header-sub {
-          color: rgba(255, 255, 255, 0.75);
-          font-size: 0.8rem;
-          margin: 0.2rem 0 0 2.2rem;
-        }
-
-        .myreports-close-btn {
-          background: rgba(255, 255, 255, 0.15);
-          border: none;
-          color: white;
-          width: 42px;
-          height: 42px;
-          border-radius: 50%;
-          font-size: 1.5rem;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background-color 0.2s;
-          flex-shrink: 0;
-        }
-
-        .myreports-close-btn:hover {
-          background: rgba(255, 255, 255, 0.28);
+          color: #938c8f;
+          font-size: 0.82rem;
+          font-weight: 500;
+          margin: 0.15rem 0 0;
         }
 
         .myreports-body {
@@ -818,13 +811,13 @@ function MyReportsPage({ isOpen, onClose, userId }) {
       `}</style>
 
       <div className="myreports-header">
+        <div className="myreports-header-icon">
+          <i className="bi bi-file-earmark-text-fill"></i>
+        </div>
         <div>
-          <h2><i className="bi bi-file-earmark-text-fill"></i> {t('myReports.title')}</h2>
+          <h2>{t('myReports.title')}</h2>
           <p className="myreports-header-sub">{t('myReports.subtitle')}</p>
         </div>
-        <button className="myreports-close-btn" onClick={onClose} aria-label="Close my reports">
-          <i className="bi bi-x-lg"></i>
-        </button>
       </div>
 
       <div className="myreports-body">

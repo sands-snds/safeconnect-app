@@ -72,7 +72,7 @@ export default function MobileMenu({
                 </button>
 
                 <button
-                    className="mobile-nav-item"
+                    className={`mobile-nav-item ${activeView === 'emergency' ? 'active' : ''}`}
                     onClick={(e)=>
                         handleNavClick(
                             e,

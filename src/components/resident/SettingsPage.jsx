@@ -285,15 +285,20 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         }
         .settings-fullscreen.show { opacity: 1; visibility: visible; transform: translateY(0); }
         .settings-header {
-          background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
-          padding: 1.25rem clamp(1.5rem, 5vw, 4rem);
-          display: flex; align-items: center; justify-content: space-between;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.15); flex-shrink: 0;
+          background: #fff;
+          padding: 1.1rem clamp(1.5rem, 5vw, 4rem);
+          display: flex; align-items: center; gap: 0.9rem;
+          border-bottom: 1px solid #f0e8ea; flex-shrink: 0;
         }
-        .settings-header h2 { color: white; font-size: clamp(1.2rem,2.5vw,1.6rem); font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.6rem; }
-        .settings-header-sub { color: rgba(255,255,255,0.75); font-size: 0.8rem; margin: 0.2rem 0 0 2.2rem; }
-        .settings-close-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 42px; height: 42px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; flex-shrink: 0; }
-        .settings-close-btn:hover { background: rgba(255,255,255,0.28); }
+        .settings-header-icon {
+          width: 44px; height: 44px; border-radius: 13px;
+          background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
+          box-shadow: 0 4px 12px rgba(107, 44, 62, 0.22);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.2rem; color: #FFC107; flex-shrink: 0;
+        }
+        .settings-header h2 { color: #1a1416; font-size: clamp(1.15rem,2.5vw,1.45rem); font-weight: 800; margin: 0; line-height: 1.25; }
+        .settings-header-sub { color: #938c8f; font-size: 0.82rem; font-weight: 500; margin: 0.15rem 0 0; }
         .settings-body { flex: 1; overflow-y: auto; padding: clamp(1.5rem,4vw,3rem) clamp(1.5rem,5vw,4rem) 4rem; }
         .settings-container { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.75rem; }
         .settings-card { background: white; border-radius: 16px; padding: clamp(1.5rem,3vw,2rem); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
@@ -339,13 +344,13 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
       `}</style>
 
       <div className="settings-header">
+        <div className="settings-header-icon">
+          <i className="bi bi-gear-fill" />
+        </div>
         <div>
-          <h2><i className="bi bi-gear-fill" /> {t('settings.title')}</h2>
+          <h2>{t('settings.title')}</h2>
           <p className="settings-header-sub">{t('settings.subtitle')}</p>
         </div>
-        <button className="settings-close-btn" onClick={onClose} aria-label="Close settings">
-          <i className="bi bi-x-lg" />
-        </button>
       </div>
 
       <div className="settings-body">

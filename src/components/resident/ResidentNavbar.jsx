@@ -103,11 +103,12 @@ function ResidentNavbar() {
   const [showReportsPage, setShowReportsPage] = useState(false);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
 
-  // Which nav item should read as "active". News/My Reports/Settings now
-  // render as a panel below the (always-visible) navbar instead of a
-  // full-screen takeover, so this drives the highlight instead of a
-  // hardcoded "active" class on Home.
-  const activeView = showNewsPage ? 'news' : showReportsPage ? 'reports' : showSettingsPage ? 'settings' : 'home';
+  // Which nav item should read as "active": 'home' | 'emergency' | 'news' |
+  // 'reports' | 'settings'. Emergency has no panel of its own (it's an
+  // anchor scroll on the dashboard), so this can't be derived from the
+  // show*Page booleans alone -- it's set explicitly by whichever nav
+  // action the resident actually took.
+  const [activeView, setActiveView] = useState('home');
 
   const {
     currentUser,
@@ -222,6 +223,7 @@ function ResidentNavbar() {
   // Only one of News / My Reports / Settings shows at a time -- they're
   // tabs below the navbar now, not independent overlays.
   const openNewsPage = () => {
+    setActiveView('news');
     setShowNewsPage(true);
     setShowReportsPage(false);
     setShowSettingsPage(false);
@@ -234,6 +236,7 @@ function ResidentNavbar() {
   const closeNewsPage = () => setShowNewsPage(false);
 
   const openReportsPage = () => {
+    setActiveView('reports');
     setShowReportsPage(true);
     setShowNewsPage(false);
     setShowSettingsPage(false);
@@ -245,6 +248,7 @@ function ResidentNavbar() {
   const closeReportsPage = () => setShowReportsPage(false);
 
   const openSettingsPage = () => {
+    setActiveView('settings');
     setShowSettingsPage(true);
     setShowNewsPage(false);
     setShowReportsPage(false);
@@ -321,6 +325,7 @@ function ResidentNavbar() {
 
   const scrollToSection = (sectionId) => {
     closeAllPanels();
+    setActiveView(sectionId === 'emergency-report' ? 'emergency' : 'home');
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -335,6 +340,7 @@ function ResidentNavbar() {
 
   const handleHomeClick = () => {
     closeAllPanels();
+    setActiveView('home');
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;

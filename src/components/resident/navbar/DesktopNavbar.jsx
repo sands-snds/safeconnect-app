@@ -66,7 +66,7 @@ export default function DesktopNavbar({
             </button>
 
             <button
-                className="resident-nav-item"
+                className={`resident-nav-item ${activeView === 'emergency' ? 'active' : ''}`}
                 onClick={(e) =>
                     handleNavClick(e, "emergency-report")
                 }
