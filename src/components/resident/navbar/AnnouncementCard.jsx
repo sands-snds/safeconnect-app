@@ -28,6 +28,16 @@ const CATEGORY_THEME = {
 };
 const themeFor = (category) => CATEGORY_THEME[category] || { color: '#6B2C3E', icon: 'bi-megaphone-fill' };
 
+// Gives each commenter a consistent, distinct avatar color (by name hash)
+// instead of every avatar being the same flat maroon circle.
+const AVATAR_COLORS = ['#6B2C3E', '#0d9488', '#2563eb', '#7c3aed', '#d97706', '#dc2626', '#059669'];
+const colorForName = (name) => {
+    const str = name || 'R';
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+};
+
 const getCurrentUserId = () => {
     try {
         const raw = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
@@ -208,6 +218,15 @@ export default function AnnouncementCard({
                         loading="lazy"
                         onError={() => setImageFailed(true)}
                     />
+                    <div className="news-card-media-overlay">
+                        <span className="news-card-category news-card-category-glass" style={{ color: theme.color }}>
+                            <i className={`bi ${theme.icon}`} />
+                            {announcement.category}
+                        </span>
+                        <span className="news-card-date news-card-date-glass">
+                            <i className="bi bi-clock" /> {formatNewsDate(announcement.date)}
+                        </span>
+                    </div>
                 </div>
             ) : announcement.sourceUrl ? (
                 // Plain text announcements get no media block at all; only
@@ -216,15 +235,17 @@ export default function AnnouncementCard({
             ) : null}
 
             <div className="news-card-content">
-                <div className="news-card-top-row">
-                    <span className="news-card-category" style={{ background: `${theme.color}18`, color: theme.color }}>
-                        <i className={`bi ${theme.icon}`} />
-                        {announcement.category}
-                    </span>
-                    <span className="news-card-date">
-                        <i className="bi bi-clock" /> {formatNewsDate(announcement.date)}
-                    </span>
-                </div>
+                {!showImage && (
+                    <div className="news-card-top-row">
+                        <span className="news-card-category" style={{ background: `${theme.color}18`, color: theme.color }}>
+                            <i className={`bi ${theme.icon}`} />
+                            {announcement.category}
+                        </span>
+                        <span className="news-card-date">
+                            <i className="bi bi-clock" /> {formatNewsDate(announcement.date)}
+                        </span>
+                    </div>
+                )}
 
                 <h3>
                     {announcement.title}
@@ -284,16 +305,20 @@ export default function AnnouncementCard({
                 {showComments && (
                     <div className="news-comments">
                         {commentsLoading && (
-                            <p className="news-comments-empty">{t('news.loadingComments')}</p>
+                            <p className="news-comments-empty">
+                                <i className="bi bi-arrow-repeat news-comments-spin" /> {t('news.loadingComments')}
+                            </p>
                         )}
 
                         {!commentsLoading && comments && comments.length === 0 && (
-                            <p className="news-comments-empty">{t('news.noComments')}</p>
+                            <p className="news-comments-empty">
+                                <i className="bi bi-chat-square-text" /> {t('news.noComments')}
+                            </p>
                         )}
 
                         {!commentsLoading && comments && comments.map((c) => (
                             <div className="news-comment" key={c.id}>
-                                <div className="news-comment-avatar">{initialsOf(c.author)}</div>
+                                <div className="news-comment-avatar" style={{ background: colorForName(c.author) }}>{initialsOf(c.author)}</div>
                                 <div className="news-comment-body">
                                     <div className="news-comment-head">
                                         <span className="news-comment-author">{c.author}</span>
