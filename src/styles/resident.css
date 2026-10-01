@@ -226,12 +226,25 @@ header {
 }
 
 #residentHeroCarousel .hero-title {
+    display: block;
+    width: 100%;
     font-size: 4rem;
     font-weight: 800;
     color: white;
     letter-spacing: 7px;
     margin: 0 0 0.5rem;
     text-shadow: 0 2px 8px #7e1313a0;
+    text-align: center;
+}
+
+/* Each line gets its own full-width box so it's centered independently --
+   relying on the parent's shrink-wrapped width made "Safe Connect" center
+   under whichever line happened to be widest, instead of the two lines
+   lining up with each other. */
+#residentHeroCarousel .hero-title .hero-title-line {
+    display: block;
+    width: 100%;
+    text-align: center;
 }
 
 #residentHeroCarousel .hero-subtitle {

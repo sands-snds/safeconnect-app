@@ -32,8 +32,8 @@ function ResidentHero() {
                 <div className="resident-hero-overlay">
                   <div className="container hero-content text-center">
                     <h3 className="hero-title">
-                      {t('residentHero.titleLine1')}<br />
-                      {t('residentHero.titleLine2')}
+                      <span className="hero-title-line">{t('residentHero.titleLine1')}</span>
+                      <span className="hero-title-line">{t('residentHero.titleLine2')}</span>
                     </h3>
 
                     <p className="hero-subtitle">
