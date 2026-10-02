@@ -1,3 +1,4 @@
+import { showPopup } from "../components/shared/popup";
 const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
 const ASSET_BASE = process.env.REACT_APP_ASSET_BASE || "http://localhost:5000";
 
@@ -374,7 +375,7 @@ export const createAssistanceRequest = async (data) => {
     return res.json();
 };
 
-export const updateAssistanceRequest = async (id, data) => {
+export const updateAssistanceRequest = async ({ id, ...data }) => {
     const res = await apiFetch(`${API_ENDPOINTS.ASSISTANCE}/${id}`, {
         method: "PUT",
         headers: authHeaders(),
@@ -440,7 +441,7 @@ export const createPettyCrimeReport = async (data) => {
     return res.json();
 };
 
-export const updatePettyCrimeReport = async (id, data) => {
+export const updatePettyCrimeReport = async ({ id, ...data }) => {
     const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}`, {
         method: "PUT",
         headers: authHeaders(),
@@ -451,7 +452,7 @@ export const updatePettyCrimeReport = async (id, data) => {
 
 export const updatePettyCrimeStatus = async (id, status) => {
     const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}/status`, {
-        method: "PUT",
+        method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ status }),
     });
@@ -834,7 +835,7 @@ export const updateStatus = async (type, id, status) => {
     }
 
     if (!res.ok || result.success === false) {
-        if (result.message) alert(result.message);
+        if (result.message) showPopup({ type: "error", title: "Couldn't Update Status", message: result.message });
         return false;
     }
 

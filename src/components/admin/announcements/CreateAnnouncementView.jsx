@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchLinkPreview, createAnnouncement, updateAnnouncement, isSessionError } from "../../../Services/api";
 import { ANNOUNCEMENT_CATEGORIES } from "./constants";
-import ResultPopup from "../shared/ResultPopup";
+import ResultPopup from "../../shared/ResultPopup";
+
+// Local-time YYYY-MM-DD for <input type="date">.
+const toInputDate = (value) => {
+  const d = value ? new Date(value) : null;
+  if (!d || isNaN(d)) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) => {
   const isEditMode = !!editingAnnouncement;
@@ -31,7 +39,9 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
       setTitle(editingAnnouncement.title || "");
       setCategory(editingAnnouncement.category || "Announcement");
       setMessage(editingAnnouncement.message || "");
-      setDate(editingAnnouncement.date || "");
+      // .date is a display string ("10/2/2026"), which the date input can't
+      // show and MySQL rejects on save -- use the raw date as YYYY-MM-DD.
+      setDate(toInputDate(editingAnnouncement.rawDate) || today);
       setSourceUrl(editingAnnouncement.sourceUrl || "");
       setExistingImageUrl(editingAnnouncement.imageUrl || "");
       setRemoveImage(false);

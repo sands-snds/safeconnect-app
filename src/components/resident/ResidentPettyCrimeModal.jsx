@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPettyCrimeReport, updatePettyCrimeReport } from '../../Services/api';
+import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -162,7 +163,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
-        alert(t('pettyCrimeModal.cooldownAlert', { time: formatRemaining(remaining) }));
+        showPopup({ type: 'warning', message: t('pettyCrimeModal.cooldownAlert', { time: formatRemaining(remaining) }) });
         return;
       }
     }
@@ -174,27 +175,27 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 
     if (isEditing) {
       if (!formData.location.trim()) {
-        alert(t('reportForm.provideLocation'));
+        showPopup({ type: 'warning', message: t('reportForm.provideLocation') });
         return;
       }
     } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
-      alert(t('reportForm.pinLocation'));
+      showPopup({ type: 'warning', message: t('reportForm.pinLocation') });
       return;
     }
     if (reportFor === 'others' && !victimRelationship) {
-      alert(t('reportForm.selectRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.selectRelationship') });
       return;
     }
     if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
-      alert(t('reportForm.specifyRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.specifyRelationship') });
       return;
     }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
-      alert(t('reportForm.enterName'));
+      showPopup({ type: 'warning', message: t('reportForm.enterName') });
       return;
     }
     if (reportFor === 'others' && !victimDetails.trim()) {
-      alert(t('reportForm.provideDetails'));
+      showPopup({ type: 'warning', message: t('reportForm.provideDetails') });
       return;
     }
     setIsSubmitting(true);
@@ -212,7 +213,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         if (!result.success) {
           throw new Error(result.message || t('reportForm.updateFailed'));
         }
-        alert(t('pettyCrimeModal.updateSuccess'));
+        showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('pettyCrimeModal.updateSuccess') });
         onUpdated && onUpdated();
         onClose();
         return;
@@ -276,9 +277,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       setShowSuccessPopup(true);
     } catch (error) {
       console.log(error);
-      alert(
-        t('pettyCrimeModal.submitError')
-      );
+      showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('pettyCrimeModal.submitError') });
     } finally {
       setIsSubmitting(false);
     }

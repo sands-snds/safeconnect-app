@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { showPopup } from '../../shared/popup';
 import { exportReport } from '../../../Services/api';
 import GenerateReportModal from './GenerateReportModal';
 
@@ -48,7 +49,7 @@ const GenerateReportButton = ({
       await exportReport(type, format, filters);
     } catch (err) {
       console.error('Error generating report:', err);
-      alert(err.message || 'Failed to generate report. Please try again.');
+      showPopup({ type: 'error', title: "Couldn't Generate Report", message: err.message || 'Failed to generate report. Please try again.' });
     } finally {
       setLoading(false);
     }

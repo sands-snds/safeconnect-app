@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { showPopup } from "../../shared/popup";
 
 import {
     fetchEmergencyReports,
@@ -248,7 +249,7 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
             const result = await createEmergencyReport(newReport);
 
             if (result.success === false) {
-                alert(result.message || "Failed to submit emergency report.");
+                showPopup({ type: "error", title: "Couldn't Submit Report", message: result.message || "Failed to submit emergency report." });
                 return;
             }
 
@@ -264,7 +265,7 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
             const result = await createAssistanceRequest(newRequest);
 
             if (result.success === false) {
-                alert(result.message || "Failed to submit assistance request.");
+                showPopup({ type: "error", title: "Couldn't Submit Request", message: result.message || "Failed to submit assistance request." });
                 return;
             }
 

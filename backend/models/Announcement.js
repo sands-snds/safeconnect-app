@@ -65,7 +65,7 @@ class Announcement {
                 title=?,
                 category=?,
                 message=?,
-                date_posted=?,
+                date_posted=COALESCE(?, date_posted),
                 image_path=COALESCE(?, image_path),
                 source_url=?,
                 source_title=?,

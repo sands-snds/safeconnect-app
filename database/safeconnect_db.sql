@@ -49,6 +49,11 @@ CREATE TABLE emergency_reports (
   special_needs TEXT DEFAULT NULL,
   photo_url LONGTEXT DEFAULT NULL,
   media_type VARCHAR(20) DEFAULT NULL,
+  report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)
+  victim_name VARCHAR(255) DEFAULT NULL,
+  victim_contact VARCHAR(50) DEFAULT NULL,
+  victim_relationship VARCHAR(100) DEFAULT NULL,
+  victim_details TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received',
   assigned_to INT(11) DEFAULT NULL,
   assigned_at TIMESTAMP NULL DEFAULT NULL,
@@ -78,6 +83,11 @@ CREATE TABLE assistance_requests (
   urgency_level VARCHAR(50) NOT NULL,
   describe_your_situation TEXT NOT NULL,
   special_needs TEXT DEFAULT NULL,
+  report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)
+  victim_name VARCHAR(255) DEFAULT NULL,
+  victim_contact VARCHAR(50) DEFAULT NULL,
+  victim_relationship VARCHAR(100) DEFAULT NULL,
+  victim_details TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received', -- Received -> In Progress -> Resolved (forward-only)
   resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
@@ -102,6 +112,11 @@ CREATE TABLE petty_crimes (
   longitude DECIMAL(10,7) DEFAULT NULL,
   description TEXT NOT NULL,
   suspect_info TEXT DEFAULT NULL,
+  report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)
+  victim_name VARCHAR(255) DEFAULT NULL,
+  victim_contact VARCHAR(50) DEFAULT NULL,
+  victim_relationship VARCHAR(100) DEFAULT NULL,
+  victim_details TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received',
   resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)

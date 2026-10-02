@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { showPopup } from "../../../shared/popup";
 
 import { fetchArchiveSettings, updateArchiveSettings } from "../../../../Services/api";
 
@@ -39,7 +40,7 @@ const ArchiveToolbar = ({
       const result = await updateArchiveSettings(next);
       if (!result?.success) {
         setMonths(previous);
-        alert(result?.message || "Failed to update the auto-archive setting.");
+        showPopup({ type: "error", title: "Couldn't Save Setting", message: result?.message || "Failed to update the auto-archive setting." });
         return;
       }
       if (result.archived > 0) onSettingsChanged && onSettingsChanged();

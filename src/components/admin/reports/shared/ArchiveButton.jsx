@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { showPopup } from "../../../shared/popup";
 
 // Archive / Restore button shown next to a report's status. Only Resolved
 // reports can be archived; archived ones get a Restore button instead.
@@ -15,7 +16,7 @@ const ArchiveButton = ({ report, reportType, onArchive }) => {
     try {
       const result = await onArchive(report.id, reportType, !isArchived);
       if (!result?.success) {
-        alert(result?.message || `Failed to ${isArchived ? "restore" : "archive"} report.`);
+        showPopup({ type: "error", title: `Couldn't ${isArchived ? "Restore" : "Archive"} Report`, message: result?.message || `Failed to ${isArchived ? "restore" : "archive"} report.` });
       }
     } finally {
       setIsSubmitting(false);

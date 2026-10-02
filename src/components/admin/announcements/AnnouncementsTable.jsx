@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ListView, { allOption } from "../shared/ListView";
 import AnnouncementModal from "./AnnouncementModal";
-import ResultPopup from "../shared/ResultPopup";
+import ResultPopup from "../../shared/ResultPopup";
 import AnnouncementComments from "./AnnouncementComments";
 import AnnouncementShareButton from "./AnnouncementShareButton";
 import { fetchAnnouncements, deleteAnnouncement } from "../../../Services/api";

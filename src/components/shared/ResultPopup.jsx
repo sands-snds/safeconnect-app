@@ -1,21 +1,30 @@
 import React, { useEffect } from 'react';
 
-// Success / error popup for the admin panel, in place of the browser's
-// alert(). Same look as the resident side's "Request Submitted" popup
-// (e.g. ResidentAssistanceModal.jsx), in the admin maroon.
+// Success / warning / error popup used across the app in place of the
+// browser's alert(). Same look as the resident "Report Submitted" popup.
+// Render it directly, or call showPopup() (./popup.js) from anywhere.
 //
 // Props:
-//   type    - "success" (green check) or "error" (red exclamation)
-//   title   - e.g. "Announcement Posted"
-//   message - one or two sentences under the title
-//   onClose - called by Done, Esc or clicking outside
+//   type        - "success" (green check), "warning" (amber !) or "error" (red !)
+//   title       - e.g. "Announcement Posted"
+//   message     - one or two sentences under the title
+//   buttonLabel - defaults to "Done" for success, "OK" otherwise
+//   accent      - button color; defaults to the admin maroon on /admin and
+//                 the resident red elsewhere
+//   onClose     - called by the button, Esc or clicking outside
 
 const ICONS = {
   success: { icon: 'bi-check-lg', color: '#16a34a' },
+  warning: { icon: 'bi-exclamation-lg', color: '#d97706' },
   error: { icon: 'bi-exclamation-lg', color: '#dc2626' }
 };
 
-const ResultPopup = ({ type = 'success', title, message, onClose }) => {
+const defaultAccent = () =>
+  typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
+    ? '#6B2C3E'
+    : '#dc3545';
+
+const ResultPopup = ({ type = 'success', title, message, buttonLabel, accent, onClose }) => {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -34,7 +43,8 @@ const ResultPopup = ({ type = 'success', title, message, onClose }) => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 10001,
+        // Above the report modals and the success popups (10001).
+        zIndex: 10050,
         padding: '20px'
       }}
     >
@@ -49,9 +59,16 @@ const ResultPopup = ({ type = 'success', title, message, onClose }) => {
           width: '100%',
           padding: '28px 24px',
           textAlign: 'center',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          animation: 'resultPopupIn 0.18s ease-out'
         }}
       >
+        <style>{`
+          @keyframes resultPopupIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.97); }
+            to { opacity: 1; transform: none; }
+          }
+        `}</style>
         <div style={{
           width: '56px',
           height: '56px',
@@ -70,7 +87,7 @@ const ResultPopup = ({ type = 'success', title, message, onClose }) => {
           {title}
         </h3>
         {message && (
-          <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#4b5563', lineHeight: 1.5 }}>
+          <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#4b5563', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
             {message}
           </p>
         )}
@@ -82,7 +99,7 @@ const ResultPopup = ({ type = 'success', title, message, onClose }) => {
             padding: '12px 20px',
             borderRadius: '24px',
             border: 'none',
-            background: '#6B2C3E',
+            background: accent || defaultAccent(),
             color: 'white',
             fontWeight: 600,
             fontSize: '14px',
@@ -90,7 +107,7 @@ const ResultPopup = ({ type = 'success', title, message, onClose }) => {
             width: '100%'
           }}
         >
-          {type === 'error' ? 'OK' : 'Done'}
+          {buttonLabel || (type === 'success' ? 'Done' : 'OK')}
         </button>
       </div>
     </div>

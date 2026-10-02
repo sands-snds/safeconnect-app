@@ -27,9 +27,20 @@ const ARCHIVE_COLUMNS = {
     archived_at: "TIMESTAMP NULL DEFAULT NULL"
 };
 
-// Adds archived_at / resolved_at to the report tables and creates the
-// settings table, so existing databases (local and Azure) don't need a
-// manual migration.
+// "Reporting for someone else" fields the report forms send. The models
+// insert all of them, so a missing one (victim_details was never added to
+// existing databases) made every resident report fail to submit.
+const REPORT_FOR_COLUMNS = {
+    report_for: "VARCHAR(20) DEFAULT 'self'",
+    victim_name: "VARCHAR(255) DEFAULT NULL",
+    victim_contact: "VARCHAR(50) DEFAULT NULL",
+    victim_relationship: "VARCHAR(100) DEFAULT NULL",
+    victim_details: "TEXT DEFAULT NULL"
+};
+
+// Adds the report-for / victim columns and archived_at / resolved_at to the
+// report tables and creates the settings table, so existing databases (local
+// and Azure) don't need a manual migration.
 async function ensureSchema() {
     for (const { table } of Object.values(REPORT_TABLES)) {
         const [existing] = await db.query(
@@ -38,7 +49,7 @@ async function ensureSchema() {
             [table]
         );
         const have = new Set(existing.map((c) => c.name));
-        for (const [name, definition] of Object.entries(ARCHIVE_COLUMNS)) {
+        for (const [name, definition] of Object.entries({ ...REPORT_FOR_COLUMNS, ...ARCHIVE_COLUMNS })) {
             if (!have.has(name)) {
                 await db.query(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
             }

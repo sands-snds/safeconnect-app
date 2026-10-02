@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
+import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -163,7 +164,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
-        alert(t('assistanceModal.cooldownAlert', { time: formatRemaining(remaining) }));
+        showPopup({ type: 'warning', message: t('assistanceModal.cooldownAlert', { time: formatRemaining(remaining) }) });
         return;
       }
     }
@@ -175,27 +176,27 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 
     if (isEditing) {
       if (!formData.location.trim()) {
-        alert(t('reportForm.provideLocation'));
+        showPopup({ type: 'warning', message: t('reportForm.provideLocation') });
         return;
       }
     } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
-      alert(t('reportForm.pinLocation'));
+      showPopup({ type: 'warning', message: t('reportForm.pinLocation') });
       return;
     }
     if (reportFor === 'others' && !victimRelationship) {
-      alert(t('reportForm.selectRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.selectRelationship') });
       return;
     }
     if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
-      alert(t('reportForm.specifyRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.specifyRelationship') });
       return;
     }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
-      alert(t('assistanceModal.enterNameRequesting'));
+      showPopup({ type: 'warning', message: t('assistanceModal.enterNameRequesting') });
       return;
     }
     if (reportFor === 'others' && !victimDetails.trim()) {
-      alert(t('assistanceModal.provideDetailsRequesting'));
+      showPopup({ type: 'warning', message: t('assistanceModal.provideDetailsRequesting') });
       return;
     }
     const currentUser = getCurrentUser();
@@ -220,7 +221,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         if (!result.success) {
           throw new Error(result.message || t('assistanceModal.updateFailed'));
         }
-        alert(t('assistanceModal.updateSuccess'));
+        showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('assistanceModal.updateSuccess') });
         onUpdated && onUpdated();
         onClose();
         return;
@@ -284,7 +285,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert(t('assistanceModal.submitError'));
+      showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('assistanceModal.submitError') });
     } finally {
       setIsSubmitting(false);
     }

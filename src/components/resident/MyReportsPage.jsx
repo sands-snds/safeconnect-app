@@ -6,6 +6,7 @@ import {
   deletePettyCrimeReport
 } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { showPopup } from '../shared/popup';
 import ResidentEmergencyModal from "./ResidentEmergencyModal";
 import ResidentAssistanceModal from "./ResidentAssistanceModal";
 import ResidentPettyCrimeModal from "./ResidentPettyCrimeModal";
@@ -201,7 +202,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
     if (result?.success) {
       await loadReports();
     } else {
-      alert(t('myReports.deleteFailed'));
+      showPopup({ type: 'error', message: t('myReports.deleteFailed') });
     }
   };
 

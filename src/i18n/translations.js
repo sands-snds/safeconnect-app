@@ -6,6 +6,15 @@
 
 export const translations = {
   en: {
+    popup: {
+      successTitle: 'Success',
+      warningTitle: 'Please Check',
+      errorTitle: 'Something Went Wrong',
+      updatedTitle: 'Report Updated',
+      submitFailedTitle: "Couldn't Submit Report",
+      ok: 'OK',
+      done: 'Done'
+    },
     nav: {
       home: 'Home',
       services: 'Services',
@@ -474,7 +483,7 @@ export const translations = {
       cooldownAlert: 'Please wait {{time}} before submitting another report.',
       cooldownBanner: 'You can submit another report in {{time}}.',
       updateSuccess: 'Petty crime report updated successfully.',
-      submitError: 'Error submitting report.',
+      submitError: 'There was an error submitting your report. Please try again.',
       submitCrimeReport: 'Submit Crime Report',
       reportSubmitted: 'Report Submitted',
       reportSubmittedBody: 'Your petty crime report has been submitted successfully. Our team will review it shortly.'
@@ -599,6 +608,15 @@ export const translations = {
     }
   },
   tl: {
+    popup: {
+      successTitle: 'Tagumpay',
+      warningTitle: 'Pakisuri',
+      errorTitle: 'May Nangyaring Mali',
+      updatedTitle: 'Na-update ang Ulat',
+      submitFailedTitle: 'Hindi Naisumite ang Ulat',
+      ok: 'OK',
+      done: 'Tapos na'
+    },
     nav: {
       home: 'Home',
       services: 'Serbisyo',
@@ -1067,7 +1085,7 @@ export const translations = {
       cooldownAlert: 'Maghintay ng {{time}} bago magsumite ng isa pang ulat.',
       cooldownBanner: 'Makakapagsumite ka ng isa pang ulat sa loob ng {{time}}.',
       updateSuccess: 'Matagumpay na na-update ang petty crime report.',
-      submitError: 'Error sa pagsumite ng ulat.',
+      submitError: 'Nagkaroon ng error sa pagsumite ng iyong ulat. Subukang muli.',
       submitCrimeReport: 'Isumite ang Crime Report',
       reportSubmitted: 'Naisumite ang Ulat',
       reportSubmittedBody: 'Matagumpay na naisumite ang iyong petty crime report. Susuriin ito ng aming team sa lalong madaling panahon.'
