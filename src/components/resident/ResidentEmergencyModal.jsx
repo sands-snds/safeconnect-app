@@ -44,7 +44,8 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 // submissions. Each modal (Emergency / Assistance / Petty Crime) tracks its
 // own cooldown independently, so submitting one doesn't block the others.
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_emergency';
-const REPORT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+const REPORT_COOLDOWN_MS = 0;
  
 // Reads the currently logged-in resident's name/contact, set at sign-in.
 // Tries several common shapes for the id field since different sign-in

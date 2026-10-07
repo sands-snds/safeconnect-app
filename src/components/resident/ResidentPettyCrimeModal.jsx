@@ -23,7 +23,8 @@ const SERVICE_AREA = {
 };
 // Anti-spam: minimum time a resident must wait between report submissions.
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_pettycrime';
-const REPORT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+const REPORT_COOLDOWN_MS = 0;
 
 // Not everyone in the barangay knows the person they're reporting for by
 // name — these relationships make the name field optional instead of required.

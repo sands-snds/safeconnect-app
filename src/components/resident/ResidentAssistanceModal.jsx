@@ -30,7 +30,8 @@ const URGENCY_OPTIONS = [
 // name — these relationships make the name field optional instead of required.
 const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_assistance';
-const REPORT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+const REPORT_COOLDOWN_MS = 0;
 
 const getCurrentUser = () => {
   let raw = {};
