@@ -30,7 +30,7 @@ const apiPost = async (path, body) => {
 // ── EmergencyCallButton ───────────────────────────────────────────────────────
 function EmergencyCallButton() {
     const { t } = useLanguage();
-    // Editable by Admins under System > Site Contacts; also the footer's hotlines.
+    // Editable by Admins under Content > Site Contacts; also the footer's hotlines.
     const { emergencyContacts } = useSiteContent();
     const [showContacts, setShowContacts] = useState(false);
     const handleCall = (n) => { window.location.href = `tel:${n}`; setShowContacts(false); };

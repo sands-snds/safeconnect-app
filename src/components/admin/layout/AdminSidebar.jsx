@@ -44,6 +44,11 @@ const AdminSidebar = ({
         {
           id: "announcement-page",
           label: "Announcements"
+        },
+        {
+          id: "site-contacts",
+          label: "Site Contacts",
+          superAdminOnly: true
         }
       ]
     },
@@ -62,10 +67,6 @@ const AdminSidebar = ({
         {
           id: "admin-logs",
           label: "Admin Logs"
-        },
-        {
-          id: "site-contacts",
-          label: "Site Contacts"
         }
       ]
     }
@@ -212,7 +213,10 @@ const AdminSidebar = ({
               {section.title}
             </div>
 
-            {section.items.map((item) => (
+            {section.items
+              // Admin-only items (e.g. Site Contacts) are hidden from Officials.
+              .filter((item) => isSuperAdmin || !item.superAdminOnly)
+              .map((item) => (
               <div
                 key={item.id}
                 onClick={() => {

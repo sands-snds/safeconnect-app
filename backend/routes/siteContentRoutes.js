@@ -8,7 +8,7 @@ const { logActivity } = require("../middleware/activityLogger");
 // Public: emergency contacts, footer officials and socials.
 router.get("/", controller.getContent);
 
-// Admin (super_admin) only: System > Site Contacts.
+// Admin (super_admin) only: Content > Site Contacts.
 router.put("/", verifyToken, verifyAdmin, verifySuperAdmin,
     logActivity("Updated site contacts", () => "Emergency contacts, officials and socials"),
     controller.updateContent);

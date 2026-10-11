@@ -7,7 +7,7 @@ exports.getContent = async (req, res) => {
         res.json({
             success: true,
             content,
-            // Choices for the editor (System > Site Contacts).
+            // Choices for the editor (Content > Site Contacts).
             options: { icons: SiteContent.CONTACT_ICONS, colors: SiteContent.CONTACT_COLORS }
         });
     } catch (err) {

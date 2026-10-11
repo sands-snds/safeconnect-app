@@ -105,8 +105,8 @@ const AdminPage = () => {
   "site-contacts": "Site Contacts"
 };
 
-// Tabs under SYSTEM in the sidebar: Admins (super_admin) only.
-const SYSTEM_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts"];
+// Admin-only tabs (super_admin): the SYSTEM tabs plus Site Contacts under CONTENT.
+const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts"];
 
   const alerts = [];
     const emergencyPending =
@@ -206,9 +206,9 @@ useEffect(() => {
   const adminName =
     adminUser?.fullName || adminUser?.username || "Administrator";
 
-  // Normal admins never see the System tabs; fall back to the dashboard if
-  // one is somehow selected (e.g. a stat card or a demoted super admin).
-  const visibleView = !isSuperAdmin && SYSTEM_VIEWS.includes(activeView)
+  // Officials never see the Admin-only tabs; fall back to the dashboard if
+  // one is somehow selected (e.g. a stat card or a demoted Admin).
+  const visibleView = !isSuperAdmin && ADMIN_ONLY_VIEWS.includes(activeView)
     ? "dashboard"
     : activeView;
 

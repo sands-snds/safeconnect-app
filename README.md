@@ -262,7 +262,7 @@ safeconnect-app/
 |---|---|---|---|
 | **Resident** | `resident` | `/resident` | Submit reports, and view, edit or delete their own reports; manage their profile |
 | **Official** | `admin` | `/admin` | Everything in the admin panel **except** the System tabs: reports, statuses, archiving, announcements, exports |
-| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Sign-in Logs, Admin Logs and Site Contacts**, and changing auto-archive periods |
+| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Sign-in Logs and Admin Logs**, **Content → Site Contacts**, and changing auto-archive periods |
 
 Only the names shown on screen, in exports and in messages changed. The values stored in the database are the same as before, so existing accounts and sign-ins keep working. In code, always show `ROLE_LABELS[role]` (`backend/utils/roles.js`, `src/components/shared/roles.js`), never the stored value.
 

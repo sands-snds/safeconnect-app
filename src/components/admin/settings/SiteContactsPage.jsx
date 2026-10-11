@@ -3,7 +3,7 @@ import { fetchSiteContent, updateSiteContent } from "../../../Services/api";
 import { showPopup } from "../../shared/popup";
 import { setSiteContent } from "../../shared/useSiteContent";
 
-// System > Site Contacts (Admins only): edits what the public site shows
+// Content > Site Contacts (Admins only): edits what the public site shows
 //   - Emergency contacts: the floating call button (landing + resident
 //     pages) and the footer's "Emergency Hotline" column
 //   - Barangay officials: the footer's "Barangay Officials" column

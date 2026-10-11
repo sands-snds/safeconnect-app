@@ -116,7 +116,7 @@ require("./services/archiveService").startScheduler();
 // period (default 90 days) now and every 6 hours.
 require("./services/logArchiveService").startScheduler();
 
-// Lets the editable site contacts (System > Site Contacts) fit in system_settings.
+// Lets the editable site contacts (Content > Site Contacts) fit in system_settings.
 require("./services/siteContentService").ensureSchema().catch((err) =>
   console.error("Could not prepare site contacts storage:", err.message)
 );
