@@ -1,7 +1,8 @@
 import RegisteredUsersTable from "./RegisteredUsersTable";
+import { roleLabel } from "../../shared/roles";
 
-// Search / status / role filtering (the table used to receive the raw list,
-// so the filters on this tab never actually did anything).
+// Search / status filtering, shared by both tables (Residents, and Admins &
+// Officials).
 const filterUsers = (users, filter = {}) => {
     let result = users;
 
@@ -9,14 +10,10 @@ const filterUsers = (users, filter = {}) => {
         result = result.filter(u => u.status === filter.status);
     }
 
-    if (filter.role && filter.role !== "All Roles") {
-        result = result.filter(u => u.role === filter.role);
-    }
-
     if (filter.search) {
         const q = filter.search.toLowerCase();
         result = result.filter(u =>
-            [u.fullName, u.username, u.email, u.contact, u.role, u.status]
+            [u.fullName, u.username, u.email, u.contact, roleLabel(u.role), u.status]
                 .some(v => String(v || "").toLowerCase().includes(q))
         );
     }
@@ -32,9 +29,12 @@ export default function UsersPage({
     onUpdateRole,
     currentAdminId
 }) {
+    const filtered = filterUsers(registeredUsers, filters.users);
+
     return (
         <RegisteredUsersTable
-            data={filterUsers(registeredUsers, filters.users)}
+            residents={filtered.filter(u => u.role === "resident")}
+            staff={filtered.filter(u => u.role !== "resident")}
             filters={filters}
             setFilters={setFilters}
             onUpdateStatus={onUpdateStatus}

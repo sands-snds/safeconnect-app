@@ -5,6 +5,7 @@ import {
   deleteAnnouncementComment
 } from "../../../Services/api";
 import { timeAgo } from "../shared/timeUtils";
+import { roleLabel } from "../../shared/roles";
 
 // Comments panel under an admin announcement card: residents' comments with
 // their replies, a box to comment as the barangay, a Reply box per comment,
@@ -114,7 +115,7 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
       <div className="ac-body">
         <div className="ac-head">
           <span className="ac-author">{c.author}</span>
-          {c.isAdmin && <span className="ac-admin-badge">Admin</span>}
+          {c.isAdmin && <span className="ac-admin-badge">{roleLabel(c.role)}</span>}
           <span className="ac-time">{timeAgo(c.date)}</span>
         </div>
         <p className="ac-text">

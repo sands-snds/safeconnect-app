@@ -34,11 +34,25 @@ class AdminActivity {
         );
     }
 
-    static async getRecent(limit = 500) {
-        const [rows] = await db.query(
-            `SELECT * FROM admin_activity_logs ORDER BY id DESC LIMIT ?`,
-            [limit]
-        );
+    // Newest first. Old entries are archived by services/logArchiveService.js;
+    // archived: true lists those instead. role: the account's current role.
+    // Optional filters (Generate Report): role, from / to (Date bounds,
+    // `to` exclusive).
+    static async getRecent(limit = 500, { archived = false, role, from, to } = {}) {
+        let sql = `
+            SELECT l.*, u.role
+            FROM admin_activity_logs l
+            LEFT JOIN registered_users u ON u.id = l.admin_id
+            WHERE l.archived_at IS ${archived ? "NOT NULL" : "NULL"}
+        `;
+        const values = [];
+        if (role) { sql += " AND u.role = ?"; values.push(role); }
+        if (from) { sql += " AND l.created_at >= ?"; values.push(from); }
+        if (to) { sql += " AND l.created_at < ?"; values.push(to); }
+        sql += " ORDER BY l.id DESC LIMIT ?";
+        values.push(limit);
+
+        const [rows] = await db.query(sql, values);
         return rows;
     }
 
@@ -47,7 +61,7 @@ class AdminActivity {
     static async getAdminSummaries() {
         const [rows] = await db.query(`
             SELECT
-                u.id, u.full_name, u.username, u.email_address, u.status, u.photo_url,
+                u.id, u.full_name, u.username, u.email_address, u.role, u.status, u.photo_url,
                 (
                     SELECT MAX(l.created_at) FROM admin_activity_logs l
                     WHERE l.admin_id = u.id AND l.action = 'Logged in'

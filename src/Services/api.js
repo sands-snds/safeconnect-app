@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
     EXPORT:             `${API_BASE}/export`,
     NOTIFICATIONS:      `${API_BASE}/notifications`,
     SETTINGS:           `${API_BASE}/settings`,
+    SITE_CONTENT:       `${API_BASE}/site-content`,
 };
 
 export const SHEETDB_APIS = {};
@@ -229,6 +230,8 @@ export const fetchRegisteredUsers = async () => {
         contact: u.contact_number || '',
         role: u.role || 'resident',
         status: u.status || 'Active',
+        // The barangay's main Admin account (role/status can't be changed).
+        isMainAccount: Boolean(u.is_main_account),
         dateRegistered: u.created_at ? new Date(u.created_at).toLocaleDateString() : ''
     }));
 };
@@ -599,8 +602,10 @@ export const fetchLinkPreview = async (url) => {
 // camelCase. IP address, device and approximate location are recorded by the
 // backend at sign-in (backend/utils/signinContext.js); logs from before that
 // have none and show "Not tracked" rather than made-up values.
-export const fetchSignInLogs = async () => {
-    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/signin`, { headers: authHeaders() });
+// archived: true loads the Archived tab (entries older than the
+// auto-archive period) instead of the current ones.
+export const fetchSignInLogs = async ({ archived = false } = {}) => {
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/signin${archived ? "?archived=1" : ""}`, { headers: authHeaders() });
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
@@ -611,9 +616,9 @@ export const fetchSignInLogs = async () => {
         loginTime: log.timestamp ? new Date(log.timestamp).toLocaleString() : '',
         role: log.role || '',
         // Logs from before IP/device tracking was added have neither.
-        ipAddress: log.ip_address || 'Not tracked',
+        ipAddress: log.ip_address || 'IP not tracked',
         location: log.location || '',
-        device: log.device || 'Not tracked',
+        device: log.device || 'Device not tracked',
         status: log.status || ''
     }));
 };
@@ -621,8 +626,9 @@ export const fetchSignInLogs = async () => {
 // { admins, activity } -- see backend/controllers/logController.js.
 // admins: one entry per admin account (online state, last login, latest action).
 // activity: every logged admin action, newest first.
-export const fetchAdminLogs = async () => {
-    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/admin`, { headers: authHeaders() });
+// archived: true loads archived activity entries instead of the current ones.
+export const fetchAdminLogs = async ({ archived = false } = {}) => {
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/admin${archived ? "?archived=1" : ""}`, { headers: authHeaders() });
     const data = await res.json();
     if (!data?.success) return { admins: [], activity: [] };
 
@@ -632,6 +638,7 @@ export const fetchAdminLogs = async () => {
             fullName: a.full_name || '',
             username: a.username || '',
             email: a.email_address || '',
+            role: a.role || '',
             status: a.status || 'Active',
             photoUrl: resolveAssetUrl(a.photo_url),
             online: Boolean(a.online),
@@ -646,11 +653,48 @@ export const fetchAdminLogs = async () => {
             adminId: log.admin_id,
             email: log.admin_email || '',
             username: log.admin_username || '',
+            role: log.role || '',
             action: log.action || '',
             details: log.details || '',
             createdAt: log.created_at || null
         }))
     };
+};
+
+// Auto-archive period for a System log. log: "signin" | "admin".
+// Returns the number of days (0 = off), or null if it couldn't be loaded.
+export const fetchLogArchiveSettings = async (log) => {
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/archive-settings/${log}`, { headers: authHeaders() });
+    const data = await res.json().catch(() => null);
+    return data?.success ? data.days : null;
+};
+
+export const updateLogArchiveSettings = async (log, days) => {
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/archive-settings/${log}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ days }),
+    });
+    return res.json().catch(() => ({ success: false }));
+};
+
+// ── Site contacts ─────────────────────────────────────────────────────────────
+// Emergency contacts (floating call button + footer hotlines), barangay
+// officials and socials. Public to read; only Admins (super_admin) can save.
+// Returns { content, options } or null.
+export const fetchSiteContent = async () => {
+    const res = await apiFetch(API_ENDPOINTS.SITE_CONTENT);
+    const data = await res.json().catch(() => null);
+    return data?.success ? { content: data.content, options: data.options || null } : null;
+};
+
+export const updateSiteContent = async (content) => {
+    const res = await apiFetch(API_ENDPOINTS.SITE_CONTENT, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(content),
+    });
+    return res.json().catch(() => ({ success: false }));
 };
 
 // Records the logout in the admin activity log. Must run before the token is cleared.

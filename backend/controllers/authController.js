@@ -475,15 +475,28 @@ exports.signin = async (req, res) => {
 
         if (user.status && user.status !== "Active") {
             await recordSignin(req, user.full_name, email, "Failed");
-            const STATUS_MESSAGES = {
-                Pending:   "Your account is still pending approval.",
-                Suspended: "Your account has been suspended. Please contact an administrator.",
-                Closed:    "This account has been closed.",
+            // code: the sign-in screens show a dedicated popup for each
+            // (translated on the frontend); message is the English fallback.
+            const STATUS_RESPONSES = {
+                Suspended: {
+                    code: "ACCOUNT_SUSPENDED",
+                    message: "Your account has been suspended, so you can't sign in right now. Please contact the Barangay Sta. Fe administrator to resolve this."
+                },
+                Closed: {
+                    code: "ACCOUNT_CLOSED",
+                    message: "This account has been permanently closed and can no longer be used to sign in. If you believe this is a mistake, please contact the Barangay Sta. Fe administrator."
+                },
+                // No longer assigned; kept for any older accounts.
+                Pending: {
+                    code: "ACCOUNT_PENDING",
+                    message: "Your account isn't active yet. Please contact the Barangay Sta. Fe administrator."
+                }
             };
-            return res.json({
-                success: false,
-                message: STATUS_MESSAGES[user.status] || "Your account cannot sign in right now.",
-            });
+            const response = STATUS_RESPONSES[user.status] || {
+                code: "ACCOUNT_INACTIVE",
+                message: "Your account can't sign in right now. Please contact the Barangay Sta. Fe administrator."
+            };
+            return res.json({ success: false, ...response });
         }
 
         await recordSignin(req, user.full_name, email, "Success");

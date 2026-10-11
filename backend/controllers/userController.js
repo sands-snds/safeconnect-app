@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
-const { ROLES, ALL_ROLES } = require("../utils/roles");
+const { ROLES, ALL_ROLES, roleLabel, isMainAccount } = require("../utils/roles");
+
+const MAIN_ACCOUNT_LOCKED = "This is the barangay's main Admin account. Its role, status and email can't be changed.";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Matches the +63 + 10-digit format the resident sign-up/settings forms
@@ -10,7 +12,8 @@ const PH_CONTACT_REGEX = /^\+63\d{10}$/;
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.getAll();
-        return res.json(users);
+        // is_main_account: the barangay's own account, which can't be changed.
+        return res.json(users.map((u) => ({ ...u, is_main_account: isMainAccount(u.email_address) })));
     }
 
     catch (err) {
@@ -22,7 +25,9 @@ exports.getUsers = async (req, res) => {
     }
 };
 
-const ALLOWED_STATUSES = ["Active", "Pending", "Suspended", "Closed"];
+// "Pending" is no longer offered: accounts are usable as soon as the email
+// is verified. Older Pending accounts can still be moved to another status.
+const ALLOWED_STATUSES = ["Active", "Suspended", "Closed"];
 
 exports.updateUserStatus = async (req, res) => {
     try {
@@ -44,6 +49,14 @@ exports.updateUserStatus = async (req, res) => {
             });
         }
 
+        const target = await User.findById(id);
+        if (!target) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+        if (isMainAccount(target.email_address)) {
+            return res.status(403).json({ success: false, message: MAIN_ACCOUNT_LOCKED });
+        }
+
         await User.updateStatus(id, status);
         return res.json({
             success: true,
@@ -63,9 +76,9 @@ exports.updateUserStatus = async (req, res) => {
 const ALLOWED_ROLES = ALL_ROLES;
 
 const ROLE_CHANGE_MESSAGES = {
-    [ROLES.SUPER_ADMIN]: "User promoted to super admin.",
-    [ROLES.ADMIN]: "User changed to admin.",
-    [ROLES.RESIDENT]: "User changed to resident."
+    [ROLES.SUPER_ADMIN]: `User is now an ${roleLabel(ROLES.SUPER_ADMIN)}.`,
+    [ROLES.ADMIN]: `User is now an ${roleLabel(ROLES.ADMIN)}.`,
+    [ROLES.RESIDENT]: `User is now a ${roleLabel(ROLES.RESIDENT)}.`
 };
 
 // Change a user's role (resident / admin / super admin). Super admin only.
@@ -94,6 +107,9 @@ exports.updateUserRole = async (req, res) => {
         const user = await User.findById(id);
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });
+        }
+        if (isMainAccount(user.email_address)) {
+            return res.status(403).json({ success: false, message: MAIN_ACCOUNT_LOCKED });
         }
 
         await User.updateRole(id, role);
@@ -198,6 +214,9 @@ exports.updateEmail = async (req, res) => {
         const user = await User.findByIdWithPassword(req.params.id);
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });
+        }
+        if (isMainAccount(user.email_address)) {
+            return res.status(403).json({ success: false, message: MAIN_ACCOUNT_LOCKED });
         }
 
         const validPassword = await bcrypt.compare(currentPassword, user.password);

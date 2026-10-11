@@ -9,8 +9,6 @@ const SIGNIN_EXTRA_COLUMNS = {
     location: "VARCHAR(160) DEFAULT NULL"
 };
 
-const SIGNIN_LOG_DAYS = 90;
-
 class Log {
     static async ensureColumns() {
         const [existing] = await db.query(
@@ -52,17 +50,28 @@ class Log {
         await db.query(`UPDATE signin_logs SET location = ? WHERE id = ?`, [location, id]);
     }
 
-    // Only the last SIGNIN_LOG_DAYS days are shown in System > Sign-in Logs.
-    static async getSigninLogs() {
-        const [rows] = await db.query(`
-            -- role: the account's current role, looked up by email (NULL for
-            -- failed attempts with an email that has no account).
+    // System > Sign-in Logs. Old entries are archived by
+    // services/logArchiveService.js; archived: true lists those instead.
+    // Optional filters (Generate Report): role ("unknown" = no account),
+    // status, from / to (Date bounds, `to` exclusive).
+    static async getSigninLogs({ archived = false, role, status, from, to } = {}) {
+        // role: the account's current role, looked up by email (NULL for
+        // failed attempts with an email that has no account).
+        let sql = `
             SELECT s.*, u.role
             FROM signin_logs s
             LEFT JOIN registered_users u ON u.email_address = s.email_address
-            WHERE s.timestamp >= NOW() - INTERVAL ? DAY
-            ORDER BY s.id DESC
-        `, [SIGNIN_LOG_DAYS]);
+            WHERE s.archived_at IS ${archived ? "NOT NULL" : "NULL"}
+        `;
+        const values = [];
+        if (role === "unknown") sql += " AND u.role IS NULL";
+        else if (role) { sql += " AND u.role = ?"; values.push(role); }
+        if (status) { sql += " AND s.status = ?"; values.push(status); }
+        if (from) { sql += " AND s.timestamp >= ?"; values.push(from); }
+        if (to) { sql += " AND s.timestamp < ?"; values.push(to); }
+        sql += " ORDER BY s.id DESC";
+
+        const [rows] = await db.query(sql, values);
         return rows;
     }
 

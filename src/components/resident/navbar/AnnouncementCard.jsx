@@ -208,7 +208,7 @@ export default function AnnouncementCard({
             <div className="news-comment-body">
                 <div className="news-comment-head">
                     <span className="news-comment-author">{c.author}</span>
-                    {c.isAdmin && <span className="news-comment-admin">{t('news.adminBadge')}</span>}
+                    {c.isAdmin && <span className="news-comment-admin">{t(c.role === 'admin' ? 'news.officialBadge' : 'news.adminBadge')}</span>}
                     <span className="news-comment-time">{formatCommentTime(c.date)}</span>
                 </div>
                 <p className="news-comment-text">

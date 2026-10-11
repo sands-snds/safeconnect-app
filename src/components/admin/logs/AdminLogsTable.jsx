@@ -1,5 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import GenerateReportButton from '../shared/GenerateReportButton';
+import ArchiveToolbar from '../reports/shared/ArchiveToolbar';
+import { roleLabel } from '../../shared/roles';
+import { fetchAdminLogs, fetchLogArchiveSettings, updateLogArchiveSettings } from '../../../Services/api';
+import { LOG_PERIOD_OPTIONS } from './logArchive';
 import { timeAgo, formatDateTime } from '../shared/timeUtils';
 import Pagination from '../shared/Pagination';
 
@@ -75,9 +79,27 @@ const PresenceLabel = ({ admin }) => {
   );
 };
 
-const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => {
+// System > Admin Logs: every Admin / Official account, and the activity log.
+// Activity older than the auto-archive period (default 90 days) moves to the
+// Archived tab; nothing is deleted.
+const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSuperAdmin, onRefresh }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedActivity, setArchivedActivity] = useState(null); // null = not loaded yet
+
+  const loadArchived = useCallback(() => {
+    fetchAdminLogs({ archived: true })
+      .then((data) => setArchivedActivity(data.activity))
+      .catch(() => setArchivedActivity([]));
+  }, []);
+
+  useEffect(() => { loadArchived(); }, [loadArchived]);
+
+  const shownActivity = useMemo(
+    () => (showArchived ? (archivedActivity || []) : activity),
+    [showArchived, archivedActivity, activity]
+  );
 
   const search = filters.adminLogs?.search || '';
   const adminFilter = filters.adminLogs?.admin || '';
@@ -89,14 +111,14 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
 
   const onlineCount = admins.filter(a => a.online).length;
 
-  // Every admin who shows up in the log, including ones since demoted.
+  // Every account that shows up in the log, including ones since demoted.
   const adminOptions = useMemo(() => {
-    const emails = new Set([...admins.map(a => a.email), ...activity.map(l => l.email)]);
+    const emails = new Set([...admins.map(a => a.email), ...shownActivity.map(l => l.email)]);
     return [...emails].filter(Boolean).sort();
-  }, [admins, activity]);
+  }, [admins, shownActivity]);
 
   const filteredActivity = useMemo(() => {
-    let result = activity;
+    let result = shownActivity;
     if (adminFilter) result = result.filter(l => l.email === adminFilter);
     if (search) {
       const q = search.toLowerCase();
@@ -105,7 +127,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
       );
     }
     return result;
-  }, [activity, adminFilter, search]);
+  }, [shownActivity, adminFilter, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredActivity.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -118,7 +140,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
         <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="bi bi-shield-lock-fill"></i>
-            <span>Admin Accounts</span>
+            <span>Admin &amp; Official Accounts</span>
             <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>
               {admins.length}
             </span>
@@ -132,7 +154,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
           <table className="data-table">
             <thead className="table-header">
               <tr>
-                <th className="table-header-cell">Admin</th>
+                <th className="table-header-cell">Account</th>
                 <th className="table-header-cell">Status</th>
                 <th className="table-header-cell">Last Login</th>
                 <th className="table-header-cell">Latest Activity</th>
@@ -142,7 +164,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
               {admins.length === 0 ? (
                 <tr>
                   <td colSpan="4" style={{ textAlign: 'center', padding: '32px', color: '#6b7280' }}>
-                    No admin accounts found
+                    No Admin or Official accounts found
                   </td>
                 </tr>
               ) : (
@@ -154,6 +176,9 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontWeight: 600 }}>{admin.username || admin.fullName || '—'}</div>
                           <div style={{ fontSize: 12, color: '#6b7280' }}>{admin.email}</div>
+                          <span style={{ display: 'inline-block', marginTop: 3, fontSize: 10.5, fontWeight: 700, padding: '1px 8px', borderRadius: 999, background: admin.role === 'super_admin' ? '#3b0d1b' : '#FDECEC', color: admin.role === 'super_admin' ? '#fff' : '#6B2C3E' }}>
+                            {roleLabel(admin.role)}
+                          </span>
                         </div>
                       </div>
                     </td>
@@ -192,11 +217,26 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
       </div>
 
       {/* ── Activity log ───────────────────────────────────────────────── */}
+      <ArchiveToolbar
+        showArchived={showArchived}
+        setShowArchived={(value) => { setShowArchived(value); setPage(1); }}
+        activeCount={activity.length}
+        archivedCount={archivedActivity ? archivedActivity.length : null}
+        isSuperAdmin={isSuperAdmin}
+        onSettingsChanged={() => { onRefresh && onRefresh(); loadArchived(); }}
+        loadSetting={() => fetchLogArchiveSettings('admin')}
+        saveSetting={(days) => updateLogArchiveSettings('admin', days)}
+        periodOptions={LOG_PERIOD_OPTIONS}
+        settingLabel="Auto-archive activity:"
+        activeLabel="Recent activity"
+        archivedLabel="Archived activity"
+      />
+
       <div className="section">
         <div className="section-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="bi bi-clock-history"></i>
-            <span>Activity Log</span>
+            <span>{showArchived ? 'Archived Activity' : 'Activity Log'}</span>
             <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>
               {filteredActivity.length}
             </span>
@@ -215,10 +255,11 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
 
           <select
             className="form-select"
+            style={{ width: 'auto', minWidth: 200 }}
             value={adminFilter}
             onChange={(e) => setAdminLogsFilter({ admin: e.target.value })}
           >
-            <option value="">All admins</option>
+            <option value="">All accounts</option>
             {adminOptions.map(email => (
               <option key={email} value={email}>{email}</option>
             ))}
@@ -226,7 +267,10 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
 
           <GenerateReportButton
             type="adminLogs"
-            filters={{ search: search || undefined, admin: adminFilter || undefined }}
+            inline
+            withOptions
+            optionsTitle={showArchived ? 'Archived Admin Activity' : 'Admin Activity'}
+            filters={{ search: search || undefined, admin: adminFilter || undefined, ...(showArchived ? { archived: '1' } : {}) }}
           />
         </div>
 
@@ -235,7 +279,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
             <thead className="table-header">
               <tr>
                 <th className="table-header-cell">Time</th>
-                <th className="table-header-cell">Admin</th>
+                <th className="table-header-cell">Account</th>
                 <th className="table-header-cell">Action</th>
                 <th className="table-header-cell">Details</th>
               </tr>
@@ -247,9 +291,13 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
                     <div style={{ color: '#6b7280' }}>
                       <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '12px', opacity: 0.5 }}></i>
                       <p style={{ margin: 0, fontSize: '14px' }}>
-                        {activity.length === 0
-                          ? 'No admin activity recorded yet. Actions will appear here as admins log in and make changes.'
-                          : 'No activity matches your filters'}
+                        {showArchived && archivedActivity === null
+                          ? 'Loading archived activity...'
+                          : shownActivity.length === 0
+                            ? (showArchived
+                              ? 'No archived activity yet. Entries older than the auto-archive period appear here.'
+                              : 'No activity recorded yet. Actions will appear here as Admins and Officials sign in and make changes.')
+                            : 'No activity matches your filters'}
                       </p>
                     </div>
                   </td>
@@ -264,6 +312,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters }) => 
                     <td className="table-cell">
                       <div style={{ fontWeight: 600, fontSize: 13 }}>{log.username || log.email}</div>
                       {log.username && <div style={{ fontSize: 12, color: '#6b7280' }}>{log.email}</div>}
+                      {log.role && <div style={{ fontSize: 11.5, color: '#9ca3af' }}>{roleLabel(log.role)}</div>}
                     </td>
                     <td className="table-cell">
                       <ActionBadge action={log.action} />

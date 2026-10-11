@@ -62,6 +62,10 @@ const AdminSidebar = ({
         {
           id: "admin-logs",
           label: "Admin Logs"
+        },
+        {
+          id: "site-contacts",
+          label: "Site Contacts"
         }
       ]
     }
@@ -88,8 +92,7 @@ const AdminSidebar = ({
             borderRadius: "50%",
             overflow: "hidden",
             flexShrink: 0,
-            // The logo's inside is transparent; white keeps the maroon house
-            // visible against the maroon sidebar.
+
             background: "#fff",
             boxShadow: "0 2px 8px rgba(0,0,0,.25)"
           }}
@@ -177,7 +180,7 @@ const AdminSidebar = ({
                 fontWeight: 600
               }}
             >
-              {isSuperAdmin ? "Super Admin" : "Admin"}
+              {isSuperAdmin ? "Admin" : "Official"}
             </span>
           </div>
         </div>

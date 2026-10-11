@@ -466,14 +466,14 @@ const userMenuRef = useRef(null);
                                         fontSize: 11,
                                         fontWeight: 600
                                     }}>
-                                        {isSuperAdmin ? "Super Admin" : "Admin"}
+                                        {isSuperAdmin ? "Admin" : "Official"}
                                     </span>
                                 </div>
                             </div>
 
                             <div style={{ borderTop: "1px solid #f3f4f6" }} />
 
-                            {/* System tab: super admins only (like the sidebar). */}
+                            {/* System tab: Admins (super_admin) only, like the sidebar. */}
                             {isSuperAdmin && (
                                 <button
                                     className="admin-user-menu-item"

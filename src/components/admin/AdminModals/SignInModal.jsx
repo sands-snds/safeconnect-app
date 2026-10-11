@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { signinUser, setAuthToken } from '../../../Services/api';
+import { useLanguage } from '../../../i18n/LanguageContext';
+import useSiteContent from '../../shared/useSiteContent';
+import { showAccountStatusPopup } from '../../shared/accountStatusPopup';
 
 // This modal never existed in the project — isAuthenticated had no way to
 // ever become true, which is why the dashboard/reports/etc never rendered
@@ -9,6 +12,8 @@ const SignInModal = ({ onSuccess, notice }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useLanguage();
+  const { socials } = useSiteContent();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,13 +24,20 @@ const SignInModal = ({ onSuccess, notice }) => {
 
     setIsSubmitting(false);
 
+    // Closed / suspended accounts get the same explanation popup as the
+    // resident sign-in.
+    if (!result.success && result.code && showAccountStatusPopup(result.code, t, socials?.email)) {
+      setPassword('');
+      return;
+    }
+
     if (!result.success) {
       setError(result.message || 'Invalid email or password.');
       return;
     }
 
     if (!result.isAdmin) {
-      setError('This account does not have admin access.');
+      setError("This account doesn't have access to the admin panel.");
       return;
     }
 

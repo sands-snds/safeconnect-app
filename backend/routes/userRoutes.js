@@ -12,11 +12,13 @@ const {
 } = require("../middleware/authMiddleware");
 const { logActivity } = require("../middleware/activityLogger");
 const User = require("../models/User");
+const { roleLabel } = require("../utils/roles");
 
 const describeUserChange = (field) => async (req) => {
     const user = await User.findById(req.params.id);
     const who = user ? (user.email_address || user.username) : `User #${req.params.id}`;
-    return `${who} → ${req.body[field]}`;
+    const value = field === "role" ? roleLabel(req.body.role) : req.body[field];
+    return `${who} → ${value}`;
 };
 const logUserStatus = logActivity("Changed user status", describeUserChange("status"));
 

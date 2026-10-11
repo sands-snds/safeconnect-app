@@ -6,6 +6,7 @@ import Dashboard from '../components/admin/dashboard/Dashboard';
 import AdminLayout from "../components/admin/layout/AdminLayout";
 import UsersPage from "../components/admin/users/UsersPage";
 import LogsPage from "../components/admin/logs/LogsPage";
+import SiteContactsPage from "../components/admin/settings/SiteContactsPage";
 import ReportsPage from "../components/admin/reports/ReportsPage";
 import AnnouncementsPage from "../components/admin/announcements/AnnouncementsPage";
 import PettyCrimePage from '../components/admin/reports/pettyCrime';
@@ -100,11 +101,12 @@ const AdminPage = () => {
   "create-announcement": "Create Announcement",
   "registered-users": "Registered Users",
   "sign-in-logs": "Sign-in Logs",
-  "admin-logs": "Admin Logs"
+  "admin-logs": "Admin Logs",
+  "site-contacts": "Site Contacts"
 };
 
-// Tabs under SYSTEM in the sidebar: super admin only.
-const SYSTEM_VIEWS = ["registered-users", "sign-in-logs", "admin-logs"];
+// Tabs under SYSTEM in the sidebar: Admins (super_admin) only.
+const SYSTEM_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts"];
 
   const alerts = [];
     const emergencyPending =
@@ -299,8 +301,12 @@ useEffect(() => {
                   adminLogs={adminLogs}
                   filters={filters}
                   setFilters={setFilters}
+                  isSuperAdmin={isSuperAdmin}
+                  onRefresh={() => handleRefresh(activeView)}
               />
           );
+      case "site-contacts":
+          return <SiteContactsPage />;
       default:
 
         return (

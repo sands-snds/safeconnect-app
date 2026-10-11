@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { signinUser, setAuthToken } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
+import useSiteContent, { contactDescription } from '../shared/useSiteContent';
+import { showAccountStatusPopup } from '../shared/accountStatusPopup';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
 
@@ -16,15 +18,6 @@ const PASSWORD_REQUIREMENTS = [
 const getMissingRequirements = (pw) =>
     PASSWORD_REQUIREMENTS.filter(r => !r.test(pw)).map(r => r.key);
 
-// Also listed in the footer (LandingPage passes it to DonationFooter).
-export const EMERGENCY_CONTACTS = [
-    { id:'police',   label:'911 Emergency',     sublabelKey:'police',   number:'911',           icon:'bi-shield-fill-exclamation', color:'#dc2626' },
-    { id:'dasma',    label:'Dasmariñas Police',  sublabelKey:'dasma',    number:'+63462420002',  icon:'bi-shield-fill',             color:'#1d4ed8' },
-    { id:'cdrmc',    label:'CDRMC',              sublabelKey:'cdrmc',    number:'+63462300345',  icon:'bi-heart-pulse-fill',        color:'#059669' },
-    { id:'dswd',     label:'DSWD',               sublabelKey:'dswd',     number:'+63464165393',  icon:'bi-people-fill',             color:'#ea580c' },
-    { id:'barangay', label:'Barangay Sta. Fe',  sublabelKey:'barangay', number:'+63567341876', icon:'bi-house-fill',              color:'#7c3aed' },
-];
-
 const apiPost = async (path, body) => {
     const res = await fetch(`${API_BASE}/auth/${path}`, {
         method: 'POST',
@@ -37,6 +30,8 @@ const apiPost = async (path, body) => {
 // ── EmergencyCallButton ───────────────────────────────────────────────────────
 function EmergencyCallButton() {
     const { t } = useLanguage();
+    // Editable by Admins under System > Site Contacts; also the footer's hotlines.
+    const { emergencyContacts } = useSiteContent();
     const [showContacts, setShowContacts] = useState(false);
     const handleCall = (n) => { window.location.href = `tel:${n}`; setShowContacts(false); };
     return (
@@ -47,7 +42,7 @@ function EmergencyCallButton() {
                     <p style={{ margin:'0 0 2px',fontWeight:700,fontSize:'14px',color:'#111' }}>{t('emergencyContacts.title')}</p>
                     <p style={{ margin:'0 0 12px',fontSize:'12px',color:'#6b7280' }}>{t('emergencyContacts.subtitle')}</p>
                     <div style={{ display:'flex',flexDirection:'column',gap:'8px' }}>
-                        {EMERGENCY_CONTACTS.map(c => (
+                        {emergencyContacts.map(c => (
                             <button key={c.id} onClick={() => handleCall(c.number)}
                                 style={{ display:'flex',alignItems:'center',gap:'12px',padding:'10px 12px',borderRadius:'10px',border:`1.5px solid ${c.color}22`,background:`${c.color}0d`,cursor:'pointer',textAlign:'left',width:'100%' }}
                                 onMouseEnter={e => e.currentTarget.style.background=`${c.color}22`}
@@ -57,7 +52,7 @@ function EmergencyCallButton() {
                                 </div>
                                 <div style={{ flex:1 }}>
                                     <p style={{ margin:0,fontWeight:600,fontSize:'13px',color:'#111' }}>{c.label}</p>
-                                    <p style={{ margin:0,fontSize:'11px',color:'#6b7280' }}>{t(`emergencyContacts.sublabels.${c.sublabelKey}`)}</p>
+                                    <p style={{ margin:0,fontSize:'11px',color:'#6b7280' }}>{contactDescription(c, t)}</p>
                                 </div>
                                 <div style={{ display:'flex',alignItems:'center',gap:'4px',background:c.color,color:'#fff',borderRadius:'20px',padding:'4px 10px',fontSize:'11px',fontWeight:600 }}>
                                     <i className="bi bi-telephone-fill" style={{ fontSize:'10px' }} />{t('emergencyContacts.call')}
@@ -102,6 +97,7 @@ function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs }) {
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
     const { t } = useLanguage();
+    const siteContent = useSiteContent(); // support email for the account popups
     // Modal visibility
     const [showSignIn,    setShowSignIn]    = useState(false);
     const [showSignUp,    setShowSignUp]    = useState(false);
@@ -204,6 +200,11 @@ function Hero() {
         setIsSubmitting(true);
         try {
             const result = await signinUser(siEmail.trim(), siPassword);
+            // Closed / suspended accounts: close the sign-in box and explain in a popup.
+            if (!result.success && result.code) {
+                closeAll();
+                if (showAccountStatusPopup(result.code, t, siteContent.socials?.email)) return;
+            }
             if (!result.success) { setError(result.message || t('auth.invalidCredentials')); return; }
             setAuthToken(result.token, result.isAdmin);
             if (result.isAdmin) {

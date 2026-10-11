@@ -63,6 +63,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/settings", systemSettingRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/site-content", require("./routes/siteContentRoutes"));
 
 // ── Static uploads: explicitly set cross-origin header ──
 app.use("/uploads", (req, res, next) => {
@@ -110,3 +111,17 @@ AnnouncementComment.ensureTable().catch((err) =>
 // Adds the report archive columns/setting, then auto-archives old resolved
 // reports now and every 6 hours.
 require("./services/archiveService").startScheduler();
+
+// Archives sign-in / admin activity log entries older than each log's
+// period (default 90 days) now and every 6 hours.
+require("./services/logArchiveService").startScheduler();
+
+// Lets the editable site contacts (System > Site Contacts) fit in system_settings.
+require("./services/siteContentService").ensureSchema().catch((err) =>
+  console.error("Could not prepare site contacts storage:", err.message)
+);
+
+// The barangay's main Admin account always exists and stays an Active Admin.
+require("./services/mainAccount").ensureMainAccount().catch((err) =>
+  console.error("Could not check the main barangay account:", err.message)
+);

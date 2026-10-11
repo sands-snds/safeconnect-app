@@ -49,11 +49,18 @@ const ListView = ({
   exportLabel,
   exportWithOptions = false,
   exportTitle = '',
+  // Extra filters sent with the export (e.g. archived: '1' on an Archived tab).
+  exportFilters = {},
   // Optional override for the "+ Add New" button text.
   addLabel = '+ Add New',
-  // Optional: extra filter controls rendered after the status filter
-  // (e.g. the Users tab's role filter).
-  extraFilters
+  // Optional: extra filter controls rendered after the status filter.
+  extraFilters,
+  // Optional heading inside the table card (defaults to "All <title>"
+  // when a title is given, otherwise none).
+  sectionTitle,
+  // false hides the search/filter row -- the Users tab shows one shared row
+  // above its two tables.
+  showFilters = true
 }) => {
   const isControlled = typeof page === 'number';
 
@@ -106,6 +113,7 @@ const ListView = ({
       {/* lv-* classes: on phones admin.css turns this row into a grid --
           search on its own line, the filters two per line, then the
           action button full width. */}
+      {showFilters && (
       <div className="lv-filters" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '16px', marginBottom: '20px' }}>
         <div className="lv-search" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1 1 240px', minWidth: '200px' }}>
           <label className="font-medium text-sm">Search</label>
@@ -179,12 +187,14 @@ const ListView = ({
               status: filters[filterType]?.status !== 'All Items'
                 ? filters[filterType]?.status
                 : undefined,
-              search: filters[filterType]?.search || undefined
+              search: filters[filterType]?.search || undefined,
+              ...exportFilters
             }}
           />
           </div>
         )}
       </div>
+      )}
 
       {layout === 'cards' ? (
         <div>
@@ -199,7 +209,7 @@ const ListView = ({
           )}
         </div>
       ) : (
-        <Section title={`All ${title}`}>
+        <Section title={sectionTitle ?? (title ? `All ${title}` : undefined)}>
           <Table headers={headers}>
             {visibleData.map(item => renderRow(item))}
           </Table>

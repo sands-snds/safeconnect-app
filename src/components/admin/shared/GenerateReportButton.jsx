@@ -74,6 +74,7 @@ const GenerateReportButton = ({
           type={type}
           title={optionsTitle}
           defaultStatus={filters.status || ''}
+          baseFilters={filters}
           onClose={() => setShowForm(false)}
         />
       )}

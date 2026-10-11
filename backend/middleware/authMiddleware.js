@@ -56,7 +56,7 @@ const verifyAdmin = async (req, res, next) => {
     if (!req.user) {
         return res.status(403).json({
             success: false,
-            message: "Admin access only."
+            message: "Only barangay Officials and Admins can do this."
         });
     }
 
@@ -66,7 +66,7 @@ const verifyAdmin = async (req, res, next) => {
         if (!admin || !isAdminRole(admin.role) || (admin.status && admin.status !== "Active")) {
             return res.status(403).json({
                 success: false,
-                message: "Admin access only."
+                message: "Only barangay Officials and Admins can do this."
             });
         }
 
@@ -87,7 +87,7 @@ const verifySuperAdmin = (req, res, next) => {
     if (!req.admin || !isSuperAdminRole(req.admin.role)) {
         return res.status(403).json({
             success: false,
-            message: "Super admin access only."
+            message: "Only Admins can do this."
         });
     }
     next();
