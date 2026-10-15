@@ -33,7 +33,7 @@ const AssistanceRequestsTable = ({
     <ReportCard
       key={request.id}
       accentColor="#6B2C3E"
-      title={request.assistanceType}
+      title={request.victimOfEmergency ? `${request.assistanceType} · ${request.victimOfEmergency}` : request.assistanceType}
       badge={{
         text: `${request.peopleAffected || 1} people`,
         bg: "#f3f4f6",

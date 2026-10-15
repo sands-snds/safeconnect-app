@@ -38,12 +38,18 @@ const REPORT_FOR_COLUMNS = {
     victim_details: "TEXT DEFAULT NULL"
 };
 
-// Petty crime photo/video (base64, like emergency_reports.photo_url) and the
-// "report anonymously" flag.
-const PETTY_CRIME_COLUMNS = {
+// Photo/video attachment, stored as base64 like emergency_reports.photo_url.
+const MEDIA_COLUMNS = {
     photo_url: "LONGTEXT DEFAULT NULL",
-    media_type: "VARCHAR(20) DEFAULT NULL",
-    is_anonymous: "TINYINT(1) NOT NULL DEFAULT 0"
+    media_type: "VARCHAR(20) DEFAULT NULL"
+};
+
+// Columns only some report tables have.
+const TABLE_EXTRA_COLUMNS = {
+    // + the "report anonymously" flag
+    petty_crimes: { ...MEDIA_COLUMNS, is_anonymous: "TINYINT(1) NOT NULL DEFAULT 0" },
+    // + "Victim of What Emergency?"
+    assistance_requests: { ...MEDIA_COLUMNS, victim_of_emergency: "VARCHAR(255) DEFAULT NULL" }
 };
 
 // Adds the report-for / victim columns and archived_at / resolved_at to the
@@ -60,7 +66,7 @@ async function ensureSchema() {
         const columns = {
             ...REPORT_FOR_COLUMNS,
             ...ARCHIVE_COLUMNS,
-            ...(table === "petty_crimes" ? PETTY_CRIME_COLUMNS : {})
+            ...TABLE_EXTRA_COLUMNS[table]
         };
         for (const [name, definition] of Object.entries(columns)) {
             if (!have.has(name)) {

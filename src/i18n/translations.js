@@ -467,7 +467,14 @@ export const translations = {
       submitRequest: 'Submit Request',
       requestSubmitted: 'Request Submitted',
       requestSubmittedBody: 'Your assistance request has been submitted successfully. Our team will contact you soon.',
-      done: 'Done'
+      done: 'Done',
+      victimOfEmergency: 'Victim of What Emergency?',
+      selectEmergency: 'Select Emergency',
+      emergencyOther: 'Other (please specify)',
+      emergencyOtherPlaceholder: 'What emergency did you experience?',
+      specifyEmergency: 'Please specify the emergency you experienced.',
+      proofPhoto: 'Photo or Video (Proof)',
+      proofHint: 'Optional, but it helps the barangay verify your request. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).'
     },
     pettyCrimeModal: {
       title: 'Report Petty Crime',
@@ -1082,7 +1089,14 @@ export const translations = {
       submitRequest: 'Isumite ang Kahilingan',
       requestSubmitted: 'Naisumite ang Kahilingan',
       requestSubmittedBody: 'Matagumpay na naisumite ang iyong kahilingan ng tulong. Makikipag-ugnayan sa iyo ang aming team sa lalong madaling panahon.',
-      done: 'Tapos na'
+      done: 'Tapos na',
+      victimOfEmergency: 'Biktima ng Anong Emergency?',
+      selectEmergency: 'Piliin ang Emergency',
+      emergencyOther: 'Iba pa (pakispesipiko)',
+      emergencyOtherPlaceholder: 'Anong emergency ang naranasan mo?',
+      specifyEmergency: 'Pakispesipiko ang emergency na naranasan mo.',
+      proofPhoto: 'Larawan o Video (Patunay)',
+      proofHint: 'Opsyonal, pero makakatulong ito sa barangay na beripikahin ang iyong kahilingan. JPG/JPEG na larawan (max 20MB) o MP4/MOV/WEBM na video (max 50MB).'
     },
     pettyCrimeModal: {
       title: 'Mag-report ng Petty Crime',

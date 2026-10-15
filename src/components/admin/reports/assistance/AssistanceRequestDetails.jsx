@@ -48,6 +48,11 @@ const AssistanceRequestDetails = ({ request }) => {
         />
 
         <DetailField
+          label="Victim of Emergency"
+          value={request.victimOfEmergency}
+        />
+
+        <DetailField
           label="Urgency Level"
           value={request.urgency}
         />
@@ -78,7 +83,7 @@ const AssistanceRequestDetails = ({ request }) => {
         />
       </div>
 
-      <ReportImage photo={photo} />
+      <ReportImage photo={photo} mediaType={request.mediaType || request.media_type} />
 
       <ReportLocationMap latitude={request.latitude} longitude={request.longitude} />
     </div>

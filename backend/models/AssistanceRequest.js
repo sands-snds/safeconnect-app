@@ -23,6 +23,9 @@ class AssistanceRequest {
                 urgency_level,
                 describe_your_situation,
                 special_needs,
+                victim_of_emergency,
+                photo_url,
+                media_type,
                 report_for,
                 victim_name,
                 victim_contact,
@@ -30,7 +33,7 @@ class AssistanceRequest {
                 victim_details,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 request.reportReference,
@@ -46,6 +49,9 @@ class AssistanceRequest {
                 request.urgency || "Medium",
                 request.situation,
                 request.specialNeeds || null,
+                request.victimOfEmergency || null,
+                request.photoUrl || null,
+                request.mediaType || null,
                 request.reportFor || "self",
                 request.victimName || null,
                 request.victimContact || null,
@@ -118,7 +124,10 @@ class AssistanceRequest {
                 longitude = ?,
                 urgency_level = ?,
                 describe_your_situation = ?,
-                special_needs = ?
+                special_needs = ?,
+                victim_of_emergency = COALESCE(?, victim_of_emergency),
+                photo_url = COALESCE(?, photo_url),
+                media_type = COALESCE(?, media_type)
             WHERE id = ?
             `,
             [
@@ -129,6 +138,9 @@ class AssistanceRequest {
                 request.urgency || "Medium",
                 request.situation,
                 request.specialNeeds || null,
+                request.victimOfEmergency || null,
+                request.photoUrl || null,
+                request.mediaType || null,
                 id
             ]
         );

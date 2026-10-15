@@ -19,6 +19,9 @@ class AssistanceRequestService {
             urgency: data.urgency,
             situation: data.situation,
             specialNeeds: data.special,
+            victimOfEmergency: data.victimOfEmergency,
+            photoUrl: data.photoUrl,
+            mediaType: data.mediaType,
             reportFor: data.reportFor,
             victimName: data.victimName,
             victimContact: data.victimContact,
@@ -48,7 +51,10 @@ class AssistanceRequestService {
             longitude: data.longitude,
             urgency: data.urgency,
             situation: data.situation,
-            specialNeeds: data.special
+            specialNeeds: data.special,
+            victimOfEmergency: data.victimOfEmergency,
+            photoUrl: data.photoUrl,
+            mediaType: data.mediaType
         });
 
         return { success: affected > 0 };

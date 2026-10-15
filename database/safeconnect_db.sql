@@ -83,6 +83,9 @@ CREATE TABLE assistance_requests (
   urgency_level VARCHAR(50) NOT NULL,
   describe_your_situation TEXT NOT NULL,
   special_needs TEXT DEFAULT NULL,
+  victim_of_emergency VARCHAR(255) DEFAULT NULL, -- "Victim of What Emergency?" (e.g. Flood Emergency, or typed under Other)
+  photo_url LONGTEXT DEFAULT NULL, -- optional proof photo/video (base64)
+  media_type VARCHAR(20) DEFAULT NULL,
   report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)
   victim_name VARCHAR(255) DEFAULT NULL,
   victim_contact VARCHAR(50) DEFAULT NULL,

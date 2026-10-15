@@ -6,17 +6,22 @@ import { showPopup } from '../shared/popup';
 
 // The map needs a real browser; the form logic under test doesn't.
 jest.mock('../shared/location/LocationPickerMap', () => () => null);
-jest.mock('../shared/location/useLocationPin', () => () => ({
-  gpsCoords: { lat: 14.32, lng: 120.96 },
-  setGpsCoords: () => {},
-  isLocating: false,
-  locationError: '',
-  setLocationError: () => {},
-  isOutsideSantaFe: false,
-  outsideMessage: '',
-  handleUseCurrentLocation: () => {},
-  handlePickOnMap: () => {}
-}));
+// Same object every render, like the real hook's stable state setters --
+// a fresh setGpsCoords each render would re-run the edit prefill effect forever.
+jest.mock('../shared/location/useLocationPin', () => {
+  const pin = {
+    gpsCoords: { lat: 14.32, lng: 120.96 },
+    setGpsCoords: () => {},
+    isLocating: false,
+    locationError: '',
+    setLocationError: () => {},
+    isOutsideSantaFe: false,
+    outsideMessage: '',
+    handleUseCurrentLocation: () => {},
+    handlePickOnMap: () => {}
+  };
+  return () => pin;
+});
 jest.mock('../../Services/api', () => ({
   createPettyCrimeReport: jest.fn(() => Promise.resolve({ success: true, id: 1 })),
   updatePettyCrimeReport: jest.fn(() => Promise.resolve({ success: true }))

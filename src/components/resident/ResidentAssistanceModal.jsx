@@ -4,6 +4,7 @@ import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
+import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
   city: 'Dasmariñas',
@@ -26,6 +27,14 @@ const URGENCY_OPTIONS = [
   { key: 'critical', value: 'Critical' }
 ];
 
+// "Victim of What Emergency?" choices: the Report Emergency form's types
+// (same stored values), plus Other, where the resident types it in.
+const EMERGENCY_OPTIONS = [
+  { value: 'Fire Emergency', labelKey: 'emergencyModal.typeFire' },
+  { value: 'Flood Emergency', labelKey: 'emergencyModal.typeFlood' },
+  { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake' }
+];
+const OTHER_EMERGENCY = 'Other';
 // Not everyone in the barangay knows the person they're requesting for by
 // name — these relationships make the name field optional instead of required.
 const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
@@ -72,6 +81,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     assistanceType: '',
+    emergency: '',
+    emergencyOther: '',
     houseNumber: '',
     street: '',
     floorUnit: '',
@@ -82,6 +93,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     urgency: '',
     consent: false
   });
+  const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
+  const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
@@ -114,8 +127,13 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 
   useEffect(() => {
     if (!editingReport) return;
+    // A value that isn't one of the listed types was typed in under Other.
+    const savedEmergency = editingReport.victim_of_emergency || '';
+    const isListed = EMERGENCY_OPTIONS.some((o) => o.value === savedEmergency);
     setFormData((prev) => ({
       ...prev,
+      emergency: !savedEmergency ? '' : isListed ? savedEmergency : OTHER_EMERGENCY,
+      emergencyOther: savedEmergency && !isListed ? savedEmergency : '',
       assistanceType: editingReport.title || '',
       location: editingReport.location || '',
       situation: editingReport.description || '',
@@ -200,6 +218,13 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       showPopup({ type: 'warning', message: t('assistanceModal.provideDetailsRequesting') });
       return;
     }
+    if (formData.emergency === OTHER_EMERGENCY && !formData.emergencyOther.trim()) {
+      showPopup({ type: 'warning', message: t('assistanceModal.specifyEmergency') });
+      return;
+    }
+    const victimOfEmergency = formData.emergency === OTHER_EMERGENCY
+      ? formData.emergencyOther.trim()
+      : formData.emergency;
     const currentUser = getCurrentUser();
     if (!currentUser.id) {
       console.warn(
@@ -208,10 +233,14 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     }
     setIsSubmitting(true);
     try {
+      const photoUrl = media.file ? await readAsDataUrl(media.file) : null;
       if (isEditing) {
         const result = await updateAssistanceRequest({
           id: editingReport.id,
           type: formData.assistanceType || 'General Assistance',
+          victimOfEmergency,
+          // Only replace the saved photo/video if a new one was attached
+          ...(photoUrl ? { photoUrl, mediaType: media.type } : {}),
           location: formData.location.trim(),
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
@@ -243,6 +272,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       ].filter(Boolean).join(', ') + (landmark ? ` (Landmark: ${landmark})` : '');
       const result = await createAssistanceRequest({
         type: formData.assistanceType || 'General Assistance',
+        victimOfEmergency,
+        photoUrl,
+        mediaType: photoUrl ? media.type : null,
         userId: currentUser.id || null,
         fullname: fullName,
         contact,
@@ -268,6 +300,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setCooldownRemaining(REPORT_COOLDOWN_MS);
       setFormData({
         assistanceType: '',
+        emergency: '',
+        emergencyOther: '',
         houseNumber: '',
         street: '',
         floorUnit: '',
@@ -281,6 +315,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setReportFor('self');
       setVictimName(''); setVictimContact(''); setVictimRelationship('');
       setVictimRelationshipOther(''); setVictimDetails('');
+      clearMedia();
       setGpsCoords(null);
       setLocationError('');
       setShowSuccessPopup(true);
@@ -501,6 +536,75 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 {t('assistanceModal.typeTransportVehicle')}
 </option>
 </select>
+</div>
+<div className="rf-2col" style={{ gap: '12px', marginBottom: '16px', alignItems: 'start' }}>
+<div>
+<label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '8px',
+                fontWeight: '600',
+                color: '#374151',
+                fontSize: '13px'
+              }}>
+<i className="bi bi-exclamation-circle-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
+                {t('assistanceModal.victimOfEmergency')} <span style={{ color: '#dc3545' }}>*</span>
+</label>
+<select
+                name="emergency"
+                value={formData.emergency}
+                onChange={(e) => setFormData((prev) => ({ ...prev, emergency: e.target.value, emergencyOther: '' }))}
+                required
+                disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
+>
+<option value="">{t('assistanceModal.selectEmergency')}</option>
+                {EMERGENCY_OPTIONS.map((opt) => (
+<option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+                ))}
+<option value={OTHER_EMERGENCY}>{t('assistanceModal.emergencyOther')}</option>
+</select>
+              {formData.emergency === OTHER_EMERGENCY && (
+<input
+                  type="text"
+                  name="emergencyOther"
+                  value={formData.emergencyOther}
+                  onChange={handleChange}
+                  required
+                  maxLength={100}
+                  disabled={isSubmitting}
+                  placeholder={t('assistanceModal.emergencyOtherPlaceholder')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    fontSize: '14px',
+                    outline: 'none',
+                    marginTop: '8px'
+                  }}
+                />
+              )}
+</div>
+<MediaAttachmentField
+              t={t}
+              label={t('assistanceModal.proofPhoto')}
+              optionalMark
+              hint={hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}
+              disabled={isSubmitting}
+              media={media}
+              fileInputRef={fileInputRef}
+              onChange={handleMediaChange}
+              onRemove={clearMedia}
+            />
 </div>
 <div style={{ marginBottom: '16px' }}>
 <label style={{
