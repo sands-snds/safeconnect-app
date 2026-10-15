@@ -454,7 +454,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 <i className="bi bi-person-exclamation"></i> {t('assistanceModal.personBoxLabel')}
               </label>
               <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.relationship')} <span style={{ color: '#dc3545' }}>*</span></label>
-              <select value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
+              <select className="form-select" value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
                 <option value="">{t('reportForm.relationshipPlaceholder')}</option>
                 <option value="Family Member">{t('reportForm.relationshipOptions.family')}</option>
@@ -516,7 +516,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 ></i>
               {t('assistanceModal.assistanceType')} <span style={{ color: '#dc3545' }}>*</span>
 </label>
-<select
+<select className="form-select"
               name="assistanceType"
               value={formData.assistanceType}
               onChange={handleChange}
@@ -557,7 +557,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 <i className="bi bi-exclamation-circle-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
                 {t('assistanceModal.victimOfEmergency')} <span style={{ color: '#dc3545' }}>*</span>
 </label>
-<select
+<select className="form-select"
                 name="emergency"
                 value={formData.emergency}
                 onChange={(e) => setFormData((prev) => ({ ...prev, emergency: e.target.value, emergencyOther: '' }))}
@@ -629,7 +629,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 ></i>
               {t('assistanceModal.urgency')}
 </label>
-<select
+<select className="form-select"
               name="urgency"
               value={formData.urgency}
               onChange={handleChange}

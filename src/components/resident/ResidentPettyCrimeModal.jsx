@@ -462,7 +462,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
                 <i className="bi bi-person-exclamation"></i> {t('reportForm.personBoxLabel')}
               </label>
               <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.relationship')} <span style={{ color: '#dc3545' }}>*</span></label>
-              <select value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
+              <select className="form-select" value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
                 <option value="">{t('reportForm.relationshipPlaceholder')}</option>
                 <option value="Family Member">{t('reportForm.relationshipOptions.family')}</option>
@@ -520,7 +520,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               {t('pettyCrimeModal.crimeType')}
 <span style={{color:'#dc3545'}}>*</span>
 </label>
-<select
+<select className="form-select"
               name="crimeType"
               required
               value={formData.crimeType}
