@@ -13,6 +13,25 @@ const CRIME_TYPES = [
   { key: 'harassment', value: 'Harassment' },
   { key: 'other', value: 'Other' }
 ];
+// A photo/video is optional for these crime types and required for the rest.
+// Keep in sync with PHOTO_OPTIONAL_CRIME_TYPES in backend/services/pettyCrimeService.js.
+const PHOTO_OPTIONAL_CRIME_TYPES = ['Theft', 'Suspicious Activity', 'Harassment'];
+// Same attachment rules as the Report Emergency form (ResidentEmergencyModal.jsx).
+const ALLOWED_MEDIA_TYPES = [
+  'image/jpeg', 'image/jpg',
+  'video/mp4', 'video/quicktime', 'video/webm'
+];
+const ALLOWED_MEDIA_EXTENSIONS = /\.(jpe?g|mp4|mov|webm)$/i;
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const EMPTY_MEDIA = { file: null, previewUrl: null, type: null };
+// Reads a file as a base64 data URL, which is how report media is stored.
+const readAsDataUrl = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onloadend = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
   city: 'Dasmariñas',
@@ -89,6 +108,14 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [media, setMedia] = useState(EMPTY_MEDIA);
+  const fileInputRef = useRef(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  // Photo rule: none until a crime type is picked, then optional or required
+  // by type. When editing, a photo already on file satisfies it.
+  const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
+  const isPhotoRequired = Boolean(formData.crimeType) && !PHOTO_OPTIONAL_CRIME_TYPES.includes(formData.crimeType);
+  const needsNewMedia = isPhotoRequired && !hasExistingMedia;
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   // Map pin, "Use my current location" and the Santa Fe boundary check
   // (../shared/location/useLocationPin.js). A new pin fills in the address.
@@ -159,6 +186,35 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           : value
     }));
   };
+  // Revoke the preview's object URL when it changes or the modal unmounts
+  useEffect(() => {
+    return () => {
+      if (media.previewUrl) URL.revokeObjectURL(media.previewUrl);
+    };
+  }, [media.previewUrl]);
+  const clearMedia = () => {
+    setMedia(EMPTY_MEDIA);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+  const handleMediaChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      clearMedia();
+      return;
+    }
+    if (!ALLOWED_MEDIA_TYPES.includes(file.type) && !ALLOWED_MEDIA_EXTENSIONS.test(file.name)) {
+      showPopup({ type: 'warning', message: t('reportForm.mediaTypeError') });
+      clearMedia();
+      return;
+    }
+    const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|webm)$/i.test(file.name);
+    if (file.size > (isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE)) {
+      showPopup({ type: 'warning', message: isVideo ? t('reportForm.mediaTooLargeVideo') : t('reportForm.mediaTooLargeImage') });
+      clearMedia();
+      return;
+    }
+    setMedia({ file, previewUrl: URL.createObjectURL(file), type: isVideo ? 'video' : 'image' });
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isEditing) {
@@ -199,8 +255,13 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       showPopup({ type: 'warning', message: t('reportForm.provideDetails') });
       return;
     }
+    if (needsNewMedia && !media.file) {
+      showPopup({ type: 'warning', message: t('pettyCrimeModal.mediaRequired') });
+      return;
+    }
     setIsSubmitting(true);
     try {
+      const photoUrl = media.file ? await readAsDataUrl(media.file) : null;
       if (isEditing) {
         const result = await updatePettyCrimeReport({
           id: editingReport.id,
@@ -209,7 +270,9 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
           description: formData.description,
-          suspectInfo: formData.suspectInfo || null
+          suspectInfo: formData.suspectInfo || null,
+          // Only replace the saved photo/video if a new one was attached
+          ...(photoUrl ? { photoUrl, mediaType: media.type } : {})
         });
         if (!result.success) {
           throw new Error(result.message || t('reportForm.updateFailed'));
@@ -243,6 +306,10 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         longitude: gpsCoords ? gpsCoords.lng : null,
         description: formData.description,
         suspectInfo: formData.suspectInfo || null,
+        photoUrl,
+        mediaType: photoUrl ? media.type : null,
+        // The backend drops the name/contact for anonymous reports
+        isAnonymous,
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
         victimContact: reportFor === 'others' ? victimContact.trim() : null,
@@ -273,6 +340,8 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       setVictimRelationship('');
       setVictimRelationshipOther('');
       setVictimDetails('');
+      clearMedia();
+      setIsAnonymous(false);
       setGpsCoords(null);
       setLocationError('');
       setShowSuccessPopup(true);
@@ -397,6 +466,41 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               </button>
             </div>
           </div>
+          {isEditing ? (
+            editingReport.is_anonymous ? (
+              <div style={{ marginBottom: '16px', fontSize: '13px', color: '#374151', background: '#f3f4f6', borderRadius: '8px', padding: '10px 14px' }}>
+                <i className="bi bi-incognito" style={{ marginRight: '6px' }}></i>{t('pettyCrimeModal.anonymousOnEdit')}
+              </div>
+            ) : null
+          ) : (
+            <label style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+              marginBottom: '16px',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              border: `2px solid ${isAnonymous ? '#dc3545' : '#d1d5db'}`,
+              background: isAnonymous ? '#fef2f2' : '#fff',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                disabled={isSubmitting}
+                style={{ accentColor: '#dc3545', marginTop: '3px' }}
+              />
+              <span>
+                <span style={{ display: 'block', fontWeight: 600, fontSize: '13px', color: isAnonymous ? '#dc3545' : '#374151' }}>
+                  <i className="bi bi-incognito" style={{ marginRight: '6px' }}></i>{t('pettyCrimeModal.anonymousLabel')}
+                </span>
+                <span style={{ display: 'block', fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                  {t('pettyCrimeModal.anonymousHint')}
+                </span>
+              </span>
+            </label>
+          )}
           {reportFor === 'others' && (
             <div style={{ marginBottom: '16px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', padding: '14px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
@@ -705,6 +809,79 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
                 border:'1px solid #d1d5db'
               }}
             />
+</div>
+<div style={{marginBottom:'16px'}}>
+<label style={{
+              display:'flex',
+              alignItems:'center',
+              gap:'6px',
+              marginBottom:'8px',
+              fontWeight:'600',
+              color:'#374151',
+              fontSize:'13px'
+            }}>
+<i className="bi bi-camera-video-fill"></i>
+              {t('reportForm.photoOrVideo')}
+              {needsNewMedia
+                ? <span style={{color:'#dc3545'}}>*</span>
+                : formData.crimeType && <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span>}
+</label>
+<input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleMediaChange}
+              accept="image/jpeg,image/jpg,video/mp4,video/quicktime,video/webm"
+              required={needsNewMedia}
+              disabled={isSubmitting}
+              style={{
+                width:'100%',
+                padding:'8px 10px',
+                borderRadius:'6px',
+                border:'1px solid #d1d5db',
+                fontSize:'13px'
+              }}
+            />
+<div style={{ fontSize:'11px', color:'#6b7280', marginTop:'4px' }}>
+              {hasExistingMedia
+                ? t('reportForm.mediaHintEdit')
+                : !formData.crimeType
+                  ? t('pettyCrimeModal.mediaHintSelectType')
+                  : isPhotoRequired
+                    ? t('reportForm.mediaHintRequired')
+                    : t('pettyCrimeModal.mediaHintOptional')}
+</div>
+            {media.previewUrl && (
+<>
+<div style={{ marginTop:'10px', borderRadius:'8px', overflow:'hidden', border:'1px solid #d1d5db' }}>
+                {media.type === 'video' ? (
+<video src={media.previewUrl} controls style={{ display:'block', width:'100%', maxHeight:'220px', objectFit:'cover', background:'#000' }} />
+                ) : (
+<img src={media.previewUrl} alt="Selected attachment preview" style={{ display:'block', width:'100%', maxHeight:'220px', objectFit:'cover', background:'#000' }} />
+                )}
+</div>
+<button
+                type="button"
+                onClick={clearMedia}
+                disabled={isSubmitting}
+                style={{
+                  display:'inline-flex',
+                  alignItems:'center',
+                  gap:'4px',
+                  marginTop:'8px',
+                  padding:'5px 12px',
+                  borderRadius:'16px',
+                  border:'1px solid #dc3545',
+                  background:'#fff',
+                  color:'#dc3545',
+                  fontSize:'12px',
+                  fontWeight:600,
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                }}
+>
+<i className="bi bi-trash3-fill"></i> {t('reportForm.remove')}
+</button>
+</>
+            )}
 </div>
 <div style={{marginBottom:'20px'}}>
 <label style={{

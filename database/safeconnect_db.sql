@@ -112,6 +112,9 @@ CREATE TABLE petty_crimes (
   longitude DECIMAL(10,7) DEFAULT NULL,
   description TEXT NOT NULL,
   suspect_info TEXT DEFAULT NULL,
+  photo_url LONGTEXT DEFAULT NULL, -- optional for Theft / Suspicious Activity / Harassment, required otherwise
+  media_type VARCHAR(20) DEFAULT NULL,
+  is_anonymous TINYINT(1) NOT NULL DEFAULT 0, -- reporter chose to hide their name/contact from admins
   report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)
   victim_name VARCHAR(255) DEFAULT NULL,
   victim_contact VARCHAR(50) DEFAULT NULL,

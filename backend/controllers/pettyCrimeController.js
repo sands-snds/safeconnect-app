@@ -3,10 +3,24 @@ const PettyCrimeService = require("../services/pettyCrimeService");
 const Notification = require("../models/Notification");
 const { validateStatusTransition } = require("../utils/statusWorkflow");
 
+// Anonymous reports: admins get no way to link the report to an account.
+// (Name and contact were never stored; this removes reporter_id.)
+const hideAnonymousReporter = (report) => {
+    if (!report || !report.is_anonymous) return report;
+    const { reporter_id, ...rest } = report;
+    return rest;
+};
+
+// Services return { success: false, status: 400, message } for invalid input.
+const sendResult = (res, result, successStatus = 200) => {
+    const { status, ...body } = result;
+    res.status(result.success === false && status ? status : successStatus).json(body);
+};
+
 exports.createReport = async (req, res) => {
     try {
         const result = await PettyCrimeService.create(req.body);
-        res.status(201).json(result);
+        sendResult(res, result, 201);
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to submit petty crime report." });
@@ -16,7 +30,7 @@ exports.createReport = async (req, res) => {
 exports.getReports = async (req, res) => {
     try {
         const reports = await PettyCrime.findAll();
-        res.json(reports);
+        res.json(reports.map(hideAnonymousReporter));
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to retrieve petty crime reports." });
@@ -26,7 +40,7 @@ exports.getReports = async (req, res) => {
 exports.getReport = async (req, res) => {
     try {
         const report = await PettyCrime.findById(req.params.id);
-        res.json(report);
+        res.json(hideAnonymousReporter(report));
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false });
@@ -36,7 +50,7 @@ exports.getReport = async (req, res) => {
 exports.updateReport = async (req, res) => {
     try {
         const result = await PettyCrimeService.update(req.params.id, req.body);
-        res.json(result);
+        sendResult(res, result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to update petty crime report." });

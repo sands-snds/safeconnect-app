@@ -20,6 +20,9 @@ class PettyCrime {
                 longitude,
                 description,
                 suspect_info,
+                photo_url,
+                media_type,
+                is_anonymous,
                 report_for,
                 victim_name,
                 victim_contact,
@@ -27,7 +30,7 @@ class PettyCrime {
                 victim_details,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 report.reportReference,
@@ -40,6 +43,9 @@ class PettyCrime {
                 report.longitude || null,
                 report.description,
                 report.suspectInfo || null,
+                report.photoUrl || null,
+                report.mediaType || null,
+                report.isAnonymous ? 1 : 0,
                 report.reportFor || "self",
                 report.victimName || null,
                 report.victimContact || null,
@@ -101,6 +107,15 @@ class PettyCrime {
         return rows[0];
     }
 
+    // Whether a photo/video is already on file, without loading it.
+    static async hasMedia(id) {
+        const [rows] = await db.query(
+            `SELECT photo_url IS NOT NULL AND photo_url <> '' AS has_media FROM petty_crimes WHERE id = ?`,
+            [id]
+        );
+        return Boolean(rows[0]?.has_media);
+    }
+
     static async update(id, report) {
         const [result] = await db.query(
             `
@@ -111,7 +126,9 @@ class PettyCrime {
                 latitude = ?,
                 longitude = ?,
                 description = ?,
-                suspect_info = ?
+                suspect_info = ?,
+                photo_url = COALESCE(?, photo_url),
+                media_type = COALESCE(?, media_type)
             WHERE id = ?
             `,
             [
@@ -121,6 +138,8 @@ class PettyCrime {
                 report.longitude || null,
                 report.description,
                 report.suspectInfo || null,
+                report.photoUrl || null,
+                report.mediaType || null,
                 id
             ]
         );

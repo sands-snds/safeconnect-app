@@ -38,6 +38,14 @@ const REPORT_FOR_COLUMNS = {
     victim_details: "TEXT DEFAULT NULL"
 };
 
+// Petty crime photo/video (base64, like emergency_reports.photo_url) and the
+// "report anonymously" flag.
+const PETTY_CRIME_COLUMNS = {
+    photo_url: "LONGTEXT DEFAULT NULL",
+    media_type: "VARCHAR(20) DEFAULT NULL",
+    is_anonymous: "TINYINT(1) NOT NULL DEFAULT 0"
+};
+
 // Adds the report-for / victim columns and archived_at / resolved_at to the
 // report tables and creates the settings table, so existing databases (local
 // and Azure) don't need a manual migration.
@@ -49,9 +57,20 @@ async function ensureSchema() {
             [table]
         );
         const have = new Set(existing.map((c) => c.name));
-        for (const [name, definition] of Object.entries({ ...REPORT_FOR_COLUMNS, ...ARCHIVE_COLUMNS })) {
+        const columns = {
+            ...REPORT_FOR_COLUMNS,
+            ...ARCHIVE_COLUMNS,
+            ...(table === "petty_crimes" ? PETTY_CRIME_COLUMNS : {})
+        };
+        for (const [name, definition] of Object.entries(columns)) {
             if (!have.has(name)) {
-                await db.query(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
+                try {
+                    await db.query(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
+                } catch (err) {
+                    // Another server instance added it first (e.g. two
+                    // starting at once) -- that's the outcome we wanted.
+                    if (err.code !== "ER_DUP_FIELDNAME") throw err;
+                }
             }
         }
     }

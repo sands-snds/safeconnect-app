@@ -68,7 +68,7 @@ const EmergencyReportDetails = ({ report }) => {
         />
       </div>
 
-      <ReportImage photo={photo} />
+      <ReportImage photo={photo} mediaType={report.mediaType || report.media_type} />
 
       <ReportLocationMap latitude={report.latitude} longitude={report.longitude} />
     </div>

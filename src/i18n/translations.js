@@ -493,7 +493,13 @@ export const translations = {
       submitError: 'There was an error submitting your report. Please try again.',
       submitCrimeReport: 'Submit Crime Report',
       reportSubmitted: 'Report Submitted',
-      reportSubmittedBody: 'Your petty crime report has been submitted successfully. Our team will review it shortly.'
+      reportSubmittedBody: 'Your petty crime report has been submitted successfully. Our team will review it shortly.',
+      mediaHintSelectType: 'Optional for Theft, Suspicious Activity and Harassment; required for all other crime types. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).',
+      mediaHintOptional: 'Optional for this crime type. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).',
+      mediaRequired: 'Please attach a photo or video of the incident. It is required for this crime type.',
+      anonymousLabel: 'Report anonymously',
+      anonymousHint: 'Your name and contact number will be hidden from barangay staff, for your safety. You can still follow this report in My Reports.',
+      anonymousOnEdit: 'This report was submitted anonymously.'
     },
     myReports: {
       title: 'My Reports',
@@ -1102,7 +1108,13 @@ export const translations = {
       submitError: 'Nagkaroon ng error sa pagsumite ng iyong ulat. Subukang muli.',
       submitCrimeReport: 'Isumite ang Crime Report',
       reportSubmitted: 'Naisumite ang Ulat',
-      reportSubmittedBody: 'Matagumpay na naisumite ang iyong petty crime report. Susuriin ito ng aming team sa lalong madaling panahon.'
+      reportSubmittedBody: 'Matagumpay na naisumite ang iyong petty crime report. Susuriin ito ng aming team sa lalong madaling panahon.',
+      mediaHintSelectType: 'Opsyonal para sa Pagnanakaw, Kahina-hinalang Aktibidad at Panliligalig; kinakailangan para sa ibang uri ng krimen. JPG/JPEG na larawan (max 20MB) o MP4/MOV/WEBM na video (max 50MB).',
+      mediaHintOptional: 'Opsyonal para sa uring ito ng krimen. JPG/JPEG na larawan (max 20MB) o MP4/MOV/WEBM na video (max 50MB).',
+      mediaRequired: 'Maglagay ng larawan o video ng insidente. Kinakailangan ito para sa uring ito ng krimen.',
+      anonymousLabel: 'Mag-report nang hindi nagpapakilala',
+      anonymousHint: 'Itatago sa mga kawani ng barangay ang iyong pangalan at contact number, para sa iyong kaligtasan. Masusubaybayan mo pa rin ang ulat na ito sa Aking Mga Ulat.',
+      anonymousOnEdit: 'Isinumite ang ulat na ito nang hindi nagpapakilala.'
     },
     myReports: {
       title: 'Aking Mga Ulat',

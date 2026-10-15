@@ -27,15 +27,29 @@ const PettyCrimeReportDetails = ({ report }) => {
       >
         <ReportForDetails report={report} personLabel="Victim" />
 
-        <DetailField
-          label={isForOthers(report) ? "Reported By" : "Reporter Name"}
-          value={report.reporter}
-        />
+        {report.isAnonymous ? (
+          <DetailField
+            label={isForOthers(report) ? "Reported By" : "Reporter"}
+            value={
+              <span>
+                <i className="bi bi-incognito" style={{ marginRight: "6px" }}></i>
+                Anonymous: the reporter chose to hide their name and contact number
+              </span>
+            }
+          />
+        ) : (
+          <>
+            <DetailField
+              label={isForOthers(report) ? "Reported By" : "Reporter Name"}
+              value={report.reporter}
+            />
 
-        <DetailField
-          label={isForOthers(report) ? "Reporter Contact" : "Contact Number"}
-          value={report.phone}
-        />
+            <DetailField
+              label={isForOthers(report) ? "Reporter Contact" : "Contact Number"}
+              value={report.phone}
+            />
+          </>
+        )}
 
         <DetailField
           label="Crime Type"
@@ -68,7 +82,7 @@ const PettyCrimeReportDetails = ({ report }) => {
         />
       </div>
 
-      <ReportImage photo={photo} />
+      <ReportImage photo={photo} mediaType={report.mediaType || report.media_type} />
 
       <ReportLocationMap latitude={report.latitude} longitude={report.longitude} />
     </div>

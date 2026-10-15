@@ -41,8 +41,10 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Reports carry their photo/video as base64, which is ~4/3 the file size:
+// the forms allow 50MB videos, so the body can reach ~67MB.
+app.use(express.json({ limit: '75mb' }));
+app.use(express.urlencoded({ limit: '75mb', extended: true }));
 
 // ── Helmet: keep security headers but allow cross-origin image loads ──
 app.use(helmet({
