@@ -52,15 +52,19 @@ const renderModal = (props = {}) => {
     const consent = $('input[name="consent"]');
     if (consent && !consent.checked) fireEvent.click(consent);
   };
-  return { ...utils, $, fill, form: $('form'), fileInput: $('input[type="file"]') };
+  const attachPhoto = () => fireEvent.change($('input[type="file"]'), {
+    target: { files: [new File(['jpeg'], 'house.jpg', { type: 'image/jpeg' })] }
+  });
+  return { ...utils, $, fill, attachPhoto, form: $('form'), fileInput: $('input[type="file"]') };
 };
 
-test('shows "Victim of What Emergency?" (required) with the photo field beside it (optional)', () => {
+test('shows "Victim of What Emergency?" and the photo field beside it, both required', () => {
   const { $, fileInput } = renderModal();
   expect(screen.getByText('Victim of What Emergency?')).toBeInTheDocument();
   expect($('select[name="emergency"]').required).toBe(true);
   expect(screen.getByText('Photo or Video (Proof)')).toBeInTheDocument();
-  expect(fileInput.required).toBe(false);
+  expect(fileInput.required).toBe(true);
+  expect(screen.getByText(/^Required. It helps the barangay verify your request/)).toBeInTheDocument();
   // Same grid row
   expect($('select[name="emergency"]').closest('.rf-2col')).toBe(fileInput.closest('.rf-2col'));
 });
@@ -71,18 +75,30 @@ test('lists the Report Emergency types plus Other', () => {
   expect(values).toEqual(['', 'Fire Emergency', 'Flood Emergency', 'Earthquake', 'Other']);
 });
 
-test('submits the chosen emergency without a photo', async () => {
+test('submitting without a photo is blocked', async () => {
   const { form, fill } = renderModal();
   fill('Flood Emergency');
   fireEvent.submit(form);
+  await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
+    type: 'warning', message: expect.stringMatching(/^Please attach a photo or video of your situation/)
+  })));
+  expect(createAssistanceRequest).not.toHaveBeenCalled();
+});
+
+test('submits the chosen emergency with the photo', async () => {
+  const { form, fill, attachPhoto } = renderModal();
+  fill('Flood Emergency');
+  attachPhoto();
+  fireEvent.submit(form);
   await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
-  expect(createAssistanceRequest.mock.calls[0][0]).toMatchObject({ victimOfEmergency: 'Flood Emergency', photoUrl: null, mediaType: null });
+  expect(createAssistanceRequest.mock.calls[0][0]).toMatchObject({ victimOfEmergency: 'Flood Emergency', mediaType: 'image' });
   expect(await screen.findByText('Request Submitted')).toBeInTheDocument();
 });
 
 test('Other: typed emergency is what gets saved', async () => {
-  const { $, form, fill } = renderModal();
+  const { $, form, fill, attachPhoto } = renderModal();
   fill('Other');
+  attachPhoto();
   fireEvent.change($('input[name="emergencyOther"]'), { target: { value: '  Landslide ' } });
   fireEvent.submit(form);
   await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
@@ -90,8 +106,9 @@ test('Other: typed emergency is what gets saved', async () => {
 });
 
 test('Other with nothing typed is blocked', async () => {
-  const { form, fill } = renderModal();
+  const { form, fill, attachPhoto } = renderModal();
   fill('Other');
+  attachPhoto();
   fireEvent.submit(form);
   await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
     type: 'warning', message: 'Please specify the emergency you experienced.'
@@ -120,6 +137,7 @@ test('editing a request typed under Other restores it into the Other box', async
   expect($('select[name="emergency"]').value).toBe('Other');
   expect($('input[name="emergencyOther"]').value).toBe('Landslide');
   expect(screen.getByText(/Attach a new file only if you want to replace/)).toBeInTheDocument();
+  expect($('input[type="file"]').required).toBe(false); // the photo on file counts
   fireEvent.submit(form);
   await waitFor(() => expect(updateAssistanceRequest).toHaveBeenCalledTimes(1));
   const sent = updateAssistanceRequest.mock.calls[0][0];

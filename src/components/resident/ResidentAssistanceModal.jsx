@@ -94,7 +94,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     consent: false
   });
   const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
+  // Proof photo/video is required; when editing, one already on file counts.
   const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
+  const needsNewMedia = !hasExistingMedia;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
@@ -216,6 +218,10 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     }
     if (reportFor === 'others' && !victimDetails.trim()) {
       showPopup({ type: 'warning', message: t('assistanceModal.provideDetailsRequesting') });
+      return;
+    }
+    if (needsNewMedia && !media.file) {
+      showPopup({ type: 'warning', message: t('assistanceModal.proofRequired') });
       return;
     }
     if (formData.emergency === OTHER_EMERGENCY && !formData.emergencyOther.trim()) {
@@ -597,7 +603,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 <MediaAttachmentField
               t={t}
               label={t('assistanceModal.proofPhoto')}
-              optionalMark
+              required={needsNewMedia}
+              requiredMark={needsNewMedia}
               hint={hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}
               disabled={isSubmitting}
               media={media}

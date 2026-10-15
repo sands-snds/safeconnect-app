@@ -474,7 +474,8 @@ export const translations = {
       emergencyOtherPlaceholder: 'What emergency did you experience?',
       specifyEmergency: 'Please specify the emergency you experienced.',
       proofPhoto: 'Photo or Video (Proof)',
-      proofHint: 'Optional, but it helps the barangay verify your request. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).'
+      proofHint: 'Required. It helps the barangay verify your request. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).',
+      proofRequired: 'Please attach a photo or video of your situation. It is required so the barangay can verify your request.'
     },
     pettyCrimeModal: {
       title: 'Report Petty Crime',
@@ -1096,7 +1097,8 @@ export const translations = {
       emergencyOtherPlaceholder: 'Anong emergency ang naranasan mo?',
       specifyEmergency: 'Pakispesipiko ang emergency na naranasan mo.',
       proofPhoto: 'Larawan o Video (Patunay)',
-      proofHint: 'Opsyonal, pero makakatulong ito sa barangay na beripikahin ang iyong kahilingan. JPG/JPEG na larawan (max 20MB) o MP4/MOV/WEBM na video (max 50MB).'
+      proofHint: 'Kinakailangan. Makakatulong ito sa barangay na beripikahin ang iyong kahilingan. JPG/JPEG na larawan (max 20MB) o MP4/MOV/WEBM na video (max 50MB).',
+      proofRequired: 'Maglagay ng larawan o video ng iyong sitwasyon. Kinakailangan ito para maberipika ng barangay ang iyong kahilingan.'
     },
     pettyCrimeModal: {
       title: 'Mag-report ng Petty Crime',

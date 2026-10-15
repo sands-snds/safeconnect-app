@@ -113,6 +113,15 @@ class AssistanceRequest {
         return rows[0];
     }
 
+    // Whether a photo/video is already on file, without loading it.
+    static async hasMedia(id) {
+        const [rows] = await db.query(
+            `SELECT photo_url IS NOT NULL AND photo_url <> '' AS has_media FROM assistance_requests WHERE id = ?`,
+            [id]
+        );
+        return Boolean(rows[0]?.has_media);
+    }
+
     static async update(id, request) {
         const [result] = await db.query(
             `
