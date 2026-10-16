@@ -13,7 +13,8 @@ export const translations = {
       updatedTitle: 'Report Updated',
       submitFailedTitle: "Couldn't Submit Report",
       ok: 'OK',
-      done: 'Done'
+      done: 'Done',
+      cancel: 'Cancel'
     },
     nav: {
       home: 'Home',
@@ -647,6 +648,10 @@ export const translations = {
       noAccount: 'We could not identify your account. Please sign in again.',
       loadError: 'Could not load your reports right now. Please try again later.',
       confirmDelete: 'Delete this {{type}} report? This cannot be undone.',
+      deleteTitle: 'Delete this report?',
+      deleteBody: 'Your {{type}} report "{{title}}" will be permanently removed. This cannot be undone.',
+      deletedTitle: 'Report Deleted',
+      deletedBody: 'Your report has been deleted.',
       deleteFailed: 'Failed to delete report.',
       totalReports: 'Total Reports',
       other: 'Other',
@@ -768,7 +773,8 @@ export const translations = {
       updatedTitle: 'Na-update ang Ulat',
       submitFailedTitle: 'Hindi Naisumite ang Ulat',
       ok: 'OK',
-      done: 'Tapos na'
+      done: 'Tapos na',
+      cancel: 'Kanselahin'
     },
     nav: {
       home: 'Home',
@@ -1402,6 +1408,10 @@ export const translations = {
       noAccount: 'Hindi namin matukoy ang iyong account. Mangyaring mag-sign in muli.',
       loadError: 'Hindi ma-load ang iyong mga ulat ngayon. Subukan muli sa ibang pagkakataon.',
       confirmDelete: 'Burahin ang {{type}} report na ito? Hindi na ito maibabalik.',
+      deleteTitle: 'Burahin ang ulat na ito?',
+      deleteBody: 'Permanenteng mabubura ang iyong {{type}} report na "{{title}}". Hindi na ito maibabalik.',
+      deletedTitle: 'Nabura ang Ulat',
+      deletedBody: 'Nabura na ang iyong ulat.',
       deleteFailed: 'Hindi nabura ang ulat.',
       totalReports: 'Kabuuang Ulat',
       other: 'Iba pa',

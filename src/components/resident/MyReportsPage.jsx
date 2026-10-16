@@ -7,7 +7,7 @@ import {
   deletePettyCrimeReport
 } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { showPopup } from '../shared/popup';
+import { showPopup, confirmPopup } from '../shared/popup';
 import ResidentEmergencyModal from "./ResidentEmergencyModal";
 import ResidentAssistanceModal from "./ResidentAssistanceModal";
 import ResidentPettyCrimeModal from "./ResidentPettyCrimeModal";
@@ -182,19 +182,30 @@ function MyReportsPage({ isOpen, onClose, userId }) {
   };
 
   const handleDelete = async (report) => {
-    if (!window.confirm(t('myReports.confirmDelete', { type: typeLabel(report.type, t).toLowerCase() }))) return;
+    const confirmed = await confirmPopup({
+      type: 'danger',
+      title: t('myReports.deleteTitle'),
+      message: t('myReports.deleteBody', { type: typeLabel(report.type, t).toLowerCase(), title: report.title }),
+      confirmLabel: t('myReports.delete')
+    });
+    if (!confirmed) return;
 
     let result;
-    if (report.type === 'Emergency') {
-      result = await deleteEmergencyReport(report.id);
-    } else if (report.type === 'Assistance') {
-      result = await deleteAssistanceRequest(report.id);
-    } else if (report.type === 'Petty Crime') {
-      result = await deletePettyCrimeReport(report.id);
+    try {
+      if (report.type === 'Emergency') {
+        result = await deleteEmergencyReport(report.id);
+      } else if (report.type === 'Assistance') {
+        result = await deleteAssistanceRequest(report.id);
+      } else if (report.type === 'Petty Crime') {
+        result = await deletePettyCrimeReport(report.id);
+      }
+    } catch {
+      result = null;
     }
 
     if (result?.success) {
       await loadReports();
+      showPopup({ type: 'success', title: t('myReports.deletedTitle'), message: t('myReports.deletedBody') });
     } else {
       showPopup({ type: 'error', message: t('myReports.deleteFailed') });
     }

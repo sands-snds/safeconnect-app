@@ -12,11 +12,17 @@ import React, { useEffect } from 'react';
 //   accent      - button color; defaults to the admin maroon on /admin and
 //                 the resident red elsewhere
 //   onClose     - called by the button, Esc or clicking outside
+//
+// Confirmation (in place of window.confirm(); see confirmPopup() in
+// ./popup.js): pass cancelLabel and onCancel too. Then there are two
+// buttons, the main one calls onClose (= confirmed), and Esc / clicking
+// outside call onCancel. type "danger" shows a red trash icon.
 
 const ICONS = {
   success: { icon: 'bi-check-lg', color: '#16a34a' },
   warning: { icon: 'bi-exclamation-lg', color: '#d97706' },
-  error: { icon: 'bi-exclamation-lg', color: '#dc2626' }
+  error: { icon: 'bi-exclamation-lg', color: '#dc2626' },
+  danger: { icon: 'bi-trash3-fill', color: '#dc2626' }
 };
 
 const defaultAccent = () =>
@@ -24,18 +30,21 @@ const defaultAccent = () =>
     ? '#6B2C3E'
     : '#dc3545';
 
-const ResultPopup = ({ type = 'success', title, message, buttonLabel, accent, onClose }) => {
+const ResultPopup = ({ type = 'success', title, message, buttonLabel, accent, onClose, cancelLabel, onCancel }) => {
+  const isConfirm = typeof onCancel === 'function';
+  const dismiss = isConfirm ? onCancel : onClose;
+
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [dismiss]);
 
   const { icon, color } = ICONS[type] || ICONS.success;
 
   return (
     <div
-      onClick={onClose}
+      onClick={dismiss}
       style={{
         position: 'fixed',
         inset: 0,
@@ -91,24 +100,46 @@ const ResultPopup = ({ type = 'success', title, message, buttonLabel, accent, on
             {message}
           </p>
         )}
-        <button
-          type="button"
-          autoFocus
-          onClick={onClose}
-          style={{
-            padding: '12px 20px',
-            borderRadius: '24px',
-            border: 'none',
-            background: accent || defaultAccent(),
-            color: 'white',
-            fontWeight: 600,
-            fontSize: '14px',
-            cursor: 'pointer',
-            width: '100%'
-          }}
-        >
-          {buttonLabel || (type === 'success' ? 'Done' : 'OK')}
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {isConfirm && (
+            <button
+              type="button"
+              autoFocus
+              onClick={onCancel}
+              style={{
+                flex: 1,
+                padding: '12px 20px',
+                borderRadius: '24px',
+                border: '1px solid #d1d5db',
+                background: 'white',
+                color: '#374151',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              {cancelLabel || 'Cancel'}
+            </button>
+          )}
+          <button
+            type="button"
+            autoFocus={!isConfirm}
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: '12px 20px',
+              borderRadius: '24px',
+              border: 'none',
+              background: accent || (type === 'danger' ? '#dc2626' : defaultAccent()),
+              color: 'white',
+              fontWeight: 600,
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            {buttonLabel || (type === 'success' ? 'Done' : 'OK')}
+          </button>
+        </div>
       </div>
     </div>
   );

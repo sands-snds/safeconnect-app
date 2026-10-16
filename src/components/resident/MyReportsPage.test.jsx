@@ -5,8 +5,10 @@ import {
   fetchMyReports,
   updateEmergencyReport,
   updateAssistanceRequest,
-  updatePettyCrimeReport
+  updatePettyCrimeReport,
+  deleteEmergencyReport
 } from '../../Services/api';
+import { showPopup, confirmPopup } from '../shared/popup';
 
 // The map needs a real browser; the form logic under test doesn't.
 jest.mock('../shared/location/LocationPickerMap', () => () => null);
@@ -36,25 +38,25 @@ jest.mock('../../Services/api', () => ({
   createPettyCrimeReport: jest.fn(),
   updatePettyCrimeReport: jest.fn()
 }));
-jest.mock('../shared/popup', () => ({ showPopup: jest.fn() }));
+jest.mock('../shared/popup', () => ({ showPopup: jest.fn(), confirmPopup: jest.fn() }));
 
 // Shapes match myReportsController's normalize* (raw columns + type/title/...).
 const REPORTS = [
   {
     id: 11, type: 'Emergency', title: 'Fire Emergency', description: 'Smoke from a house',
     date: '2026-10-16T08:00:00Z', location: '12 Mabini St, Sta. Fe', status: 'Received',
-    report_reference: 'SC-2026-000011', latitude: 14.32, longitude: 120.96, peopleAffected: '1-10'
+    report_reference: 'SC-2026-000011', latitude: '14.3198000', longitude: '120.9644000', peopleAffected: '1-10'
   },
   {
     id: 22, type: 'Assistance', title: 'Medical Aid', description: 'Need first aid',
     date: '2026-10-16T07:00:00Z', location: '3 Rizal St, Sta. Fe', status: 'Received',
     report_reference: 'SC-2026-000022', urgency: 'High', victim_of_emergency: 'Flood Emergency',
-    photo_url: 'data:image/jpeg;base64,AAA', latitude: 14.32, longitude: 120.96
+    photo_url: 'data:image/jpeg;base64,AAA', latitude: '14.3198000', longitude: '120.9644000'
   },
   {
     id: 33, type: 'Petty Crime', title: 'Theft', description: 'Bike stolen',
     date: '2026-10-16T06:00:00Z', location: '5 Luna St, Sta. Fe', status: 'Received',
-    report_reference: 'SC-2026-000033', latitude: 14.32, longitude: 120.96
+    report_reference: 'SC-2026-000033', latitude: '14.3198000', longitude: '120.9644000'
   }
 ];
 
@@ -65,6 +67,7 @@ beforeEach(() => {
   updateEmergencyReport.mockResolvedValue({ success: true });
   updateAssistanceRequest.mockResolvedValue({ success: true });
   updatePettyCrimeReport.mockResolvedValue({ success: true });
+  deleteEmergencyReport.mockResolvedValue({ success: true });
   global.URL.createObjectURL = jest.fn(() => 'blob:preview');
   global.URL.revokeObjectURL = jest.fn();
 });
@@ -112,4 +115,47 @@ test.each([
   await waitFor(() => expect(updateFn).toHaveBeenCalledTimes(1));
   expect(updateFn.mock.calls[0][0]).toMatchObject({ id });
   await waitFor(() => expect(fetchMyReports).toHaveBeenCalledTimes(2)); // list reloads after saving
+});
+
+describe('Delete', () => {
+  test('asks with the styled confirmation, not the browser dialog', async () => {
+    const nativeConfirm = jest.spyOn(window, 'confirm').mockImplementation(() => true);
+    confirmPopup.mockResolvedValue(false);
+    await renderPage();
+    fireEvent.click(within(cardFor('Fire Emergency')).getByRole('button', { name: /Delete/ }));
+    await waitFor(() => expect(confirmPopup).toHaveBeenCalledTimes(1));
+    expect(confirmPopup.mock.calls[0][0]).toMatchObject({
+      type: 'danger',
+      title: 'Delete this report?',
+      confirmLabel: 'Delete'
+    });
+    expect(confirmPopup.mock.calls[0][0].message).toMatch(/emergency report "Fire Emergency" will be permanently removed/);
+    expect(nativeConfirm).not.toHaveBeenCalled();
+    nativeConfirm.mockRestore();
+  });
+
+  test('Cancel keeps the report', async () => {
+    confirmPopup.mockResolvedValue(false);
+    await renderPage();
+    fireEvent.click(within(cardFor('Fire Emergency')).getByRole('button', { name: /Delete/ }));
+    await waitFor(() => expect(confirmPopup).toHaveBeenCalled());
+    expect(deleteEmergencyReport).not.toHaveBeenCalled();
+  });
+
+  test('confirming deletes it, reloads the list and says so', async () => {
+    confirmPopup.mockResolvedValue(true);
+    await renderPage();
+    fireEvent.click(within(cardFor('Fire Emergency')).getByRole('button', { name: /Delete/ }));
+    await waitFor(() => expect(deleteEmergencyReport).toHaveBeenCalledWith(11));
+    await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'success', title: 'Report Deleted' })));
+    expect(fetchMyReports).toHaveBeenCalledTimes(2);
+  });
+
+  test('a failed delete shows an error', async () => {
+    confirmPopup.mockResolvedValue(true);
+    deleteEmergencyReport.mockResolvedValue({ success: false });
+    await renderPage();
+    fireEvent.click(within(cardFor('Fire Emergency')).getByRole('button', { name: /Delete/ }));
+    await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'error', message: 'Failed to delete report.' })));
+  });
 });

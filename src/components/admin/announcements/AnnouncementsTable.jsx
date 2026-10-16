@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ListView, { allOption } from "../shared/ListView";
 import AnnouncementModal from "./AnnouncementModal";
 import ResultPopup from "../../shared/ResultPopup";
+import { confirmPopup } from "../../shared/popup";
 import AnnouncementComments from "./AnnouncementComments";
 import AnnouncementShareButton from "./AnnouncementShareButton";
 import { fetchAnnouncements, deleteAnnouncement } from "../../../Services/api";
@@ -184,7 +185,13 @@ const AnnouncementsTable = ({
     ));
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this announcement?")) return;
+    const confirmed = await confirmPopup({
+      type: "danger",
+      title: "Delete Announcement?",
+      message: "This announcement and its likes and comments will be permanently removed. This cannot be undone.",
+      confirmLabel: "Delete"
+    });
+    if (!confirmed) return;
 
     try {
       const success = await deleteAnnouncement(id);
