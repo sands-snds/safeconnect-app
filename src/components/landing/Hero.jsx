@@ -4,6 +4,7 @@ import { signinUser, setAuthToken } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
 import useSiteContent, { contactDescription } from '../shared/useSiteContent';
 import { showAccountStatusPopup } from '../shared/accountStatusPopup';
+import { hasViewedTerms, openTerms, TERMS_VIEWED_EVENT } from '../shared/termsConsent';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
 
@@ -111,6 +112,21 @@ function Hero() {
     // Sign-in fields
     const [siEmail,       setSiEmail]       = useState('');
     const [siPassword,    setSiPassword]    = useState('');
+    // Sign-in requires ticking "I agree", which unlocks only after the
+    // Terms and Conditions have been opened (termsConsent.js).
+    const [siAgree,       setSiAgree]       = useState(false);
+    const [termsViewed,   setTermsViewed]   = useState(hasViewedTerms);
+    useEffect(() => {
+        const onViewed = () => setTermsViewed(true);
+        window.addEventListener(TERMS_VIEWED_EVENT, onViewed);
+        return () => window.removeEventListener(TERMS_VIEWED_EVENT, onViewed);
+    }, []);
+    // Before the Terms have been opened, the box opens them instead of ticking.
+    const handleAgreeChange = (e) => {
+        if (!termsViewed) { openTerms(); return; }
+        setSiAgree(e.target.checked);
+        if (e.target.checked) setError('');
+    };
     const [showSiPw,      setShowSiPw]      = useState(false);
 
     // Sign-up fields
@@ -182,7 +198,7 @@ function Hero() {
     const closeAll = () => {
         setShowSignIn(false); setShowSignUp(false); setShowForgot(false);
         setSignUpStep('form'); setForgotStep('email');
-        setSiEmail(''); setSiPassword(''); setShowSiPw(false);
+        setSiEmail(''); setSiPassword(''); setShowSiPw(false); setSiAgree(false);
         setSuFirst(''); setSuMiddle(''); setSuLast('');
         setSuUsername(''); setSuContact(''); setSuEmail('');
         setSuPassword(''); setSuConfirm('');
@@ -197,6 +213,8 @@ function Hero() {
     const handleSignIn = async (e) => {
         e.preventDefault(); clearErr();
         if (!siEmail.trim() || !siPassword) { setError(t('auth.bothEmailPassword')); return; }
+        if (!termsViewed) { setError(t('signIn.viewTermsFirst')); return; }
+        if (!siAgree) { setError(t('signIn.mustAgree')); return; }
         setIsSubmitting(true);
         try {
             const result = await signinUser(siEmail.trim(), siPassword);
@@ -419,6 +437,18 @@ function Hero() {
                                             onClick={() => { setShowSignIn(false); setShowForgot(true); clearErr(); setForgotStep('email'); setFpEmail(siEmail); }}>
                                             {t('signIn.forgotPassword')}
                                         </button>
+                                    </div>
+
+                                    <div className="form-check mb-3">
+                                        <input className="form-check-input" type="checkbox" id="siAgree" checked={siAgree} onChange={handleAgreeChange}
+                                            style={siAgree ? { backgroundColor:'#6B2C3E', borderColor:'#6B2C3E' } : undefined} />
+                                        <label className="form-check-label small" htmlFor="siAgree">
+                                            {t('signIn.agreePrefix')}{' '}
+                                            <a href="#terms" className="fw-bold text-decoration-none" style={{ color:'#6B2C3E' }}>{t('signIn.agreeLink')}</a>.
+                                        </label>
+                                        {!termsViewed && (
+                                            <div className="form-text" style={{ fontSize:'0.78rem' }}>{t('signIn.viewTermsHint')}</div>
+                                        )}
                                     </div>
 
                                     <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>

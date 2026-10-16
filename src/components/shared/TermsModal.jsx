@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { TERMS_HASH, markTermsViewed } from './termsConsent';
 
 // Terms and Conditions, opened from any page by a link to "#terms" (the
 // footer and the sign-up form use one), so it can also be shared as
 // <site>/#terms. Mounted once in App.js. The text lives in translations.js
-// under `terms` (English and Tagalog).
-
-const TERMS_HASH = '#terms';
+// under `terms` (English and Tagalog). Opening it counts as having viewed
+// the Terms, which the Sign In checkbox requires (termsConsent.js).
 
 // Icon per section id (translations.js terms.sections[].id).
 const SECTION_ICONS = {
@@ -47,6 +47,10 @@ export default function TermsModal() {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
   }, []);
+
+  useEffect(() => {
+    if (open) markTermsViewed();
+  }, [open]);
 
   useEffect(() => {
     if (!open) return undefined;

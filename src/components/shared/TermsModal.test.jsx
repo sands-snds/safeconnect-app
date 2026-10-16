@@ -36,11 +36,11 @@ test('opens straight away when the page loads with #terms (shared link)', () => 
 test('shows the summary, contents and all 13 numbered sections', () => {
   window.history.replaceState(null, '', '/#terms');
   const { container } = renderTerms();
-  expect(screen.getByText('The short version')).toBeInTheDocument();
+  expect(screen.getByText('Key Points')).toBeInTheDocument();
   expect(container.querySelectorAll('.tc-chip')).toHaveLength(13);
   expect(container.querySelectorAll('.tc-section')).toHaveLength(13);
-  expect(screen.getByRole('heading', { name: /1\.\s*Acceptance of These Terms/ })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: /13\.\s*Questions and Contact/ })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /1\.\s*Acceptance of Terms/ })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /13\.\s*Contact Information/ })).toBeInTheDocument();
   expect(screen.getByText(/Data Privacy Act of 2012 \(Republic Act No\. 10173\)/)).toBeInTheDocument();
 });
 
@@ -67,9 +67,20 @@ test.each([
   expect(document.body.style.overflow).toBe('');
 });
 
+test('opening the Terms records that they were viewed (for the Sign In checkbox)', () => {
+  const onViewed = jest.fn();
+  window.addEventListener('safeconnect:terms-viewed', onViewed);
+  renderTerms();
+  expect(localStorage.getItem('sf_terms_viewed')).toBeNull();
+  goTo('#terms');
+  expect(localStorage.getItem('sf_terms_viewed')).toBe('2026-10-16');
+  expect(onViewed).toHaveBeenCalled();
+  window.removeEventListener('safeconnect:terms-viewed', onViewed);
+});
+
 test('clicking inside the panel does not close it', () => {
   window.history.replaceState(null, '', '/#terms');
   renderTerms();
-  fireEvent.click(screen.getByText('The short version'));
+  fireEvent.click(screen.getByText('Key Points'));
   expect(screen.getByRole('dialog')).toBeInTheDocument();
 });
