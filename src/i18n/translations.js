@@ -134,7 +134,9 @@ export const translations = {
       resendIn: 'Resend code in {{s}}s',
       resend: 'Resend code',
       backToRegistration: '← Back to registration',
-      accountCreated: 'Account created successfully! Please sign in.'
+      accountCreated: 'Account created successfully! Please sign in.',
+      agreePrefix: 'By creating an account, you agree to our',
+      agreeLink: 'Terms and Conditions'
     },
     forgotPassword: {
       titleEmail: 'Forgot Password',
@@ -251,7 +253,140 @@ export const translations = {
       emailSupport: 'Email Support',
       copyright: '© 2025 Safe Connect. All rights reserved.',
       privacyPolicy: 'Privacy Policy',
-      termsOfService: 'Terms of Service'
+      termsOfService: 'Terms and Conditions'
+    },
+    terms: {
+      badge: 'Legal',
+      title: 'Terms and Conditions',
+      lastUpdated: 'Last updated: October 16, 2026',
+      summaryTitle: 'The short version',
+      summary: [
+        'In a life-threatening emergency, call 911 first. Safe Connect helps, but it does not replace emergency hotlines.',
+        'Only submit true and accurate reports. False reports waste help that someone else may need.',
+        'Your information is used only to respond to your reports and to run Safe Connect, under the Data Privacy Act of 2012.',
+        'Be respectful in comments. The barangay may remove posts or suspend accounts that break these terms.'
+      ],
+      contents: 'Contents',
+      close: 'Close',
+      understand: 'I Understand',
+      sections: [
+        {
+          id: 'acceptance',
+          title: 'Acceptance of These Terms',
+          points: [
+            'By creating an account or using Safe Connect, you agree to these Terms and Conditions.',
+            'If you do not agree, please do not use Safe Connect.',
+            'If you are under 18, use Safe Connect with the guidance of a parent or guardian.'
+          ]
+        },
+        {
+          id: 'about',
+          title: 'About Safe Connect',
+          points: [
+            'Safe Connect is the online reporting platform of Barangay Sta. Fe, Dasmariñas, Cavite.',
+            'It lets residents report emergencies and petty crimes, request assistance, find evacuation centers, and read barangay news and announcements.',
+            'Reports are received and handled by the barangay response team.'
+          ]
+        },
+        {
+          id: 'emergencies',
+          title: 'Not a Replacement for Emergency Hotlines',
+          points: [
+            'In any life-threatening situation, call 911 or the emergency numbers listed on this website first.',
+            'Safe Connect depends on your internet connection and our servers, so a report may be delayed.',
+            'Submitting a report does not guarantee a specific response time.'
+          ]
+        },
+        {
+          id: 'account',
+          title: 'Your Account',
+          points: [
+            'Give your real name, a working email address, and a correct contact number when you sign up.',
+            'Keep your password private. You are responsible for everything done through your account.',
+            'One account per person. Do not create accounts for, or pretend to be, someone else.',
+            'Tell the barangay right away if you think someone else is using your account.'
+          ]
+        },
+        {
+          id: 'reports',
+          title: 'Submitting Reports and Requests',
+          points: [
+            'Describe what happened truthfully and as clearly as you can.',
+            'Your location (address or map pin) is attached so responders can find you. Only pin places within Barangay Sta. Fe.',
+            'Photos and videos must be of the actual incident or situation. Some report types require one, to help the barangay verify the report.',
+            'Do not upload content that is unrelated, violent for shock value, sexual, or that shows people in a way that violates their dignity.',
+            'When you report for someone else, only share their details if they would want help, or if they cannot ask for it themselves.'
+          ]
+        },
+        {
+          id: 'falseReports',
+          title: 'False or Misleading Reports',
+          points: [
+            'Never submit fake, prank, or exaggerated reports.',
+            'False reports take responders away from real emergencies.',
+            'Accounts that submit false reports may be suspended, and the matter may be referred to the proper authorities under Philippine law.'
+          ]
+        },
+        {
+          id: 'anonymous',
+          title: 'Anonymous Reports',
+          points: [
+            'When you report a petty crime anonymously, your name and contact number are hidden from barangay staff.',
+            'The report stays linked to your account so you can follow it in My Reports and receive status updates.',
+            'Anonymous reporting protects your identity, not false reports. The rules above still apply.'
+          ]
+        },
+        {
+          id: 'community',
+          title: 'News, Comments and Community Conduct',
+          points: [
+            'Keep comments respectful and related to the post.',
+            'Do not post insults, threats, hate speech, personal information about others, spam, or false information.',
+            'Barangay administrators may hide or delete comments that break these rules.'
+          ]
+        },
+        {
+          id: 'privacy',
+          title: 'Your Information and Privacy',
+          points: [
+            'We collect the details you give us: your name, email, contact number, reports, photos and videos, locations, and comments.',
+            'This information is used only to receive and respond to your reports, contact you about them, send you updates, and keep Safe Connect running and secure.',
+            'Only authorized barangay personnel can see your reports. We do not sell your information.',
+            'Your information is handled in line with the Data Privacy Act of 2012 (Republic Act No. 10173). You may ask the barangay to access, correct, or delete your personal information.'
+          ]
+        },
+        {
+          id: 'limitations',
+          title: 'Service Availability and Limitations',
+          points: [
+            'We work to keep Safe Connect available at all times, but it may sometimes be unavailable because of maintenance, outages, or problems outside our control.',
+            'Information on Safe Connect, such as news and evacuation centers, is provided in good faith. Always follow instructions from responders and officials on the ground.'
+          ]
+        },
+        {
+          id: 'suspension',
+          title: 'Suspension or Removal of Accounts',
+          points: [
+            'The barangay may suspend or remove accounts that break these terms, submit false reports, or misuse Safe Connect.',
+            'Serious violations may be reported to the proper authorities.'
+          ]
+        },
+        {
+          id: 'changes',
+          title: 'Changes to These Terms',
+          points: [
+            'We may update these terms as Safe Connect changes. The date at the top shows the latest version.',
+            'If you keep using Safe Connect after an update, you accept the updated terms.'
+          ]
+        },
+        {
+          id: 'contact',
+          title: 'Questions and Contact',
+          points: [
+            'For questions about these terms or your information, contact Barangay Sta. Fe using the details in the Contact section of this website.'
+          ]
+        }
+      ]
     },
     residentNav: {
       home: 'Home',
@@ -757,7 +892,9 @@ export const translations = {
       resendIn: 'Ipadala ulit ang code sa loob ng {{s}}s',
       resend: 'Ipadala ulit ang code',
       backToRegistration: '← Bumalik sa pagpaparehistro',
-      accountCreated: 'Matagumpay na nagawa ang account! Mangyaring mag-sign in.'
+      accountCreated: 'Matagumpay na nagawa ang account! Mangyaring mag-sign in.',
+      agreePrefix: 'Sa paggawa ng account, sumasang-ayon ka sa aming',
+      agreeLink: 'Mga Tuntunin at Kundisyon'
     },
     forgotPassword: {
       titleEmail: 'Nakalimutan ang Password',
@@ -874,7 +1011,140 @@ export const translations = {
       emailSupport: 'Email Support',
       copyright: '© 2025 Safe Connect. Nakalaan ang lahat ng karapatan.',
       privacyPolicy: 'Patakaran sa Privacy',
-      termsOfService: 'Mga Tuntunin ng Serbisyo'
+      termsOfService: 'Mga Tuntunin at Kundisyon'
+    },
+    terms: {
+      badge: 'Legal',
+      title: 'Mga Tuntunin at Kundisyon',
+      lastUpdated: 'Huling na-update: Oktubre 16, 2026',
+      summaryTitle: 'Ang maikling bersyon',
+      summary: [
+        'Sa emergency na nagbabanta sa buhay, tumawag muna sa 911. Nakakatulong ang Safe Connect, pero hindi nito pinapalitan ang mga emergency hotline.',
+        'Magsumite lamang ng totoo at tamang ulat. Inaagaw ng pekeng ulat ang tulong na maaaring kailangan ng iba.',
+        'Ginagamit lamang ang iyong impormasyon para tugunan ang iyong mga ulat at patakbuhin ang Safe Connect, alinsunod sa Data Privacy Act of 2012.',
+        'Maging magalang sa mga komento. Maaaring alisin ng barangay ang mga post o suspindihin ang mga account na lumalabag sa mga tuntuning ito.'
+      ],
+      contents: 'Nilalaman',
+      close: 'Isara',
+      understand: 'Naiintindihan Ko',
+      sections: [
+        {
+          id: 'acceptance',
+          title: 'Pagtanggap sa mga Tuntuning Ito',
+          points: [
+            'Sa paggawa ng account o paggamit ng Safe Connect, sumasang-ayon ka sa mga Tuntunin at Kundisyong ito.',
+            'Kung hindi ka sumasang-ayon, huwag gamitin ang Safe Connect.',
+            'Kung ikaw ay wala pang 18 taong gulang, gamitin ang Safe Connect sa gabay ng magulang o tagapag-alaga.'
+          ]
+        },
+        {
+          id: 'about',
+          title: 'Tungkol sa Safe Connect',
+          points: [
+            'Ang Safe Connect ay ang online na plataporma sa pag-uulat ng Barangay Sta. Fe, Dasmariñas, Cavite.',
+            'Dito maaaring mag-ulat ang mga residente ng emergency at petty crime, humingi ng tulong, maghanap ng evacuation center, at magbasa ng balita at anunsyo ng barangay.',
+            'Ang mga ulat ay tinatanggap at inaasikaso ng response team ng barangay.'
+          ]
+        },
+        {
+          id: 'emergencies',
+          title: 'Hindi Kapalit ng mga Emergency Hotline',
+          points: [
+            'Sa anumang sitwasyong nagbabanta sa buhay, tumawag muna sa 911 o sa mga emergency number na nakalista sa website na ito.',
+            'Umaasa ang Safe Connect sa iyong internet at sa aming mga server, kaya maaaring maantala ang isang ulat.',
+            'Ang pagsusumite ng ulat ay hindi garantiya ng tiyak na oras ng pagtugon.'
+          ]
+        },
+        {
+          id: 'account',
+          title: 'Ang Iyong Account',
+          points: [
+            'Ibigay ang iyong tunay na pangalan, gumaganang email, at tamang contact number sa pag-sign up.',
+            'Panatilihing pribado ang iyong password. Ikaw ang responsable sa lahat ng ginagawa gamit ang iyong account.',
+            'Isang account bawat tao. Huwag gumawa ng account para sa iba, o magpanggap na ibang tao.',
+            'Ipaalam agad sa barangay kung sa tingin mo ay may ibang gumagamit ng iyong account.'
+          ]
+        },
+        {
+          id: 'reports',
+          title: 'Pagsusumite ng mga Ulat at Kahilingan',
+          points: [
+            'Ilarawan nang totoo at malinaw hangga\'t maaari ang nangyari.',
+            'Kasama ang iyong lokasyon (address o pin sa mapa) para mahanap ka ng mga responder. Mag-pin lamang ng lugar sa loob ng Barangay Sta. Fe.',
+            'Ang mga larawan at video ay dapat tungkol sa mismong insidente o sitwasyon. May ilang uri ng ulat na nangangailangan nito, para matulungan ang barangay na beripikahin ang ulat.',
+            'Huwag mag-upload ng nilalamang walang kaugnayan, marahas para lamang manggulat, sekswal, o nagpapakita ng tao sa paraang yumuyurak sa kanilang dignidad.',
+            'Kapag nag-uulat para sa iba, ibahagi lamang ang kanilang detalye kung nais nila ng tulong, o kung hindi nila ito kayang hingin mismo.'
+          ]
+        },
+        {
+          id: 'falseReports',
+          title: 'Peke o Mapanlinlang na mga Ulat',
+          points: [
+            'Huwag kailanman magsumite ng peke, biro, o pinalabis na ulat.',
+            'Inilalayo ng pekeng ulat ang mga responder sa mga tunay na emergency.',
+            'Maaaring masuspinde ang mga account na nagsusumite ng pekeng ulat, at maaaring idulog ang usapin sa kinauukulan alinsunod sa batas ng Pilipinas.'
+          ]
+        },
+        {
+          id: 'anonymous',
+          title: 'Mga Ulat nang Hindi Nagpapakilala',
+          points: [
+            'Kapag nag-ulat ka ng petty crime nang hindi nagpapakilala, itatago sa mga kawani ng barangay ang iyong pangalan at contact number.',
+            'Nananatiling naka-link ang ulat sa iyong account para masubaybayan mo ito sa Aking Mga Ulat at makatanggap ng mga update.',
+            'Pinoprotektahan ng anonymous na pag-uulat ang iyong pagkakakilanlan, hindi ang pekeng ulat. Nalalapat pa rin ang mga tuntunin sa itaas.'
+          ]
+        },
+        {
+          id: 'community',
+          title: 'Balita, Komento at Asal sa Komunidad',
+          points: [
+            'Panatilihing magalang ang mga komento at may kaugnayan sa post.',
+            'Huwag mag-post ng insulto, banta, mapoot na pananalita, personal na impormasyon ng iba, spam, o maling impormasyon.',
+            'Maaaring itago o burahin ng mga administrador ng barangay ang mga komentong lumalabag sa mga tuntuning ito.'
+          ]
+        },
+        {
+          id: 'privacy',
+          title: 'Ang Iyong Impormasyon at Privacy',
+          points: [
+            'Kinokolekta namin ang mga detalyeng ibinibigay mo: pangalan, email, contact number, mga ulat, larawan at video, lokasyon, at mga komento.',
+            'Ginagamit lamang ang impormasyong ito para tanggapin at tugunan ang iyong mga ulat, makipag-ugnayan sa iyo tungkol dito, magpadala ng mga update, at panatilihing gumagana at ligtas ang Safe Connect.',
+            'Ang mga awtorisadong tauhan lamang ng barangay ang nakakakita ng iyong mga ulat. Hindi namin ibinebenta ang iyong impormasyon.',
+            'Pinangangasiwaan ang iyong impormasyon alinsunod sa Data Privacy Act of 2012 (Republic Act No. 10173). Maaari mong hilingin sa barangay na makita, itama, o burahin ang iyong personal na impormasyon.'
+          ]
+        },
+        {
+          id: 'limitations',
+          title: 'Pagkakaroon ng Serbisyo at mga Limitasyon',
+          points: [
+            'Sinisikap naming laging gumagana ang Safe Connect, pero maaaring minsan itong hindi magamit dahil sa maintenance, pagkaputol ng serbisyo, o mga problemang wala sa aming kontrol.',
+            'Ang impormasyon sa Safe Connect, gaya ng balita at evacuation center, ay ibinibigay nang may mabuting hangarin. Laging sundin ang mga tagubilin ng mga responder at opisyal sa lugar.'
+          ]
+        },
+        {
+          id: 'suspension',
+          title: 'Pagsuspinde o Pag-alis ng mga Account',
+          points: [
+            'Maaaring suspindihin o alisin ng barangay ang mga account na lumalabag sa mga tuntuning ito, nagsusumite ng pekeng ulat, o nag-aabuso sa Safe Connect.',
+            'Ang mabibigat na paglabag ay maaaring iulat sa kinauukulan.'
+          ]
+        },
+        {
+          id: 'changes',
+          title: 'Mga Pagbabago sa mga Tuntuning Ito',
+          points: [
+            'Maaari naming i-update ang mga tuntuning ito habang nagbabago ang Safe Connect. Ipinapakita ng petsa sa itaas ang pinakabagong bersyon.',
+            'Kung patuloy mong gagamitin ang Safe Connect pagkatapos ng update, tinatanggap mo ang mga na-update na tuntunin.'
+          ]
+        },
+        {
+          id: 'contact',
+          title: 'Mga Tanong at Pakikipag-ugnayan',
+          points: [
+            'Para sa mga tanong tungkol sa mga tuntuning ito o sa iyong impormasyon, makipag-ugnayan sa Barangay Sta. Fe gamit ang mga detalye sa seksyong Contact ng website na ito.'
+          ]
+        }
+      ]
     },
     residentNav: {
       home: 'Home',

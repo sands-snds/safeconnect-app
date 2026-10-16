@@ -6,6 +6,7 @@ import ResidentPage from './pages/ResidentPage';
 import { LanguageProvider } from './i18n/LanguageContext';
 import LanguageGate from './components/shared/LanguageGate';
 import { PopupHost } from './components/shared/popup';
+import TermsModal from './components/shared/TermsModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './App.css';
@@ -15,6 +16,7 @@ function App() {
     <LanguageProvider>
       <LanguageGate />
       <PopupHost />
+      <TermsModal />
       <Router>
         <div className="App">
           <Routes>

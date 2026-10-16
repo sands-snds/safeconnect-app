@@ -511,6 +511,10 @@ function Hero() {
                                                 </p>
                                             )}
                                         </div>
+                                        <p className="text-center small text-muted mb-2">
+                                            {t('signUp.agreePrefix')}{' '}
+                                            <a href="#terms" className="fw-bold text-decoration-none" style={{ color:'#6B2C3E' }}>{t('signUp.agreeLink')}</a>.
+                                        </p>
                                         <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
                                             {isSubmitting ? t('signUp.submitting') : t('signUp.submit')}
                                         </button>
