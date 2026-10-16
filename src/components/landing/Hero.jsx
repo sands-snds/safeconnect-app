@@ -112,9 +112,9 @@ function Hero() {
     // Sign-in fields
     const [siEmail,       setSiEmail]       = useState('');
     const [siPassword,    setSiPassword]    = useState('');
-    // Sign-in requires ticking "I agree", which unlocks only after the
-    // Terms and Conditions have been opened (termsConsent.js).
-    const [siAgree,       setSiAgree]       = useState(false);
+    // Creating an account requires ticking "I agree", which unlocks only
+    // after the Terms and Conditions have been opened (termsConsent.js).
+    const [suAgree,       setSuAgree]       = useState(false);
     const [termsViewed,   setTermsViewed]   = useState(hasViewedTerms);
     useEffect(() => {
         const onViewed = () => setTermsViewed(true);
@@ -124,7 +124,7 @@ function Hero() {
     // Before the Terms have been opened, the box opens them instead of ticking.
     const handleAgreeChange = (e) => {
         if (!termsViewed) { openTerms(); return; }
-        setSiAgree(e.target.checked);
+        setSuAgree(e.target.checked);
         if (e.target.checked) setError('');
     };
     const [showSiPw,      setShowSiPw]      = useState(false);
@@ -198,10 +198,10 @@ function Hero() {
     const closeAll = () => {
         setShowSignIn(false); setShowSignUp(false); setShowForgot(false);
         setSignUpStep('form'); setForgotStep('email');
-        setSiEmail(''); setSiPassword(''); setShowSiPw(false); setSiAgree(false);
+        setSiEmail(''); setSiPassword(''); setShowSiPw(false);
         setSuFirst(''); setSuMiddle(''); setSuLast('');
         setSuUsername(''); setSuContact(''); setSuEmail('');
-        setSuPassword(''); setSuConfirm('');
+        setSuPassword(''); setSuConfirm(''); setSuAgree(false);
         setShowSuPw(false); setShowSuConfPw(false);
         setFpEmail(''); setFpNewPw(''); setFpConfirmPw('');
         setShowFpNewPw(false); setShowFpConfPw(false);
@@ -213,8 +213,6 @@ function Hero() {
     const handleSignIn = async (e) => {
         e.preventDefault(); clearErr();
         if (!siEmail.trim() || !siPassword) { setError(t('auth.bothEmailPassword')); return; }
-        if (!termsViewed) { setError(t('signIn.viewTermsFirst')); return; }
-        if (!siAgree) { setError(t('signIn.mustAgree')); return; }
         setIsSubmitting(true);
         try {
             const result = await signinUser(siEmail.trim(), siPassword);
@@ -257,6 +255,8 @@ function Hero() {
         if (suPassword !== suConfirm) { setError(t('auth.passwordMismatch')); return; }
         const missing = getMissingRequirements(suPassword);
         if (missing.length > 0) { setError(t('auth.passwordMissing', { list: missing.map(k => t(`pwReq.${k}`)).join(', ') })); return; }
+        if (!termsViewed) { setError(t('signUp.viewTermsFirst')); return; }
+        if (!suAgree) { setError(t('signUp.mustAgree')); return; }
 
         const fullName = [suFirst, suMiddle, suLast].filter(Boolean).join(' ');
         setIsSubmitting(true);
@@ -439,18 +439,6 @@ function Hero() {
                                         </button>
                                     </div>
 
-                                    <div className="form-check mb-3">
-                                        <input className="form-check-input" type="checkbox" id="siAgree" checked={siAgree} onChange={handleAgreeChange}
-                                            style={siAgree ? { backgroundColor:'#6B2C3E', borderColor:'#6B2C3E' } : undefined} />
-                                        <label className="form-check-label small" htmlFor="siAgree">
-                                            {t('signIn.agreePrefix')}{' '}
-                                            <a href="#terms" className="fw-bold text-decoration-none" style={{ color:'#6B2C3E' }}>{t('signIn.agreeLink')}</a>.
-                                        </label>
-                                        {!termsViewed && (
-                                            <div className="form-text" style={{ fontSize:'0.78rem' }}>{t('signIn.viewTermsHint')}</div>
-                                        )}
-                                    </div>
-
                                     <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
                                         {isSubmitting ? t('signIn.submitting') : t('signIn.submit')}
                                     </button>
@@ -541,10 +529,17 @@ function Hero() {
                                                 </p>
                                             )}
                                         </div>
-                                        <p className="text-center small text-muted mb-2">
-                                            {t('signUp.agreePrefix')}{' '}
-                                            <a href="#terms" className="fw-bold text-decoration-none" style={{ color:'#6B2C3E' }}>{t('signUp.agreeLink')}</a>.
-                                        </p>
+                                        <div className="form-check mb-3">
+                                            <input className="form-check-input" type="checkbox" id="suAgree" checked={suAgree} onChange={handleAgreeChange}
+                                                style={suAgree ? { backgroundColor:'#6B2C3E', borderColor:'#6B2C3E' } : undefined} />
+                                            <label className="form-check-label small" htmlFor="suAgree">
+                                                {t('signUp.agreePrefix')}{' '}
+                                                <a href="#terms" className="fw-bold text-decoration-none" style={{ color:'#6B2C3E' }}>{t('signUp.agreeLink')}</a>.
+                                            </label>
+                                            {!termsViewed && (
+                                                <div className="form-text" style={{ fontSize:'0.78rem' }}>{t('signUp.viewTermsHint')}</div>
+                                            )}
+                                        </div>
                                         <button type="submit" className="btn w-100 fw-bold mb-3" style={{ backgroundColor:'#6B2C3E',color:'white' }} disabled={isSubmitting}>
                                             {isSubmitting ? t('signUp.submitting') : t('signUp.submit')}
                                         </button>

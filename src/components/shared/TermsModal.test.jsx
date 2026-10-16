@@ -33,12 +33,19 @@ test('opens straight away when the page loads with #terms (shared link)', () => 
   expect(screen.getByRole('dialog')).toBeInTheDocument();
 });
 
-test('shows the summary, contents and all 13 numbered sections', () => {
+test('a plain document: title, date, introduction and 13 sections of numbered clauses', () => {
   window.history.replaceState(null, '', '/#terms');
   const { container } = renderTerms();
-  expect(screen.getByText('Key Points')).toBeInTheDocument();
-  expect(container.querySelectorAll('.tc-chip')).toHaveLength(13);
+  expect(screen.getByText('Last updated: October 16, 2026')).toBeInTheDocument();
+  expect(screen.getByText(/^Please read these Terms and Conditions carefully/)).toBeInTheDocument();
   expect(container.querySelectorAll('.tc-section')).toHaveLength(13);
+  // Clauses are numbered 1.1, 1.2 ... 13.1
+  expect(screen.getByText('1.1')).toBeInTheDocument();
+  expect(screen.getByText('9.4')).toBeInTheDocument();
+  expect(screen.getByText('13.1')).toBeInTheDocument();
+  // No decorative extras (badge, summary box, contents chips, section icons)
+  expect(container.querySelector('.tc-badge, .tc-summary, .tc-chip, .tc-num')).toBeNull();
+  expect(container.querySelectorAll('.tc-body i.bi')).toHaveLength(0);
   expect(screen.getByRole('heading', { name: /1\.\s*Acceptance of Terms/ })).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: /13\.\s*Contact Information/ })).toBeInTheDocument();
   expect(screen.getByText(/Data Privacy Act of 2012 \(Republic Act No\. 10173\)/)).toBeInTheDocument();
@@ -54,7 +61,7 @@ test('follows the site language (Tagalog)', () => {
 
 test.each([
   ['the close (X) button', () => fireEvent.click(screen.getByRole('button', { name: 'Close' }))],
-  ['"I Understand"', () => fireEvent.click(screen.getByRole('button', { name: /I Understand/ }))],
+  ['"I Understand"', () => fireEvent.click(screen.getByRole('button', { name: 'I Understand' }))],
   ['Escape', () => fireEvent.keyDown(document, { key: 'Escape' })],
   ['clicking outside', () => fireEvent.click(document.querySelector('.tc-overlay'))]
 ])('closes with %s, clears #terms, and restores page scrolling', (_, doClose) => {
@@ -81,6 +88,6 @@ test('opening the Terms records that they were viewed (for the Sign In checkbox)
 test('clicking inside the panel does not close it', () => {
   window.history.replaceState(null, '', '/#terms');
   renderTerms();
-  fireEvent.click(screen.getByText('Key Points'));
+  fireEvent.click(screen.getByText(/^Please read these Terms and Conditions carefully/));
   expect(screen.getByRole('dialog')).toBeInTheDocument();
 });

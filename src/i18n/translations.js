@@ -100,12 +100,7 @@ export const translations = {
       submit: 'Sign In',
       submitting: 'Signing In...',
       noAccount: "Don't have an account?",
-      signUpLink: 'Sign Up',
-      agreePrefix: 'I have read and agree to the',
-      agreeLink: 'Terms and Conditions',
-      viewTermsHint: 'Open the Terms and Conditions to enable this checkbox.',
-      viewTermsFirst: 'Please read the Terms and Conditions before signing in.',
-      mustAgree: 'You must agree to the Terms and Conditions to sign in.'
+      signUpLink: 'Sign Up'
     },
     signUp: {
       createTitle: 'Create Account',
@@ -140,8 +135,11 @@ export const translations = {
       resend: 'Resend code',
       backToRegistration: '← Back to registration',
       accountCreated: 'Account created successfully! Please sign in.',
-      agreePrefix: 'By creating an account, you agree to our',
-      agreeLink: 'Terms and Conditions'
+      agreePrefix: 'I have read and agree to the',
+      agreeLink: 'Terms and Conditions',
+      viewTermsHint: 'Open the Terms and Conditions to enable this checkbox.',
+      viewTermsFirst: 'Please read the Terms and Conditions before creating an account.',
+      mustAgree: 'You must agree to the Terms and Conditions to create an account.'
     },
     forgotPassword: {
       titleEmail: 'Forgot Password',
@@ -261,17 +259,9 @@ export const translations = {
       termsOfService: 'Terms and Conditions'
     },
     terms: {
-      badge: 'Legal',
       title: 'Terms and Conditions',
       lastUpdated: 'Last updated: October 16, 2026',
-      summaryTitle: 'Key Points',
-      summary: [
-        'Safe Connect does not replace emergency hotlines. In a life-threatening situation, call 911 immediately.',
-        'You must submit only truthful and accurate reports. False reports are prohibited and may result in account suspension.',
-        'Your personal information is used only to respond to your reports and operate the Platform, in accordance with the Data Privacy Act of 2012.',
-        'You are expected to communicate respectfully. Content that violates these Terms may be removed.'
-      ],
-      contents: 'Contents',
+      intro: 'Please read these Terms and Conditions carefully before creating an account or using Safe Connect. They set out your rights and responsibilities as a user of the Platform.',
       close: 'Close',
       understand: 'I Understand',
       sections: [
@@ -865,12 +855,7 @@ export const translations = {
       submit: 'Mag-sign In',
       submitting: 'Nagsa-sign In...',
       noAccount: 'Wala ka pang account?',
-      signUpLink: 'Mag-sign Up',
-      agreePrefix: 'Nabasa ko at sumasang-ayon ako sa',
-      agreeLink: 'Mga Tuntunin at Kundisyon',
-      viewTermsHint: 'Buksan ang Mga Tuntunin at Kundisyon para magamit ang checkbox na ito.',
-      viewTermsFirst: 'Pakibasa muna ang Mga Tuntunin at Kundisyon bago mag-sign in.',
-      mustAgree: 'Kailangan mong sumang-ayon sa Mga Tuntunin at Kundisyon para makapag-sign in.'
+      signUpLink: 'Mag-sign Up'
     },
     signUp: {
       createTitle: 'Gumawa ng Account',
@@ -905,8 +890,11 @@ export const translations = {
       resend: 'Ipadala ulit ang code',
       backToRegistration: '← Bumalik sa pagpaparehistro',
       accountCreated: 'Matagumpay na nagawa ang account! Mangyaring mag-sign in.',
-      agreePrefix: 'Sa paggawa ng account, sumasang-ayon ka sa aming',
-      agreeLink: 'Mga Tuntunin at Kundisyon'
+      agreePrefix: 'Nabasa ko at sumasang-ayon ako sa',
+      agreeLink: 'Mga Tuntunin at Kundisyon',
+      viewTermsHint: 'Buksan ang Mga Tuntunin at Kundisyon para magamit ang checkbox na ito.',
+      viewTermsFirst: 'Pakibasa muna ang Mga Tuntunin at Kundisyon bago gumawa ng account.',
+      mustAgree: 'Kailangan mong sumang-ayon sa Mga Tuntunin at Kundisyon para makagawa ng account.'
     },
     forgotPassword: {
       titleEmail: 'Nakalimutan ang Password',
@@ -1026,17 +1014,9 @@ export const translations = {
       termsOfService: 'Mga Tuntunin at Kundisyon'
     },
     terms: {
-      badge: 'Legal',
       title: 'Mga Tuntunin at Kundisyon',
       lastUpdated: 'Huling na-update: Oktubre 16, 2026',
-      summaryTitle: 'Mahahalagang Punto',
-      summary: [
-        'Hindi pinapalitan ng Safe Connect ang mga emergency hotline. Sa sitwasyong nagbabanta sa buhay, tumawag agad sa 911.',
-        'Dapat magsumite ka lamang ng totoo at tamang ulat. Ipinagbabawal ang pekeng ulat at maaari itong magresulta sa pagsuspinde ng account.',
-        'Ginagamit lamang ang iyong personal na impormasyon para tugunan ang iyong mga ulat at patakbuhin ang Plataporma, alinsunod sa Data Privacy Act of 2012.',
-        'Inaasahang makikipag-ugnayan ka nang magalang. Maaaring alisin ang nilalamang lumalabag sa mga Tuntuning ito.'
-      ],
-      contents: 'Nilalaman',
+      intro: 'Pakibasa nang mabuti ang mga Tuntunin at Kundisyong ito bago gumawa ng account o gumamit ng Safe Connect. Nakasaad dito ang iyong mga karapatan at responsibilidad bilang user ng Plataporma.',
       close: 'Isara',
       understand: 'Naiintindihan Ko',
       sections: [
