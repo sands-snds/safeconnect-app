@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import Hero from './Hero';
 import TermsModal from '../shared/TermsModal';
 import { LanguageProvider } from '../../i18n/LanguageContext';
-import { signinUser } from '../../Services/api';
+import { signinUser, fetchSiteContent } from '../../Services/api';
 
 jest.mock('../../Services/api', () => ({
   signinUser: jest.fn(),
@@ -25,6 +25,8 @@ beforeEach(() => {
   // Sign-up step 1 asks the server to email a verification code.
   global.fetch = jest.fn(() => Promise.resolve({ json: () => Promise.resolve({ success: true }) }));
   signinUser.mockResolvedValue({ success: false, message: 'Invalid email or password.' });
+  // The landing page also refreshes site content (carousel, contacts) on load.
+  fetchSiteContent.mockResolvedValue({});
 });
 
 const renderHero = () => render(
