@@ -701,6 +701,7 @@ export const translations = {
       hideDetails: 'Hide Details',
       viewDetails: 'View Details',
       edit: 'Edit',
+      moreOptions: 'More options',
       delete: 'Delete',
       detail: {
         contactNumber: 'Contact Number',
@@ -1468,6 +1469,7 @@ export const translations = {
       hideDetails: 'Itago ang Detalye',
       viewDetails: 'Tingnan ang Detalye',
       edit: 'I-edit',
+      moreOptions: 'Iba pang opsyon',
       delete: 'Burahin',
       detail: {
         contactNumber: 'Numero ng Contact',

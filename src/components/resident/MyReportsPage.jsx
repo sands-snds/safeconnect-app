@@ -107,6 +107,32 @@ function MyReportsPage({ isOpen, onClose, userId }) {
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showCrimeModal, setShowCrimeModal] = useState(false);
+  // Card whose three-dot (Edit / Delete) menu is open, by report key.
+  const [openMenuKey, setOpenMenuKey] = useState(null);
+
+  useEffect(() => {
+    if (!openMenuKey) return undefined;
+    const onPointerDown = (e) => {
+      if (!e.target.closest(`[data-menu-key="${openMenuKey}"]`)) setOpenMenuKey(null);
+    };
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      document.querySelector(`[data-menu-key="${openMenuKey}"] .mr-menu-btn`)?.focus();
+      setOpenMenuKey(null);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [openMenuKey]);
+
+  useEffect(() => {
+    if (!isOpen) setOpenMenuKey(null);
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -623,22 +649,66 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           padding: 0.3rem 0;
         }
 
-        .mr-actions { display: flex; gap: 8px; }
+        /* Three-dot menu (Edit / Delete). Opens upward so the last card's
+           menu isn't cut off at the bottom of the list. */
+        .mr-menu-wrap { position: relative; }
 
-        .mr-edit-btn, .mr-delete-btn {
+        .mr-menu-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
           border: none;
-          padding: 7px 14px;
-          border-radius: 8px;
+          background: transparent;
+          color: #4b5563;
+          font-size: 1.15rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
-          font-weight: 600;
-          font-size: 0.8rem;
-          transition: 0.2s;
+          transition: background 0.2s, color 0.2s;
         }
 
-        .mr-edit-btn { background: #2563eb; color: white; }
-        .mr-edit-btn:hover { background: #1d4ed8; }
-        .mr-delete-btn { background: #dc2626; color: white; }
-        .mr-delete-btn:hover { background: #b91c1c; }
+        .mr-menu-btn:hover, .mr-menu-btn[aria-expanded="true"] { background: #f3eef0; color: #6B2C3E; }
+        .mr-menu-btn:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; }
+
+        .mr-menu {
+          position: absolute;
+          right: 0;
+          bottom: calc(100% + 6px);
+          min-width: 160px;
+          background: #fff;
+          border: 1px solid #f0eaec;
+          border-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+          padding: 6px;
+          z-index: 20;
+          animation: mr-menu-in 0.12s ease-out;
+        }
+
+        @keyframes mr-menu-in {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: none; }
+        }
+
+        .mr-menu-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+          padding: 9px 12px;
+          border: none;
+          background: none;
+          border-radius: 8px;
+          font-size: 0.86rem;
+          font-weight: 600;
+          color: #374151;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .mr-menu-item:hover, .mr-menu-item:focus-visible { background: #f7f3f4; outline: none; }
+        .mr-menu-item.danger { color: #dc2626; }
+        .mr-menu-item.danger:hover, .mr-menu-item.danger:focus-visible { background: #fef2f2; }
 
         .mr-details {
           margin-top: 0.9rem;
@@ -982,13 +1052,38 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                       ) : <span />}
 
                       {canEditOrDelete && (
-                        <div className="mr-actions">
-                          <button className="mr-edit-btn" onClick={() => handleEdit(r)}>
-                            <i className="bi bi-pencil"></i> {t('myReports.edit')}
+                        <div className="mr-menu-wrap" data-menu-key={key}>
+                          <button
+                            type="button"
+                            className="mr-menu-btn"
+                            aria-label={t('myReports.moreOptions')}
+                            aria-haspopup="menu"
+                            aria-expanded={openMenuKey === key}
+                            onClick={() => setOpenMenuKey((open) => (open === key ? null : key))}
+                          >
+                            <i className="bi bi-three-dots-vertical"></i>
                           </button>
-                          <button className="mr-delete-btn" onClick={() => handleDelete(r)}>
-                            <i className="bi bi-trash"></i> {t('myReports.delete')}
-                          </button>
+                          {openMenuKey === key && (
+                            <div className="mr-menu" role="menu" aria-label={t('myReports.moreOptions')}>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="mr-menu-item"
+                                autoFocus
+                                onClick={() => { setOpenMenuKey(null); handleEdit(r); }}
+                              >
+                                <i className="bi bi-pencil"></i> {t('myReports.edit')}
+                              </button>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="mr-menu-item danger"
+                                onClick={() => { setOpenMenuKey(null); handleDelete(r); }}
+                              >
+                                <i className="bi bi-trash"></i> {t('myReports.delete')}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

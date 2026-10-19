@@ -85,6 +85,13 @@ const renderPage = async () => {
 // Each report is one child of .mr-list.
 const cardFor = (title) => [...document.querySelector('.mr-list').children].find((c) => within(c).queryByText(title));
 
+// Edit and Delete live in each card's three-dot menu.
+const openMenu = (title) => fireEvent.click(within(cardFor(title)).getByRole('button', { name: 'More options' }));
+const chooseFromMenu = (title, option) => {
+  openMenu(title);
+  fireEvent.click(within(cardFor(title)).getByRole('menuitem', { name: option }));
+};
+
 test('no "Total Reports" status bar', async () => {
   const { container } = await renderPage();
   expect(screen.queryByText('Total Reports')).not.toBeInTheDocument();
@@ -97,7 +104,7 @@ test.each([
   ['Petty Crime', 'Theft', updatePettyCrimeReport, 33]
 ])('%s: Edit opens the form on top of the page and saving updates the report', async (_, title, updateFn, id) => {
   await renderPage();
-  fireEvent.click(within(cardFor(title)).getByRole('button', { name: /Edit/ }));
+  chooseFromMenu(title, 'Edit');
 
   // The edit form must not be inside the transformed My Reports panel.
   const consent = await waitFor(() => {
@@ -122,7 +129,7 @@ describe('Delete', () => {
     const nativeConfirm = jest.spyOn(window, 'confirm').mockImplementation(() => true);
     confirmPopup.mockResolvedValue(false);
     await renderPage();
-    fireEvent.click(within(cardFor('Fire Emergency')).getByRole('button', { name: /Delete/ }));
+    chooseFromMenu('Fire Emergency', 'Delete');
     await waitFor(() => expect(confirmPopup).toHaveBeenCalledTimes(1));
     expect(confirmPopup.mock.calls[0][0]).toMatchObject({
       type: 'danger',
@@ -137,7 +144,7 @@ describe('Delete', () => {
   test('Cancel keeps the report', async () => {
     confirmPopup.mockResolvedValue(false);
     await renderPage();
-    fireEvent.click(within(cardFor('Fire Emergency')).getByRole('button', { name: /Delete/ }));
+    chooseFromMenu('Fire Emergency', 'Delete');
     await waitFor(() => expect(confirmPopup).toHaveBeenCalled());
     expect(deleteEmergencyReport).not.toHaveBeenCalled();
   });
@@ -145,7 +152,7 @@ describe('Delete', () => {
   test('confirming deletes it, reloads the list and says so', async () => {
     confirmPopup.mockResolvedValue(true);
     await renderPage();
-    fireEvent.click(within(cardFor('Fire Emergency')).getByRole('button', { name: /Delete/ }));
+    chooseFromMenu('Fire Emergency', 'Delete');
     await waitFor(() => expect(deleteEmergencyReport).toHaveBeenCalledWith(11));
     await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'success', title: 'Report Deleted' })));
     expect(fetchMyReports).toHaveBeenCalledTimes(2);
@@ -155,7 +162,64 @@ describe('Delete', () => {
     confirmPopup.mockResolvedValue(true);
     deleteEmergencyReport.mockResolvedValue({ success: false });
     await renderPage();
-    fireEvent.click(within(cardFor('Fire Emergency')).getByRole('button', { name: /Delete/ }));
+    chooseFromMenu('Fire Emergency', 'Delete');
     await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'error', message: 'Failed to delete report.' })));
+  });
+});
+
+describe('Three-dot menu', () => {
+  test('Edit and Delete are hidden behind a three-dot button on each editable card', async () => {
+    await renderPage();
+    expect(screen.queryByRole('button', { name: /^Edit$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Delete$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'More options' })).toHaveLength(3);
+  });
+
+  test('clicking it shows Edit and Delete', async () => {
+    await renderPage();
+    openMenu('Theft');
+    const btn = within(cardFor('Theft')).getByRole('button', { name: 'More options' });
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    const menu = within(cardFor('Theft')).getByRole('menu');
+    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent.trim())).toEqual(['Edit', 'Delete']);
+  });
+
+  test('closes when clicking the button again, clicking outside, or pressing Esc', async () => {
+    await renderPage();
+    openMenu('Theft');
+    openMenu('Theft');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+
+    openMenu('Theft');
+    fireEvent.mouseDown(document.querySelector('.myreports-header'));
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+
+    openMenu('Theft');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(within(cardFor('Theft')).getByRole('button', { name: 'More options' })).toHaveFocus();
+  });
+
+  test('only one menu is open at a time', async () => {
+    await renderPage();
+    openMenu('Theft');
+    openMenu('Medical Aid');
+    expect(screen.getAllByRole('menu')).toHaveLength(1);
+    expect(within(cardFor('Medical Aid')).getByRole('menu')).toBeInTheDocument();
+  });
+
+  test('choosing an option closes the menu', async () => {
+    confirmPopup.mockResolvedValue(false);
+    await renderPage();
+    chooseFromMenu('Theft', 'Delete');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  test('reports that can no longer be edited have no menu', async () => {
+    fetchMyReports.mockResolvedValue([{ ...REPORTS[2], status: 'In Progress' }]);
+    render(<LanguageProvider><MyReportsPage isOpen userId={7} onClose={() => {}} /></LanguageProvider>);
+    await screen.findByText('Theft');
+    expect(screen.queryByRole('button', { name: 'More options' })).not.toBeInTheDocument();
   });
 });
