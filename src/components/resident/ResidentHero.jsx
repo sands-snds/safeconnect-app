@@ -1,13 +1,13 @@
 import React from "react";
 import { useLanguage } from "../../i18n/LanguageContext";
+import { useSiteMedia, mediaSrc, DEFAULT_SITE_MEDIA } from "../shared/useSiteContent";
 
 function ResidentHero() {
   const { t } = useLanguage();
-  const heroImages = [
-    "/images/resident-background.jpg",
-    "/images/resident-background2.jpg",
-    "/images/resident-background3.jpg",
-  ];
+  // Admins change these under Content > Site Contents.
+  const { residentCarousel } = useSiteMedia();
+  const heroImages = (residentCarousel?.length ? residentCarousel : DEFAULT_SITE_MEDIA.residentCarousel)
+    .map((slide) => mediaSrc(slide.src));
 
   return (
     <>
@@ -26,7 +26,7 @@ function ResidentHero() {
             >
               <div
                 className="resident-hero-slide"
-                style={{ backgroundImage: `url(${image})` }}
+                style={{ backgroundImage: `url("${image}")` }}
               >
                 {/* Dark Overlay */}
                 <div className="resident-hero-overlay">

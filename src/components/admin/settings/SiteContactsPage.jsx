@@ -123,7 +123,7 @@ const SiteContactsPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: 980, paddingBottom: 80 }}>
+    <div style={{ maxWidth: 1000, margin: "0 auto", paddingBottom: 80 }}>
       {/* ── Emergency contacts ── */}
       <div style={sectionStyle}>
         <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>

@@ -44,6 +44,11 @@ export const DEFAULT_SITE_MEDIA = {
     { src: '/images/Santa Fe 2.jpg', alt: 'Community rescue' },
     { src: '/images/Santa Fe.jpg', alt: 'Evacuation' }
   ],
+  residentCarousel: [
+    { src: '/images/resident-background.jpg', alt: 'Barangay Sta. Fe' },
+    { src: '/images/resident-background2.jpg', alt: 'Barangay Sta. Fe' },
+    { src: '/images/resident-background3.jpg', alt: 'Barangay Sta. Fe' }
+  ],
   systemDemo: {
     title: 'See SafeConnect in action',
     caption: 'A quick tour of how to report an emergency, request help and follow your report.',

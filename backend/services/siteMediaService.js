@@ -24,6 +24,12 @@ const DEFAULT_MEDIA = {
         { src: "/images/Santa Fe 2.jpg", alt: "Community rescue" },
         { src: "/images/Santa Fe.jpg", alt: "Evacuation" }
     ],
+    // The resident page's slideshow (behind "Stay safe, stay informed").
+    residentCarousel: [
+        { src: "/images/resident-background.jpg", alt: "Barangay Sta. Fe" },
+        { src: "/images/resident-background2.jpg", alt: "Barangay Sta. Fe" },
+        { src: "/images/resident-background3.jpg", alt: "Barangay Sta. Fe" }
+    ],
     systemDemo: {
         title: "See SafeConnect in action",
         caption: "A quick tour of how to report an emergency, request help and follow your report.",
@@ -63,6 +69,7 @@ async function getMedia() {
         const saved = JSON.parse(rows[0].setting_value);
         return {
             carousel: Array.isArray(saved.carousel) && saved.carousel.length ? saved.carousel : DEFAULT_MEDIA.carousel,
+            residentCarousel: Array.isArray(saved.residentCarousel) && saved.residentCarousel.length ? saved.residentCarousel : DEFAULT_MEDIA.residentCarousel,
             systemDemo: { ...DEFAULT_MEDIA.systemDemo, ...(saved.systemDemo || {}) },
             adminDemo: { ...DEFAULT_MEDIA.adminDemo, ...(saved.adminDemo || {}) }
         };
@@ -86,16 +93,23 @@ function validateVideo(video = {}, name) {
 }
 
 // Cleans what the editor sent. Returns { media } or { error }.
-function validate(input = {}) {
-    const slidesIn = Array.isArray(input.carousel) ? input.carousel : [];
-    if (slidesIn.length === 0) return { error: "Keep at least one carousel photo." };
-    if (slidesIn.length > MAX_SLIDES) return { error: `You can have up to ${MAX_SLIDES} carousel photos.` };
-
-    const carousel = [];
+// name: "landing page" / "resident page", for messages.
+function validateSlides(slidesIn, name) {
+    if (!Array.isArray(slidesIn) || slidesIn.length === 0) return { error: `Keep at least one ${name} carousel photo.` };
+    if (slidesIn.length > MAX_SLIDES) return { error: `You can have up to ${MAX_SLIDES} ${name} carousel photos.` };
+    const slides = [];
     for (const [i, s] of slidesIn.entries()) {
-        if (!isUploadPath(s.src) && !isFrontendImage(s.src)) return { error: `Carousel photo #${i + 1} is missing its image.` };
-        carousel.push({ src: s.src, alt: text(s.alt, 120) || "Barangay Sta. Fe" });
+        if (!isUploadPath(s.src) && !isFrontendImage(s.src)) return { error: `${name[0].toUpperCase()}${name.slice(1)} carousel photo #${i + 1} is missing its image.` };
+        slides.push({ src: s.src, alt: text(s.alt, 120) || "Barangay Sta. Fe" });
     }
+    return { slides };
+}
+
+function validate(input = {}) {
+    const landing = validateSlides(input.carousel, "landing page");
+    if (landing.error) return landing;
+    const resident = validateSlides(input.residentCarousel || DEFAULT_MEDIA.residentCarousel, "resident page");
+    if (resident.error) return resident;
 
     const sys = input.systemDemo || {};
     const sysVideo = validateVideo(sys.video, "System demo");
@@ -107,7 +121,8 @@ function validate(input = {}) {
 
     return {
         media: {
-            carousel,
+            carousel: landing.slides,
+            residentCarousel: resident.slides,
             systemDemo: {
                 title: text(sys.title, 100),
                 caption: text(sys.caption, 300),

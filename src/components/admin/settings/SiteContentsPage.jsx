@@ -12,7 +12,8 @@ import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
 const card = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, marginBottom: 20 };
 const hint = { margin: "0 0 12px", fontSize: 13, color: "#6b7280" };
 const label = { fontSize: 12, fontWeight: 600, color: "#6b7280" };
-const field = (flex = "1 1 260px") => ({ display: "flex", flexDirection: "column", gap: 4, flex, minWidth: 200 });
+// A field stacked in a vertical column (no flex-basis, which would become height).
+const stackedField = { display: "flex", flexDirection: "column", gap: 4 };
 const smallButton = (danger) => ({
   width: 32, height: 32, border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff",
   color: danger ? "#b91c1c" : "#374151", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center"
@@ -117,7 +118,7 @@ function VideoEditor({ demo, onChange, children }) {
         </div>
 
         {source === "youtube" && (
-          <label style={field()}>
+          <label style={stackedField}>
             <span style={label}>YouTube link</span>
             <input
               className="form-input"
@@ -132,11 +133,11 @@ function VideoEditor({ demo, onChange, children }) {
           </label>
         )}
 
-        <label style={field()}>
+        <label style={stackedField}>
           <span style={label}>Title</span>
           <input className="form-input" value={demo.title} maxLength={100} onChange={(e) => onChange({ ...demo, title: e.target.value })} />
         </label>
-        <label style={field()}>
+        <label style={stackedField}>
           <span style={label}>Caption (one or two sentences)</span>
           <textarea className="form-input" rows={2} value={demo.caption} maxLength={300} onChange={(e) => onChange({ ...demo, caption: e.target.value })} style={{ resize: "vertical" }} />
         </label>
@@ -160,30 +161,11 @@ function VideoEditor({ demo, onChange, children }) {
   );
 }
 
-export default function SiteContentsPage() {
-  const [saved, setSaved] = useState(null);
-  const [draft, setDraft] = useState(null);
-  const [loadError, setLoadError] = useState(false);
-  const [saving, setSaving] = useState(false);
+// One carousel's photos: upload, describe, reorder, remove.
+// onChange(fn) receives an updater for the slides list.
+function CarouselEditor({ icon, title, hint: hintText, slides, onChange }) {
   const photoRef = useRef(null);
-  const { progress: photoProgress, upload: uploadPhoto } = useUploader();
-
-  useEffect(() => {
-    fetchSiteContent()
-      .then((result) => {
-        if (!result?.media) throw new Error();
-        setSaved(result.media);
-        setDraft(result.media);
-      })
-      .catch(() => setLoadError(true));
-  }, []);
-
-  const dirty = useMemo(() => JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
-
-  if (loadError) return <div style={card}>Couldn't load the site contents. Make sure the backend is up to date, then refresh the page.</div>;
-  if (!draft) return <div style={card}>Loading site contents...</div>;
-
-  const setSlides = (fn) => setDraft((d) => ({ ...d, carousel: fn(d.carousel) }));
+  const { progress, upload } = useUploader();
 
   const pickPhoto = (e) => {
     const file = e.target.files?.[0];
@@ -197,8 +179,79 @@ export default function SiteContentsPage() {
       showPopup({ type: "warning", title: "Photo Too Large", message: "Photos must be 5 MB or smaller." });
       return;
     }
-    uploadPhoto(file, (url) => setSlides((list) => [...list, { src: url, alt: "" }]));
+    upload(file, (url) => onChange((list) => [...list, { src: url, alt: "" }]));
   };
+
+  return (
+    <div style={card}>
+      <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>
+        <i className={`bi ${icon}`} style={{ color: "#6B2C3E", marginRight: 8 }} />
+        {title}
+      </h3>
+      <p style={hint}>{hintText}</p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
+        {slides.map((s, i) => (
+          <div key={`${s.src}-${i}`} style={{ border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", background: "#fafafa" }}>
+            <div style={{ position: "relative", aspectRatio: "16 / 9", background: "#e5e7eb" }}>
+              <img src={mediaSrc(s.src)} alt={s.alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <span style={{ position: "absolute", top: 6, left: 6, background: "rgba(0,0,0,.6)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>{i + 1}</span>
+            </div>
+            <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+              <input
+                className="form-input"
+                value={s.alt}
+                maxLength={120}
+                placeholder="Short description (for screen readers)"
+                onChange={(e) => onChange((list) => list.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)))}
+                style={{ fontSize: 13 }}
+              />
+              <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                <button type="button" style={smallButton()} title="Move earlier" disabled={i === 0} onClick={() => onChange((l) => move(l, i, -1))}><i className="bi bi-arrow-left" /></button>
+                <button type="button" style={smallButton()} title="Move later" disabled={i === slides.length - 1} onClick={() => onChange((l) => move(l, i, 1))}><i className="bi bi-arrow-right" /></button>
+                <button type="button" style={smallButton(true)} title="Remove" disabled={slides.length === 1} onClick={() => onChange((l) => l.filter((_, j) => j !== i))}><i className="bi bi-trash3" /></button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {slides.length < 10 && (
+          <button
+            type="button"
+            onClick={() => photoRef.current?.click()}
+            disabled={progress !== null}
+            style={{ border: "2px dashed #d1d5db", borderRadius: 10, background: "#fff", color: "#6b7280", minHeight: 180, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}
+          >
+            <i className="bi bi-plus-circle" style={{ fontSize: 26 }} />
+            {progress !== null ? `Uploading… ${progress}%` : "Add a photo"}
+          </button>
+        )}
+        <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pickPhoto} />
+      </div>
+    </div>
+  );
+}
+
+export default function SiteContentsPage() {
+  const [saved, setSaved] = useState(null);
+  const [draft, setDraft] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchSiteContent()
+      .then((result) => {
+        if (!result?.media) throw new Error();
+        setSaved(result.media);
+        setDraft(result.media);
+      })
+      .catch(() => setLoadError(true));
+  }, []);
+
+  const dirty = useMemo(() => JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
+
+  if (loadError) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>Couldn't load the site contents. Make sure the backend is up to date, then refresh the page.</div>;
+  if (!draft) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>Loading site contents...</div>;
 
   const handleSave = async () => {
     // A YouTube choice with no valid link would be refused; catch it here.
@@ -218,61 +271,29 @@ export default function SiteContentsPage() {
       setSaved(result.media);
       setDraft(result.media);
       setSiteMedia(result.media);
-      showPopup({ type: "success", title: "Site Contents Saved", message: "The landing page, News and admin sign-in now use these photos and videos." });
+      showPopup({ type: "success", title: "Site Contents Saved", message: "The landing page, resident page, News and admin sign-in now use these photos and videos." });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 1000, paddingBottom: 80 }}>
-      {/* ── Carousel photos ── */}
-      <div style={card}>
-        <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>
-          <i className="bi bi-images" style={{ color: "#6B2C3E", marginRight: 8 }} />
-          Landing Page Carousel
-        </h3>
-        <p style={hint}>The background photos that slide behind the landing page's heading, in this order. Wide photos (landscape) look best. JPG, PNG or WebP up to 5 MB.</p>
+    <div style={{ maxWidth: 1000, margin: "0 auto", paddingBottom: 80 }}>
+      <CarouselEditor
+        icon="bi-images"
+        title="Landing Page Carousel"
+        hint="The background photos that slide behind the landing page's heading, in this order. Wide photos (landscape) look best. JPG, PNG or WebP up to 5 MB."
+        slides={draft.carousel}
+        onChange={(fn) => setDraft((d) => ({ ...d, carousel: fn(d.carousel) }))}
+      />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
-          {draft.carousel.map((s, i) => (
-            <div key={`${s.src}-${i}`} style={{ border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", background: "#fafafa" }}>
-              <div style={{ position: "relative", aspectRatio: "16 / 9", background: "#e5e7eb" }}>
-                <img src={mediaSrc(s.src)} alt={s.alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                <span style={{ position: "absolute", top: 6, left: 6, background: "rgba(0,0,0,.6)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>{i + 1}</span>
-              </div>
-              <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-                <input
-                  className="form-input"
-                  value={s.alt}
-                  maxLength={120}
-                  placeholder="Short description (for screen readers)"
-                  onChange={(e) => setSlides((list) => list.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)))}
-                  style={{ fontSize: 13 }}
-                />
-                <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                  <button type="button" style={smallButton()} title="Move earlier" disabled={i === 0} onClick={() => setSlides((l) => move(l, i, -1))}><i className="bi bi-arrow-left" /></button>
-                  <button type="button" style={smallButton()} title="Move later" disabled={i === draft.carousel.length - 1} onClick={() => setSlides((l) => move(l, i, 1))}><i className="bi bi-arrow-right" /></button>
-                  <button type="button" style={smallButton(true)} title="Remove" disabled={draft.carousel.length === 1} onClick={() => setSlides((l) => l.filter((_, j) => j !== i))}><i className="bi bi-trash3" /></button>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {draft.carousel.length < 10 && (
-            <button
-              type="button"
-              onClick={() => photoRef.current?.click()}
-              disabled={photoProgress !== null}
-              style={{ border: "2px dashed #d1d5db", borderRadius: 10, background: "#fff", color: "#6b7280", minHeight: 180, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}
-            >
-              <i className="bi bi-plus-circle" style={{ fontSize: 26 }} />
-              {photoProgress !== null ? `Uploading… ${photoProgress}%` : "Add a photo"}
-            </button>
-          )}
-          <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pickPhoto} />
-        </div>
-      </div>
+      <CarouselEditor
+        icon="bi-house-heart"
+        title="Resident Page Carousel"
+        hint="The background photos that slide behind “Stay safe, stay informed” on the resident page after signing in, in this order."
+        slides={draft.residentCarousel}
+        onChange={(fn) => setDraft((d) => ({ ...d, residentCarousel: fn(d.residentCarousel) }))}
+      />
 
       {/* ── System demo video ── */}
       <div style={card}>

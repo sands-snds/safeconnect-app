@@ -37,12 +37,9 @@ export default function DemoVideoSection() {
   );
 
   return (
-    <section id="demo" style={{ background: '#fff', padding: 'clamp(48px, 8vw, 80px) 0' }}>
+    <section id="demo" style={{ background: '#fff', padding: 'clamp(72px, 10vw, 112px) 0 clamp(80px, 11vw, 128px)' }}>
       <div className="container" style={{ maxWidth: 920 }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B2C3E', margin: '0 0 6px' }}>
-            {t('demoVideo.eyebrow')}
-          </p>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <h2 style={{ fontWeight: 800, fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)', margin: '0 0 8px', color: '#1a1416' }}>
             {systemDemo.title || t('demoVideo.defaultTitle')}
           </h2>
