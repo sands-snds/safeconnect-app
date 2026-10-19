@@ -25,7 +25,8 @@ const AdminLayout = ({
     unreadCount,
     onMarkAllRead,
     onMarkOneRead,
-    adminUser
+    adminUser,
+    onWatchDemo
 }) => {
 
     return (
@@ -63,6 +64,7 @@ const AdminLayout = ({
                         onLogout={onLogout}
                         isSuperAdmin={isSuperAdmin}
                         adminUser={adminUser}
+                        onWatchDemo={onWatchDemo}
                     />
 
                     {/* Padding lives in admin.css (.admin-page-body) so phones get narrower margins. */}

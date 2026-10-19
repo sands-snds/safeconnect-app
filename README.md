@@ -58,6 +58,8 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | **Sign-in Logs** *(Admin)* | Every sign-in attempt, with device, IP address and approximate location in one column. Entries older than 90 days (adjustable) move to an **Archived** tab. |
 | **Admin Logs** *(Admin)* | Which Admins and Officials are online, and a record of every action (logins, status changes, exports and more). Activity older than 90 days (adjustable) moves to an **Archived** tab. |
 | **Site Contacts** *(Admin)* | Edit the floating call button's emergency numbers and the footer's barangay officials, hotlines and socials. |
+| **Site Contents** *(Admin)* | Change the landing page carousel photos, and set the two demo videos (upload an MP4/WebM up to 100 MB, or paste a YouTube link) with a title and caption. The **system demo** shows on the landing page (below the carousel) and in the resident News page (below the weather card); each place can be hidden. The **admin demo** pops up after signing in to the admin panel. |
+| **Account Settings** | From the account menu (top right), Admins and Officials can change their photo, username, contact number, email and password, and re-watch the admin demo video. |
 | **Account status popups** | Signing in to a Suspended or Closed account closes the sign-in box and explains, in English or Tagalog, what happened and who to contact. |
 
 ---

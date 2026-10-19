@@ -687,12 +687,42 @@ export const updateLogArchiveSettings = async (log, days) => {
 // ── Site contacts ─────────────────────────────────────────────────────────────
 // Emergency contacts (floating call button + footer hotlines), barangay
 // officials and socials. Public to read; only Admins (super_admin) can save.
-// Returns { content, options } or null.
+// Returns { content, media, options } or null. media = carousel photos and
+// demo videos (Content > Site Contents).
 export const fetchSiteContent = async () => {
     const res = await apiFetch(API_ENDPOINTS.SITE_CONTENT);
     const data = await res.json().catch(() => null);
-    return data?.success ? { content: data.content, options: data.options || null } : null;
+    return data?.success ? { content: data.content, media: data.media || null, options: data.options || null } : null;
 };
+
+export const updateSiteMedia = async (media) => {
+    const res = await apiFetch(`${API_ENDPOINTS.SITE_CONTENT}/media`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(media),
+    });
+    return res.json().catch(() => ({ success: false }));
+};
+
+// Uploads a carousel photo or demo video (Admins only). Uses XHR so big
+// videos can show progress: onProgress(0-100). Resolves { success, url, message }.
+export const uploadSiteMedia = (file, onProgress) => new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_ENDPOINTS.SITE_CONTENT}/upload`);
+    const token = getAuthToken();
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+        try { resolve(JSON.parse(xhr.responseText)); }
+        catch { resolve({ success: false, message: "The upload failed. Please try again." }); }
+    };
+    xhr.onerror = () => resolve({ success: false, message: "Couldn't reach the server. Please check your connection." });
+    const form = new FormData();
+    form.append("file", file);
+    xhr.send(form);
+});
 
 export const updateSiteContent = async (content) => {
     const res = await apiFetch(API_ENDPOINTS.SITE_CONTENT, {

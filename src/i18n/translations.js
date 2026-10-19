@@ -198,6 +198,13 @@ export const translations = {
         }
       }
     },
+    demoVideo: {
+      eyebrow: 'Watch the demo',
+      defaultTitle: 'See SafeConnect in action',
+      comingSoonTitle: 'Demo video coming soon',
+      comingSoonText: 'A short video showing how to use SafeConnect will be available here.',
+      newsBadge: 'Video guide'
+    },
     services: {
       badge: 'What You Can Do',
       title: 'Everything you need, in one place.',
@@ -957,6 +964,13 @@ export const translations = {
           body: 'Subaybayan ang iyong report sa real time — mula received, hanggang in progress, hanggang resolved.'
         }
       }
+    },
+    demoVideo: {
+      eyebrow: 'Panoorin ang demo',
+      defaultTitle: 'Tingnan kung paano gumagana ang SafeConnect',
+      comingSoonTitle: 'Malapit nang ilabas ang demo video',
+      comingSoonText: 'Dito ilalagay ang maikling video kung paano gamitin ang SafeConnect.',
+      newsBadge: 'Video gabay'
     },
     services: {
       badge: 'Ano ang Magagawa Mo',

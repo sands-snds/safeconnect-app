@@ -3,6 +3,7 @@ import { signinUser, setAuthToken } from '../../../Services/api';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import useSiteContent from '../../shared/useSiteContent';
 import { showAccountStatusPopup } from '../../shared/accountStatusPopup';
+import { markAdminJustSignedIn } from './AdminDemoPopup';
 
 // This modal never existed in the project — isAuthenticated had no way to
 // ever become true, which is why the dashboard/reports/etc never rendered
@@ -44,6 +45,8 @@ const SignInModal = ({ onSuccess, notice }) => {
     sessionStorage.setItem('adminAuthenticated', 'true');
     sessionStorage.setItem('adminUser', JSON.stringify(result.user || {}));
     setAuthToken(result.token, true);
+    // A fresh sign-in (not an expired session) shows the admin demo video.
+    if (!notice) markAdminJustSignedIn();
     onSuccess(result.user);
   };
 

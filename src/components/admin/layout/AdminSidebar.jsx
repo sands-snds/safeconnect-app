@@ -49,6 +49,11 @@ const AdminSidebar = ({
           id: "site-contacts",
           label: "Site Contacts",
           superAdminOnly: true
+        },
+        {
+          id: "site-contents",
+          label: "Site Contents",
+          superAdminOnly: true
         }
       ]
     },
@@ -158,7 +163,7 @@ const AdminSidebar = ({
                 flexShrink: 0
               }}
             >
-              {adminName.trim().split(/s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+              {adminName.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
             </div>
           )}
           <div style={{ minWidth: 0 }}>
@@ -183,6 +188,13 @@ const AdminSidebar = ({
             >
               {isSuperAdmin ? "Admin" : "Official"}
             </span>
+            <button
+              type="button"
+              onClick={() => { onNavigate("account-settings"); onCloseMobileMenu(); }}
+              style={{ display: "block", marginTop: 8, padding: 0, border: "none", background: "none", color: "#fff", fontSize: 12.5, fontWeight: 600, textDecoration: "underline", cursor: "pointer" }}
+            >
+              <i className="bi bi-person-gear" style={{ marginRight: 4 }} />Account Settings
+            </button>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchSiteContent } from '../../Services/api';
+import { fetchSiteContent, resolveAssetUrl } from '../../Services/api';
 
 // Contact details for the public site (floating call button, footer):
 // { emergencyContacts, officials, socials }. Admins edit them under
@@ -35,32 +35,96 @@ export const DEFAULT_SITE_CONTENT = {
   }
 };
 
-const readCache = () => {
+// Carousel photos and demo videos (Content > Site Contents). Same as
+// DEFAULT_MEDIA in backend/services/siteMediaService.js.
+const MEDIA_CACHE_KEY = 'sf_siteMedia';
+export const DEFAULT_SITE_MEDIA = {
+  carousel: [
+    { src: '/images/Santa Fe 3.jpg', alt: 'Barangay Sta. Fe' },
+    { src: '/images/Santa Fe 2.jpg', alt: 'Community rescue' },
+    { src: '/images/Santa Fe.jpg', alt: 'Evacuation' }
+  ],
+  systemDemo: {
+    title: 'See SafeConnect in action',
+    caption: 'A quick tour of how to report an emergency, request help and follow your report.',
+    video: { source: 'none', url: '' },
+    showOnLanding: true,
+    showInNews: true
+  },
+  adminDemo: {
+    title: 'Welcome to the SafeConnect admin panel',
+    caption: 'A short walkthrough of handling reports, posting announcements and managing the site.',
+    video: { source: 'none', url: '' },
+    showOnSignIn: true
+  }
+};
+
+const readCache = (key) => {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 };
 
-// One request per page load, shared by every component using the hook.
-let current = readCache() || DEFAULT_SITE_CONTENT;
+const writeCache = (key, value) => {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage unavailable */ }
+};
+
+// One request per page load, shared by every component using the hooks.
+let current = readCache(CACHE_KEY) || DEFAULT_SITE_CONTENT;
+let currentMedia = readCache(MEDIA_CACHE_KEY) || DEFAULT_SITE_MEDIA;
 let request = null;
 const listeners = new Set();
+const mediaListeners = new Set();
 
 const setCurrent = (content) => {
   current = content;
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(content)); } catch { /* storage unavailable */ }
+  writeCache(CACHE_KEY, content);
   listeners.forEach((fn) => fn(content));
+};
+
+const setCurrentMedia = (media) => {
+  currentMedia = media;
+  writeCache(MEDIA_CACHE_KEY, media);
+  mediaListeners.forEach((fn) => fn(media));
 };
 
 export const refreshSiteContent = () => {
   request = fetchSiteContent()
-    .then((result) => { if (result?.content) setCurrent(result.content); return result; })
+    .then((result) => {
+      if (result?.content) setCurrent(result.content);
+      if (result?.media) setCurrentMedia(result.media);
+      return result;
+    })
     .catch(() => null);
   return request;
 };
+
+// Lets the Content > Site Contents editor show its changes immediately.
+export const setSiteMedia = (media) => setCurrentMedia(media);
+
+export function useSiteMedia() {
+  const [media, setMedia] = useState(currentMedia);
+
+  useEffect(() => {
+    mediaListeners.add(setMedia);
+    if (!request) refreshSiteContent();
+    return () => mediaListeners.delete(setMedia);
+  }, []);
+
+  return media;
+}
+
+// Full URL for a carousel photo or uploaded video: uploads come from the
+// backend, the default photos from the frontend's public/images.
+export const mediaSrc = (src) =>
+  String(src || '').startsWith('/uploads/') ? resolveAssetUrl(src) : src;
+
+// True when a demo video has something to play.
+export const hasVideo = (demo) =>
+  Boolean(demo?.video && demo.video.source !== 'none' && demo.video.url);
 
 // Lets the Content > Site Contacts editor show its changes immediately.
 export const setSiteContent = (content) => setCurrent(content);

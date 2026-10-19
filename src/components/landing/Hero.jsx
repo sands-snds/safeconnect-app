@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { signinUser, setAuthToken } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
-import useSiteContent, { contactDescription } from '../shared/useSiteContent';
+import useSiteContent, { contactDescription, useSiteMedia, mediaSrc } from '../shared/useSiteContent';
+import { Carousel } from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { showAccountStatusPopup } from '../shared/accountStatusPopup';
+import { markAdminJustSignedIn } from '../admin/AdminModals/AdminDemoPopup';
 import { hasViewedTerms, openTerms, TERMS_VIEWED_EVENT } from '../shared/termsConsent';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
@@ -99,6 +101,18 @@ function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs }) {
 function Hero() {
     const { t } = useLanguage();
     const siteContent = useSiteContent(); // support email for the account popups
+    // Background photos: editable by Admins under Content > Site Contents.
+    const { carousel: slides = [] } = useSiteMedia();
+    const slidesKey = slides.map((s) => s.src).join('|');
+    const carouselRef = useRef(null);
+    // React remounts the carousel when the photos change (see key below), so
+    // start Bootstrap's autoplay on the new element.
+    useEffect(() => {
+        if (!carouselRef.current) return undefined;
+        const instance = Carousel.getOrCreateInstance(carouselRef.current, { interval: 4000, ride: 'carousel', pause: 'hover' });
+        instance.cycle();
+        return () => instance.dispose();
+    }, [slidesKey]);
     // Modal visibility
     const [showSignIn,    setShowSignIn]    = useState(false);
     const [showSignUp,    setShowSignUp]    = useState(false);
@@ -225,6 +239,7 @@ function Hero() {
             setAuthToken(result.token, result.isAdmin);
             if (result.isAdmin) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
+                markAdminJustSignedIn(); // shows the admin demo video, if set
                 window.location.href = '/admin'; return;
             }
             sessionStorage.setItem('userAuthenticated', 'true');
@@ -367,17 +382,20 @@ function Hero() {
         <>
             {/* ── Hero carousel ── */}
             <div id="home" style={{ minHeight:'100vh',position:'relative',display:'flex',alignItems:'center' }}>
-                <div id="homeCarousel" className="carousel slide" data-bs-ride="carousel" data-bs-interval="4000" data-bs-pause="hover"
+                <div id="homeCarousel" key={slidesKey} ref={carouselRef} className="carousel slide" data-bs-interval="4000" data-bs-pause="hover"
                     style={{ position:'absolute',top:0,left:0,width:'100%',height:'100%' }}>
                     <div className="carousel-indicators">
-                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" className="active" aria-current="true" aria-label="Slide 1" />
-                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="1" aria-label="Slide 2" />
-                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2" aria-label="Slide 3" />
+                        {slides.map((s, i) => (
+                            <button key={s.src} type="button" data-bs-target="#homeCarousel" data-bs-slide-to={i}
+                                className={i === 0 ? 'active' : undefined} aria-current={i === 0 ? 'true' : undefined} aria-label={`Slide ${i + 1}`} />
+                        ))}
                     </div>
                     <div className="carousel-inner" style={{ height:'100%' }}>
-                        <div className="carousel-item active" style={{ height:'100%' }}><img src="/images/Santa Fe 3.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Barangay Sta. Fe" /></div>
-                        <div className="carousel-item" style={{ height:'100%' }}><img src="/images/Santa Fe 2.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Community rescue" /></div>
-                        <div className="carousel-item" style={{ height:'100%' }}><img src="/images/Santa Fe.jpg" style={{ width:'100%',height:'100%',objectFit:'cover' }} alt="Evacuation" /></div>
+                        {slides.map((s, i) => (
+                            <div key={s.src} className={`carousel-item${i === 0 ? ' active' : ''}`} style={{ height:'100%' }}>
+                                <img src={mediaSrc(s.src)} style={{ width:'100%',height:'100%',objectFit:'cover' }} alt={s.alt || 'Barangay Sta. Fe'} />
+                            </div>
+                        ))}
                     </div>
                     <button className="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon" aria-hidden="true" /><span className="visually-hidden">Previous</span></button>
                     <button className="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next"><span className="carousel-control-next-icon" aria-hidden="true" /><span className="visually-hidden">Next</span></button>

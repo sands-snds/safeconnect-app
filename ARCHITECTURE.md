@@ -327,6 +327,10 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 |---|---|---|---|---|
 | GET | `/site-content` | public | `{ content: { emergencyContacts, officials, socials }, options: { icons, colors } }`. Falls back to the defaults if the database can't be read. | `fetchSiteContent()` → `useSiteContent()`, Site Contacts tab |
 | PUT | `/site-content` | super | Save all three lists (validated: names, phone-number format, email, https facebook.com link, list limits) | `updateSiteContent()` → `SiteContactsPage` |
+| PUT | `/site-content/media` | super | Save `{ carousel, systemDemo, adminDemo }` (validated: only uploaded or built-in images, YouTube links reduced to the video id) | `updateSiteMedia()` → `SiteContentsPage` |
+| POST | `/site-content/upload` | super | Upload one carousel photo (JPG/PNG/WebP, 5 MB) or demo video (MP4/WebM, 100 MB), multipart field `file`; returns `{ url: "/uploads/…" }` | `uploadSiteMedia()` (XHR, with progress) |
+
+The GET above also returns `media`: the carousel photos and demo videos.
 
 #### Dashboard and Settings
 | Method | Path | Access | Notes |
@@ -372,6 +376,7 @@ Services hold logic that is shared, has several steps, or talks to outside syste
 | `adminPresence.js` | An in-memory map from admin id to "last seen". `verifyAdmin` updates it on every admin request. An admin counts as online if seen in the last **2 minutes**; the admin panel polls every 30 seconds while open. |
 | `logArchiveService.js` | Log archiving for `signin_logs` and `admin_activity_logs`. Same idea as `archiveService`, but in days (0, 30, 90, 180 or 365; default 90) with one setting per log. `runAutoArchive(log?)` sets `archived_at` on entries older than the period; nothing is deleted. Runs on start and every 6 hours. |
 | `siteContentService.js` | The public contact details (emergency contacts, barangay officials, socials), stored as JSON under `system_settings.site_contacts`. Holds the defaults, the allowed icons and colors, and `validate()`. Default contacts keep a `sublabelKey` so their description stays translated until an Admin edits it. |
+| `siteMediaService.js` | The carousel photos and the two demo videos, stored as JSON under `system_settings.site_media`. A video is `{ source: "none" | "upload" | "youtube", url }`. Holds the defaults (the three built-in photos) and `validate()`. |
 | `mainAccount.js` | `ensureMainAccount()`: creates the barangay's main Admin account if missing, or restores it to an Active Admin. |
 | `systemSettingService.js` | Turns the `system_settings` rows into a `{ key: value }` object. |
 
@@ -620,6 +625,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 |---|---|---|
 | `Navbar.jsx` | Public top navigation with smooth scrolling to sections, a mobile menu and the language toggle. | No |
 | `Hero.jsx` | The landing hero and **all account dialogs**: sign-in, sign-up (form, then 6-digit code step with a 60-second resend timer), and forgot password (email → code → new password → done). Also has an emergency-hotline call button. After sign-in it stores the token and redirects by role. | Yes: `signinUser()` and the `/auth/*` code endpoints |
+| `DemoVideoSection.jsx` | Between the carousel and "What you can do": the system demo video, or a "coming soon" placeholder. Hidden when an Admin turns it off. | Reads `useSiteMedia()` |
 | `Services.jsx` | Cards describing what SafeConnect offers (translated). | No |
 | `About.jsx` | About the project and barangay (translated). | No |
 | `Contact.jsx` | Barangay contact details and hotlines (translated). | No |
@@ -647,6 +653,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `AnnouncementCard.jsx` | One announcement: its image, the linked article's preview image, or a placeholder showing the source site. Its action bar has **Like**, **Comment** and **Share**. Comments are shown as YouTube-style threads: replies (from the barangay) sit under the comment they answer, with an @mention, a smaller avatar, a "Barangay Admin" tag and a "N replies / Hide replies" toggle. Residents can delete their own comments. |
 | `UserDropdown.jsx` | The avatar menu: My Reports, Settings, Logout. |
 | `WeatherCard.jsx` | Shows the forecast from `useWeather`. |
+| `DemoVideoCard.jsx` | Right below the weather card in News: the system demo video, when one is set and "Show in News" is on. Not an announcement (no comments or likes). |
 | `NavbarStyle.css` | Styles for all of the above. |
 
 #### Navbar hooks (`components/resident/navbar/hooks/`)
@@ -719,6 +726,9 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `logs/SignInLogsTable.jsx` | User, time, role, **Device & IP address** (device, then IP, then location) and status. An `ArchiveToolbar` switches between Active and Archived sign-ins and sets the auto-archive period. It filters and exports whichever list is showing. |
 | `logs/AdminLogsTable.jsx` | Admin & Official account cards (role badge, **online / last seen**, latest action), plus the searchable activity list with an `ArchiveToolbar` for Recent / Archived activity and its auto-archive period. |
 | `logs/logArchive.js` | The auto-archive period choices for the logs (Off, 30 days, 90 days, 6 months, 1 year). |
+| `settings/SiteContentsPage.jsx` | Content → Site Contents (Admins only): carousel photos (upload, describe, reorder, remove) and the system and admin demo videos (upload with progress or YouTube link, title, caption, show/hide switches, live preview). |
+| `settings/AccountSettingsPage.jsx` | Account Settings for the signed-in Admin or Official, opened from the account menu (and the phone drawer): photo, username, contact number, email (locked for the main account) and password. |
+| `AdminModals/AdminDemoPopup.jsx` | The admin demo video popup. Shown once after a fresh sign-in (the sign-in screens call `markAdminJustSignedIn()`) unless the person ticked "Don't show this after signing in"; also opened by "Watch demo video" in the account menu. |
 | `settings/SiteContactsPage.jsx` | Content → Site Contacts: edit the emergency contacts (name, description, number, icon, color, order), the barangay officials (name, number, order) and the socials (email, Facebook name and link). Has a sticky Save / Discard bar. |
 | `AdminModals/SignInModal.jsx` | The admin sign-in box, also shown when the session expires. |
 | `AdminModals/FormModal.jsx` | A generic "add record" form, built with `shared/formUtils.js`. It is still wired into `AdminPage` but **no button opens it** at the moment. |
@@ -746,7 +756,8 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `DonationFooter.jsx` | The site footer (translated), used on the landing and resident pages. It shows the SafeConnect logo and description, the barangay officials and their numbers, the emergency hotlines, the support email and the Facebook page, and the "Created by Group Tres" credit. The officials, hotlines and socials come from `useSiteContent()`, so they match the floating call button and can be edited under Content → Site Contacts. |
-| `useSiteContent.js` | Loads the site contacts once per page load and shares them with every component; caches the last copy in `localStorage` (`sf_siteContent`) and has the defaults built in. `contactDescription(contact, t)` shows the translated default description until an Admin changes it. |
+| `useSiteContent.js` | Loads the site contacts once per page load and shares them with every component; caches the last copy in `localStorage` (`sf_siteContent`) and has the defaults built in. `contactDescription(contact, t)` shows the translated default description until an Admin changes it. `useSiteMedia()` does the same for the carousel photos and demo videos (`sf_siteMedia`); `mediaSrc()` turns an uploaded path into a full URL. |
+| `DemoVideoPlayer.jsx` | Plays a demo video (uploaded file or YouTube embed) in a 16:9 frame with its title and caption, or shows a placeholder when none is set. |
 | `roles.js` | `ROLE_LABELS` / `roleLabel()` (Resident, Official, Admin) and `MAIN_ACCOUNT_EMAIL`. |
 | `accountStatusPopup.js` | `showAccountStatusPopup(code, t, email)`: the popup for a closed, suspended or inactive account at sign-in. |
 | `LanguageGate.jsx` | A full-screen **English / Tagalog** picker, shown until a language is chosen. |

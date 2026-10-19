@@ -7,6 +7,9 @@ import AdminLayout from "../components/admin/layout/AdminLayout";
 import UsersPage from "../components/admin/users/UsersPage";
 import LogsPage from "../components/admin/logs/LogsPage";
 import SiteContactsPage from "../components/admin/settings/SiteContactsPage";
+import SiteContentsPage from "../components/admin/settings/SiteContentsPage";
+import AccountSettingsPage from "../components/admin/settings/AccountSettingsPage";
+import AdminDemoPopup from "../components/admin/AdminModals/AdminDemoPopup";
 import ReportsPage from "../components/admin/reports/ReportsPage";
 import AnnouncementsPage from "../components/admin/announcements/AnnouncementsPage";
 import PettyCrimePage from '../components/admin/reports/pettyCrime';
@@ -77,6 +80,9 @@ const AdminPage = () => {
   // pendingCreateAnnouncement effect for the other half of this.
   const [pendingCreateAnnouncement, setPendingCreateAnnouncement] = useState(false);
 
+  // Admin demo video opened from the account menu ("Watch demo video").
+  const [showDemo, setShowDemo] = useState(false);
+
   const handleCreateAnnouncementShortcut = () => {
     setPendingCreateAnnouncement(true);
     handleNavigation("announcement-page");
@@ -102,11 +108,14 @@ const AdminPage = () => {
   "registered-users": "Registered Users",
   "sign-in-logs": "Sign-in Logs",
   "admin-logs": "Admin Logs",
-  "site-contacts": "Site Contacts"
+  "site-contacts": "Site Contacts",
+  "site-contents": "Site Contents",
+  "account-settings": "Account Settings"
 };
 
-// Admin-only tabs (super_admin): the SYSTEM tabs plus Site Contacts under CONTENT.
-const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts"];
+// Admin-only tabs (super_admin): the SYSTEM tabs plus Site Contacts and
+// Site Contents under CONTENT.
+const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts", "site-contents"];
 
   const alerts = [];
     const emergencyPending =
@@ -307,6 +316,15 @@ useEffect(() => {
           );
       case "site-contacts":
           return <SiteContactsPage />;
+      case "site-contents":
+          return <SiteContentsPage />;
+      case "account-settings":
+          return (
+              <AccountSettingsPage
+                  adminUser={adminUser}
+                  onProfileUpdate={(updates) => setAdminUser({ ...(adminUser || {}), ...updates })}
+              />
+          );
       default:
 
         return (
@@ -352,11 +370,20 @@ useEffect(() => {
             onMarkAllRead={markAllRead}
             onMarkOneRead={markOneRead}
             adminUser={adminUser}
+            onWatchDemo={() => setShowDemo(true)}
           >
               {isAuthenticated
                   ? renderActiveView()
                   : null}
           </AdminLayout>
+
+          {isAuthenticated && (
+              <AdminDemoPopup
+                  userId={adminUser?.id}
+                  manualOpen={showDemo}
+                  onManualClose={() => setShowDemo(false)}
+              />
+          )}
 
           {showSigninModal && (
               <SignInModal

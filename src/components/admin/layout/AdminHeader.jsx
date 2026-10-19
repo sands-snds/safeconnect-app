@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { timeAgo } from "../shared/timeUtils";
 import useIsMobile from "../hooks/useIsMobile";
+import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 
 // notification_type (set by the backend services) -> admin tab + link label.
 const NOTIFICATION_TARGETS = {
@@ -68,8 +69,10 @@ const AdminHeader = ({
     onLogout,
     onToggleMobileMenu,
     isSuperAdmin = false,
-    adminUser
+    adminUser,
+    onWatchDemo
 }) => {
+    const { adminDemo } = useSiteMedia();
 
 const [showNotifications, setShowNotifications] = useState(false);
 const [showUserMenu, setShowUserMenu] = useState(false);
@@ -472,6 +475,56 @@ const userMenuRef = useRef(null);
                             </div>
 
                             <div style={{ borderTop: "1px solid #f3f4f6" }} />
+
+                            <button
+                                className="admin-user-menu-item"
+                                onClick={() => {
+                                    setShowUserMenu(false);
+                                    onNavigate?.("account-settings");
+                                }}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 10,
+                                    width: "100%",
+                                    padding: "12px 16px",
+                                    border: "none",
+                                    background: "none",
+                                    cursor: "pointer",
+                                    fontSize: 13.5,
+                                    color: "#374151",
+                                    textAlign: "left"
+                                }}
+                            >
+                                <i className="bi bi-person-gear" />
+                                <span>Account Settings</span>
+                            </button>
+
+                            {hasVideo(adminDemo) && (
+                                <button
+                                    className="admin-user-menu-item"
+                                    onClick={() => {
+                                        setShowUserMenu(false);
+                                        onWatchDemo?.();
+                                    }}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 10,
+                                        width: "100%",
+                                        padding: "12px 16px",
+                                        border: "none",
+                                        background: "none",
+                                        cursor: "pointer",
+                                        fontSize: 13.5,
+                                        color: "#374151",
+                                        textAlign: "left"
+                                    }}
+                                >
+                                    <i className="bi bi-play-circle" />
+                                    <span>Watch demo video</span>
+                                </button>
+                                )}
 
                             {/* System tab: Admins (super_admin) only, like the sidebar. */}
                             {isSuperAdmin && (
