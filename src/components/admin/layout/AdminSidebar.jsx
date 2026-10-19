@@ -84,7 +84,7 @@ const AdminSidebar = ({
       {/* Logo */}
       <div
         style={{
-          padding: "22px 20px",
+          padding: "16px 20px",
           borderBottom: "1px solid rgba(255,255,255,.12)",
           display: "flex",
           alignItems: "center",
@@ -210,7 +210,7 @@ const AdminSidebar = ({
           .map((section) => (
           <div
             key={section.title}
-            style={{ marginBottom: "18px" }}
+            style={{ marginBottom: "12px" }}
           >
             <div
               style={{
@@ -218,7 +218,7 @@ const AdminSidebar = ({
                 fontWeight: "700",
                 opacity: ".65",
                 letterSpacing: "1px",
-                marginBottom: "10px",
+                marginBottom: "6px",
                 padding: "0 10px"
               }}
             >
@@ -239,8 +239,8 @@ const AdminSidebar = ({
                   display: "flex",
                   alignItems: "center",
                   gap: "10px",
-                  padding: "11px 12px",
-                  marginBottom: "4px",
+                  padding: "9px 12px",
+                  marginBottom: "2px",
                   borderRadius: "8px",
                   cursor: "pointer",
                   transition: ".2s",
@@ -260,31 +260,36 @@ const AdminSidebar = ({
           </div>
         ))}
 
-        {/* Divider */}
-        <div
-          style={{
-            borderTop:
-              "1px solid rgba(255,255,255,.12)",
-            margin: "8px 0 12px"
-          }}
-        />
+        {/* Logout: phone drawer only. On computers it is in the account menu (top right). */}
+        {showProfile && (
+          <>
+            {/* Divider */}
+            <div
+              style={{
+                borderTop:
+                  "1px solid rgba(255,255,255,.12)",
+                margin: "8px 0 12px"
+              }}
+            />
 
-        {/* Logout */}
-        <div
-          onClick={onLogout}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            padding: "11px 12px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontSize: "14px",
-            transition: ".2s"
-          }}
-        >
-          <span>Logout</span>
-        </div>
+            {/* Logout */}
+            <div
+              onClick={onLogout}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "11px 12px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "14px",
+                transition: ".2s"
+              }}
+            >
+              <span>Logout</span>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
