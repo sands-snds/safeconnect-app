@@ -605,16 +605,19 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                       )}
                     </div>
                   </div>
-                  <ul className="st-checklist" aria-label={t('signUp.passwordRules')}>
-                    {PASSWORD_RULES.map((r) => {
-                      const met = r.test(newPassword);
-                      return (
-                        <li key={r.key} className={met ? 'met' : ''}>
-                          <i className={`bi ${met ? 'bi-check-circle-fill' : 'bi-circle'}`} aria-hidden="true" /> {t(`pwReq.${r.key}`)}
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  {/* Requirements appear once a new password is being typed. */}
+                  {newPassword && (
+                    <ul className="st-checklist" aria-label={t('signUp.passwordRules')}>
+                      {PASSWORD_RULES.map((r) => {
+                        const met = r.test(newPassword);
+                        return (
+                          <li key={r.key} className={met ? 'met' : ''}>
+                            <i className={`bi ${met ? 'bi-check-circle-fill' : 'bi-circle'}`} aria-hidden="true" /> {t(`pwReq.${r.key}`)}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                   <div className="st-note">
                     <i className="bi bi-info-circle" aria-hidden="true" />
                     <span>{t('settings.passwordDevicesNote')}</span>

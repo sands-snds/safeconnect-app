@@ -155,6 +155,13 @@ describe('Password', () => {
     fireEvent.click(screen.getByRole('button', { name: /Password & security/ }));
   };
 
+  test('password requirements stay hidden until a new password is typed', async () => {
+    await openSecurity();
+    expect(screen.queryByRole('list', { name: 'Password requirements' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'N' } });
+    expect(screen.getByRole('list', { name: 'Password requirements' })).toBeInTheDocument();
+  });
+
   test('a weak new password is blocked with the same rules as Sign Up', async () => {
     await openSecurity();
     fireEvent.change(screen.getByLabelText('Current password'), { target: { value: 'OldPass1!' } });

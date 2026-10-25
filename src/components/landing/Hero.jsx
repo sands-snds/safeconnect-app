@@ -529,7 +529,6 @@ function Hero() {
                     <AuthAlert type="error">{error}</AuthAlert>
 
                     <form onSubmit={handleSignUpSubmit} noValidate>
-                        <p className="auth-section">{t('signUp.sectionPersonal')}</p>
                         <div className="auth-grid cols-3">
                             <AuthField id="suFirst" label={t('signUp.firstName')} icon="bi-person">
                                 <input type="text" className="auth-input" id="suFirst" autoComplete="given-name" placeholder={t('signUp.firstNamePlaceholder')} value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
@@ -541,20 +540,16 @@ function Hero() {
                                 <input type="text" className="auth-input" id="suLast" autoComplete="family-name" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                             </AuthField>
                         </div>
-
-                        <p className="auth-section">{t('signUp.sectionContact')}</p>
                         <div className="auth-grid cols-2">
+                            <AuthField id="suUsername" label={t('signUp.username')} icon="bi-at">
+                                <input type="text" className="auth-input" id="suUsername" autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
+                            </AuthField>
                             <AuthField id="suContact" label={t('signUp.contactNumber')} icon="bi-phone" prefix="+63">
                                 <input type="tel" className="auth-input has-prefix" id="suContact" autoComplete="tel-national" placeholder="9XXXXXXXXX" value={suContact} onChange={e => setSuContact(e.target.value.replace(DIGITS_ONLY_REGEX,'').slice(0,10))} maxLength={10} inputMode="numeric" />
                             </AuthField>
-                            <AuthField id="suEmail" label={t('signUp.email')} icon="bi-envelope">
-                                <input type="email" className="auth-input" id="suEmail" autoComplete="email" placeholder={t('signUp.emailPlaceholder')} value={suEmail} onChange={e => setSuEmail(e.target.value)} />
-                            </AuthField>
                         </div>
-
-                        <p className="auth-section">{t('signUp.sectionSecurity')}</p>
-                        <AuthField id="suUsername" label={t('signUp.username')} icon="bi-at">
-                            <input type="text" className="auth-input" id="suUsername" autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
+                        <AuthField id="suEmail" label={t('signUp.email')} icon="bi-envelope">
+                            <input type="email" className="auth-input" id="suEmail" autoComplete="email" placeholder={t('signUp.emailPlaceholder')} value={suEmail} onChange={e => setSuEmail(e.target.value)} />
                         </AuthField>
                         <div className="auth-grid cols-2">
                             <AuthField id="suPassword" label={t('signUp.password')} icon="bi-lock"
@@ -570,17 +565,20 @@ function Hero() {
                                     placeholder={t('signUp.confirmPasswordPlaceholder')} value={suConfirm} onChange={e => setSuConfirm(e.target.value)} />
                             </AuthField>
                         </div>
-                        <ul className="auth-checklist" aria-label={t('signUp.passwordRules')} style={{ margin:'-4px 0 18px' }}>
-                            {PASSWORD_REQUIREMENTS.map(req => {
-                                const met = req.test(suPassword);
-                                return (
-                                    <li key={req.key} className={met ? 'met' : ''}>
-                                        <i className={`bi ${met ? 'bi-check-circle-fill' : 'bi-circle'}`} aria-hidden="true"></i>
-                                        {t(`pwReq.${req.key}`)}
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                        {/* Requirements appear once a password is being typed. */}
+                        {suPassword && (
+                            <ul className="auth-checklist" aria-label={t('signUp.passwordRules')}>
+                                {PASSWORD_REQUIREMENTS.map(req => {
+                                    const met = req.test(suPassword);
+                                    return (
+                                        <li key={req.key} className={met ? 'met' : ''}>
+                                            <i className={`bi ${met ? 'bi-check-circle-fill' : 'bi-circle'}`} aria-hidden="true"></i>
+                                            {t(`pwReq.${req.key}`)}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        )}
 
                         <label className="auth-check" htmlFor="suAgree">
                             <input type="checkbox" id="suAgree" checked={suAgree} onChange={handleAgreeChange} />
@@ -685,17 +683,20 @@ function Hero() {
                                 toggle={<PasswordToggleButton visible={showFpNewPw} onToggle={() => setShowFpNewPw(v=>!v)} />}>
                                 <input type={showFpNewPw?'text':'password'} className="auth-input has-toggle" id="fpNewPw" autoComplete="new-password" placeholder={t('forgotPassword.newPasswordPlaceholder')} value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} />
                             </AuthField>
-                            <ul className="auth-checklist" aria-label={t('signUp.passwordRules')} style={{ margin:'-4px 0 14px' }}>
-                                {PASSWORD_REQUIREMENTS.map(req => {
-                                    const met = req.test(fpNewPw);
-                                    return (
-                                        <li key={req.key} className={met ? 'met' : ''}>
-                                            <i className={`bi ${met ? 'bi-check-circle-fill' : 'bi-circle'}`} aria-hidden="true"></i>
-                                            {t(`pwReq.${req.key}`)}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                            {/* Requirements appear once a password is being typed. */}
+                            {fpNewPw && (
+                                <ul className="auth-checklist" aria-label={t('signUp.passwordRules')}>
+                                    {PASSWORD_REQUIREMENTS.map(req => {
+                                        const met = req.test(fpNewPw);
+                                        return (
+                                            <li key={req.key} className={met ? 'met' : ''}>
+                                                <i className={`bi ${met ? 'bi-check-circle-fill' : 'bi-circle'}`} aria-hidden="true"></i>
+                                                {t(`pwReq.${req.key}`)}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            )}
                             <AuthField id="fpConfirmPw" label={t('forgotPassword.confirmNewPassword')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showFpConfPw} onToggle={() => setShowFpConfPw(v=>!v)} />}
                                 hint={fpConfirmPw ? (fpNewPw===fpConfirmPw ? t('signUp.passwordsMatch') : t('signUp.passwordsNoMatch')) : null}

@@ -210,3 +210,23 @@ describe('Save Login Info', () => {
     expect(screen.queryByRole('dialog', { name: 'Save your login info?' })).not.toBeInTheDocument();
   });
 });
+
+describe('Sign Up layout', () => {
+  test('password requirements stay hidden until a password is typed', () => {
+    renderHero();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
+    expect(screen.queryByRole('list', { name: 'Password requirements' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText('Min. 8 characters'), { target: { value: 'S' } });
+    expect(screen.getByRole('list', { name: 'Password requirements' })).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText('Min. 8 characters'), { target: { value: '' } });
+    expect(screen.queryByRole('list', { name: 'Password requirements' })).not.toBeInTheDocument();
+  });
+
+  test('no section headings', () => {
+    renderHero();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
+    for (const heading of ['Personal information', 'Contact details', 'Account security']) {
+      expect(screen.queryByText(heading)).not.toBeInTheDocument();
+    }
+  });
+});
