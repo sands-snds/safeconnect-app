@@ -50,6 +50,8 @@ export const translations = {
       title: 'Emergency Contacts',
       subtitle: 'Tap a contact to call immediately',
       call: 'Call',
+      choose: 'Choose',
+      chooseWho: 'Choose who to call',
       sublabels: {
         police: 'National Emergency Hotline',
         dasma: 'Dasmariñas City PNP',
@@ -878,6 +880,8 @@ export const translations = {
       title: 'Mga Emergency Contact',
       subtitle: 'Pindutin ang isang contact para tumawag agad',
       call: 'Tawagan',
+      choose: 'Pumili',
+      chooseWho: 'Piliin kung sino ang tatawagan',
       sublabels: {
         police: 'Pambansang Emergency Hotline',
         dasma: 'Dasmariñas City PNP',

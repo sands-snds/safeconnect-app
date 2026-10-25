@@ -3,7 +3,8 @@ import { Eye, EyeOff } from 'lucide-react';
 import { signinUser, setAuthToken, rememberLogin } from '../../Services/api';
 import AuthModal, { AuthAlert, AuthField } from './AuthModal';
 import { useLanguage } from '../../i18n/LanguageContext';
-import useSiteContent, { contactDescription, useSiteMedia, mediaSrc } from '../shared/useSiteContent';
+import useSiteContent, { useSiteMedia, mediaSrc } from '../shared/useSiteContent';
+import EmergencyContactList from '../shared/EmergencyContactList';
 import { Carousel } from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { showAccountStatusPopup } from '../shared/accountStatusPopup';
 import { markAdminJustSignedIn } from '../admin/AdminModals/AdminDemoPopup';
@@ -42,28 +43,10 @@ function EmergencyCallButton() {
         <>
             {showContacts && <div onClick={() => setShowContacts(false)} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:1050,backdropFilter:'blur(2px)' }} />}
             {showContacts && (
-                <div style={{ position:'fixed',bottom:'96px',right:'24px',zIndex:1051,background:'#fff',borderRadius:'16px',boxShadow:'0 8px 32px rgba(0,0,0,0.22)',padding:'16px',width:'280px',animation:'slideUpFade 0.22s ease' }}>
+                <div style={{ position:'fixed',bottom:'96px',right:'24px',zIndex:1051,background:'#fff',borderRadius:'16px',boxShadow:'0 8px 32px rgba(0,0,0,0.22)',padding:'16px',width:'290px',maxWidth:'calc(100vw - 32px)',maxHeight:'calc(100vh - 120px)',overflowY:'auto',animation:'slideUpFade 0.22s ease' }}>
                     <p style={{ margin:'0 0 2px',fontWeight:700,fontSize:'14px',color:'#111' }}>{t('emergencyContacts.title')}</p>
                     <p style={{ margin:'0 0 12px',fontSize:'12px',color:'#6b7280' }}>{t('emergencyContacts.subtitle')}</p>
-                    <div style={{ display:'flex',flexDirection:'column',gap:'8px' }}>
-                        {emergencyContacts.map(c => (
-                            <button key={c.id} onClick={() => handleCall(c.number)}
-                                style={{ display:'flex',alignItems:'center',gap:'12px',padding:'10px 12px',borderRadius:'10px',border:`1.5px solid ${c.color}22`,background:`${c.color}0d`,cursor:'pointer',textAlign:'left',width:'100%' }}
-                                onMouseEnter={e => e.currentTarget.style.background=`${c.color}22`}
-                                onMouseLeave={e => e.currentTarget.style.background=`${c.color}0d`}>
-                                <div style={{ width:'38px',height:'38px',borderRadius:'50%',background:c.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                                    <i className={`bi ${c.icon}`} style={{ color:'#fff',fontSize:'16px' }} />
-                                </div>
-                                <div style={{ flex:1 }}>
-                                    <p style={{ margin:0,fontWeight:600,fontSize:'13px',color:'#111' }}>{c.label}</p>
-                                    <p style={{ margin:0,fontSize:'11px',color:'#6b7280' }}>{contactDescription(c, t)}</p>
-                                </div>
-                                <div style={{ display:'flex',alignItems:'center',gap:'4px',background:c.color,color:'#fff',borderRadius:'20px',padding:'4px 10px',fontSize:'11px',fontWeight:600 }}>
-                                    <i className="bi bi-telephone-fill" style={{ fontSize:'10px' }} />{t('emergencyContacts.call')}
-                                </div>
-                            </button>
-                        ))}
-                    </div>
+                    <EmergencyContactList contacts={emergencyContacts} onCall={handleCall} />
                 </div>
             )}
             <button onClick={() => setShowContacts(v => !v)} aria-label="Emergency Contacts"

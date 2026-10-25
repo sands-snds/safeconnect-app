@@ -18,7 +18,13 @@ export const DEFAULT_SITE_CONTENT = {
     { id: 'dasma', label: 'Dasmariñas Police', description: 'Dasmariñas City PNP', sublabelKey: 'dasma', number: '+63462420002', icon: 'bi-shield-fill', color: '#1d4ed8' },
     { id: 'cdrmc', label: 'CDRMC', description: 'Cavite Disaster Risk Management', sublabelKey: 'cdrmc', number: '+63462300345', icon: 'bi-heart-pulse-fill', color: '#059669' },
     { id: 'dswd', label: 'DSWD', description: 'Social Welfare & Development', sublabelKey: 'dswd', number: '+63464165393', icon: 'bi-people-fill', color: '#ea580c' },
-    { id: 'barangay', label: 'Barangay Sta. Fe', description: 'Barangay Emergency Line', sublabelKey: 'barangay', number: '+639929474309', icon: 'bi-house-fill', color: '#7c3aed' }
+    {
+      id: 'barangay', label: 'Barangay Sta. Fe', description: 'Barangay Emergency Line', sublabelKey: 'barangay', number: '09354984838', icon: 'bi-house-fill', color: '#7c3aed',
+      choices: [
+        { name: 'PB Emmanuel B. Noora', number: '09354984838' },
+        { name: 'Sec Hazel R. Adriano', number: '09456355303' }
+      ]
+    }
   ],
   officials: [
     { name: 'PB Emmanuel B. Noora', number: '09354984838' },

@@ -102,6 +102,10 @@ const SiteContactsPage = () => {
       return next;
     }));
 
+  // People a caller can choose between for one contact (e.g. Barangay Sta. Fe).
+  const setChoices = (index, fn) =>
+    setContacts((list) => list.map((c, i) => (i === index ? { ...c, choices: fn(c.choices || []) } : c)));
+
   const updateOfficial = (index, patch) =>
     setOfficials((list) => list.map((o, i) => (i === index ? { ...o, ...patch } : o)));
 
@@ -182,6 +186,30 @@ const SiteContactsPage = () => {
               <button type="button" style={iconButton()} title="Move up" disabled={i === 0} onClick={() => setContacts((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
               <button type="button" style={iconButton()} title="Move down" disabled={i === draft.emergencyContacts.length - 1} onClick={() => setContacts((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
               <button type="button" style={iconButton(true)} title="Remove" disabled={draft.emergencyContacts.length === 1} onClick={() => setContacts((l) => l.filter((_, j) => j !== i))}><i className="bi bi-trash3" /></button>
+            </div>
+
+            {/* Optional: let the caller choose who to call */}
+            <div style={{ flex: "1 1 100%", marginLeft: 48, minWidth: 0, background: "#f9fafb", border: "1px solid #f3f4f6", borderRadius: 10, padding: "10px 12px" }}>
+              <div style={{ ...labelStyle, marginBottom: 2 }}>People to choose from (optional)</div>
+              <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>
+                {(c.choices || []).length
+                  ? "Callers pick one of these people instead of calling the number above."
+                  : "Leave empty to call the number above directly, or add people so callers can choose who to call."}
+              </p>
+              {(c.choices || []).map((p, j) => (
+                <div key={j} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
+                  <input className="form-input" style={{ flex: "1 1 200px", minWidth: 0 }} value={p.name} maxLength={80} placeholder="e.g. PB Juan Dela Cruz" aria-label={`Person ${j + 1} name`}
+                    onChange={(e) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, name: e.target.value } : x)))} />
+                  <input className="form-input" style={{ flex: "1 1 150px", minWidth: 0 }} value={p.number} maxLength={25} placeholder="e.g. 09171234567" inputMode="tel" aria-label={`Person ${j + 1} number`}
+                    onChange={(e) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, number: e.target.value } : x)))} />
+                  <button type="button" style={iconButton(true)} title="Remove person" onClick={() => setChoices(i, (l) => l.filter((_, k) => k !== j))}><i className="bi bi-x-lg" /></button>
+                </div>
+              ))}
+              <button type="button" className="button button-secondary" style={{ fontSize: 13, padding: "6px 12px" }}
+                disabled={(c.choices || []).length >= 4}
+                onClick={() => setChoices(i, (l) => [...l, { name: "", number: "" }])}>
+                <i className="bi bi-person-plus" /> Add person
+              </button>
             </div>
           </div>
         ))}

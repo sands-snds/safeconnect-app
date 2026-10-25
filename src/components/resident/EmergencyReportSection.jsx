@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
-import useSiteContent, { contactDescription } from '../shared/useSiteContent';
+import useSiteContent from '../shared/useSiteContent';
+import EmergencyContactList from '../shared/EmergencyContactList';
 import ResidentAssistanceModal from './ResidentAssistanceModal';
 import ResidentPettyCrimeModal from './ResidentPettyCrimeModal';
 
@@ -43,7 +44,10 @@ function EmergencyCallButton() {
             borderRadius: '16px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
             padding: '16px',
-            width: '280px',
+            width: '290px',
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: 'calc(100vh - 120px)',
+            overflowY: 'auto',
             animation: 'slideUpFade 0.22s ease',
           }}
         >
@@ -62,65 +66,7 @@ function EmergencyCallButton() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {emergencyContacts.map((contact) => (
-              <button
-                key={contact.id}
-                onClick={() => handleCall(contact.number)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 12px',
-                  borderRadius: '10px',
-                  border: `1.5px solid ${contact.color}22`,
-                  background: `${contact.color}0d`,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'background 0.15s',
-                  width: '100%',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = `${contact.color}22`}
-                onMouseLeave={e => e.currentTarget.style.background = `${contact.color}0d`}
-              >
-                <div style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  background: contact.color,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  <i className={`bi ${contact.icon}`} style={{ color: '#fff', fontSize: '16px' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontWeight: 600, fontSize: '13px', color: '#111' }}>
-                    {contact.label}
-                  </p>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#6b7280' }}>
-                    {contactDescription(contact, t)}
-                  </p>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: contact.color,
-                  color: '#fff',
-                  borderRadius: '20px',
-                  padding: '4px 10px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  flexShrink: 0,
-                }}>
-                  <i className="bi bi-telephone-fill" style={{ fontSize: '10px' }} />
-                  {t('emergencyContacts.call')}
-                </div>
-              </button>
-            ))}
-          </div>
+          <EmergencyContactList contacts={emergencyContacts} onCall={handleCall} />
         </div>
       )}
 

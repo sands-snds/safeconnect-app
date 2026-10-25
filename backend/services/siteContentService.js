@@ -3,7 +3,9 @@ const db = require("../config/db");
 // Contact details shown on the public site, editable by an Admin
 // (super_admin) under Content > Site Contacts:
 //   emergencyContacts - the floating call button's list, also the footer's
-//                       "Emergency Hotline" column
+//                       "Emergency Hotline" column. A contact may have
+//                       "choices" ([{ name, number }], up to 4): the call
+//                       button then lets the caller pick who to call.
 //   officials         - the footer's "Barangay Officials" column
 //   socials           - the footer's support email and Facebook page
 // Stored as JSON in system_settings (key "site_contacts"). Until an Admin
@@ -19,7 +21,14 @@ const DEFAULT_CONTENT = {
         { id: "dasma", label: "Dasmariñas Police", description: "Dasmariñas City PNP", sublabelKey: "dasma", number: "+63462420002", icon: "bi-shield-fill", color: "#1d4ed8" },
         { id: "cdrmc", label: "CDRMC", description: "Cavite Disaster Risk Management", sublabelKey: "cdrmc", number: "+63462300345", icon: "bi-heart-pulse-fill", color: "#059669" },
         { id: "dswd", label: "DSWD", description: "Social Welfare & Development", sublabelKey: "dswd", number: "+63464165393", icon: "bi-people-fill", color: "#ea580c" },
-        { id: "barangay", label: "Barangay Sta. Fe", description: "Barangay Emergency Line", sublabelKey: "barangay", number: "+639929474309", icon: "bi-house-fill", color: "#7c3aed" }
+        {
+            id: "barangay", label: "Barangay Sta. Fe", description: "Barangay Emergency Line", sublabelKey: "barangay", number: "09354984838", icon: "bi-house-fill", color: "#7c3aed",
+            // The caller picks who to call (see "choices" below).
+            choices: [
+                { name: "PB Emmanuel B. Noora", number: "09354984838" },
+                { name: "Sec Hazel R. Adriano", number: "09456355303" }
+            ]
+        }
     ],
     officials: [
         { name: "PB Emmanuel B. Noora", number: "09354984838" },
@@ -43,7 +52,17 @@ const CONTACT_ICONS = [
 ];
 const CONTACT_COLORS = ["#dc2626", "#1d4ed8", "#059669", "#ea580c", "#7c3aed", "#0891b2", "#db2777", "#6B2C3E"];
 
-const LIMITS = { emergencyContacts: 12, officials: 20 };
+const LIMITS = { emergencyContacts: 12, officials: 20, choices: 4 };
+
+// The single Barangay line used before callers could choose between the
+// Punong Barangay and the Secretary. Saved contacts still on it are moved
+// to the new choices (an Admin's other edits are kept).
+const OLD_BARANGAY_NUMBER = "+639929474309";
+const upgradeBarangayContact = (contacts) => contacts.map((c) => {
+    const def = DEFAULT_CONTENT.emergencyContacts.find((d) => d.id === "barangay");
+    if (c.id !== "barangay" || c.choices || String(c.number).replace(/\s/g, "") !== OLD_BARANGAY_NUMBER) return c;
+    return { ...c, number: def.number, choices: def.choices };
+});
 const PHONE_REGEX = /^[+()\d][\d\s()+-]{1,24}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -73,7 +92,9 @@ async function getContent() {
     if (!rows[0]?.setting_value) return DEFAULT_CONTENT;
     try {
         const saved = JSON.parse(rows[0].setting_value);
-        return { ...DEFAULT_CONTENT, ...saved, socials: { ...DEFAULT_CONTENT.socials, ...(saved.socials || {}) } };
+        const merged = { ...DEFAULT_CONTENT, ...saved, socials: { ...DEFAULT_CONTENT.socials, ...(saved.socials || {}) } };
+        if (Array.isArray(merged.emergencyContacts)) merged.emergencyContacts = upgradeBarangayContact(merged.emergencyContacts);
+        return merged;
     } catch {
         return DEFAULT_CONTENT;
     }
@@ -93,7 +114,23 @@ function validate(input = {}) {
     const emergencyContacts = [];
     for (const [i, c] of contactsIn.entries()) {
         const label = text(c.label, 60);
-        const number = text(c.number, 25);
+
+        // People the caller can choose between (optional).
+        const choicesIn = Array.isArray(c.choices) ? c.choices : [];
+        const choices = [];
+        for (const [j, ch] of choicesIn.entries()) {
+            const name = text(ch?.name, 80);
+            const chNumber = text(ch?.number, 25);
+            if (!name && !chNumber) continue; // ignore empty rows
+            if (!name || !chNumber) return { error: `Person #${j + 1} under "${label || `emergency contact #${i + 1}`}" needs a name and a number.` };
+            if (!PHONE_REGEX.test(chNumber)) return { error: `"${chNumber}" doesn't look like a phone number (${name}, under "${label}").` };
+            choices.push({ name, number: chNumber });
+        }
+        if (choices.length > LIMITS.choices) return { error: `"${label}" can list up to ${LIMITS.choices} people to choose from.` };
+
+        // With people to choose from, the contact's own number may be left
+        // empty; the first person's number is used where one number is needed.
+        const number = text(c.number, 25) || (choices[0] ? choices[0].number : "");
         if (!label || !number) return { error: `Emergency contact #${i + 1} needs a name and a number.` };
         if (!PHONE_REGEX.test(number)) return { error: `"${number}" doesn't look like a phone number (emergency contact "${label}").` };
         const description = text(c.description, 80);
@@ -108,6 +145,7 @@ function validate(input = {}) {
         // Keep the translation key only while the description is unchanged.
         const original = DEFAULT_CONTENT.emergencyContacts.find((d) => d.sublabelKey && d.sublabelKey === c.sublabelKey);
         if (original && original.description === description) entry.sublabelKey = original.sublabelKey;
+        if (choices.length) entry.choices = choices;
         emergencyContacts.push(entry);
     }
 

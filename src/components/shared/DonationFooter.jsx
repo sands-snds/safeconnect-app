@@ -1,6 +1,7 @@
 import React from "react";
 import { useLanguage } from "../../i18n/LanguageContext";
 import useSiteContent from "./useSiteContent";
+import { formatMobile, hasChoices } from "./EmergencyContactList";
 
 // "+63464165393" -> "+63 46 416 5393", "+639929474309" -> "+63 992 947 4309".
 // Anything else (e.g. "911") is shown as-is.
@@ -100,11 +101,20 @@ export default function DonationFooter() {
                       <i className="bi bi-telephone-fill me-2 text-danger"></i>
                       {t("footer.emergencyHotline")}
                     </p>
-                    {emergencyContacts.map((c) => (
+                    {emergencyContacts.map((c) => (hasChoices(c) ? (
+                      <div key={c.id}>
+                        {c.label}:
+                        {c.choices.map((p) => (
+                          <div key={`${p.name}-${p.number}`} className="ps-3">
+                            {p.name}: <PhoneLink number={p.number}>{formatMobile(p.number)}</PhoneLink>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
                       <div key={c.id}>
                         {c.label}: <PhoneLink number={c.number}>{formatPhone(c.number)}</PhoneLink>
                       </div>
-                    ))}
+                    )))}
                   </div>
                 )}
 
