@@ -201,7 +201,7 @@ export const translations = {
     },
     about: {
       badge: 'About SafeConnect',
-      titlePrefix: 'One app.',
+      titlePrefix: 'One website.',
       titleHighlight: 'A safer',
       titleSuffix: 'Barangay Sta. Fe.',
       intro: "SafeConnect connects every resident directly to the barangay's emergency response team — report incidents, request help, and stay informed, all in one place.",
@@ -1028,7 +1028,7 @@ export const translations = {
     },
     about: {
       badge: 'Tungkol sa SafeConnect',
-      titlePrefix: 'Isang app.',
+      titlePrefix: 'Isang website.',
       titleHighlight: 'Mas ligtas na',
       titleSuffix: 'Barangay Sta. Fe.',
       intro: 'Direktang ikinokonekta ng SafeConnect ang bawat residente sa emergency response team ng barangay — mag-report ng insidente, humingi ng tulong, at manatiling updated, lahat sa iisang lugar.',

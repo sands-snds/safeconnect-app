@@ -939,7 +939,7 @@ header {
 }
 
 .modal-overlay {
-    display: none;
+    display: flex; /* overlays are only rendered while open */
     position: fixed;
     top: 0;
     left: 0;

@@ -37,8 +37,11 @@ export default function DemoVideoSection() {
   );
 
   return (
-    <section id="demo" style={{ background: '#fff', padding: 'clamp(72px, 10vw, 112px) 0 clamp(80px, 11vw, 128px)' }}>
-      <div className="container" style={{ maxWidth: 920 }}>
+    // The padding is on an inner div: styles/App.css zeroes every <section>'s
+    // margin and padding with !important, which left the heading jammed
+    // against the carousel above.
+    <section id="demo" style={{ background: '#fff' }}>
+      <div className="container" style={{ maxWidth: 920, padding: 'clamp(56px, 8vw, 96px) 16px clamp(64px, 9vw, 112px)' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <h2 style={{ fontWeight: 800, fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)', margin: '0 0 8px', color: '#1a1416' }}>
             {systemDemo.title || t('demoVideo.defaultTitle')}

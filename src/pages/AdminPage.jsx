@@ -30,7 +30,8 @@ const AdminPage = () => {
     setSessionExpired,
     adminUser,
     setAdminUser,
-    handleLogout
+    handleLogout,
+    authChecked
   } = useAdminAuth();
   
   const {
@@ -136,11 +137,13 @@ const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "sit
     if (crimePending > 0)
         alerts.push(`🚔 ${crimePending} Crime Reports Pending`);
   
+  // Only after the server has confirmed the admin (useAdminAuth) -- the
+  // sessionStorage flag on its own must not open the panel.
   useEffect(() => {
-    if (!showSigninModal && sessionStorage.getItem('adminAuthenticated') === 'true' && !isAuthenticated) {
+    if (authChecked && !showSigninModal && sessionStorage.getItem('adminAuthenticated') === 'true' && !isAuthenticated) {
         setIsAuthenticated(true);
     }
-  }, [showSigninModal, isAuthenticated]);
+  }, [authChecked, showSigninModal, isAuthenticated, setIsAuthenticated]);
 
   useEffect(() => {
     if (showMobileMenu) {
@@ -187,8 +190,37 @@ useEffect(() => {
     return () => clearInterval(interval);
 }, [isAuthenticated, activeView, refreshAllData]);
 
+  if (!authChecked) {
+    return (
+      <div role="status" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', background: '#f5f2f3', color: '#374151' }}>
+        <div className="spinner-border" style={{ color: '#6B2C3E' }} aria-hidden="true"></div>
+        <p style={{ margin: 0, fontSize: '0.95rem' }}>Checking your sign-in...</p>
+      </div>
+    );
+  }
+
   if (!isAuthenticated && !showSigninModal) {
     return null;
+  }
+
+  // Not a confirmed admin: only the sign-in box, on a plain background --
+  // none of the dashboard (sidebar, menus, pages) is rendered.
+  if (!isAuthenticated) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #6B2C3E 0%, #3d1823 100%)' }}>
+        <SignInModal
+            notice={sessionExpired
+                ? "Your session has ended. Please sign in again to continue. Anything you were typing is still there."
+                : ""}
+            onSuccess={(user) => {
+                setAdminUser(user || null);
+                setIsAuthenticated(true);
+                setShowSignInModal(false);
+                setSessionExpired(false);
+            }}
+        />
+      </div>
+    );
   }
   
   if (isLoading && isAuthenticated) {

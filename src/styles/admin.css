@@ -153,6 +153,15 @@
   overflow-y: auto;
 }
 
+/* Bootstrap's .modal-content (loaded later) takes its background from a
+   variable only set inside its own .modal, which left these boxes see-through. */
+.modal-overlay > .modal-content {
+  background: #fff;
+  color: #1f2937;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
 .form-field {
   margin-bottom: 16px;
 }

@@ -322,7 +322,10 @@ function ResidentNavbar() {
     }
     setShowDropdown(false);
     setShowMobileMenu(false);
-    navigate(path);
+    // Logging out lands on the home page directly: "signedOut" stops it from
+    // forwarding anywhere based on other sign-ins in this browser.
+    if (path === '/') navigate('/', { replace: true, state: { signedOut: true } });
+    else navigate(path);
   };
 
   const scrollToSection = (sectionId) => {

@@ -143,12 +143,21 @@ const getDeviceHints = async () => {
 // token AND that the account still exists and is Active). Returns
 // { success, user, isAdmin }; { success: false, message } otherwise --
 // including "Invalid token.", which apiFetch() treats as signed out.
-export const fetchCurrentUser = async () => {
-    if (!getAuthToken()) return { success: false, message: "Access denied. No token provided." };
+//
+// admin: check the admin sign-in instead of the one for the current page
+// (the home page checks both). A sign-in the server rejects is deleted.
+export const fetchCurrentUser = async ({ admin = isAdminContext() } = {}) => {
+    const key = admin ? ADMIN_TOKEN_KEY : RESIDENT_TOKEN_KEY;
+    const token = readToken(key);
+    if (!token) return { success: false, message: "Access denied. No token provided." };
     try {
-        const res = await apiFetch(`${API_ENDPOINTS.AUTH}/me`, { headers: authHeaders() });
+        const res = await fetch(`${API_ENDPOINTS.AUTH}/me`, {
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        });
         const data = await res.json().catch(() => ({}));
-        return res.ok ? data : { success: false, ...data };
+        if (res.ok) return data;
+        if (res.status === 401 || res.status === 403) removeToken(key);
+        return { success: false, ...data };
     } catch {
         return { success: false, offline: true, message: "Could not reach the server." };
     }

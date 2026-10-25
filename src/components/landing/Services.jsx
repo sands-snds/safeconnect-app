@@ -3,7 +3,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 
 const FEATURES = [
   { key: 'emergencyReports',  icon: 'bi-exclamation-octagon-fill',      color: '#ef4444', gradient: 'linear-gradient(135deg, #dc2626 0%, #f97316 100%)', size: 'featured' },
-  { key: 'assistanceRequests',icon: 'bi-hand-heart-fill',               color: '#f97316', size: 'small' },
+  { key: 'assistanceRequests',icon: 'bi-life-preserver',                color: '#f97316', size: 'small' },
   { key: 'crimeReports',      icon: 'bi-eye-slash-fill',                color: '#8b5cf6', size: 'small' },
   { key: 'announcements',     icon: 'bi-megaphone-fill',                color: '#0ea5e9', size: 'small' },
   { key: 'liveWeather',       icon: 'bi-cloud-lightning-rain-fill',     color: '#14b8a6', size: 'small' },

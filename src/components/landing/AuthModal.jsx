@@ -43,7 +43,7 @@ const STYLES = `
   .auth-subtitle { margin: 4px 0 0; font-size: 0.88rem; color: #6b7280; line-height: 1.45; }
   .auth-body { padding: 18px 30px 26px; }
 
-  .auth-section { margin: 0 0 12px; font-size: 1rem; font-weight: 700; color: #1f2937; }
+  .auth-section { margin: 0 0 12px; font-size: 1rem; font-weight: 700; color: #6B2C3E; }
   .auth-section ~ .auth-section { margin-top: 6px; padding-top: 16px; border-top: 1px solid #f0eaec; }
   .auth-grid { display: grid; gap: 0 14px; }
   .auth-grid.cols-2 { grid-template-columns: 1fr 1fr; }
