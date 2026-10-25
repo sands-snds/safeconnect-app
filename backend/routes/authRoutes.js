@@ -10,6 +10,11 @@ router.post("/signin",      authController.signin);
 // The signed-in account (verifies the token against the database)
 router.get("/me",          verifyToken, authController.me);
 
+// "Save Login Info": Yes swaps the session sign-in for a 30-day saved login;
+// logout revokes a saved login on the server (models/RememberedLogin.js)
+router.post("/remember",   verifyToken, authController.remember);
+router.post("/logout",     verifyToken, authController.logout);
+
 // Email verification (signup OTP)
 router.post("/request-otp", authController.requestOtp);
 router.post("/verify-otp",  authController.verifyOtp);

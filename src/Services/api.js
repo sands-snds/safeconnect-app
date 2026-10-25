@@ -33,35 +33,48 @@ const ADMIN_TOKEN_KEY = "adminAuthToken";
 const isAdminContext = () =>
     typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
 
+// "Save Login Info": a saved login (Yes) lives in localStorage and survives
+// closing the browser; an ordinary sign-in (No) lives in sessionStorage and
+// is gone when the tab/browser closes. Reads check both.
+const readToken = (key) => sessionStorage.getItem(key) || localStorage.getItem(key);
+const removeToken = (key) => {
+    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
+};
+
 export const getAuthToken = () => {
     if (isAdminContext()) {
         // Fallback: admins signed in before the split still have their
         // token under the shared key (flagged by the old "isAdmin" entry).
-        return localStorage.getItem(ADMIN_TOKEN_KEY) ||
+        return readToken(ADMIN_TOKEN_KEY) ||
             (localStorage.getItem("isAdmin") === "true" ? localStorage.getItem(RESIDENT_TOKEN_KEY) : null);
     }
-    return localStorage.getItem(RESIDENT_TOKEN_KEY);
+    return readToken(RESIDENT_TOKEN_KEY);
 };
 
-export const setAuthToken = (token, isAdmin = false) => {
-    if (isAdmin) {
-        localStorage.setItem(ADMIN_TOKEN_KEY, token);
-    } else {
-        localStorage.setItem(RESIDENT_TOKEN_KEY, token);
-        localStorage.removeItem("isAdmin");
-    }
+// Whether a resident (or admin) sign-in is stored at all, regardless of the
+// page you're on -- the home page uses it to send signed-in visitors on.
+export const hasStoredToken = (isAdmin = false) =>
+    Boolean(readToken(isAdmin ? ADMIN_TOKEN_KEY : RESIDENT_TOKEN_KEY));
+
+// remember: true only for a saved login (POST /auth/remember's token).
+export const setAuthToken = (token, isAdmin = false, remember = false) => {
+    const key = isAdmin ? ADMIN_TOKEN_KEY : RESIDENT_TOKEN_KEY;
+    removeToken(key);
+    (remember ? localStorage : sessionStorage).setItem(key, token);
+    if (!isAdmin) localStorage.removeItem("isAdmin");
 };
 
 // Clears only the session of the page you're on.
 export const clearAuthToken = () => {
     if (isAdminContext()) {
-        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        removeToken(ADMIN_TOKEN_KEY);
         if (localStorage.getItem("isAdmin") === "true") {
-            localStorage.removeItem(RESIDENT_TOKEN_KEY);
+            removeToken(RESIDENT_TOKEN_KEY);
             localStorage.removeItem("isAdmin");
         }
     } else {
-        localStorage.removeItem(RESIDENT_TOKEN_KEY);
+        removeToken(RESIDENT_TOKEN_KEY);
         localStorage.removeItem("isAdmin");
     }
 };
@@ -138,6 +151,31 @@ export const fetchCurrentUser = async () => {
         return res.ok ? data : { success: false, ...data };
     } catch {
         return { success: false, offline: true, message: "Could not reach the server." };
+    }
+};
+
+// "Save Login Info" > Yes: swaps the just-issued session token for a 30-day
+// saved login. Takes the token explicitly because it isn't stored yet.
+export const rememberLogin = async (token) => {
+    try {
+        const res = await fetch(`${API_ENDPOINTS.AUTH}/remember`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        });
+        return await res.json();
+    } catch {
+        return { success: false };
+    }
+};
+
+// Signing out: revokes a saved login on the server (so a copied token stops
+// working), then the caller clears the local copy. Never blocks signing out.
+export const logoutUser = async () => {
+    if (!getAuthToken()) return;
+    try {
+        await fetch(`${API_ENDPOINTS.AUTH}/logout`, { method: "POST", headers: authHeaders() });
+    } catch {
+        // offline: the local copy is still removed by the caller
     }
 };
 

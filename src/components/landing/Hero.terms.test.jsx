@@ -1,11 +1,12 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import Hero from './Hero';
 import TermsModal from '../shared/TermsModal';
 import { LanguageProvider } from '../../i18n/LanguageContext';
-import { signinUser, fetchSiteContent } from '../../Services/api';
+import { signinUser, fetchSiteContent, setAuthToken, rememberLogin } from '../../Services/api';
 
 jest.mock('../../Services/api', () => ({
   signinUser: jest.fn(),
+  rememberLogin: jest.fn(),
   setAuthToken: jest.fn(),
   fetchSiteContent: jest.fn()
 }));
@@ -92,12 +93,13 @@ describe('Sign Up', () => {
     const { checkbox, submit } = openSignUp();
     expect(screen.getByRole('link', { name: 'Terms and Conditions' })).toHaveAttribute('href', '#terms');
     act(() => { window.location.hash = '#terms'; }); // what following the link does
-    fireEvent.click(await screen.findByRole('button', { name: 'Close' }));
+    const terms = await screen.findByRole('dialog', { name: 'Terms and Conditions' });
+    fireEvent.click(within(terms).getByRole('button', { name: 'Close' }));
     fireEvent.click(checkbox);
     expect(checkbox).toBeChecked();
     submit();
     await waitFor(() => expect(otpRequested()).toBe(true));
-    expect(await screen.findByText('Check your email')).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Verify Your Email' })).toBeInTheDocument();
   });
 
   test('Terms viewed on an earlier visit (same version): box can be ticked straight away', async () => {
@@ -124,7 +126,7 @@ describe('Sign Up', () => {
     const { checkbox } = openSignUp();
     fireEvent.click(checkbox);
     expect(checkbox).toBeChecked();
-    fireEvent.click(document.querySelector('.modal-header .btn-close'));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
     expect(screen.getByRole('checkbox', { name: /I have read and agree/ })).not.toBeChecked();
   });
@@ -139,5 +141,72 @@ describe('Sign In', () => {
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Secret123!' } });
     fireEvent.click(document.querySelector('form button[type="submit"]'));
     await waitFor(() => expect(signinUser).toHaveBeenCalledWith('juan@example.com', 'Secret123!'));
+  });
+});
+
+describe('Save Login Info', () => {
+  const signIn = async () => {
+    renderHero();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sign In' })[0]);
+    fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'juan@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Secret123!' } });
+    fireEvent.click(document.querySelector('form button[type="submit"]'));
+    return screen.findByRole('dialog', { name: 'Save your login info?' });
+  };
+
+  beforeEach(() => {
+    signinUser.mockResolvedValue({
+      success: true, isAdmin: false, token: 'session-token',
+      user: { id: 7, fullName: 'Juan Dela Cruz', username: 'juandc', email: 'juan@example.com', role: 'resident' }
+    });
+  });
+
+  test('after a successful sign-in, asks whether to save the login (nothing stored yet)', async () => {
+    const dialog = await signIn();
+    expect(dialog).toHaveTextContent('30 days');
+    expect(dialog).toHaveTextContent('never on a shared or public computer');
+    expect(screen.getByRole('button', { name: 'Yes, save' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'No' })).toBeInTheDocument();
+    expect(setAuthToken).not.toHaveBeenCalled();
+  });
+
+  test('No: keeps the sign-in for this browser session only', async () => {
+    await signIn();
+    fireEvent.click(screen.getByRole('button', { name: 'No' }));
+    await waitFor(() => expect(setAuthToken).toHaveBeenCalledWith('session-token', false, false));
+    expect(rememberLogin).not.toHaveBeenCalled();
+    expect(JSON.parse(sessionStorage.getItem('currentUser')).id).toBe(7);
+  });
+
+  test('Yes: exchanges it for a saved login and stores that', async () => {
+    rememberLogin.mockResolvedValue({ success: true, token: 'saved-token' });
+    await signIn();
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, save' }));
+    await waitFor(() => expect(setAuthToken).toHaveBeenCalledWith('saved-token', false, true));
+    expect(rememberLogin).toHaveBeenCalledWith('session-token');
+  });
+
+  test('Yes, but saving fails: still signed in for this session', async () => {
+    rememberLogin.mockResolvedValue({ success: false });
+    await signIn();
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, save' }));
+    await waitFor(() => expect(setAuthToken).toHaveBeenCalledWith('session-token', false, false));
+  });
+
+  test('closing the question counts as No', async () => {
+    await signIn();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(setAuthToken).toHaveBeenCalledWith('session-token', false, false));
+  });
+
+  test('a failed sign-in shows the error and never asks', async () => {
+    signinUser.mockResolvedValue({ success: false, message: 'Invalid email or password.' });
+    renderHero();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sign In' })[0]);
+    fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'juan@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrong' } });
+    fireEvent.click(document.querySelector('form button[type="submit"]'));
+    expect(await screen.findByText('Invalid email or password.')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Save your login info?' })).not.toBeInTheDocument();
   });
 });

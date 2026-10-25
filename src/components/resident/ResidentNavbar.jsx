@@ -10,7 +10,7 @@ import useNotifications from "./navbar/hooks/useNotifications";
 import useWeather from "./navbar/hooks/useWeather";
 import useResidentProfile from "./navbar/hooks/useResidentProfile";
 import useClickOutside from "./navbar/hooks/useClickOutside";
-import { clearAuthToken } from "../../Services/api";
+import { clearAuthToken, logoutUser } from "../../Services/api";
 import "./navbar/NavbarStyle.css";
 
 // How often to poll for new announcements while the app is open (ms)
@@ -308,11 +308,13 @@ function ResidentNavbar() {
 
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);
 
-  const handleNavigation = (path) => {
+  const handleNavigation = async (path) => {
     if (path === '/evacuation') {
       sessionStorage.setItem('previousPage', '/resident');
     }
     if (path === '/') {
+      // Revokes a saved login on the server first (needs the token).
+      await logoutUser();
       localStorage.removeItem('residentName');
       sessionStorage.removeItem('userAuthenticated');
       sessionStorage.removeItem('currentUser');

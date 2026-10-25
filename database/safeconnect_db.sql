@@ -259,3 +259,20 @@ VALUES (
   'Active'
 );
 
+-- --------------------------------------------------------
+-- remembered_logins: "Save Login Info" (Yes after signing in). One row per
+-- saved login; its 30-day token carries the row id as jti and only works
+-- while the row exists. Sign-out deletes the row; a password change deletes
+-- all of the user's rows. (Also created on server start by
+-- backend/models/RememberedLogin.js.)
+-- --------------------------------------------------------
+CREATE TABLE remembered_logins (
+  id CHAR(36) NOT NULL,
+  user_id INT(11) NOT NULL,
+  device VARCHAR(255) DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  PRIMARY KEY (id),
+  KEY user_id (user_id),
+  CONSTRAINT fk_remembered_user FOREIGN KEY (user_id) REFERENCES registered_users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

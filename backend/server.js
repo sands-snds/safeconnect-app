@@ -103,6 +103,15 @@ Log.ensureColumns().catch((err) =>
 );
 
 // Creates the News Like/Comment tables on existing databases (no manual migration needed).
+// Saved logins ("Save Login Info"); expired rows are cleared daily.
+const RememberedLogin = require("./models/RememberedLogin");
+RememberedLogin.ensureTable()
+    .then(() => RememberedLogin.deleteExpired())
+    .catch((err) => console.error("Could not create remembered_logins table:", err.message));
+setInterval(() => {
+    RememberedLogin.deleteExpired().catch((err) => console.error("Saved-login cleanup failed:", err.message));
+}, 24 * 60 * 60 * 1000).unref();
+
 AnnouncementLike.ensureTable().catch((err) =>
   console.error("Could not create announcement_likes table:", err.message)
 );

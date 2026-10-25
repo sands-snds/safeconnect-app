@@ -551,3 +551,35 @@ exports.me = (req, res) => {
         user: toPublicUser(req.account)
     });
 };
+
+// POST /api/auth/remember -- "Save Login Info" > Yes. Exchanges the current
+// (session) sign-in for a 30-day saved login that the server can revoke.
+exports.remember = async (req, res) => {
+    try {
+        const RememberedLogin = require("../models/RememberedLogin");
+        // Re-answering Yes replaces that device's previous saved login.
+        if (req.user.jti) await RememberedLogin.delete(req.user.jti);
+        const rememberedId = await RememberedLogin.create(req.account.id, req.headers["user-agent"]);
+        res.json({
+            success: true,
+            token: generateToken(req.account, { rememberedId }),
+            days: RememberedLogin.REMEMBER_DAYS
+        });
+    } catch (err) {
+        console.error("remember error:", err);
+        res.status(500).json({ success: false, message: "Could not save your login." });
+    }
+};
+
+// POST /api/auth/logout -- revokes a saved login so its token stops working
+// immediately (the frontend also deletes its copy). Session sign-ins have
+// nothing to revoke; they expire on their own.
+exports.logout = async (req, res) => {
+    try {
+        if (req.user.jti) await require("../models/RememberedLogin").delete(req.user.jti);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("logout error:", err);
+        res.status(500).json({ success: false, message: "Could not sign out." });
+    }
+};

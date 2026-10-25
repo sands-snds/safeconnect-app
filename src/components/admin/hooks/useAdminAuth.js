@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     clearAuthToken,
+    logoutUser,
     getAuthToken,
     fetchUserProfile,
     resolveAssetUrl,
@@ -101,8 +102,10 @@ export default function useAdminAuth() {
 
     const handleLogout = async () => {
 
-        // Needs the token, so it runs before clearAuthToken().
+        // Need the token, so they run before clearAuthToken(). logoutUser
+        // revokes a saved login ("Save Login Info") on the server.
         await logoutAdmin();
+        await logoutUser();
 
         sessionStorage.removeItem(
             "adminAuthenticated"

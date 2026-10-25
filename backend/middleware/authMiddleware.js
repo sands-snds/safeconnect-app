@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
 const User = require("../models/User");
+const RememberedLogin = require("../models/RememberedLogin");
 const adminPresence = require("../services/adminPresence");
 const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
 
@@ -37,6 +38,16 @@ const verifyToken = (req, res, next) => {
                     success: false,
                     message: "Invalid token.",
                     code: account ? "ACCOUNT_INACTIVE" : "ACCOUNT_NOT_FOUND"
+                });
+            }
+            // A saved login ("Save Login Info") is only valid while its
+            // remembered_logins row exists: signing out or changing the
+            // password revokes it, even though the token itself hasn't expired.
+            if (decoded.jti && !(await RememberedLogin.isValid(decoded.jti, decoded.id))) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid token.",
+                    code: "LOGIN_REVOKED"
                 });
             }
             req.user = decoded;
