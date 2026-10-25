@@ -228,6 +228,7 @@ export const translations = {
     demoVideo: {
       eyebrow: 'Watch the demo',
       defaultTitle: 'See SafeConnect in action',
+      subtitle: 'A quick walkthrough of how to report an emergency, request help, and follow your reports.',
       comingSoonTitle: 'Demo video coming soon',
       comingSoonText: 'A short video showing how to use SafeConnect will be available here.',
       newsBadge: 'Video guide'
@@ -1055,6 +1056,7 @@ export const translations = {
     demoVideo: {
       eyebrow: 'Panoorin ang demo',
       defaultTitle: 'Tingnan kung paano gumagana ang SafeConnect',
+      subtitle: 'Maikling gabay kung paano mag-report ng emergency, humingi ng tulong, at subaybayan ang iyong mga report.',
       comingSoonTitle: 'Malapit nang ilabas ang demo video',
       comingSoonText: 'Dito ilalagay ang maikling video kung paano gamitin ang SafeConnect.',
       newsBadge: 'Video gabay'

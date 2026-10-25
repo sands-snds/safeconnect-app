@@ -32,7 +32,7 @@ export default function Services() {
           z-index: 2;
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          grid-auto-rows: 175px;
+          grid-auto-rows: minmax(175px, auto); /* grows when a title wraps, so no tile is cramped */
           gap: 20px;
           max-width: 980px;
           margin: 0 auto;
@@ -58,7 +58,7 @@ export default function Services() {
           flex-direction: column;
           justify-content: flex-end;
         }
-        .svc-tile.small { grid-column: span 1; grid-row: span 1; display: flex; flex-direction: column; justify-content: center; }
+        .svc-tile.small { grid-column: span 1; grid-row: span 1; display: flex; flex-direction: column; justify-content: flex-start; }
         .svc-tile.wide { grid-column: span 4; grid-row: span 1; }
 
         .svc-tile-watermark { position: absolute; top: -18px; right: -14px; font-size: 9rem; opacity: 0.15; }
