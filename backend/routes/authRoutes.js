@@ -1,10 +1,14 @@
 const express = require("express");
 const router  = express.Router();
 const authController = require("../controllers/authController");
+const { verifyToken } = require("../middleware/authMiddleware");
 
 // Sign up / Sign in
 router.post("/signup",      authController.signup);
 router.post("/signin",      authController.signin);
+
+// The signed-in account (verifies the token against the database)
+router.get("/me",          verifyToken, authController.me);
 
 // Email verification (signup OTP)
 router.post("/request-otp", authController.requestOtp);

@@ -508,34 +508,46 @@ exports.signin = async (req, res) => {
 
         const token = generateToken(user);
 
-        // Resolve photo_url to a full URL so the navbar avatar works immediately
-        // after login without needing a separate profile fetch.
-        const ASSET_BASE = process.env.ASSET_BASE ||
-            `http://localhost:${process.env.PORT || 5000}`;
-        const resolvePhoto = (p) => {
-            if (!p) return null;
-            if (/^https?:\/\//.test(p) || p.startsWith("data:")) return p;
-            return `${ASSET_BASE}${p}`;
-        };
-
         return res.json({
             success: true,
             isAdmin: isAdminRole(user.role),
             isSuperAdmin: isSuperAdminRole(user.role),
             token,
-            user: {
-                id:       user.id,
-                fullName: user.full_name,
-                username: user.username,
-                contact:  user.contact_number,
-                email:    user.email_address,
-                role:     user.role,
-                photoUrl: resolvePhoto(user.photo_url),
-            },
+            user: toPublicUser(user),
             message: "Login successful",
         });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ success: false, message: "Internal server error." });
     }
+};
+// The signed-in user as the frontend stores it (sessionStorage "currentUser").
+// photo_url is resolved to a full URL so the navbar avatar works right away.
+function toPublicUser(user) {
+    const assetBase = process.env.ASSET_BASE || `http://localhost:${process.env.PORT || 5000}`;
+    const photo = user.photo_url;
+    let photoUrl = null;
+    if (photo) {
+        photoUrl = /^https?:\/\//.test(photo) || photo.startsWith("data:") ? photo : `${assetBase}${photo}`;
+    }
+    return {
+        id:       user.id,
+        fullName: user.full_name,
+        username: user.username,
+        contact:  user.contact_number,
+        email:    user.email_address,
+        role:     user.role,
+        photoUrl,
+    };
+}
+
+// GET /api/auth/me -- confirms the token belongs to an existing, Active
+// account (verifyToken checks that and loads req.account). The Resident page
+// calls it before showing anything (RequireResident.jsx).
+exports.me = (req, res) => {
+    res.json({
+        success: true,
+        isAdmin: isAdminRole(req.account.role),
+        user: toPublicUser(req.account)
+    });
 };

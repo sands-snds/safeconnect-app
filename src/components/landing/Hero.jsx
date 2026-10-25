@@ -171,6 +171,21 @@ function Hero() {
     const [isSubmitting,  setIsSubmitting]  = useState(false);
     const [error,         setError]         = useState('');
     const [successMsg,    setSuccessMsg]    = useState('');
+    // Shown in Sign In when the Resident page sent the visitor here
+    // (RequireResident.jsx redirects to /?signin=required).
+    const [signInNotice,  setSignInNotice]  = useState('');
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('signin') !== 'required') return;
+        setShowSignIn(true);
+        setSignInNotice(t('signIn.signInRequired'));
+        // Drop the flag so refreshing doesn't reopen Sign In.
+        params.delete('signin');
+        const query = params.toString();
+        window.history.replaceState(null, '', window.location.pathname + (query ? `?${query}` : '') + window.location.hash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Countdown timer for resend button
     useEffect(() => {
@@ -220,7 +235,7 @@ function Hero() {
         setFpEmail(''); setFpNewPw(''); setFpConfirmPw('');
         setShowFpNewPw(false); setShowFpConfPw(false);
         resetOtp(); setOtpEmail(''); setResendCooldown(0);
-        setError(''); setSuccessMsg('');
+        setError(''); setSuccessMsg(''); setSignInNotice('');
     };
 
     // ── Sign in ───────────────────────────────────────────────────────────────
@@ -433,6 +448,7 @@ function Hero() {
                                 <button type="button" className="btn-close btn-close-white" onClick={closeAll} />
                             </div>
                             <div className="modal-body p-4">
+                                {signInNotice && !error && <div className="alert alert-warning" role="status">{signInNotice}</div>}
                                 {error      && <div className="alert alert-danger"  role="alert">{error}</div>}
                                 {successMsg && <div className="alert alert-success" role="alert">{successMsg}</div>}
 

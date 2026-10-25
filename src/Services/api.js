@@ -126,6 +126,21 @@ const getDeviceHints = async () => {
     }
 };
 
+// The signed-in account, checked by the server (GET /auth/me verifies the
+// token AND that the account still exists and is Active). Returns
+// { success, user, isAdmin }; { success: false, message } otherwise --
+// including "Invalid token.", which apiFetch() treats as signed out.
+export const fetchCurrentUser = async () => {
+    if (!getAuthToken()) return { success: false, message: "Access denied. No token provided." };
+    try {
+        const res = await apiFetch(`${API_ENDPOINTS.AUTH}/me`, { headers: authHeaders() });
+        const data = await res.json().catch(() => ({}));
+        return res.ok ? data : { success: false, ...data };
+    } catch {
+        return { success: false, offline: true, message: "Could not reach the server." };
+    }
+};
+
 export const signinUser = async (email, password) => {
     const device = await getDeviceHints();
     const res = await apiFetch(`${API_ENDPOINTS.AUTH}/signin`, {

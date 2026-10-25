@@ -101,7 +101,15 @@ export const translations = {
       submit: 'Sign In',
       submitting: 'Signing In...',
       noAccount: "Don't have an account?",
-      signUpLink: 'Sign Up'
+      signUpLink: 'Sign Up',
+      signInRequired: 'Please sign in to continue to your Safe Connect account.'
+    },
+    residentGuard: {
+      checking: 'Checking your sign-in...',
+      offlineTitle: "Couldn't verify your sign-in",
+      offlineBody: 'We could not reach Safe Connect to confirm that you are signed in. Check your internet connection and try again.',
+      retry: 'Try Again',
+      signInAgain: 'Sign In Again'
     },
     signUp: {
       createTitle: 'Create Account',
@@ -869,7 +877,15 @@ export const translations = {
       submit: 'Mag-sign In',
       submitting: 'Nagsa-sign In...',
       noAccount: 'Wala ka pang account?',
-      signUpLink: 'Mag-sign Up'
+      signUpLink: 'Mag-sign Up',
+      signInRequired: 'Mag-sign in muna para magpatuloy sa iyong Safe Connect account.'
+    },
+    residentGuard: {
+      checking: 'Sinusuri ang iyong pag-sign in...',
+      offlineTitle: 'Hindi ma-verify ang iyong pag-sign in',
+      offlineBody: 'Hindi namin maabot ang Safe Connect para kumpirmahing naka-sign in ka. Suriin ang iyong koneksyon sa internet at subukang muli.',
+      retry: 'Subukang Muli',
+      signInAgain: 'Mag-sign In Muli'
     },
     signUp: {
       createTitle: 'Gumawa ng Account',

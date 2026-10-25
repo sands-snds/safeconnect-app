@@ -16,7 +16,7 @@ const verifyToken = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
 
         if (err) {
             return res.status(403).json({
@@ -25,9 +25,27 @@ const verifyToken = (req, res, next) => {
             });
         }
 
-        req.user = decoded;
-
-        next();
+        // A signed token alone isn't enough: tokens last 7 days, so check the
+        // account still exists and is Active. Otherwise a deleted or
+        // suspended account could keep using the API until its token
+        // expired. "Invalid token." makes the frontend sign out (api.js
+        // SESSION_ERRORS); signing in again explains the account status.
+        try {
+            const account = await User.findById(decoded.id);
+            if (!account || (account.status && account.status !== "Active")) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid token.",
+                    code: account ? "ACCOUNT_INACTIVE" : "ACCOUNT_NOT_FOUND"
+                });
+            }
+            req.user = decoded;
+            req.account = account;
+            next();
+        } catch (dbErr) {
+            console.error("verifyToken error:", dbErr);
+            return res.status(500).json({ success: false, message: "Internal server error." });
+        }
     });
 };
 
@@ -171,8 +189,26 @@ const verifySelfOrAnyAdmin = async (req, res, next) => {
     }
 };
 
+// New reports are always filed under the signed-in account. The forms send
+// userId / name / contact too, but they're client-supplied, so a resident
+// could otherwise file reports as someone else (and have them show up in that
+// person's My Reports). Use after verifyToken, which loads req.account.
+const reportAsSignedInUser = (req, res, next) => {
+    const account = req.account;
+    req.body = {
+        ...req.body,
+        userId: account.id,
+        name: account.full_name,          // emergency_reports.reporter_name
+        fullname: account.full_name,      // assistance / petty crime
+        contact: account.contact_number,
+        email: account.email_address
+    };
+    next();
+};
+
 module.exports = {
     verifyToken,
+    reportAsSignedInUser,
     attachUserIfPresent,
     verifyAdmin,
     verifySuperAdmin,

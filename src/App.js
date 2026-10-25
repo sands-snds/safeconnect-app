@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AdminPage from './pages/AdminPage';
 import ResidentPage from './pages/ResidentPage';
+import RequireResident from './components/resident/RequireResident';
 import { LanguageProvider } from './i18n/LanguageContext';
 import LanguageGate from './components/shared/LanguageGate';
 import { PopupHost } from './components/shared/popup';
@@ -23,7 +24,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/admin" element={<AdminPage />} />
 
-            <Route path="/resident" element={<ResidentPage />} />
+            <Route path="/resident" element={<RequireResident><ResidentPage /></RequireResident>} />
           </Routes>
         </div>
       </Router>
