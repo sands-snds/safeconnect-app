@@ -3,6 +3,7 @@ const dns    = require("dns").promises;
 const User   = require("../models/User");
 const AdminActivity = require("../models/AdminActivity");
 const { generateToken } = require("../utils/jwt");
+const { passwordProblem } = require("../utils/validation");
 const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
 const Log = require("../models/Log");
 const { signinContext, lookupLocation } = require("../utils/signinContext");
@@ -54,6 +55,8 @@ exports.requestOtp = async (req, res) => {
                 message: "All required fields must be filled.",
             });
         }
+        const weakPassword = passwordProblem(password);
+        if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
         const domainValid = await verifyEmailDomain(email);
         if (!domainValid) {
@@ -309,6 +312,8 @@ exports.resetPassword = async (req, res) => {
                 message: "Email and new password are required.",
             });
         }
+        const weakPassword = passwordProblem(newPassword);
+        if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
         const entry = resetStore.get(email);
         if (!entry || !entry.verified) {
@@ -413,6 +418,8 @@ exports.signup = async (req, res) => {
                 message: "All required fields must be filled.",
             });
         }
+        const weakPassword = passwordProblem(password);
+        if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
         const emailExists = await User.findByEmail(email);
         if (emailExists) {

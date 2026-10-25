@@ -216,6 +216,15 @@ export const fetchUserProfile = async (userId) => {
 };
 
 // Real routes are PATCH-only (see backend/routes/userRoutes.js) -- PUT 404s.
+export const updateFullName = async (userId, fullName) => {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/name`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ fullName }),
+    });
+    return res.json();
+};
+
 export const updateUsername = async (userId, username) => {
     const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/username`, {
         method: "PATCH",
@@ -249,7 +258,11 @@ export const changePassword = async (userId, currentPassword, newPassword) => {
         headers: authHeaders(),
         body: JSON.stringify({ currentPassword, newPassword }),
     });
-    return res.json();
+    const data = await res.json();
+    // Changing the password revokes every saved login; when this device was
+    // on one, the server sends a fresh one so it stays signed in.
+    if (data?.success && data.token) setAuthToken(data.token, isAdminContext(), true);
+    return data;
 };
 
 export const uploadProfilePhoto = async (userId, file) => {

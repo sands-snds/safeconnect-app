@@ -1,5 +1,8 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const RememberedLogin = require("../models/RememberedLogin");
+const { generateToken } = require("../utils/jwt");
+const { passwordProblem, fullNameProblem, normalizeName } = require("../utils/validation");
 const { ROLES, ALL_ROLES, roleLabel, isMainAccount } = require("../utils/roles");
 
 const MAIN_ACCOUNT_LOCKED = "This is the barangay's main Admin account. Its role, status and email can't be changed.";
@@ -159,11 +162,28 @@ exports.uploadPhoto = async (req, res) => {
     }
 };
 
+exports.updateFullName = async (req, res) => {
+    try {
+        const problem = fullNameProblem(req.body.fullName);
+        if (problem) return res.status(400).json({ success: false, message: problem });
+
+        const fullName = normalizeName(req.body.fullName);
+        await User.updateFullName(req.params.id, fullName);
+        return res.json({ success: true, fullName });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, message: "Failed to update full name." });
+    }
+};
+
 exports.updateUsername = async (req, res) => {
     try {
-        const { username } = req.body;
+        const username = String(req.body.username || "").trim();
         if (!username) {
             return res.status(400).json({ success: false, message: "Username is required." });
+        }
+        if (username.length > 50) {
+            return res.status(400).json({ success: false, message: "Username must be 50 characters or fewer." });
         }
 
         const existing = await User.findByUsername(username);
@@ -172,7 +192,7 @@ exports.updateUsername = async (req, res) => {
         }
 
         await User.updateUsername(req.params.id, username);
-        return res.json({ success: true });
+        return res.json({ success: true, username });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ success: false, message: "Failed to update username." });
@@ -253,10 +273,22 @@ exports.changePassword = async (req, res) => {
         if (!validPassword) {
             return res.status(401).json({ success: false, message: "Current password is incorrect." });
         }
+        const weakPassword = passwordProblem(newPassword);
+        if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
         const hashed = await bcrypt.hash(newPassword, 10);
+        // Also signs the account out of every saved login (User.updatePassword).
         await User.updatePassword(req.params.id, hashed);
-        return res.json({ success: true });
+
+        // Keep the person who changed it signed in on this device: if they
+        // were on a saved login, give this device a fresh one to replace the
+        // one that was just revoked. Other devices stay signed out.
+        let token;
+        if (req.user?.jti && String(req.user.id) === String(req.params.id)) {
+            const rememberedId = await RememberedLogin.create(user.id, req.headers["user-agent"]);
+            token = generateToken(user, { rememberedId });
+        }
+        return res.json({ success: true, ...(token ? { token } : {}) });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ success: false, message: "Failed to change password." });

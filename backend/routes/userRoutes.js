@@ -31,6 +31,7 @@ router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, logActivit
 // Self-or-admin: a resident's own profile (SettingsPage.jsx, MyReportsPage.jsx)
 router.get("/:id", verifyToken, verifySelfOrAdmin, userController.getUserById);
 router.post("/:id/photo", verifyToken, verifySelfOrAdmin, upload.single("photo"), userController.uploadPhoto);
+router.patch("/:id/name", verifyToken, verifySelfOrAdmin, userController.updateFullName);
 router.patch("/:id/username", verifyToken, verifySelfOrAdmin, userController.updateUsername);
 router.patch("/:id/contact", verifyToken, verifySelfOrAdmin, userController.updateContact);
 router.patch("/:id/email", verifyToken, verifySelfOrAdmin, userController.updateEmail);

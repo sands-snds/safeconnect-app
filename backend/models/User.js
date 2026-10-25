@@ -112,6 +112,14 @@ class User {
         return result.affectedRows;
     }
 
+    static async updateFullName(id, fullName) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET full_name = ? WHERE id = ?`,
+            [fullName, id]
+        );
+        return result.affectedRows;
+    }
+
     static async updateContact(id, contact) {
         const [result] = await db.query(
             `UPDATE registered_users SET contact_number = ? WHERE id = ?`,
