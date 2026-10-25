@@ -222,11 +222,11 @@ describe('Sign Up layout', () => {
     expect(screen.queryByRole('list', { name: 'Password requirements' })).not.toBeInTheDocument();
   });
 
-  test('no section headings', () => {
+  test('groups the form under bold section headings', () => {
     renderHero();
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
-    for (const heading of ['Personal information', 'Contact details', 'Account security']) {
-      expect(screen.queryByText(heading)).not.toBeInTheDocument();
+    for (const heading of ['Personal Information', 'Contact Details', 'Account Security']) {
+      expect(screen.getByRole('heading', { name: heading })).toHaveClass('auth-section');
     }
   });
 });

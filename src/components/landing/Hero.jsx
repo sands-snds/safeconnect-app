@@ -529,6 +529,7 @@ function Hero() {
                     <AuthAlert type="error">{error}</AuthAlert>
 
                     <form onSubmit={handleSignUpSubmit} noValidate>
+                        <h3 className="auth-section">{t('signUp.sectionPersonal')}</h3>
                         <div className="auth-grid cols-3">
                             <AuthField id="suFirst" label={t('signUp.firstName')} icon="bi-person">
                                 <input type="text" className="auth-input" id="suFirst" autoComplete="given-name" placeholder={t('signUp.firstNamePlaceholder')} value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
@@ -540,16 +541,20 @@ function Hero() {
                                 <input type="text" className="auth-input" id="suLast" autoComplete="family-name" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                             </AuthField>
                         </div>
+
+                        <h3 className="auth-section">{t('signUp.sectionContact')}</h3>
                         <div className="auth-grid cols-2">
-                            <AuthField id="suUsername" label={t('signUp.username')} icon="bi-at">
-                                <input type="text" className="auth-input" id="suUsername" autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
-                            </AuthField>
                             <AuthField id="suContact" label={t('signUp.contactNumber')} icon="bi-phone" prefix="+63">
                                 <input type="tel" className="auth-input has-prefix" id="suContact" autoComplete="tel-national" placeholder="9XXXXXXXXX" value={suContact} onChange={e => setSuContact(e.target.value.replace(DIGITS_ONLY_REGEX,'').slice(0,10))} maxLength={10} inputMode="numeric" />
                             </AuthField>
+                            <AuthField id="suEmail" label={t('signUp.email')} icon="bi-envelope">
+                                <input type="email" className="auth-input" id="suEmail" autoComplete="email" placeholder={t('signUp.emailPlaceholder')} value={suEmail} onChange={e => setSuEmail(e.target.value)} />
+                            </AuthField>
                         </div>
-                        <AuthField id="suEmail" label={t('signUp.email')} icon="bi-envelope">
-                            <input type="email" className="auth-input" id="suEmail" autoComplete="email" placeholder={t('signUp.emailPlaceholder')} value={suEmail} onChange={e => setSuEmail(e.target.value)} />
+
+                        <h3 className="auth-section">{t('signUp.sectionSecurity')}</h3>
+                        <AuthField id="suUsername" label={t('signUp.username')} icon="bi-at">
+                            <input type="text" className="auth-input" id="suUsername" autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
                         </AuthField>
                         <div className="auth-grid cols-2">
                             <AuthField id="suPassword" label={t('signUp.password')} icon="bi-lock"
