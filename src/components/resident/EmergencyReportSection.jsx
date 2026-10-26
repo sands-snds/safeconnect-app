@@ -190,6 +190,8 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
         .ir-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
         .ir-intro h2 { margin: 0 0 14px; font-size: clamp(1.9rem, 3.8vw, 2.8rem); font-weight: 900; color: #111; line-height: 1.18; letter-spacing: -0.02em; }
         .ir-intro p { margin: 0; color: #5b6170; line-height: 1.75; font-size: 1rem; }
+        .ir-intro .ir-priority-note { display: inline-flex; align-items: flex-start; gap: 7px; margin-top: 14px; padding: 8px 14px; border-radius: 12px; background: #fff; border: 1px solid #f0eaec; color: #4b5563; font-size: 0.86rem; line-height: 1.5; text-align: left; }
+        .ir-priority-note i { color: #6B2C3E; margin-top: 2px; }
 
         .ir-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
         .ir-card { display: flex; flex-direction: column; background: #fff; border: 1.5px solid #f0eaec; border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(107, 44, 62, 0.07); transition: transform 0.25s ease, box-shadow 0.25s ease; }
@@ -234,6 +236,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
             <div className="ir-badge"><i className="bi bi-lightning-charge-fill" /> {t('emergencyReportSection.badge')}</div>
             <h2>{t('emergencyReportSection.title')}</h2>
             <p>{t('emergencyReportSection.subtitle')}</p>
+            <p className="ir-priority-note"><i className="bi bi-info-circle-fill" aria-hidden="true" />{t('emergencyReportSection.priorityNote')}</p>
           </div>
 
           <div className="ir-cards">

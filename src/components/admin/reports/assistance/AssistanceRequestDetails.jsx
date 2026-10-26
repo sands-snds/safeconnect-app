@@ -52,10 +52,13 @@ const AssistanceRequestDetails = ({ request }) => {
           value={request.victimOfEmergency}
         />
 
-        <DetailField
-          label="Urgency Level"
-          value={request.urgency}
-        />
+        {/* Only older requests have one: residents no longer choose an urgency. */}
+        {request.urgency && (
+          <DetailField
+            label="Urgency Level"
+            value={request.urgency}
+          />
+        )}
 
         <DetailField
           label="People Needing Help"

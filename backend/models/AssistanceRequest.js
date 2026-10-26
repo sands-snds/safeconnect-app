@@ -46,7 +46,7 @@ class AssistanceRequest {
                 request.latitude || null,
                 request.longitude || null,
                 request.peopleAffected || 1,
-                request.urgency || "Medium",
+                request.urgency || "", // residents no longer pick one; blank, not a made-up level
                 request.situation,
                 request.specialNeeds || null,
                 request.victimOfEmergency || null,
@@ -131,7 +131,7 @@ class AssistanceRequest {
                 current_location = ?,
                 latitude = ?,
                 longitude = ?,
-                urgency_level = ?,
+                urgency_level = COALESCE(?, urgency_level),
                 describe_your_situation = ?,
                 special_needs = ?,
                 victim_of_emergency = COALESCE(?, victim_of_emergency),
@@ -144,7 +144,7 @@ class AssistanceRequest {
                 request.location,
                 request.latitude || null,
                 request.longitude || null,
-                request.urgency || "Medium",
+                request.urgency || null, // keep the saved level when none is sent
                 request.situation,
                 request.specialNeeds || null,
                 request.victimOfEmergency || null,

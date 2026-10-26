@@ -20,12 +20,6 @@ const SPECIAL_NEEDS_OPTIONS = [
   { key: 'pregnant', value: 'Pregnant' },
   { key: 'pets', value: 'Pets' }
 ];
-const URGENCY_OPTIONS = [
-  { key: 'low', value: 'Low' },
-  { key: 'medium', value: 'Medium' },
-  { key: 'high', value: 'High' },
-  { key: 'critical', value: 'Critical' }
-];
 
 // "Victim of What Emergency?" choices: the Report Emergency form's types
 // (same stored values), plus Other, where the resident types it in.
@@ -92,7 +86,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     location: '',
     situation: '',
     special: [],
-    urgency: '',
     consent: false
   });
   const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
@@ -141,7 +134,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       assistanceType: editingReport.title || '',
       location: editingReport.location || '',
       situation: editingReport.description || '',
-      urgency: editingReport.urgency || '',
       special: editingReport.specialNeeds
         ? editingReport.specialNeeds.split(',').map((s) => s.trim()).filter(Boolean)
         : []
@@ -260,7 +252,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           longitude: gpsCoords ? gpsCoords.lng : null,
           situation: formData.situation,
           special: formData.special.join(', ') || null,
-          urgency: formData.urgency || null
+          urgency: null
         });
         if (!result.success) {
           throw new Error(result.message || t('assistanceModal.updateFailed'));
@@ -298,7 +290,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         longitude: gpsCoords ? gpsCoords.lng : null,
         situation: formData.situation,
         special: formData.special.join(', ') || null,
-        urgency: formData.urgency || null,
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
         victimContact: reportFor === 'others' ? victimContact.trim() : null,
@@ -323,7 +314,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         location: '',
         situation: '',
         special: [],
-        urgency: '',
         consent: false
       });
       setReportFor('self');
@@ -620,42 +610,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               onChange={handleMediaChange}
               onRemove={clearMedia}
             />
-</div>
-<div style={{ marginBottom: '16px' }}>
-<label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginBottom: '8px',
-              fontWeight: '600',
-              color: '#374151',
-              fontSize: '13px'
-            }}>
-<i
-                className="bi bi-exclamation-diamond-fill"
-                style={{ color: '#374151', fontSize: '14px' }}
-></i>
-              {t('assistanceModal.urgency')}
-</label>
-<select className="form-select"
-              name="urgency"
-              value={formData.urgency}
-              onChange={handleChange}
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                fontSize: '14px',
-                outline: 'none'
-              }}
->
-<option value="">{t('assistanceModal.selectUrgency')}</option>
-              {URGENCY_OPTIONS.map((opt) => (
-<option key={opt.key} value={opt.value}>{t(`assistanceModal.urgencyOptions.${opt.key}`)}</option>
-              ))}
-</select>
 </div>
 <div style={{
               display: 'flex',

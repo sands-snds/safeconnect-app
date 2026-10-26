@@ -499,23 +499,24 @@ export const translations = {
       badge: 'Get help fast',
       title: 'Report an Incident',
       subtitle: 'Tell the barangay what is happening and where. Your report goes straight to our response team, day or night. Choose the option that fits your situation.',
+      priorityNote: 'The label on each card shows how urgent that kind of report is, so the barangay can respond to the most serious ones first.',
       reportButton: 'Report',
       cards: {
         emergency: {
           title: 'Report an Emergency',
-          badge: 'Critical',
+          badge: 'Life-threatening',
           description: 'A life-threatening situation happening right now that needs responders immediately.',
           cta: 'Report an emergency'
         },
         assistance: {
           title: 'Request Assistance',
-          badge: 'High',
+          badge: 'Help needed soon',
           description: 'Need relief goods, rescue, or support during or after a disaster? Let the barangay know what you need.',
           cta: 'Request assistance'
         },
         pettyCrime: {
           title: 'Report a Crime',
-          badge: 'Medium',
+          badge: 'Non-urgent',
           description: 'Report theft, vandalism, harassment, or suspicious activity. You can choose to stay anonymous.',
           cta: 'Report a crime'
         }
@@ -1339,23 +1340,24 @@ export const translations = {
       badge: 'Mabilis na tulong',
       title: 'Mag-report ng Insidente',
       subtitle: 'Sabihin sa barangay kung ano ang nangyayari at saan. Diretso sa aming response team ang iyong report, araw man o gabi. Piliin ang angkop sa iyong sitwasyon.',
+      priorityNote: 'Ipinapakita ng label sa bawat card kung gaano kaagaran ang ganitong report, para matugunan muna ng barangay ang pinakamabigat.',
       reportButton: 'I-report',
       cards: {
         emergency: {
           title: 'Mag-report ng Emergency',
-          badge: 'Kritikal',
+          badge: 'Nagbabanta sa buhay',
           description: 'Isang nagbabantang-buhay na sitwasyon na nangyayari ngayon at kailangan agad ng responder.',
           cta: 'Mag-report ng emergency'
         },
         assistance: {
           title: 'Humingi ng Tulong',
-          badge: 'Mataas',
+          badge: 'Kailangan ng tulong',
           description: 'Kailangan ng relief goods, rescue, o suporta habang o pagkatapos ng sakuna? Ipaalam sa barangay ang iyong kailangan.',
           cta: 'Humingi ng tulong'
         },
         pettyCrime: {
           title: 'Mag-report ng Krimen',
-          badge: 'Katamtaman',
+          badge: 'Hindi agaran',
           description: 'I-report ang pagnanakaw, bandalismo, panliligalig, o kahina-hinalang gawain. Maaari kang manatiling anonymous.',
           cta: 'Mag-report ng krimen'
         }
