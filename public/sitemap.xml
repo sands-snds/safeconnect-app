@@ -2,7 +2,7 @@
 <!-- Public pages only (the landing page). /admin and /resident need sign-in. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://polite-plant-04bf1e000.3.azurestaticapps.net/</loc>
-    <lastmod>2026-10-15</lastmod>
+    <loc>https://safeconnect-santafe.vercel.app/</loc>
+    <lastmod>2026-10-27</lastmod>
   </url>
 </urlset>

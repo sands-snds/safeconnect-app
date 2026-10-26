@@ -11,6 +11,7 @@ import {
 } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
 import PhotoCropModal from '../shared/PhotoCropModal';
+import { useInstallApp } from '../shared/installApp';
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // before cropping; the saved photo is a small 512px JPEG
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,6 +29,7 @@ const SECTIONS = [
   { key: 'profile', icon: 'bi-person-fill' },
   { key: 'contact', icon: 'bi-telephone-fill' },
   { key: 'security', icon: 'bi-shield-lock-fill' },
+  { key: 'app', icon: 'bi-phone-fill' },
   { key: 'account', icon: 'bi-info-circle-fill' }
 ];
 
@@ -75,6 +77,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const fileInputRef = useRef(null);
 
   const [section, setSection] = useState('profile');
+  const install = useInstallApp();
   const [profile, setProfile] = useState(user || null);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
@@ -424,6 +427,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         .st-checklist { list-style: none; margin: -4px 0 1.1rem; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
         .st-checklist li { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #6b7280; }
         .st-checklist li.met { color: #16a34a; }
+        .st-steps { margin: 0; padding-left: 1.25rem; color: #374151; font-size: 0.9rem; line-height: 1.7; }
         .st-note { display: flex; gap: 8px; font-size: 0.82rem; color: #4b5563; background: #f9fafb; border-radius: 10px; padding: 10px 12px; margin-bottom: 1.25rem; }
 
         .st-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 0.5rem; padding-top: 1.1rem; border-top: 1px solid #f3f4f6; }
@@ -631,6 +635,33 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                     </button>
                   </div>
                 </form>
+              )}
+
+              {section === 'app' && (
+                <div className="st-panel">
+                  <h3>{t('settings.installTitle')}</h3>
+                  <p className="st-panel-sub">{t('settings.installSub')}</p>
+                  {install.installed ? (
+                    <div className="st-note">
+                      <i className="bi bi-check-circle-fill" aria-hidden="true" style={{ color: '#16a34a' }} />
+                      <span>{t('settings.installDone')}</span>
+                    </div>
+                  ) : install.canPrompt ? (
+                    <div className="st-actions" style={{ justifyContent: 'flex-start' }}>
+                      <button type="button" className="st-btn primary" onClick={install.promptInstall}>
+                        <i className="bi bi-download" aria-hidden="true" /> {t('settings.installButton')}
+                      </button>
+                    </div>
+                  ) : (
+                    // No install prompt from this browser: explain the manual steps.
+                    <ol className="st-steps">
+                      {(install.ios
+                        ? [t('settings.installIos1'), t('settings.installIos2'), t('settings.installIos3')]
+                        : [t('settings.installAndroid1'), t('settings.installAndroid2'), t('settings.installAndroid3')]
+                      ).map((step) => <li key={step}>{step}</li>)}
+                    </ol>
+                  )}
+                </div>
               )}
 
               {section === 'account' && (

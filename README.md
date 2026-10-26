@@ -203,11 +203,13 @@ These values are **baked in at build time**, so set them before running `npm run
 
 | Part | Azure service | URL |
 |---|---|---|
-| Frontend | Static Web App | https://polite-plant-04bf1e000.3.azurestaticapps.net |
+| Frontend | Static Web App | https://polite-plant-04bf1e000.3.azurestaticapps.net (same build; the official address is the Vercel one below) |
+| Frontend | Vercel project `safeconnect-santafe` | https://safeconnect-santafe.vercel.app (official address; deploys from `pwa-setup`) |
 | Backend | App Service (Node 22, Linux) | https://safeconnect-api-fhtsa.azurewebsites.net |
 | Database | Azure Database for MySQL Flexible Server | private: only Azure services can connect |
 
 - **Frontend:** deployed automatically by [.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml) on every push to the `pwa-setup` branch. It needs the repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. [public/staticwebapp.config.json](public/staticwebapp.config.json) sends every route to `index.html` so React Router works on refresh.
+- **Frontend on Vercel:** the `safeconnect-santafe` project (Create React App preset, root `./`) builds `pwa-setup` on every push. Its environment variables are `REACT_APP_API_BASE` and `REACT_APP_ASSET_BASE`, the same values as the GitHub workflow. [vercel.json](vercel.json) sends every route to `index.html` and keeps `/admin` and `/resident` out of search results. Vercel treats build warnings as errors, so check with `CI=true npm run build` before pushing. The backend's `ALLOWED_ORIGINS` lists both frontend URLs.
 - **Backend:** deployed by hand, as a zip of the `backend/` folder without `node_modules` or `.env` files, using `az webapp deploy`. Azure runs `npm install` during deployment. Its environment variables are set in the App Service configuration, not in a `.env` file.
 - **Search engines:** [public/index.html](public/index.html) has the title, description, link-preview (Open Graph) tags and site name (JSON-LD) that search results show. [public/robots.txt](public/robots.txt) and [public/sitemap.xml](public/sitemap.xml) point crawlers at the landing page, and `staticwebapp.config.json` sends `X-Robots-Tag: noindex` on `/admin` and `/resident` so the sign-in pages stay out of results. The `<32 hex characters>.txt` file in `public/` is the [IndexNow](https://www.indexnow.org/) key that lets us notify Bing of updates; it is meant to be public. All of these contain the site address, so update them if it changes.
 - **Uploads:** uploaded images live in `backend/uploads/` on the App Service. A zip deploy only replaces files that came from earlier deploys, so uploaded files survive. Back them up before any big change anyway.
