@@ -81,9 +81,11 @@ const formatCommentTime = (iso) => {
         " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 };
 
+// featured: the newest post at the top of the feed (bigger, "Latest" ribbon).
 export default function AnnouncementCard({
     announcement,
-    formatNewsDate
+    formatNewsDate,
+    featured = false
 }) {
     const { t } = useLanguage();
     const theme = themeFor(announcement.category);
@@ -256,9 +258,14 @@ export default function AnnouncementCard({
     return (
         <div
             id={`news-item-${announcement.id}`}
-            className="news-card"
+            className={`news-card${featured ? " featured" : ""}${showImage || announcement.sourceUrl ? "" : " no-media"}`}
             style={{ '--news-accent': theme.color }}
         >
+            {featured && (
+                <span className="news-card-latest">
+                    <i className="bi bi-stars" aria-hidden="true" /> {t('news.latestBadge')}
+                </span>
+            )}
             {showImage ? (
                 <div className="news-card-media">
                     <img

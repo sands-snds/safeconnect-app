@@ -1,9 +1,16 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import AnnouncementCard from "./AnnouncementCard";
 import WeatherCard from "./WeatherCard";
 import DemoVideoCard from "./DemoVideoCard";
+import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 
+// News page. Desktop: the feed with category filters and search on the
+// left, today's weather and the demo video in a sidebar on the right.
+// Phones / tablets: one column, weather first.
+//
+// Filters reset whenever the page opens, so a notification that jumps to
+// a post (ResidentNavbar scrolls to #news-item-<id>) always finds it.
 const NewsOverlay = ({
     isOpen,
 
@@ -21,7 +28,38 @@ const NewsOverlay = ({
 }) => {
 
     const { t } = useLanguage();
+    const { systemDemo } = useSiteMedia();
+    const [category, setCategory] = useState("all");
+    const [query, setQuery] = useState("");
+
+    useEffect(() => {
+        if (isOpen) {
+            setCategory("all");
+            setQuery("");
+        }
+    }, [isOpen]);
+
     const articleCount = announcements.length;
+
+    // Categories in use, most common first, with counts.
+    const categories = useMemo(() => {
+        const counts = new Map();
+        announcements.forEach((a) => counts.set(a.category, (counts.get(a.category) || 0) + 1));
+        return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    }, [announcements]);
+
+    const visible = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        return announcements.filter((a) =>
+            (category === "all" || a.category === category) &&
+            (!q || `${a.title} ${a.message}`.toLowerCase().includes(q))
+        );
+    }, [announcements, category, query]);
+
+    const filtering = category !== "all" || query.trim() !== "";
+    const showVideo = Boolean(systemDemo?.showInNews && hasVideo(systemDemo));
+    const hasSidebar = Boolean(weather) || showVideo;
+    const hasContent = announcements.length > 0 || weather;
 
     return (
         <div
@@ -51,50 +89,103 @@ const NewsOverlay = ({
 
             <div className="news-fullscreen-body">
 
-                {announcementsLoading &&
-                    announcements.length === 0 &&
-                    !weather && (
-                        <div className="news-state-message">
-                            {t('news.loading')}
+                {announcementsLoading && !hasContent && (
+                    <div className="news-state-message">
+                        <div className="spinner-border spinner-border-sm" aria-hidden="true" />
+                        <p>{t('news.loading')}</p>
+                    </div>
+                )}
+
+                {!announcementsLoading && announcementsError && !hasContent && (
+                    <div className="news-state-message">
+                        <i className="bi bi-exclamation-circle" aria-hidden="true" />
+                        <p>{announcementsError}</p>
+                    </div>
+                )}
+
+                {!announcementsLoading && !announcementsError && !hasContent && (
+                    <div className="news-state-message">
+                        <i className="bi bi-megaphone" aria-hidden="true" />
+                        <p>{t('news.empty')}</p>
+                    </div>
+                )}
+
+                {hasContent && (
+                    <div className={`news-layout ${hasSidebar ? "with-sidebar" : ""}`}>
+
+                        {hasSidebar && (
+                            <aside className="news-sidebar">
+                                <WeatherCard
+                                    weather={weather}
+                                    formatNewsDate={formatNewsDate}
+                                    describeWeatherCode={describeWeatherCode}
+                                    RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
+                                />
+                                <DemoVideoCard />
+                            </aside>
+                        )}
+
+                        <div className="news-main">
+                            {announcements.length > 0 && (
+                                <div className="news-toolbar">
+                                    <label className="news-search">
+                                        <i className="bi bi-search" aria-hidden="true" />
+                                        <input
+                                            type="search"
+                                            value={query}
+                                            onChange={(e) => setQuery(e.target.value)}
+                                            placeholder={t('news.searchPlaceholder')}
+                                            aria-label={t('news.searchPlaceholder')}
+                                        />
+                                    </label>
+
+                                    {categories.length > 1 && (
+                                        <div className="news-filters" role="group" aria-label={t('news.filterLabel')}>
+                                            <button
+                                                type="button"
+                                                className={`news-filter ${category === "all" ? "active" : ""}`}
+                                                aria-pressed={category === "all"}
+                                                onClick={() => setCategory("all")}
+                                            >
+                                                {t('news.filterAll')} <span>{articleCount}</span>
+                                            </button>
+                                            {categories.map(([name, count]) => (
+                                                <button
+                                                    key={name}
+                                                    type="button"
+                                                    className={`news-filter ${category === name ? "active" : ""}`}
+                                                    aria-pressed={category === name}
+                                                    onClick={() => setCategory(name)}
+                                                >
+                                                    {name} <span>{count}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {filtering && visible.length === 0 && (
+                                <div className="news-state-message news-no-match">
+                                    <i className="bi bi-search" aria-hidden="true" />
+                                    <p>{t('news.noMatch')}</p>
+                                    <button type="button" onClick={() => { setCategory("all"); setQuery(""); }}>
+                                        {t('news.clearFilters')}
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="news-list">
+                                {visible.map((item, index) => (
+                                    <AnnouncementCard
+                                        key={item.id}
+                                        announcement={item}
+                                        featured={!filtering && index === 0}
+                                        formatNewsDate={formatPublishedAt || formatNewsDate}
+                                    />
+                                ))}
+                            </div>
                         </div>
-                    )}
-
-                {!announcementsLoading &&
-                    announcementsError &&
-                    announcements.length === 0 &&
-                    !weather && (
-                        <div className="news-state-message">
-                            {announcementsError}
-                        </div>
-                    )}
-
-                {!announcementsLoading &&
-                    !announcementsError &&
-                    announcements.length === 0 &&
-                    !weather && (
-                        <div className="news-state-message">
-                            {t('news.empty')}
-                        </div>
-                    )}
-
-                {(announcements.length > 0 || weather) && (
-                    <div className="news-list">
-                        <WeatherCard
-                            weather={weather}
-                            formatNewsDate={formatNewsDate}
-                            describeWeatherCode={describeWeatherCode}
-                            RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
-                        />
-
-                        <DemoVideoCard />
-
-                        {announcements.map((item) => (
-                            <AnnouncementCard
-                                key={item.id}
-                                announcement={item}
-                                formatNewsDate={formatPublishedAt || formatNewsDate}
-                            />
-                        ))}
                     </div>
                 )}
             </div>
