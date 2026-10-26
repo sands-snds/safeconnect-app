@@ -76,7 +76,9 @@ const formatRemaining = (ms) => {
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
 };
-function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated }) {
+// prefill: { location, latitude, longitude } from an emergency report just
+// sent (its "Request Assistance" button), so the same spot is pinned here.
+function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated, prefill }) {
   const { t } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
@@ -148,6 +150,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setGpsCoords({ lat: editingReport.latitude, lng: editingReport.longitude });
     }
   }, [editingReport, setGpsCoords]);
+  useEffect(() => {
+    if (!show || editingReport || !prefill) return;
+    if (prefill.latitude != null && prefill.longitude != null) {
+      setGpsCoords({ lat: prefill.latitude, lng: prefill.longitude });
+    }
+  }, [show, prefill, editingReport, setGpsCoords]);
   useEffect(() => {
     document.body.style.overflow = show ? 'hidden' : 'auto';
     return () => {

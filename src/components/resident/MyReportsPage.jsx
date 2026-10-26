@@ -285,7 +285,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           align-items: center;
           justify-content: center;
           font-size: 1.2rem;
-          color: #FFC107;
+          color: #fff;
           flex-shrink: 0;
         }
 
@@ -315,11 +315,14 @@ function MyReportsPage({ isOpen, onClose, userId }) {
         /* ── Toolbar: underline tabs instead of pill buttons ── */
         .mr-toolbar { margin-bottom: 1.5rem; }
 
+        /* No scrolling: the tabs fit (tighter on phones) and wrap only on very
+           narrow screens. (overflow-x: auto plus the tabs' -2px underline
+           overlap used to show a scrollbar.) */
         .mr-tabs {
           display: flex;
-          gap: 1.5rem;
+          flex-wrap: wrap;
+          gap: 0.4rem 1.5rem;
           border-bottom: 2px solid #eee2e5;
-          overflow-x: auto;
         }
 
         .mr-tab {
@@ -355,6 +358,13 @@ function MyReportsPage({ isOpen, onClose, userId }) {
         }
 
         .mr-tab.active .count { background: #fbe4e9; color: #6B2C3E; }
+
+        /* Phones: all four tabs on one row (after the rules above so it wins). */
+        @media (max-width: 576px) {
+          .mr-tabs { justify-content: space-between; column-gap: 0.35rem; }
+          .mr-tab { font-size: 0.76rem; gap: 0.25rem; padding: 0 0 0.6rem; }
+          .mr-tab .count { font-size: 0.62rem; padding: 0 5px; }
+        }
 
         .mr-toolbar-row2 {
           display: flex;

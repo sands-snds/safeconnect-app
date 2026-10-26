@@ -347,7 +347,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
           width: 44px; height: 44px; border-radius: 13px;
           background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
           box-shadow: 0 4px 12px rgba(107, 44, 62, 0.22);
-          display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #FFC107; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; flex-shrink: 0;
         }
         .settings-header h2 { color: #1a1416; font-size: clamp(1.15rem,2.5vw,1.45rem); font-weight: 800; margin: 0; line-height: 1.25; }
         .settings-header-sub { color: #6b7280; font-size: 0.82rem; font-weight: 500; margin: 0.15rem 0 0; }
@@ -377,6 +377,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         .st-summary-name { margin: 0; font-size: 1.25rem; font-weight: 800; color: #1f2937; overflow-wrap: anywhere; }
         .st-summary-meta { margin: 4px 0 0; font-size: 0.88rem; color: #4b5563; display: flex; flex-wrap: wrap; gap: 4px 14px; }
         .st-summary-meta span { display: inline-flex; align-items: center; gap: 5px; overflow-wrap: anywhere; }
+        /* Filled and maroon, like the section icons (Profile, Contact details...). */
+        .st-summary-meta i { color: #6B2C3E; font-size: 0.95rem; }
+        .st-summary-meta .bi-at { -webkit-text-stroke: 0.6px; } /* no filled version */
         .st-photo-link { margin-top: 10px; border: none; background: none; padding: 0; color: #6B2C3E; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
         .st-photo-link:hover { text-decoration: underline; }
         .st-photo-hint { display: block; margin-top: 2px; font-size: 0.75rem; color: #6b7280; }
@@ -485,8 +488,8 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
               <p className="st-summary-name">{profile?.fullName || '—'}</p>
               <div className="st-summary-meta">
                 {profile?.username && <span><i className="bi bi-at" />{profile.username}</span>}
-                {profile?.email && <span><i className="bi bi-envelope" />{profile.email}</span>}
-                <span><i className="bi bi-calendar3" />{t('settings.memberSince')} {formatMemberSince(profile?.createdAt)}</span>
+                {profile?.email && <span><i className="bi bi-envelope-fill" />{profile.email}</span>}
+                <span><i className="bi bi-calendar-event-fill" />{t('settings.memberSince')} {formatMemberSince(profile?.createdAt)}</span>
               </div>
               <button type="button" className="st-photo-link" onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto || loadingProfile}>
                 {profile?.photoUrl ? t('settings.changePhoto') : t('settings.addPhoto')}
