@@ -66,6 +66,7 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/settings", systemSettingRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/site-content", require("./routes/siteContentRoutes"));
+app.use("/api/me", require("./routes/userStateRoutes"));
 
 // ── Static uploads: explicitly set cross-origin header ──
 app.use("/uploads", (req, res, next) => {
@@ -130,6 +131,11 @@ require("./services/logArchiveService").startScheduler();
 // Lets the editable site contacts (Content > Site Contacts) fit in system_settings.
 require("./services/siteContentService").ensureSchema().catch((err) =>
   console.error("Could not prepare site contacts storage:", err.message)
+);
+
+// Per-account read state and language, synced across devices.
+require("./services/userStateService").ensureSchema().catch((err) =>
+  console.error("Could not prepare synced account settings storage:", err.message)
 );
 
 // The barangay's main Admin account always exists and stays an Active Admin.

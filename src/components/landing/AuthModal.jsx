@@ -117,11 +117,16 @@ const STYLES = `
   .auth-note { display: flex; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; font-size: 0.85rem; line-height: 1.45; margin: 0 0 14px; }
   .auth-fineprint { margin: 14px 0 0; text-align: center; font-size: 0.8rem; color: #6b7280; }
 
+  /* Phones: still a floating card with the page dimmed around it (not a
+     full-screen sheet); taller windows like Sign Up scroll inside the overlay. */
   @media (max-width: 576px) {
-    .auth-overlay { padding: 0; align-items: stretch; }
-    .auth-card, .auth-card.wide { max-width: none; min-height: 100%; border-radius: 0; }
-    .auth-head { padding: 24px 18px 4px; }
-    .auth-body { padding: 16px 18px 24px; }
+    .auth-overlay { padding: 24px 14px; }
+    .auth-card, .auth-card.wide { max-width: 420px; border-radius: 18px; }
+    .auth-close { top: 12px; right: 12px; width: 34px; height: 34px; }
+    .auth-head { padding: 22px 18px 4px; }
+    .auth-badge { width: 46px; height: 46px; margin-bottom: 10px; }
+    .auth-title { font-size: 1.25rem; }
+    .auth-body { padding: 14px 18px 20px; }
     .auth-grid.cols-2, .auth-grid.cols-3 { grid-template-columns: 1fr; }
     .auth-checklist { grid-template-columns: 1fr; }
   }

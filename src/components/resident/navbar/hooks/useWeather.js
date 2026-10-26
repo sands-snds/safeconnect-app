@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { markSyncedRead, useSyncedReadItems } from "../../../shared/useSyncedState";
 
 const WEATHER_LAT = 14.3294;
 const WEATHER_LON = 120.9367;
@@ -10,6 +11,10 @@ const RAIN_ALERT_THRESHOLD = 40;
 
 const getTodayKey = () =>
     new Date().toISOString().split("T")[0];
+
+// Dismissing the advisory is saved for the account (useSyncedState), so it
+// stays dismissed that day on every device; this browser also remembers it.
+const weatherKey = () => `weather:${getTodayKey()}`;
 
 const loadWeatherDismissed = () => {
     try {
@@ -27,6 +32,8 @@ const loadWeatherDismissed = () => {
 
     const [weather, setWeather] = useState(null);
 
+    const readItems = useSyncedReadItems();
+
     const [weatherDismissed, setWeatherDismissed] =
         useState(loadWeatherDismissed);
 
@@ -34,7 +41,8 @@ const loadWeatherDismissed = () => {
         weather &&
         weather.rainChance >=
         RAIN_ALERT_THRESHOLD &&
-        !weatherDismissed;
+        !weatherDismissed &&
+        !readItems.has(weatherKey());
 
     const loadWeather = useCallback(async () => {
         try {
@@ -125,6 +133,7 @@ const loadWeatherDismissed = () => {
         );
         } catch {}
         setWeatherDismissed(true);
+        markSyncedRead([weatherKey()]);
     };
 
     return {

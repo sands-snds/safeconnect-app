@@ -11,6 +11,7 @@ import useWeather from "./navbar/hooks/useWeather";
 import useResidentProfile from "./navbar/hooks/useResidentProfile";
 import useClickOutside from "./navbar/hooks/useClickOutside";
 import { clearAuthToken, logoutUser } from "../../Services/api";
+import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
 import "./navbar/NavbarStyle.css";
 
 // How often to poll for new announcements while the app is open (ms)
@@ -113,7 +114,8 @@ function ResidentNavbar() {
   const {
     currentUser,
     username,
-    updateProfile
+    updateProfile,
+    refreshProfile
   } = useResidentProfile();
 
   const navRef = useRef(null);
@@ -187,10 +189,29 @@ function ResidentNavbar() {
       reloadAnnouncements();
       loadWeather();
       reloadPersonalNotifications();
+      refreshSyncedState();
+      refreshProfile();
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Changes made on another device (read notifications, profile, language)
+  // show up as soon as the resident comes back to this tab.
+  const focusRefresh = useRef(null);
+  focusRefresh.current = () => {
+    reloadAnnouncements();
+    reloadPersonalNotifications();
+    refreshProfile();
+  };
+  useSyncOnFocus(Boolean(currentUser?.id), () => focusRefresh.current());
+
+  // "Mark all read" also clears today's rain advisory, so the bell's count
+  // always drops to zero.
+  const markEverythingRead = () => {
+    markAllAsRead();
+    if (showRainNotice) dismissWeatherNotice();
+  };
 
   useClickOutside({
     dropdownRef,
@@ -389,7 +410,7 @@ function ResidentNavbar() {
               weather={weather}
               showRainNotice={showRainNotice}
 
-              markAllAsRead={markAllAsRead}
+              markAllAsRead={markEverythingRead}
 
               toggleDropdown={toggleDropdown}
               toggleNotifications={toggleNotifications}
@@ -439,7 +460,7 @@ function ResidentNavbar() {
 
               toggleNotifications={toggleNotifications}
 
-              markAllAsRead={markAllAsRead}
+              markAllAsRead={markEverythingRead}
 
               handleNotificationClick={handleNotificationClick}
               handleWeatherNotificationClick={handleWeatherNotificationClick}

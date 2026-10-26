@@ -18,6 +18,7 @@ import useAdminAuth from "../components/admin/hooks/useAdminAuth";
 import useAdminNavigation from "../components/admin/hooks/useAdminNavigation";
 import FormModal from '../components/admin/AdminModals/FormModal';
 import SignInModal from '../components/admin/AdminModals/SignInModal';
+import { useSyncOnFocus } from '../components/shared/useSyncedState';
 
 const AdminPage = () => {
   const {
@@ -189,6 +190,9 @@ useEffect(() => {
 
     return () => clearInterval(interval);
 }, [isAuthenticated, activeView, refreshAllData]);
+
+  // Account settings saved on other devices (language, demo video choice).
+  useSyncOnFocus(isAuthenticated);
 
   if (!authChecked) {
     return (

@@ -35,7 +35,9 @@ export default function NotificationPanel({
     if (!show) return null;
 
     const colorOf = (category) => (getCategoryColor ? getCategoryColor(category) : '#6B2C3E');
-    const hasWeather = tab === 'all' && showRainNotice && weather;
+    // Today's rain advisory counts as unread until dismissed, like the bell.
+    const hasWeather = Boolean(showRainNotice && weather);
+    const badgeCount = totalBadgeCount ?? unreadCount;
     const visibleNotifications = tab === 'unread' ? notifications.filter((n) => n.unread) : notifications;
     const isLoadingFirstLoad = announcementsLoading && notifications.length === 0;
     const hasError = !announcementsLoading && announcementsError && notifications.length === 0;
@@ -46,10 +48,10 @@ export default function NotificationPanel({
             <div className="panel-header">
                 <div className="panel-header-title">
                     <h4>{t('notificationPanel.title')}</h4>
-                    {unreadCount > 0 && <span className="panel-unread-badge">{unreadCount}</span>}
+                    {badgeCount > 0 && <span className="panel-unread-badge">{badgeCount}</span>}
                 </div>
                 <div className="panel-header-actions">
-                    {unreadCount > 0 && (
+                    {badgeCount > 0 && (
                         <button onClick={markAllAsRead}>
                             <i className="bi bi-check2-all"></i> {t('notificationPanel.markAllRead')}
                         </button>
@@ -67,7 +69,7 @@ export default function NotificationPanel({
                     {t('notificationPanel.all')}
                 </button>
                 <button className={`panel-tab ${tab === 'unread' ? 'active' : ''}`} onClick={() => setTab('unread')}>
-                    {t('notificationPanel.unread')}{unreadCount > 0 ? ` (${unreadCount})` : ''}
+                    {t('notificationPanel.unread')}{badgeCount > 0 ? ` (${badgeCount})` : ''}
                 </button>
             </div>
 

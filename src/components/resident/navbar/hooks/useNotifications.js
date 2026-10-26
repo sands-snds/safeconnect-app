@@ -1,56 +1,34 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { fetchMyNotifications, markAllMyNotificationsRead, markMyNotificationRead } from "../../../../Services/api";
+import { markSyncedRead, useSyncedReadItems } from "../../../shared/useSyncedState";
 
-const READ_STORAGE_KEY = "resident_read_announcements";
+// Announcements read before this was synced were kept per browser under
+// this key; they're moved to the account once, then the key is removed.
+const OLD_READ_STORAGE_KEY = "resident_read_announcements";
 
 // Personal notification ids (from the backend, e.g. a "your report status
 // changed" reply) are prefixed so they can be told apart from announcement
-// ids when marking as read / handling clicks -- announcements use
-// localStorage-based read tracking, personal notifications use the backend.
+// ids when marking as read / handling clicks. Both are saved on the server
+// for the account, so read/unread is the same on every device.
 const PERSONAL_PREFIX = "personal-";
+
+export const announcementKey = (id) => `announcement:${id}`;
 
 export default function useNotifications(
     announcements = [],
     showRainNotice = false,
     userId = null
 ) {
-
-    function loadReadIds() {
-        try {
-            const stored =
-                JSON.parse(
-                    localStorage.getItem(
-                        READ_STORAGE_KEY
-                    )
-                );
-            return new Set(stored || []);
-        }
-        catch {
-            return new Set();
-        }
-    }
-
-    function saveReadIds(ids) {
-        try {
-            localStorage.setItem(
-                READ_STORAGE_KEY,
-                JSON.stringify(
-                    [...ids]
-                )
-            );
-        }
-        catch {
-            // Ignore storage errors
-        }
-    }
+    const readItems = useSyncedReadItems();
 
     const [showNotifications,
         setShowNotifications] = useState(false);
 
-    const [readIds,
-        setReadIds] = useState(loadReadIds);
-
     const [personalNotifications, setPersonalNotifications] = useState([]);
+
+    // Marked read on this page: kept read even if a refresh that started
+    // before the server saved it comes back with the old value.
+    const locallyRead = useRef(new Set());
 
     const loadPersonalNotifications = useCallback(async () => {
         if (!userId) {
@@ -58,12 +36,26 @@ export default function useNotifications(
             return;
         }
         const list = await fetchMyNotifications();
-        setPersonalNotifications(list);
+        setPersonalNotifications(list.map(n =>
+            locallyRead.current.has(String(n.id)) ? { ...n, isRead: true } : n
+        ));
     }, [userId]);
 
     useEffect(() => {
         loadPersonalNotifications();
     }, [loadPersonalNotifications]);
+
+    // One-time move of this browser's old read list to the account.
+    useEffect(() => {
+        if (!userId) return;
+        try {
+            const old = JSON.parse(localStorage.getItem(OLD_READ_STORAGE_KEY) || "[]");
+            if (Array.isArray(old) && old.length) markSyncedRead(old.map(announcementKey));
+            localStorage.removeItem(OLD_READ_STORAGE_KEY);
+        } catch {
+            // storage unavailable: nothing to move
+        }
+    }, [userId]);
 
     const announcementNotifications = useMemo(() => {
         return announcements.map(item => ({
@@ -72,10 +64,10 @@ export default function useNotifications(
             message: item.message,
             date: item.date,
             category: item.category,
-            unread: !readIds.has(item.id),
+            unread: !readItems.has(announcementKey(item.id)),
             isPersonal: false
         }));
-    }, [announcements, readIds]);
+    }, [announcements, readItems]);
 
     const mappedPersonalNotifications = useMemo(() => {
         return personalNotifications.map(item => ({
@@ -102,6 +94,7 @@ export default function useNotifications(
         [notifications]
     );
 
+    // The bell's number: unread notifications plus today's rain advisory.
     const totalBadgeCount = useMemo(() => {
         return unreadCount +
             (showRainNotice ? 1 : 0);
@@ -110,6 +103,7 @@ export default function useNotifications(
     const markOneAsRead = useCallback(id => {
         if (typeof id === "string" && id.startsWith(PERSONAL_PREFIX)) {
             const realId = id.slice(PERSONAL_PREFIX.length);
+            locallyRead.current.add(realId);
             setPersonalNotifications(prev =>
                 prev.map(n => String(n.id) === realId ? { ...n, isRead: true } : n)
             );
@@ -118,34 +112,18 @@ export default function useNotifications(
             markMyNotificationRead(realId).catch(() => {});
             return;
         }
-
-        if (readIds.has(id)) {
-            return;
-        }
-
-        const updated =
-            new Set(readIds);
-        updated.add(id);
-
-        setReadIds(updated);
-
-        saveReadIds(updated);
-    }, [readIds]);
+        markSyncedRead([announcementKey(id)]);
+    }, []);
 
     const markAllAsRead = useCallback(() => {
-        const updated =
-            new Set(readIds);
-        announcements.forEach(item =>
-            updated.add(item.id)
-        );
-        setReadIds(updated);
-        saveReadIds(updated);
+        markSyncedRead(announcements.map(item => announcementKey(item.id)));
 
         if (personalNotifications.some(n => !n.isRead)) {
+            personalNotifications.forEach(n => locallyRead.current.add(String(n.id)));
             setPersonalNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            markAllMyNotificationsRead();
+            Promise.resolve(markAllMyNotificationsRead()).catch(() => {});
         }
-    }, [announcements, readIds, personalNotifications]);
+    }, [announcements, personalNotifications]);
 
     return {
         showNotifications,

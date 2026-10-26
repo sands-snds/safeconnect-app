@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
     NOTIFICATIONS:      `${API_BASE}/notifications`,
     SETTINGS:           `${API_BASE}/settings`,
     SITE_CONTENT:       `${API_BASE}/site-content`,
+    ME:                 `${API_BASE}/me`,
 };
 
 export const SHEETDB_APIS = {};
@@ -850,6 +851,49 @@ export const fetchNotifications = async () => {
 
 // Resident bell (useNotifications.js): identity comes from the JWT, no
 // userId in the URL -- the route is /mine, not /user/:id.
+// ── Synced account state (backend/services/userStateService.js) ─────────────
+// What the signed-in account has read or dismissed ("announcement:12",
+// "weather:2026-10-26", "admin-demo:hidden") and its language, so they
+// follow the person across devices. Resolve to null when offline / signed out.
+export const fetchMyState = async () => {
+    if (!getAuthToken()) return null;
+    try {
+        const res = await apiFetch(`${API_ENDPOINTS.ME}/state`, { headers: authHeaders() });
+        const result = await res.json();
+        return result.success ? result : null;
+    } catch {
+        return null;
+    }
+};
+
+export const markItemsRead = async (keys) => {
+    if (!getAuthToken() || !keys.length) return false;
+    try {
+        const res = await apiFetch(`${API_ENDPOINTS.ME}/read`, {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({ keys }),
+        });
+        return (await res.json()).success === true;
+    } catch {
+        return false;
+    }
+};
+
+export const saveLanguagePreference = async (language) => {
+    if (!getAuthToken()) return false;
+    try {
+        const res = await apiFetch(`${API_ENDPOINTS.ME}/preferences`, {
+            method: "PUT",
+            headers: authHeaders(),
+            body: JSON.stringify({ language }),
+        });
+        return (await res.json()).success === true;
+    } catch {
+        return false;
+    }
+};
+
 export const fetchMyNotifications = async () => {
     const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine`, { headers: authHeaders() });
     const result = await res.json();

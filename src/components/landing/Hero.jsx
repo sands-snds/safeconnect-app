@@ -241,7 +241,14 @@ function Hero() {
                 if (showAccountStatusPopup(result.code, t, siteContent.socials?.email)) return;
             }
             if (!result.success) { setError(result.message || t('auth.invalidCredentials')); return; }
-            // Signed in: ask whether to save the login before going on.
+            // Admins aren't asked to save the login: the admin panel always
+            // uses a sign-in that ends when the browser closes.
+            if (result.isAdmin) {
+                setAuthToken(result.token, true, false);
+                finishSignIn(result);
+                return;
+            }
+            // Residents: ask whether to save the login before going on.
             setPendingSignIn(result);
             setSignInStep('remember');
         } catch { setError(t('auth.serverError')); }
