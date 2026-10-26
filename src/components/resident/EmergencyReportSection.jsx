@@ -134,8 +134,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
       image: '/images/emergency.jpg',
       gradientFrom: '#7f1d1d',
       gradientTo: '#dc2626',
-      badge: t('emergencyReportSection.cards.emergency.badge'),
-      badgeClass: 'critical',
       description: t('emergencyReportSection.cards.emergency.description')
     },
     {
@@ -144,8 +142,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
       image: '/images/assistance.jpg',
       gradientFrom: '#7c2d12',
       gradientTo: '#ea580c',
-      badge: t('emergencyReportSection.cards.assistance.badge'),
-      badgeClass: 'high',
       description: t('emergencyReportSection.cards.assistance.description')
     },
     {
@@ -154,8 +150,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
       image: '/images/crime.jpg',
       gradientFrom: '#450a0a',
       gradientTo: '#b91c1c',
-      badge: t('emergencyReportSection.cards.pettyCrime.badge'),
-      badgeClass: 'medium',
       description: t('emergencyReportSection.cards.pettyCrime.description')
     },
   ];
@@ -190,15 +184,11 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
         .ir-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
         .ir-intro h2 { margin: 0 0 14px; font-size: clamp(1.9rem, 3.8vw, 2.8rem); font-weight: 900; color: #111; line-height: 1.18; letter-spacing: -0.02em; }
         .ir-intro p { margin: 0; color: #5b6170; line-height: 1.75; font-size: 1rem; }
-        .ir-intro .ir-priority-note { display: inline-flex; align-items: flex-start; gap: 7px; margin-top: 14px; padding: 8px 14px; border-radius: 12px; background: #fff; border: 1px solid #f0eaec; color: #4b5563; font-size: 0.86rem; line-height: 1.5; text-align: left; }
-        .ir-priority-note i { color: #6B2C3E; margin-top: 2px; }
 
         .ir-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
         .ir-card { display: flex; flex-direction: column; background: #fff; border: 1.5px solid #f0eaec; border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(107, 44, 62, 0.07); transition: transform 0.25s ease, box-shadow 0.25s ease; }
         .ir-card:hover { transform: translateY(-5px); box-shadow: 0 18px 40px rgba(107, 44, 62, 0.13); }
         .ir-media { position: relative; aspect-ratio: 16 / 10; background-size: cover; background-position: center; }
-        .ir-priority { position: absolute; top: 14px; left: 14px; display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.94); border-radius: 999px; padding: 4px 11px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
-        .ir-priority::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
         .ir-icon { position: absolute; left: 22px; bottom: -24px; width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.35rem; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18); border: 3px solid #fff; }
         .ir-body { display: flex; flex-direction: column; flex: 1; padding: 38px 22px 22px; }
         .ir-body h3 { margin: 0 0 8px; font-size: 1.15rem; font-weight: 800; color: #111; }
@@ -208,17 +198,11 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
         .ir-cta:hover { filter: brightness(1.07); }
         .ir-cta:active { transform: translateY(1px); }
         .ir-cta:focus-visible { outline: 3px solid #6B2C3E; outline-offset: 2px; }
-        .ir-cta i { transition: transform 0.2s; }
-        .ir-cta:hover i { transform: translateX(3px); }
 
-        .ir-trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 36px 0 0; padding: 0; list-style: none; }
-        .ir-trust li { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #f0eaec; border-radius: 14px; padding: 12px 14px; color: #374151; font-size: 0.86rem; font-weight: 600; }
-        .ir-trust i { color: #6B2C3E; font-size: 1.1rem; flex-shrink: 0; }
-        .ir-danger { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 0 0; text-align: center; color: #991b1b; font-size: 0.88rem; font-weight: 600; }
+        .ir-danger { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 32px 0 0; text-align: center; color: #991b1b; font-size: 0.88rem; font-weight: 600; }
 
         @media (max-width: 900px) {
           .ir-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .ir-trust { grid-template-columns: 1fr; }
         }
         @media (max-width: 600px) {
           .ir-outer { padding: 72px 0 64px; }
@@ -236,7 +220,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
             <div className="ir-badge"><i className="bi bi-lightning-charge-fill" /> {t('emergencyReportSection.badge')}</div>
             <h2>{t('emergencyReportSection.title')}</h2>
             <p>{t('emergencyReportSection.subtitle')}</p>
-            <p className="ir-priority-note"><i className="bi bi-info-circle-fill" aria-hidden="true" />{t('emergencyReportSection.priorityNote')}</p>
           </div>
 
           <div className="ir-cards">
@@ -248,7 +231,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
                     className="ir-media"
                     style={{ backgroundImage: `linear-gradient(180deg, rgba(20,8,12,0.05) 0%, rgba(20,8,12,0.45) 100%), url(${emergency.image})` }}
                   >
-                    <span className="ir-priority" style={{ color: theme.color }}>{emergency.badge}</span>
                     <span className="ir-icon" style={{ background: theme.color }} aria-hidden="true"><i className={`bi ${theme.icon}`} /></span>
                   </div>
                   <div className="ir-body">
@@ -260,7 +242,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
                       style={{ background: theme.color }}
                       onClick={() => handleCardClick(emergency)}
                     >
-                      {t(`emergencyReportSection.cards.${theme.key}.cta`)} <i className="bi bi-arrow-right" aria-hidden="true" />
+                      {t(`emergencyReportSection.cards.${theme.key}.cta`)}
                     </button>
                   </div>
                 </article>
@@ -268,11 +250,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
             })}
           </div>
 
-          <ul className="ir-trust">
-            <li><i className="bi bi-clock-history" aria-hidden="true" />{t('emergencyReportSection.trust.alwaysOn')}</li>
-            <li><i className="bi bi-geo-alt-fill" aria-hidden="true" />{t('emergencyReportSection.trust.located')}</li>
-            <li><i className="bi bi-bell-fill" aria-hidden="true" />{t('emergencyReportSection.trust.tracked')}</li>
-          </ul>
           <p className="ir-danger"><i className="bi bi-telephone-fill" aria-hidden="true" />{t('emergencyReportSection.dangerNote')}</p>
         </div>
       </div>

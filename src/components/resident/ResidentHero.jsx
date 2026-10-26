@@ -31,16 +31,13 @@ function ResidentHero() {
                 {/* Dark Overlay */}
                 <div className="resident-hero-overlay">
                   <div className="container hero-content text-center">
+                    <p className="resident-hero-eyebrow">{t('residentHero.eyebrow')}</p>
                     <h3 className="hero-title">
                       <span className="hero-title-line">{t('residentHero.titleLine1')}</span>
-                      <span className="hero-title-line">{t('residentHero.titleLine2')}</span>
+                      <span className="hero-title-line hero-title-accent">{t('residentHero.titleLine2')}</span>
                     </h3>
 
-                    <p className="hero-subtitle">
-                      {t('residentHero.subtitleLine1')}
-                      <br />
-                      {t('residentHero.subtitleLine2')}
-                    </p>
+                    <p className="hero-subtitle">{t('residentHero.subtitle')}</p>
                   </div>
                 </div>
               </div>

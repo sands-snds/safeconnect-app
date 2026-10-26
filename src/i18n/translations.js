@@ -488,10 +488,10 @@ export const translations = {
       hideReplies: 'Hide replies'
     },
     residentHero: {
-      titleLine1: 'Barangay Sta. Fe',
-      titleLine2: 'Safe Connect',
-      subtitleLine1: 'Be part of our emergency response network and stand ready to save lives when it matters most.',
-      subtitleLine2: 'Your action can bring hope in times of crisis.',
+      eyebrow: 'Barangay Sta. Fe Safe Connect',
+      titleLine1: 'Help Is Just',
+      titleLine2: 'One Tap Away',
+      subtitle: 'Report emergencies, request assistance, and get real-time barangay updates, so help reaches you and your neighbors faster.',
       hotline: 'Emergency Hotline: 911',
       available247: 'Available 24/7 for immediate emergencies'
     },
@@ -499,32 +499,23 @@ export const translations = {
       badge: 'Get help fast',
       title: 'Report an Incident',
       subtitle: 'Tell the barangay what is happening and where. Your report goes straight to our response team, day or night. Choose the option that fits your situation.',
-      priorityNote: 'The label on each card shows how urgent that kind of report is, so the barangay can respond to the most serious ones first.',
       reportButton: 'Report',
       cards: {
         emergency: {
           title: 'Report an Emergency',
-          badge: 'Life-threatening',
           description: 'A life-threatening situation happening right now that needs responders immediately.',
           cta: 'Report an emergency'
         },
         assistance: {
           title: 'Request Assistance',
-          badge: 'Help needed soon',
           description: 'Need relief goods, rescue, or support during or after a disaster? Let the barangay know what you need.',
           cta: 'Request assistance'
         },
         pettyCrime: {
           title: 'Report a Crime',
-          badge: 'Non-urgent',
           description: 'Report theft, vandalism, harassment, or suspicious activity. You can choose to stay anonymous.',
           cta: 'Report a crime'
         }
-      },
-      trust: {
-        alwaysOn: 'Received 24/7 by the response team',
-        located: 'Your location is pinned on the map',
-        tracked: 'Follow every update in My Reports'
       },
       dangerNote: 'In immediate danger? Call 911 or tap the red phone button for emergency hotlines.'
     },
@@ -1329,10 +1320,10 @@ export const translations = {
       hideReplies: 'Itago ang mga sagot'
     },
     residentHero: {
-      titleLine1: 'Barangay Sta. Fe',
-      titleLine2: 'Safe Connect',
-      subtitleLine1: 'Maging bahagi ng aming emergency response network at maging handa na magligtas ng buhay kapag kailangan ito nang husto.',
-      subtitleLine2: 'Ang iyong aksyon ay makapagdadala ng pag-asa sa panahon ng krisis.',
+      eyebrow: 'Barangay Sta. Fe Safe Connect',
+      titleLine1: 'Isang Pindot Lang,',
+      titleLine2: 'May Tulong Na',
+      subtitle: 'Mag-report ng emergency, humingi ng tulong, at makatanggap ng balita mula sa barangay nang real time, para mas mabilis makarating ang tulong sa iyo at sa iyong mga kapitbahay.',
       hotline: 'Emergency Hotline: 911',
       available247: 'Bukas 24/7 para sa agarang emergency'
     },
@@ -1340,32 +1331,23 @@ export const translations = {
       badge: 'Mabilis na tulong',
       title: 'Mag-report ng Insidente',
       subtitle: 'Sabihin sa barangay kung ano ang nangyayari at saan. Diretso sa aming response team ang iyong report, araw man o gabi. Piliin ang angkop sa iyong sitwasyon.',
-      priorityNote: 'Ipinapakita ng label sa bawat card kung gaano kaagaran ang ganitong report, para matugunan muna ng barangay ang pinakamabigat.',
       reportButton: 'I-report',
       cards: {
         emergency: {
           title: 'Mag-report ng Emergency',
-          badge: 'Nagbabanta sa buhay',
           description: 'Isang nagbabantang-buhay na sitwasyon na nangyayari ngayon at kailangan agad ng responder.',
           cta: 'Mag-report ng emergency'
         },
         assistance: {
           title: 'Humingi ng Tulong',
-          badge: 'Kailangan ng tulong',
           description: 'Kailangan ng relief goods, rescue, o suporta habang o pagkatapos ng sakuna? Ipaalam sa barangay ang iyong kailangan.',
           cta: 'Humingi ng tulong'
         },
         pettyCrime: {
           title: 'Mag-report ng Krimen',
-          badge: 'Hindi agaran',
           description: 'I-report ang pagnanakaw, bandalismo, panliligalig, o kahina-hinalang gawain. Maaari kang manatiling anonymous.',
           cta: 'Mag-report ng krimen'
         }
-      },
-      trust: {
-        alwaysOn: 'Natatanggap 24/7 ng response team',
-        located: 'Naka-pin sa mapa ang iyong lokasyon',
-        tracked: 'Subaybayan ang bawat update sa My Reports'
       },
       dangerNote: 'Nasa agarang panganib? Tumawag sa 911 o pindutin ang pulang phone button para sa mga emergency hotline.'
     },
