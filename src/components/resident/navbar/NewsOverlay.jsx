@@ -2,12 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import AnnouncementCard from "./AnnouncementCard";
 import WeatherCard from "./WeatherCard";
-import DemoVideoCard from "./DemoVideoCard";
-import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 
-// News page. Desktop: the feed with category filters and search on the
-// left, today's weather and the demo video in a sidebar on the right.
-// Phones / tablets: one column, weather first.
+// News page, laid out as a grid:
+//   phones / tablets: search + categories, then the weather, then the feed
+//   desktop:          search + categories and the feed on the left, the
+//                     weather on the right
 //
 // Filters reset whenever the page opens, so a notification that jumps to
 // a post (ResidentNavbar scrolls to #news-item-<id>) always finds it.
@@ -28,7 +27,6 @@ const NewsOverlay = ({
 }) => {
 
     const { t } = useLanguage();
-    const { systemDemo } = useSiteMedia();
     const [category, setCategory] = useState("all");
     const [query, setQuery] = useState("");
 
@@ -57,8 +55,6 @@ const NewsOverlay = ({
     }, [announcements, category, query]);
 
     const filtering = category !== "all" || query.trim() !== "";
-    const showVideo = Boolean(systemDemo?.showInNews && hasVideo(systemDemo));
-    const hasSidebar = Boolean(weather) || showVideo;
     const hasContent = announcements.length > 0 || weather;
 
     return (
@@ -111,60 +107,59 @@ const NewsOverlay = ({
                 )}
 
                 {hasContent && (
-                    <div className={`news-layout ${hasSidebar ? "with-sidebar" : ""}`}>
+                    <div className={`news-layout ${weather ? "with-weather" : ""}`}>
 
-                        {hasSidebar && (
-                            <aside className="news-sidebar">
+                        {announcements.length > 0 && (
+                            <div className="news-toolbar">
+                                <label className="news-search">
+                                    <i className="bi bi-search" aria-hidden="true" />
+                                    <input
+                                        type="search"
+                                        value={query}
+                                        onChange={(e) => setQuery(e.target.value)}
+                                        placeholder={t('news.searchPlaceholder')}
+                                        aria-label={t('news.searchPlaceholder')}
+                                    />
+                                </label>
+
+                                {categories.length > 1 && (
+                                    <div className="news-filters" role="group" aria-label={t('news.filterLabel')}>
+                                        <button
+                                            type="button"
+                                            className={`news-filter ${category === "all" ? "active" : ""}`}
+                                            aria-pressed={category === "all"}
+                                            onClick={() => setCategory("all")}
+                                        >
+                                            {t('news.filterAll')} <span>{articleCount}</span>
+                                        </button>
+                                        {categories.map(([name, count]) => (
+                                            <button
+                                                key={name}
+                                                type="button"
+                                                className={`news-filter ${category === name ? "active" : ""}`}
+                                                aria-pressed={category === name}
+                                                onClick={() => setCategory(name)}
+                                            >
+                                                {name} <span>{count}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {weather && (
+                            <div className="news-weather-slot">
                                 <WeatherCard
                                     weather={weather}
                                     formatNewsDate={formatNewsDate}
                                     describeWeatherCode={describeWeatherCode}
                                     RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
                                 />
-                                <DemoVideoCard />
-                            </aside>
+                            </div>
                         )}
 
-                        <div className="news-main">
-                            {announcements.length > 0 && (
-                                <div className="news-toolbar">
-                                    <label className="news-search">
-                                        <i className="bi bi-search" aria-hidden="true" />
-                                        <input
-                                            type="search"
-                                            value={query}
-                                            onChange={(e) => setQuery(e.target.value)}
-                                            placeholder={t('news.searchPlaceholder')}
-                                            aria-label={t('news.searchPlaceholder')}
-                                        />
-                                    </label>
-
-                                    {categories.length > 1 && (
-                                        <div className="news-filters" role="group" aria-label={t('news.filterLabel')}>
-                                            <button
-                                                type="button"
-                                                className={`news-filter ${category === "all" ? "active" : ""}`}
-                                                aria-pressed={category === "all"}
-                                                onClick={() => setCategory("all")}
-                                            >
-                                                {t('news.filterAll')} <span>{articleCount}</span>
-                                            </button>
-                                            {categories.map(([name, count]) => (
-                                                <button
-                                                    key={name}
-                                                    type="button"
-                                                    className={`news-filter ${category === name ? "active" : ""}`}
-                                                    aria-pressed={category === name}
-                                                    onClick={() => setCategory(name)}
-                                                >
-                                                    {name} <span>{count}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
+                        <div className="news-feed">
                             {filtering && visible.length === 0 && (
                                 <div className="news-state-message news-no-match">
                                     <i className="bi bi-search" aria-hidden="true" />

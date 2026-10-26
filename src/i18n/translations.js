@@ -463,7 +463,10 @@ export const translations = {
       widgetTitle: 'Weather in Sta. Fe',
       high: 'High',
       low: 'Low',
-      rainChance: 'Chance of rain'
+      rainChance: 'Chance of rain',
+      tipRain: 'Bring an umbrella and stay away from flood-prone areas.',
+      tipHot: 'It will be hot. Drink plenty of water and limit time under the sun.',
+      tipFair: 'Good weather for outdoor activities. Stay safe!'
     },
     news: {
       latestNews: 'Latest News',
@@ -1305,7 +1308,10 @@ export const translations = {
       widgetTitle: 'Panahon sa Sta. Fe',
       high: 'Pinakamataas',
       low: 'Pinakamababa',
-      rainChance: 'Tsansa ng ulan'
+      rainChance: 'Tsansa ng ulan',
+      tipRain: 'Magdala ng payong at umiwas sa mga lugar na madalas bahain.',
+      tipHot: 'Mainit ngayon. Uminom ng maraming tubig at umiwas sa matagal na pagbibilad sa araw.',
+      tipFair: 'Magandang panahon para sa mga gawain sa labas. Mag-ingat!'
     },
     news: {
       latestNews: 'Pinakabagong Balita',

@@ -1,8 +1,10 @@
 import React from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 
-// News page: today's weather in Barangay Sta. Fe (sidebar widget).
-// The bell's rain advisory scrolls here (#news-item-weather).
+const HOT_DAY_C = 34;
+
+// News page: today's weather in Barangay Sta. Fe. The bell's rain advisory
+// scrolls here (#news-item-weather).
 export default function WeatherCard({
     weather,
     formatNewsDate,
@@ -19,6 +21,12 @@ export default function WeatherCard({
     const weatherInfo = describeWeatherCode(weather.code);
     const rainy = weather.rainChance >= RAIN_ALERT_THRESHOLD;
     const chance = Math.max(0, Math.min(100, Number(weather.rainChance) || 0));
+    // A short safety tip for the day.
+    const tip = rainy
+        ? { icon: "bi-umbrella-fill", text: t('weather.tipRain') }
+        : weather.tMax >= HOT_DAY_C
+            ? { icon: "bi-brightness-high-fill", text: t('weather.tipHot') }
+            : { icon: "bi-emoji-smile-fill", text: t('weather.tipFair') };
 
     return (
         // A div, not <section>: styles/App.css zeroes every section's padding.
@@ -37,11 +45,12 @@ export default function WeatherCard({
 
             <div className="news-weather-main">
                 <i className={`bi ${weatherInfo.icon} news-weather-icon`} aria-hidden="true" />
-                <div>
+                <div className="news-weather-now">
+                    <p className="news-weather-temp">{weather.tMax}°<span>C</span></p>
                     <p className="news-weather-cond">{t(`weather.codes.${weatherInfo.key}`)}</p>
-                    <p className="news-weather-temps">
-                        <span><i className="bi bi-thermometer-high" aria-hidden="true" />{t('weather.high')} <strong>{weather.tMax}°C</strong></span>
-                        <span><i className="bi bi-thermometer-low" aria-hidden="true" />{t('weather.low')} <strong>{weather.tMin}°C</strong></span>
+                    <p className="news-weather-range">
+                        <span><i className="bi bi-arrow-up" aria-hidden="true" />{t('weather.high')} {weather.tMax}°C</span>
+                        <span><i className="bi bi-arrow-down" aria-hidden="true" />{t('weather.low')} {weather.tMin}°C</span>
                     </p>
                 </div>
             </div>
@@ -60,6 +69,11 @@ export default function WeatherCard({
                         : t('weather.rainUnlikely', { chance })}
                 </p>
             </div>
+
+            <p className="news-weather-tip">
+                <i className={`bi ${tip.icon}`} aria-hidden="true" />
+                {tip.text}
+            </p>
         </div>
     );
 

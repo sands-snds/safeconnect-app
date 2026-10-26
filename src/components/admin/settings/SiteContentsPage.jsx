@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { fetchSiteContent, updateSiteMedia, uploadSiteMedia } from "../../../Services/api";
 import { showPopup } from "../../shared/popup";
-import { setSiteMedia, mediaSrc, hasVideo } from "../../shared/useSiteContent";
+import { setSiteMedia, mediaSrc } from "../../shared/useSiteContent";
 import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
 
 // Content > Site Contents (Admins only): the landing page carousel photos,
@@ -301,14 +301,11 @@ export default function SiteContentsPage() {
           <i className="bi bi-play-circle-fill" style={{ color: "#6B2C3E", marginRight: 8 }} />
           System Demo Video
         </h3>
-        <p style={hint}>For residents and visitors: shown on the landing page (below the carousel, above "What you can do") and in the resident News page (below the weather card). Until a video is added, the landing page shows a "coming soon" placeholder.</p>
+        <p style={hint}>For residents and visitors: shown on the landing page (below the carousel, above "What you can do") Until a video is added, the landing page shows a "coming soon" placeholder.</p>
         <VideoEditor demo={draft.systemDemo} onChange={(systemDemo) => setDraft((d) => ({ ...d, systemDemo }))}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
             <Toggle checked={draft.systemDemo.showOnLanding} onChange={(v) => setDraft((d) => ({ ...d, systemDemo: { ...d.systemDemo, showOnLanding: v } }))}>
               Show on the landing page
-            </Toggle>
-            <Toggle checked={draft.systemDemo.showInNews} onChange={(v) => setDraft((d) => ({ ...d, systemDemo: { ...d.systemDemo, showInNews: v } }))}>
-              Show in the resident News page {hasVideo(draft.systemDemo) ? "" : "(once a video is added)"}
             </Toggle>
           </div>
         </VideoEditor>

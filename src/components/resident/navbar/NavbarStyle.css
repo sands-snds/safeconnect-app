@@ -1551,7 +1551,9 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 /* =====================================================
-   NEWS PAGE (redesign): feed + sidebar, filters, weather
+   NEWS PAGE: search + categories, weather, feed
+   Phones/tablets: toolbar, weather, feed (one column).
+   Desktop: toolbar + feed on the left, weather on the right.
 ===================================================== */
 
 .news-fullscreen {
@@ -1559,7 +1561,8 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 .news-fullscreen-body {
-    padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1rem, 4vw, 3rem) 4rem;
+    padding: clamp(1rem, 3vw, 2.25rem) clamp(1rem, 4vw, 3rem) 4rem;
+    -webkit-overflow-scrolling: touch;
 }
 
 .news-layout {
@@ -1569,53 +1572,39 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     margin: 0 auto;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-}
-
-.news-main {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
+    grid-template-areas:
+        "toolbar"
+        "weather"
+        "feed";
     gap: 20px;
 }
 
-.news-sidebar {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+.news-toolbar { grid-area: toolbar; min-width: 0; }
+.news-weather-slot { grid-area: weather; min-width: 0; }
+.news-feed { grid-area: feed; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 
-/* Desktop: feed on the left, weather / video in a sticky sidebar. */
 @media (min-width: 1100px) {
-    .news-layout.with-sidebar {
+    .news-layout.with-weather {
         max-width: 1200px;
-        grid-template-columns: minmax(0, 1fr) 340px;
-        grid-template-areas: "main side";
-        gap: 32px;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        grid-template-areas:
+            "toolbar weather"
+            "feed    weather";
+        grid-template-rows: auto 1fr;
+        column-gap: 32px;
+        row-gap: 20px;
         align-items: start;
-    }
-    .news-layout.with-sidebar .news-main { grid-area: main; }
-    .news-layout.with-sidebar .news-sidebar {
-        grid-area: side;
-        position: sticky;
-        top: 0;
     }
 }
 
 .news-list {
     max-width: none;
     margin: 0;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
-/* ── Search + category filters ── */
+/* ── Search + category tabs ── */
 .news-toolbar {
-    background: #fff;
-    border: 1px solid #efe7ea;
-    border-radius: 18px;
-    padding: 14px;
-    box-shadow: 0 6px 20px rgba(107, 44, 62, 0.06);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -1630,27 +1619,27 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .news-search i {
     position: absolute;
-    left: 14px;
+    left: 15px;
     color: #9ca3af;
     pointer-events: none;
 }
 
 .news-search input {
     width: 100%;
-    height: 44px;
-    padding: 0 14px 0 40px;
+    height: 46px;
+    padding: 0 14px 0 42px;
     border: 1.5px solid #ece4e7;
-    border-radius: 12px;
-    background: #faf8f9;
-    font-size: 0.92rem;
+    border-radius: 14px;
+    background: #fff;
+    font-size: 0.95rem;
     color: #111827;
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    box-shadow: 0 2px 8px rgba(107, 44, 62, 0.04);
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .news-search input:focus {
     outline: none;
     border-color: #6B2C3E;
-    background: #fff;
     box-shadow: 0 0 0 4px rgba(107, 44, 62, 0.1);
 }
 
@@ -1661,6 +1650,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 .news-filter {
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -1669,9 +1659,10 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     color: #4b5563;
     font-size: 0.82rem;
     font-weight: 700;
-    padding: 6px 12px;
+    padding: 7px 13px;
     border-radius: 999px;
     cursor: pointer;
+    white-space: nowrap;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
@@ -1683,10 +1674,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     padding: 1px 7px;
 }
 
-.news-filter:hover {
-    border-color: #d9c4cb;
-    color: #6B2C3E;
-}
+.news-filter:hover { border-color: #d9c4cb; color: #6B2C3E; }
 
 .news-filter.active {
     background: #6B2C3E;
@@ -1694,10 +1682,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     color: #fff;
 }
 
-.news-filter.active span {
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-}
+.news-filter.active span { background: rgba(255, 255, 255, 0.2); color: #fff; }
 
 .news-filter:focus-visible,
 .news-no-match button:focus-visible {
@@ -1718,25 +1703,13 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     align-items: center;
     gap: 10px;
     color: #4b5563;
+    text-align: center;
 }
 
-.news-state-message > i {
-    font-size: 1.6rem;
-    color: #6B2C3E;
-}
-
-.news-state-message p {
-    margin: 0;
-}
-
-.news-state-message .spinner-border {
-    color: #6B2C3E;
-}
-
-.news-no-match {
-    margin: 0;
-    max-width: none;
-}
+.news-state-message > i { font-size: 1.6rem; color: #6B2C3E; }
+.news-state-message p { margin: 0; }
+.news-state-message .spinner-border { color: #6B2C3E; }
+.news-no-match { margin: 0; max-width: none; }
 
 .news-no-match button {
     border: none;
@@ -1755,9 +1728,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     border-radius: 20px;
 }
 
-.news-card:hover {
-    transform: translateY(-3px);
-}
+.news-card:hover { transform: translateY(-3px); }
 
 .news-card-media {
     height: auto;
@@ -1765,28 +1736,12 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     max-height: 420px;
 }
 
-.news-card-content {
-    padding: clamp(1.15rem, 2.4vw, 1.75rem);
-}
+.news-card-content { padding: clamp(1.1rem, 2.4vw, 1.75rem); }
+.news-card-content h3 { font-size: clamp(1.1rem, 1.8vw, 1.4rem); }
+.news-card-content p { color: #4b5563; font-size: 0.95rem; }
 
-.news-card-content h3 {
-    font-size: clamp(1.15rem, 1.8vw, 1.4rem);
-}
-
-.news-card-content p {
-    color: #4b5563;
-    font-size: 0.95rem;
-}
-
-/* Newest post: larger, with a "Latest" ribbon. */
-.news-card.featured .news-card-media {
-    aspect-ratio: 16 / 8;
-    max-height: 460px;
-}
-
-.news-card.featured .news-card-content h3 {
-    font-size: clamp(1.35rem, 2.4vw, 1.8rem);
-}
+.news-card.featured .news-card-media { aspect-ratio: 16 / 8; max-height: 460px; }
+.news-card.featured .news-card-content h3 { font-size: clamp(1.25rem, 2.4vw, 1.75rem); }
 
 .news-card-latest {
     position: absolute;
@@ -1807,95 +1762,85 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     box-shadow: 0 6px 16px rgba(107, 44, 62, 0.3);
 }
 
-.news-card-latest i {
-    color: #FFC107;
-}
+.news-card-latest i { color: #FFC107; }
+.news-card.featured.no-media .news-card-content { padding-top: 3.2rem; }
 
-/* A text-only featured post: keep the ribbon above the title. */
-.news-card.featured.no-media .news-card-content {
-    padding-top: 3.2rem;
-}
-
-/* ── Weather widget ── */
+/* ── Weather ── */
 .news-weather {
-    scroll-margin-top: 1.5rem;
-    border-radius: 20px;
-    padding: 18px;
+    scroll-margin-top: 1rem;
+    border-radius: 22px;
+    padding: 22px;
     color: #fff;
-    background: linear-gradient(145deg, #1d4ed8 0%, #3b82f6 60%, #60a5fa 100%);
-    box-shadow: 0 14px 30px rgba(29, 78, 216, 0.25);
+    background: linear-gradient(150deg, #1d4ed8 0%, #3b82f6 60%, #60a5fa 100%);
+    box-shadow: 0 14px 30px rgba(29, 78, 216, 0.22);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
-.news-weather.rainy {
-    background: linear-gradient(145deg, #1e3a5f 0%, #2563eb 70%, #3b82f6 100%);
-}
+.news-weather.rainy { background: linear-gradient(150deg, #1e3a5f 0%, #2563eb 70%, #3b82f6 100%); }
 
 .news-weather-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px 10px;
     flex-wrap: wrap;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
 }
 
-.news-weather-label {
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.news-weather-date {
-    opacity: 0.85;
-    font-weight: 600;
-}
+.news-weather-label { font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.news-weather-date { opacity: 0.85; font-weight: 600; }
 
 .news-weather-main {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin: 14px 0;
+    gap: 18px;
 }
 
 .news-weather-icon {
-    font-size: 3rem;
+    font-size: 4.5rem;
     line-height: 1;
     color: #fde68a;
-    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.2));
 }
 
-.news-weather-cond {
-    margin: 0 0 4px;
-    font-size: 1.25rem;
-    font-weight: 800;
+.news-weather-now p { margin: 0; }
+
+.news-weather-temp {
+    font-size: 3.4rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
 }
 
-.news-weather-temps {
-    margin: 0;
+.news-weather-temp span { font-size: 1.4rem; font-weight: 700; vertical-align: top; margin-left: 2px; }
+.news-weather-cond { margin-top: 6px !important; font-size: 1.15rem; font-weight: 700; opacity: 0.95; }
+
+.news-weather-range {
+    margin-top: 8px !important;
     display: flex;
     flex-wrap: wrap;
     gap: 4px 14px;
-    font-size: 0.86rem;
+    font-size: 0.88rem;
+    font-weight: 600;
     opacity: 0.95;
 }
 
-.news-weather-temps span {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-}
+.news-weather-range span { display: inline-flex; align-items: center; gap: 3px; }
+.news-weather-range i { color: #fde68a; }
 
 .news-weather-rain {
     background: rgba(255, 255, 255, 0.14);
     border-radius: 14px;
-    padding: 12px;
+    padding: 14px;
 }
 
 .news-weather-rain-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     font-weight: 600;
 }
 
@@ -1907,42 +1852,47 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     margin: 8px 0 10px;
 }
 
-.news-weather-bar span {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: #fde68a;
-}
+.news-weather-bar span { display: block; height: 100%; border-radius: inherit; background: #fde68a; }
+.news-weather-note { margin: 0; font-size: 0.85rem; line-height: 1.5; opacity: 0.95; }
 
-.news-weather-note {
+.news-weather-tip {
     margin: 0;
-    font-size: 0.82rem;
-    line-height: 1.5;
-    opacity: 0.95;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1e3a8a;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.45;
 }
 
-/* Demo video in the sidebar: a compact card. */
-.news-sidebar .news-card:hover {
-    transform: none;
+.news-weather-tip i { font-size: 1.1rem; color: #2563eb; margin-top: 1px; }
+
+/* Desktop: the weather fills the right column (taller, roomier). */
+@media (min-width: 1100px) {
+    .news-weather { padding: 26px; gap: 22px; min-height: 480px; }
+    .news-weather-tip { margin-top: auto; }
 }
 
-.news-sidebar .news-card-content {
-    padding: 16px;
-}
-
-.news-sidebar .news-card-content h3 {
-    font-size: 1.05rem;
-}
-
-.news-sidebar .news-card-content p {
-    font-size: 0.86rem;
-}
-
+/* Phones: compact header, one swipeable row of category tabs. */
 @media (max-width: 600px) {
-    .news-toolbar { padding: 12px; border-radius: 16px; }
-    .news-filter { font-size: 0.78rem; padding: 5px 10px; }
+    .news-layout { gap: 16px; }
+    .news-filters {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 2px 0;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .news-filters::-webkit-scrollbar { display: none; }
+    .news-filter { font-size: 0.8rem; padding: 6px 12px; }
     .news-card { border-radius: 18px; }
     .news-card-media,
     .news-card.featured .news-card-media { aspect-ratio: 16 / 10; }
-    .news-weather-icon { font-size: 2.6rem; }
+    .news-weather { padding: 18px; gap: 14px; border-radius: 20px; }
+    .news-weather-icon { font-size: 3.4rem; }
+    .news-weather-temp { font-size: 2.6rem; }
 }
