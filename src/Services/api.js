@@ -602,6 +602,9 @@ export const fetchAnnouncements = async () => {
         message: a.message || '',
         date: a.date_posted ? new Date(a.date_posted).toLocaleDateString() : '',
         rawDate: a.date_posted || a.created_at || null,
+        // When it was actually posted. date_posted is a date only (midnight),
+        // which made a post from minutes ago read as "13 hours ago".
+        publishedAt: a.created_at || a.date_posted || null,
         imageUrl: resolveAssetUrl(a.image_path) || null,
         sourceUrl: a.source_url || null,
         sourceTitle: a.source_title || null,

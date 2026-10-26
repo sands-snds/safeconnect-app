@@ -14,6 +14,7 @@ const NewsOverlay = ({
     announcementsError,
 
     formatNewsDate,
+    formatPublishedAt,
     describeWeatherCode,
 
     RAIN_ALERT_THRESHOLD
@@ -91,7 +92,7 @@ const NewsOverlay = ({
                             <AnnouncementCard
                                 key={item.id}
                                 announcement={item}
-                                formatNewsDate={formatNewsDate}
+                                formatNewsDate={formatPublishedAt || formatNewsDate}
                             />
                         ))}
                     </div>

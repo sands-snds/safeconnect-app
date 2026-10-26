@@ -904,13 +904,14 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-size: 0.85rem;
 }
 
+/* Date and time posted: darker so it reads clearly. */
 .news-card-date {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     font-size: 0.8rem;
-    color: #9ca3af;
-    font-weight: 500;
+    color: #4b5563;
+    font-weight: 600;
     white-space: nowrap;
 }
 

@@ -291,6 +291,7 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         loadAllData,
         refreshAllData,
         loadAnnouncements,
+        loadNotifications,
         handleRefresh,
         updateStatus,
         updateUserRole,

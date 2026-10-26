@@ -22,13 +22,17 @@ const announcementTitle = async (req) => {
 // Public: residents and the landing page read announcements without logging in.
 // attachUserIfPresent decodes a token when one is sent, so a signed-in
 // resident also gets "likedByMe" per announcement without requiring sign-in.
+// Open pages reload the announcement list after any change.
+const { afterSuccess, notifyAll } = require("../services/liveUpdates");
+const announcementsChanged = afterSuccess(() => notifyAll("announcements"));
+
 router.get("/", attachUserIfPresent, controller.getAnnouncements);
 
 // Admin-only: creating/editing announcements, including the "paste a link" preview.
 router.get("/link-preview", verifyToken, verifyAdmin, controller.getLinkPreview);
-router.post("/", verifyToken, verifyAdmin, upload.single("image"), logActivity("Created announcement", announcementTitle), controller.createAnnouncement);
-router.put("/:id", verifyToken, verifyAdmin, upload.single("image"), logActivity("Edited announcement", announcementTitle), controller.updateAnnouncement);
-router.delete("/:id", verifyToken, verifyAdmin, logActivity("Deleted announcement", announcementTitle), controller.deleteAnnouncement);
+router.post("/", verifyToken, verifyAdmin, announcementsChanged, upload.single("image"), logActivity("Created announcement", announcementTitle), controller.createAnnouncement);
+router.put("/:id", verifyToken, verifyAdmin, announcementsChanged, upload.single("image"), logActivity("Edited announcement", announcementTitle), controller.updateAnnouncement);
+router.delete("/:id", verifyToken, verifyAdmin, announcementsChanged, logActivity("Deleted announcement", announcementTitle), controller.deleteAnnouncement);
 
 // Likes & comments — shared across every resident who views the post.
 // Reading is public (matches the announcement feed itself); posting a like

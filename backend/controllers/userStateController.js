@@ -1,4 +1,17 @@
+const db = require("../config/db");
 const userState = require("../services/userStateService");
+const live = require("../services/liveUpdates");
+
+// GET /api/me/events -- live update stream (services/liveUpdates.js)
+exports.events = async (req, res) => {
+    try {
+        const [[account]] = await db.query("SELECT role FROM registered_users WHERE id = ?", [req.user.id]);
+        live.subscribe(req, res, { role: account?.role });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false });
+    }
+};
 
 // GET /api/me/state
 exports.getState = async (req, res) => {

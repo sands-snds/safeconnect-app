@@ -22,7 +22,7 @@ export default function useAnnouncements() {
                 title: item.title || "",
                 category: item.category || "General",
                 message: item.message || "",
-                date: item.rawDate || item.date,
+                date: item.publishedAt || item.rawDate || item.date,
                 imageUrl: item.imageUrl || "",
                 sourceUrl: item.sourceUrl || "",
                 sourceTitle: item.sourceTitle || "",

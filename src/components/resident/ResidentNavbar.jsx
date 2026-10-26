@@ -12,10 +12,12 @@ import useResidentProfile from "./navbar/hooks/useResidentProfile";
 import useClickOutside from "./navbar/hooks/useClickOutside";
 import { clearAuthToken, logoutUser } from "../../Services/api";
 import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
+import useLiveUpdates from "../shared/useLiveUpdates";
 import "./navbar/NavbarStyle.css";
 
-// How often to poll for new announcements while the app is open (ms)
-const POLL_INTERVAL_MS = 60 * 1000; // 1 minute
+// Fallback refresh while the tab is visible (live updates usually arrive
+// within a second or two; see useLiveUpdates).
+const POLL_INTERVAL_MS = 30 * 1000;
 
 const RAIN_ALERT_THRESHOLD = 40;
 
@@ -34,6 +36,17 @@ const formatNewsDate = (dateStr) => {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+};
+
+// News articles: date and time posted, in Philippine time, e.g.
+// "Mon, Oct 26, 2026 · 9:40 PM".
+const formatPublishedAt = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const day = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' });
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
+  return `${day} · ${time}`;
 };
 
 const formatRelativeTime = (dateStr) => {
@@ -186,6 +199,7 @@ function ResidentNavbar() {
     reloadAnnouncements();
     loadWeather();
     const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
       reloadAnnouncements();
       loadWeather();
       reloadPersonalNotifications();
@@ -205,6 +219,18 @@ function ResidentNavbar() {
     refreshProfile();
   };
   useSyncOnFocus(Boolean(currentUser?.id), () => focusRefresh.current());
+
+  // ...and right away while this tab is open: the server says what changed.
+  useLiveUpdates(Boolean(currentUser?.id), {
+    state: refreshSyncedState,
+    notifications: reloadPersonalNotifications,
+    announcements: reloadAnnouncements,
+    profile: refreshProfile,
+    reconnected: () => {
+      refreshSyncedState();
+      focusRefresh.current();
+    }
+  });
 
   // "Mark all read" also clears today's rain advisory, so the bell's count
   // always drops to zero.
@@ -496,6 +522,7 @@ function ResidentNavbar() {
         announcementsLoading={announcementsLoading}
         announcementsError={announcementsError}
         formatNewsDate={formatNewsDate}
+        formatPublishedAt={formatPublishedAt}
         describeWeatherCode={describeWeatherCode}
         RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
       />

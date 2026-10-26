@@ -275,7 +275,7 @@ export default function AnnouncementCard({
                             {announcement.category}
                         </span>
                         <span className="news-card-date news-card-date-glass">
-                            <i className="bi bi-clock" /> {formatNewsDate(announcement.date)}
+                            <i className="bi bi-clock" /> <time dateTime={announcement.date}>{formatNewsDate(announcement.date)}</time>
                         </span>
                     </div>
                 </div>
@@ -293,7 +293,7 @@ export default function AnnouncementCard({
                             {announcement.category}
                         </span>
                         <span className="news-card-date">
-                            <i className="bi bi-clock" /> {formatNewsDate(announcement.date)}
+                            <i className="bi bi-clock" /> <time dateTime={announcement.date}>{formatNewsDate(announcement.date)}</time>
                         </span>
                     </div>
                 )}

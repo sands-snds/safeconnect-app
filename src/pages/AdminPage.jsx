@@ -18,7 +18,8 @@ import useAdminAuth from "../components/admin/hooks/useAdminAuth";
 import useAdminNavigation from "../components/admin/hooks/useAdminNavigation";
 import FormModal from '../components/admin/AdminModals/FormModal';
 import SignInModal from '../components/admin/AdminModals/SignInModal';
-import { useSyncOnFocus } from '../components/shared/useSyncedState';
+import { refreshSyncedState, useSyncOnFocus } from '../components/shared/useSyncedState';
+import useLiveUpdates from '../components/shared/useLiveUpdates';
 
 const AdminPage = () => {
   const {
@@ -55,6 +56,7 @@ const AdminPage = () => {
     loadAllData,
     refreshAllData,   
     loadAnnouncements,
+    loadNotifications,
     handleRefresh,
     updateStatus,
     updateUserRole,
@@ -193,6 +195,15 @@ useEffect(() => {
 
   // Account settings saved on other devices (language, demo video choice).
   useSyncOnFocus(isAuthenticated);
+
+  // Live: the admin bell (a new report or a read on another device brings
+  // the reports along too), announcements and synced settings.
+  useLiveUpdates(isAuthenticated, {
+    'admin-notifications': () => refreshAllData(),
+    announcements: loadAnnouncements,
+    state: refreshSyncedState,
+    reconnected: () => { refreshAllData(); refreshSyncedState(); loadNotifications(); }
+  });
 
   if (!authChecked) {
     return (
