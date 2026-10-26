@@ -175,7 +175,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
     assistance: { key: 'assistance', icon: 'bi-life-preserver', color: '#ea580c' },
     'petty-crime': { key: 'pettyCrime', icon: 'bi-shield-fill-exclamation', color: '#7c3aed' }
   };
-  const asList = (value) => (Array.isArray(value) ? value : []);
 
   return (
     <section className="emergency-report-section">
@@ -201,11 +200,9 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
         .ir-icon { position: absolute; left: 22px; bottom: -24px; width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.35rem; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18); border: 3px solid #fff; }
         .ir-body { display: flex; flex-direction: column; flex: 1; padding: 38px 22px 22px; }
         .ir-body h3 { margin: 0 0 8px; font-size: 1.15rem; font-weight: 800; color: #111; }
-        .ir-desc { margin: 0 0 16px; color: #4b5563; font-size: 0.92rem; line-height: 1.6; }
-        .ir-examples-label { margin: 0 0 8px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af; }
-        .ir-examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 20px; padding: 0; list-style: none; }
-        .ir-examples li { font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
-        .ir-cta { margin-top: auto; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 12px; padding: 12px 16px; color: #fff; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: filter 0.15s, transform 0.05s; }
+        .ir-desc { margin: 0 0 20px; color: #4b5563; font-size: 0.92rem; line-height: 1.6; }
+        /* Same size on every card, lined up along the bottom. */
+        .ir-cta { margin-top: auto; flex: none; width: 100%; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 12px; padding: 0 16px; color: #fff; font-weight: 700; font-size: 0.95rem; white-space: nowrap; cursor: pointer; transition: filter 0.15s, transform 0.05s; }
         .ir-cta:hover { filter: brightness(1.07); }
         .ir-cta:active { transform: translateY(1px); }
         .ir-cta:focus-visible { outline: 3px solid #6B2C3E; outline-offset: 2px; }
@@ -242,7 +239,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
           <div className="ir-cards">
             {emergencies.map((emergency) => {
               const theme = cardTheme[emergency.id];
-              const examples = asList(t(`emergencyReportSection.cards.${theme.key}.examples`));
               return (
                 <article key={emergency.id} className={`ir-card ${emergency.id}`}>
                   <div
@@ -255,19 +251,9 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
                   <div className="ir-body">
                     <h3>{emergency.title}</h3>
                     <p className="ir-desc">{emergency.description}</p>
-                    {examples.length > 0 && (
-                      <>
-                        <p className="ir-examples-label">{t('emergencyReportSection.examplesLabel')}</p>
-                        <ul className="ir-examples">
-                          {examples.map((ex) => (
-                            <li key={ex} style={{ background: `${theme.color}12`, color: theme.color }}>{ex}</li>
-                          ))}
-                        </ul>
-                      </>
-                    )}
                     <button
                       type="button"
-                      className="ir-cta report-btn"
+                      className="ir-cta"
                       style={{ background: theme.color }}
                       onClick={() => handleCardClick(emergency)}
                     >
