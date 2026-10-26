@@ -879,6 +879,15 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     padding: clamp(1.5rem, 3vw, 2.5rem);
 }
 
+.news-card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.9rem 0 0.2rem;
+}
+
 .news-card-top-row {
     display: flex;
     align-items: center;

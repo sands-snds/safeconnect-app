@@ -496,26 +496,40 @@ export const translations = {
       available247: 'Available 24/7 for immediate emergencies'
     },
     emergencyReportSection: {
+      badge: 'Get help fast',
       title: 'Report an Incident',
-      subtitle: 'Every second counts. Choose the type of incident below and reach our response team right away, 24/7.',
+      subtitle: 'Tell the barangay what is happening and where. Your report goes straight to our response team, day or night. Choose the option that fits your situation.',
       reportButton: 'Report',
+      examplesLabel: 'For example',
       cards: {
         emergency: {
-          title: 'Report Emergency',
+          title: 'Report an Emergency',
           badge: 'Critical',
-          description: 'Fires, floods, earthquakes, or any life-threatening situation happening right now'
+          description: 'A life-threatening situation happening right now that needs responders immediately.',
+          examples: ['Fire', 'Flood', 'Medical emergency', 'Earthquake damage'],
+          cta: 'Report an emergency'
         },
         assistance: {
           title: 'Request Assistance',
           badge: 'High',
-          description: 'Request help, rescue, or support for a non-critical situation'
+          description: 'Need relief goods, rescue, or support during or after a disaster? Let the barangay know what you need.',
+          examples: ['Relief goods', 'Rescue', 'Evacuation', 'Medical support'],
+          cta: 'Request assistance'
         },
         pettyCrime: {
-          title: 'Report Petty Crimes',
+          title: 'Report a Crime',
           badge: 'Medium',
-          description: 'Theft, vandalism, disturbances, or other minor offenses'
+          description: 'Report theft, vandalism, harassment, or suspicious activity. You can choose to stay anonymous.',
+          examples: ['Theft', 'Vandalism', 'Harassment', 'Suspicious activity'],
+          cta: 'Report a crime'
         }
-      }
+      },
+      trust: {
+        alwaysOn: 'Received 24/7 by the response team',
+        located: 'Your location is pinned on the map',
+        tracked: 'Follow every update in My Reports'
+      },
+      dangerNote: 'In immediate danger? Call 911 or tap the red phone button for emergency hotlines.'
     },
     reportForm: {
       reportingFor: 'Who are you reporting for?',
@@ -1326,26 +1340,40 @@ export const translations = {
       available247: 'Bukas 24/7 para sa agarang emergency'
     },
     emergencyReportSection: {
+      badge: 'Mabilis na tulong',
       title: 'Mag-report ng Insidente',
-      subtitle: 'Bawat segundo ay mahalaga. Piliin ang uri ng insidente sa ibaba upang agad na makipag-ugnayan sa aming pangkat na handang tumugon, 24/7.',
+      subtitle: 'Sabihin sa barangay kung ano ang nangyayari at saan. Diretso sa aming response team ang iyong report, araw man o gabi. Piliin ang angkop sa iyong sitwasyon.',
       reportButton: 'I-report',
+      examplesLabel: 'Halimbawa',
       cards: {
         emergency: {
           title: 'Mag-report ng Emergency',
           badge: 'Kritikal',
-          description: 'Sunog, baha, lindol, o anumang nagbabantang buhay na sitwasyon ngayon'
+          description: 'Isang nagbabantang-buhay na sitwasyon na nangyayari ngayon at kailangan agad ng responder.',
+          examples: ['Sunog', 'Baha', 'Medikal na emergency', 'Pinsala ng lindol'],
+          cta: 'Mag-report ng emergency'
         },
         assistance: {
           title: 'Humingi ng Tulong',
           badge: 'Mataas',
-          description: 'Humiling ng tulong, rescue, o suporta para sa hindi kritikal na sitwasyon'
+          description: 'Kailangan ng relief goods, rescue, o suporta habang o pagkatapos ng sakuna? Ipaalam sa barangay ang iyong kailangan.',
+          examples: ['Relief goods', 'Rescue', 'Paglikas', 'Medikal na tulong'],
+          cta: 'Humingi ng tulong'
         },
         pettyCrime: {
           title: 'Mag-report ng Krimen',
           badge: 'Katamtaman',
-          description: 'Pagnanakaw, bandalismo, gulo, o iba pang maliliit na paglabag'
+          description: 'I-report ang pagnanakaw, bandalismo, panliligalig, o kahina-hinalang gawain. Maaari kang manatiling anonymous.',
+          examples: ['Pagnanakaw', 'Bandalismo', 'Panliligalig', 'Kahina-hinalang gawain'],
+          cta: 'Mag-report ng krimen'
         }
-      }
+      },
+      trust: {
+        alwaysOn: 'Natatanggap 24/7 ng response team',
+        located: 'Naka-pin sa mapa ang iyong lokasyon',
+        tracked: 'Subaybayan ang bawat update sa My Reports'
+      },
+      dangerNote: 'Nasa agarang panganib? Tumawag sa 911 o pindutin ang pulang phone button para sa mga emergency hotline.'
     },
     reportForm: {
       reportingFor: 'Sino ang iyong ino-report?',

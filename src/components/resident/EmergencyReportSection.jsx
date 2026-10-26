@@ -170,53 +170,121 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
     }
   };
 
+  const cardTheme = {
+    emergency: { key: 'emergency', icon: 'bi-exclamation-triangle-fill', color: '#dc2626' },
+    assistance: { key: 'assistance', icon: 'bi-life-preserver', color: '#ea580c' },
+    'petty-crime': { key: 'pettyCrime', icon: 'bi-shield-fill-exclamation', color: '#7c3aed' }
+  };
+  const asList = (value) => (Array.isArray(value) ? value : []);
+
   return (
     <section className="emergency-report-section">
+      <style>{`
+        /* Padding is on .ir-outer: styles/App.css zeroes every <section>'s padding. */
+        .ir-outer { position: relative; padding: 96px 0 88px; background: linear-gradient(180deg, #ffffff 0%, #fbf7f8 100%); overflow: hidden; }
+        .ir-blob { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0; }
+        .ir-blob-1 { width: 340px; height: 340px; background: #dc2626; opacity: 0.08; top: -120px; left: -100px; }
+        .ir-blob-2 { width: 300px; height: 300px; background: #6B2C3E; opacity: 0.1; bottom: -120px; right: -90px; }
+        .ir-inner { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 
-      <div className="assist-header" style={{ marginTop: '60px' }}>
-        <div className="assist-icon-top">
-          <i className="bi bi-exclamation-octagon-fill"></i>
-        </div>
+        .ir-intro { max-width: 640px; margin: 0 auto 48px; text-align: center; }
+        .ir-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
+        .ir-intro h2 { margin: 0 0 14px; font-size: clamp(1.9rem, 3.8vw, 2.8rem); font-weight: 900; color: #111; line-height: 1.18; letter-spacing: -0.02em; }
+        .ir-intro p { margin: 0; color: #5b6170; line-height: 1.75; font-size: 1rem; }
 
-        <h2>{t('emergencyReportSection.title')}</h2>
+        .ir-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+        .ir-card { display: flex; flex-direction: column; background: #fff; border: 1.5px solid #f0eaec; border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(107, 44, 62, 0.07); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .ir-card:hover { transform: translateY(-5px); box-shadow: 0 18px 40px rgba(107, 44, 62, 0.13); }
+        .ir-media { position: relative; aspect-ratio: 16 / 10; background-size: cover; background-position: center; }
+        .ir-priority { position: absolute; top: 14px; left: 14px; display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.94); border-radius: 999px; padding: 4px 11px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+        .ir-priority::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+        .ir-icon { position: absolute; left: 22px; bottom: -24px; width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.35rem; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18); border: 3px solid #fff; }
+        .ir-body { display: flex; flex-direction: column; flex: 1; padding: 38px 22px 22px; }
+        .ir-body h3 { margin: 0 0 8px; font-size: 1.15rem; font-weight: 800; color: #111; }
+        .ir-desc { margin: 0 0 16px; color: #4b5563; font-size: 0.92rem; line-height: 1.6; }
+        .ir-examples-label { margin: 0 0 8px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af; }
+        .ir-examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 20px; padding: 0; list-style: none; }
+        .ir-examples li { font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+        .ir-cta { margin-top: auto; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 12px; padding: 12px 16px; color: #fff; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: filter 0.15s, transform 0.05s; }
+        .ir-cta:hover { filter: brightness(1.07); }
+        .ir-cta:active { transform: translateY(1px); }
+        .ir-cta:focus-visible { outline: 3px solid #6B2C3E; outline-offset: 2px; }
+        .ir-cta i { transition: transform 0.2s; }
+        .ir-cta:hover i { transform: translateX(3px); }
 
-        <p>
-          {t('emergencyReportSection.subtitle')}
-        </p>
-      </div>
+        .ir-trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 36px 0 0; padding: 0; list-style: none; }
+        .ir-trust li { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #f0eaec; border-radius: 14px; padding: 12px 14px; color: #374151; font-size: 0.86rem; font-weight: 600; }
+        .ir-trust i { color: #6B2C3E; font-size: 1.1rem; flex-shrink: 0; }
+        .ir-danger { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 0 0; text-align: center; color: #991b1b; font-size: 0.88rem; font-weight: 600; }
 
-      <div className="center-container">
-        <div className="emergency-cards">
-          {emergencies.map((emergency) => (
-            <div key={emergency.id} className={`emergency-card ${emergency.id}`}>
-              <div
-                className="card-media"
-                style={{
-                  backgroundImage: emergency.image
-                    ? `linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%), url(${emergency.image})`
-                    : `linear-gradient(135deg, ${emergency.gradientFrom} 0%, ${emergency.gradientTo} 100%)`
-                }}
-              >
-                <span className={`badge ${emergency.badgeClass}`}>
-                  {emergency.badge}
-                </span>
-              </div>
+        @media (max-width: 900px) {
+          .ir-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .ir-trust { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+          .ir-outer { padding: 72px 0 64px; }
+          .ir-intro { margin-bottom: 32px; }
+          .ir-cards { grid-template-columns: 1fr; gap: 18px; }
+          .ir-danger { align-items: flex-start; text-align: left; }
+        }
+      `}</style>
 
-              <div className="card-body">
-                <h3>{emergency.title}</h3>
-                <p className="card-desc">{emergency.description}</p>
-              </div>
+      <div className="ir-outer">
+        <div className="ir-blob ir-blob-1" />
+        <div className="ir-blob ir-blob-2" />
+        <div className="ir-inner">
+          <div className="ir-intro">
+            <div className="ir-badge"><i className="bi bi-lightning-charge-fill" /> {t('emergencyReportSection.badge')}</div>
+            <h2>{t('emergencyReportSection.title')}</h2>
+            <p>{t('emergencyReportSection.subtitle')}</p>
+          </div>
 
-              <div className="card-actions">
-                <button
-                  className="report-btn"
-                  onClick={() => handleCardClick(emergency)}
-                >
-                  {t('emergencyReportSection.reportButton')}
-                </button>
-              </div>
-            </div>
-          ))}
+          <div className="ir-cards">
+            {emergencies.map((emergency) => {
+              const theme = cardTheme[emergency.id];
+              const examples = asList(t(`emergencyReportSection.cards.${theme.key}.examples`));
+              return (
+                <article key={emergency.id} className={`ir-card ${emergency.id}`}>
+                  <div
+                    className="ir-media"
+                    style={{ backgroundImage: `linear-gradient(180deg, rgba(20,8,12,0.05) 0%, rgba(20,8,12,0.45) 100%), url(${emergency.image})` }}
+                  >
+                    <span className="ir-priority" style={{ color: theme.color }}>{emergency.badge}</span>
+                    <span className="ir-icon" style={{ background: theme.color }} aria-hidden="true"><i className={`bi ${theme.icon}`} /></span>
+                  </div>
+                  <div className="ir-body">
+                    <h3>{emergency.title}</h3>
+                    <p className="ir-desc">{emergency.description}</p>
+                    {examples.length > 0 && (
+                      <>
+                        <p className="ir-examples-label">{t('emergencyReportSection.examplesLabel')}</p>
+                        <ul className="ir-examples">
+                          {examples.map((ex) => (
+                            <li key={ex} style={{ background: `${theme.color}12`, color: theme.color }}>{ex}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="ir-cta report-btn"
+                      style={{ background: theme.color }}
+                      onClick={() => handleCardClick(emergency)}
+                    >
+                      {t(`emergencyReportSection.cards.${theme.key}.cta`)} <i className="bi bi-arrow-right" aria-hidden="true" />
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <ul className="ir-trust">
+            <li><i className="bi bi-clock-history" aria-hidden="true" />{t('emergencyReportSection.trust.alwaysOn')}</li>
+            <li><i className="bi bi-geo-alt-fill" aria-hidden="true" />{t('emergencyReportSection.trust.located')}</li>
+            <li><i className="bi bi-bell-fill" aria-hidden="true" />{t('emergencyReportSection.trust.tracked')}</li>
+          </ul>
+          <p className="ir-danger"><i className="bi bi-telephone-fill" aria-hidden="true" />{t('emergencyReportSection.dangerNote')}</p>
         </div>
       </div>
 
