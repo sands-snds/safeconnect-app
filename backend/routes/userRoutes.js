@@ -12,11 +12,13 @@ const {
 } = require("../middleware/authMiddleware");
 const { logActivity } = require("../middleware/activityLogger");
 const User = require("../models/User");
+const { roleLabel } = require("../utils/roles");
 
 const describeUserChange = (field) => async (req) => {
     const user = await User.findById(req.params.id);
     const who = user ? (user.email_address || user.username) : `User #${req.params.id}`;
-    return `${who} → ${req.body[field]}`;
+    const value = field === "role" ? roleLabel(req.body.role) : req.body[field];
+    return `${who} → ${value}`;
 };
 const logUserStatus = logActivity("Changed user status", describeUserChange("status"));
 
@@ -28,10 +30,15 @@ router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, logActivit
 
 // Self-or-admin: a resident's own profile (SettingsPage.jsx, MyReportsPage.jsx)
 router.get("/:id", verifyToken, verifySelfOrAdmin, userController.getUserById);
-router.post("/:id/photo", verifyToken, verifySelfOrAdmin, upload.single("photo"), userController.uploadPhoto);
-router.patch("/:id/username", verifyToken, verifySelfOrAdmin, userController.updateUsername);
-router.patch("/:id/contact", verifyToken, verifySelfOrAdmin, userController.updateContact);
-router.patch("/:id/email", verifyToken, verifySelfOrAdmin, userController.updateEmail);
+// The account's other open pages pick up profile changes right away.
+const { afterSuccess, notifyUser } = require("../services/liveUpdates");
+const profileChanged = afterSuccess((req) => notifyUser(req.params.id, "profile"));
+
+router.post("/:id/photo", verifyToken, verifySelfOrAdmin, profileChanged, upload.single("photo"), userController.uploadPhoto);
+router.patch("/:id/name", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateFullName);
+router.patch("/:id/username", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateUsername);
+router.patch("/:id/contact", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateContact);
+router.patch("/:id/email", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateEmail);
 router.patch("/:id/password", verifyToken, verifySelfOrAdmin, userController.changePassword);
 
 module.exports = router;

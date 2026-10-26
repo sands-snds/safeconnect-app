@@ -79,7 +79,7 @@ const switchButton = (active) => ({
 });
 
 const LocationPickerMap = ({
-  pin,
+  pin: rawPin,
   onPick,
   isOutside = false,
   outsideMessage,
@@ -87,6 +87,12 @@ const LocationPickerMap = ({
   readOnly = false,
   height = 240
 }) => {
+  // Leaflet needs numbers: a string coordinate (MySQL DECIMALs arrive as
+  // strings) sends bounds.contains() into infinite recursion.
+  const pinLat = Number(rawPin?.lat);
+  const pinLng = Number(rawPin?.lng);
+  const hasPin = rawPin != null && Number.isFinite(pinLat) && Number.isFinite(pinLng);
+  const pin = useMemo(() => (hasPin ? { lat: pinLat, lng: pinLng } : null), [hasPin, pinLat, pinLng]);
   const [basemap, setBasemap] = useState('map');
   const markerRef = useRef(null);
   const icon = useMemo(() => pinIcon(isOutside ? '#6b7280' : '#dc3545'), [isOutside]);

@@ -77,6 +77,7 @@ exports.getComments = async (req, res) => {
             author: c.full_name || c.username || "Resident",
             userId: c.user_id,
             isAdmin: isAdminRole(c.role),
+            role: isAdminRole(c.role) ? c.role : "resident",
             date: c.created_at
         }));
         res.json(comments);
@@ -133,6 +134,7 @@ exports.createComment = async (req, res) => {
                 author: authorName,
                 userId: req.user.id,
                 isAdmin,
+                role: author?.role || "resident",
                 date: new Date().toISOString()
             }
         });

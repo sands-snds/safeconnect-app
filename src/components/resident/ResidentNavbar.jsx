@@ -10,11 +10,14 @@ import useNotifications from "./navbar/hooks/useNotifications";
 import useWeather from "./navbar/hooks/useWeather";
 import useResidentProfile from "./navbar/hooks/useResidentProfile";
 import useClickOutside from "./navbar/hooks/useClickOutside";
-import { clearAuthToken } from "../../Services/api";
+import { clearAuthToken, logoutUser } from "../../Services/api";
+import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
+import useLiveUpdates from "../shared/useLiveUpdates";
 import "./navbar/NavbarStyle.css";
 
-// How often to poll for new announcements while the app is open (ms)
-const POLL_INTERVAL_MS = 60 * 1000; // 1 minute
+// Fallback refresh while the tab is visible (live updates usually arrive
+// within a second or two; see useLiveUpdates).
+const POLL_INTERVAL_MS = 30 * 1000;
 
 const RAIN_ALERT_THRESHOLD = 40;
 
@@ -33,6 +36,17 @@ const formatNewsDate = (dateStr) => {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+};
+
+// News articles: date and time posted, in Philippine time, e.g.
+// "Mon, Oct 26, 2026 · 9:40 PM".
+const formatPublishedAt = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const day = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' });
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
+  return `${day} · ${time}`;
 };
 
 const formatRelativeTime = (dateStr) => {
@@ -113,7 +127,8 @@ function ResidentNavbar() {
   const {
     currentUser,
     username,
-    updateProfile
+    updateProfile,
+    refreshProfile
   } = useResidentProfile();
 
   const navRef = useRef(null);
@@ -184,13 +199,45 @@ function ResidentNavbar() {
     reloadAnnouncements();
     loadWeather();
     const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
       reloadAnnouncements();
       loadWeather();
       reloadPersonalNotifications();
+      refreshSyncedState();
+      refreshProfile();
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Changes made on another device (read notifications, profile, language)
+  // show up as soon as the resident comes back to this tab.
+  const focusRefresh = useRef(null);
+  focusRefresh.current = () => {
+    reloadAnnouncements();
+    reloadPersonalNotifications();
+    refreshProfile();
+  };
+  useSyncOnFocus(Boolean(currentUser?.id), () => focusRefresh.current());
+
+  // ...and right away while this tab is open: the server says what changed.
+  useLiveUpdates(Boolean(currentUser?.id), {
+    state: refreshSyncedState,
+    notifications: reloadPersonalNotifications,
+    announcements: reloadAnnouncements,
+    profile: refreshProfile,
+    reconnected: () => {
+      refreshSyncedState();
+      focusRefresh.current();
+    }
+  });
+
+  // "Mark all read" also clears today's rain advisory, so the bell's count
+  // always drops to zero.
+  const markEverythingRead = () => {
+    markAllAsRead();
+    if (showRainNotice) dismissWeatherNotice();
+  };
 
   useClickOutside({
     dropdownRef,
@@ -308,11 +355,13 @@ function ResidentNavbar() {
 
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);
 
-  const handleNavigation = (path) => {
+  const handleNavigation = async (path) => {
     if (path === '/evacuation') {
       sessionStorage.setItem('previousPage', '/resident');
     }
     if (path === '/') {
+      // Revokes a saved login on the server first (needs the token).
+      await logoutUser();
       localStorage.removeItem('residentName');
       sessionStorage.removeItem('userAuthenticated');
       sessionStorage.removeItem('currentUser');
@@ -320,7 +369,10 @@ function ResidentNavbar() {
     }
     setShowDropdown(false);
     setShowMobileMenu(false);
-    navigate(path);
+    // Logging out lands on the home page directly: "signedOut" stops it from
+    // forwarding anywhere based on other sign-ins in this browser.
+    if (path === '/') navigate('/', { replace: true, state: { signedOut: true } });
+    else navigate(path);
   };
 
   const scrollToSection = (sectionId) => {
@@ -384,7 +436,7 @@ function ResidentNavbar() {
               weather={weather}
               showRainNotice={showRainNotice}
 
-              markAllAsRead={markAllAsRead}
+              markAllAsRead={markEverythingRead}
 
               toggleDropdown={toggleDropdown}
               toggleNotifications={toggleNotifications}
@@ -434,7 +486,7 @@ function ResidentNavbar() {
 
               toggleNotifications={toggleNotifications}
 
-              markAllAsRead={markAllAsRead}
+              markAllAsRead={markEverythingRead}
 
               handleNotificationClick={handleNotificationClick}
               handleWeatherNotificationClick={handleWeatherNotificationClick}
@@ -470,6 +522,7 @@ function ResidentNavbar() {
         announcementsLoading={announcementsLoading}
         announcementsError={announcementsError}
         formatNewsDate={formatNewsDate}
+        formatPublishedAt={formatPublishedAt}
         describeWeatherCode={describeWeatherCode}
         RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
       />

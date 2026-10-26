@@ -105,6 +105,8 @@ The backend accepts requests only from `http://localhost:3000`, `http://127.0.0.
 
 All backend code is in `backend/`. It is CommonJS Node.js running Express 5.
 
+> **Role names.** The stored role values didn't change, only what people see: `resident` is shown as **Resident**, `admin` as **Official** and `super_admin` as **Admin**. In this document, "admin" in middleware names such as `verifyAdmin` means "Official or Admin", and `verifySuperAdmin` means "Admin". Always show `ROLE_LABELS[role]` (`backend/utils/roles.js`, `src/components/shared/roles.js`) to people.
+
 ### 3.1 Startup: `server.js`
 
 When the server starts, it runs these steps in order:
@@ -129,6 +131,7 @@ When the server starts, it runs these steps in order:
    | `/api/announcements` | `routes/announcementRoutes.js` |
    | `/api/settings` | `routes/systemSettingRoutes.js` |
    | `/api/notifications` | `routes/notificationRoutes.js` |
+   | `/api/site-content` | `routes/siteContentRoutes.js` |
 
 4. Serves `backend/uploads/` at **`/uploads`**, with a cross-origin header so images load on the frontend's domain.
 5. Adds `GET /` ("SafeConnect API is running!") and `GET /api/health`, which runs `SELECT NOW()` to prove the database connection works.
@@ -144,6 +147,9 @@ These run on every start, so local and Azure databases stay in sync without manu
 | `Log.ensureColumns()` | `signin_logs` has `ip_address`, `device` and `location` |
 | `AnnouncementLike.ensureTable()` | Table `announcement_likes` exists |
 | `AnnouncementComment.ensureTable()` | Table `announcement_comments` exists, including the `parent_id` column used for replies |
+| `logArchiveService.startScheduler()` | `signin_logs` and `admin_activity_logs` have `archived_at`; the settings `signin_log_auto_archive_days` and `admin_log_auto_archive_days` exist (default `90`). It then archives old log entries immediately and every 6 hours. |
+| `siteContentService.ensureSchema()` | `system_settings.setting_value` is `TEXT`, so the site contacts JSON fits |
+| `mainAccount.ensureMainAccount()` | The barangay's main account (safeconnect.brgy.santafe@gmail.com) exists and is an Active Admin. A new one gets a random password; the barangay sets theirs with "Forgot password?". |
 | `archiveService.startScheduler()` | The three report tables have `resolved_at` and `archived_at`; table `system_settings` exists with `report_auto_archive_months` (default `12`). It then runs auto-archive immediately and every 6 hours. |
 
 ### 3.2 The request pipeline
@@ -200,7 +206,7 @@ For example, **`PATCH /api/petty-crimes/42/status`** with body `{ "status": "In 
 |---|---|---|
 | `verifyToken` | The `Authorization: Bearer` token is valid and signed with `JWT_SECRET`. Sets `req.user = { id, role }`. | 401 when no token is sent; 403 "Invalid token." |
 | `verifyAdmin` | The account in the **database** has role `admin` or `super_admin` and status `Active`. Sets `req.admin` (the full user row) and calls `adminPresence.touch()`. | 403 "Admin access only." |
-| `verifySuperAdmin` | `req.admin.role === "super_admin"`. It must run after `verifyAdmin`. | 403 "Super admin access only." |
+| `verifySuperAdmin` | `req.admin.role === "super_admin"` (shown as **Admin**). It must run after `verifyAdmin`. | 403 "Only Admins can do this." |
 | `verifySelfOrAdmin` | The URL `:id` is the caller's own id, **or** the caller is an active super admin. Used for profile endpoints. | 403 |
 | `verifyReportAccess(table, level)` | The caller submitted that report (`reporter_id`), **or** is an admin at `level`: `"admin"` can view, `"super"` can edit or delete. | 404 if the report doesn't exist; 403 otherwise |
 | `verifySelfOrAnyAdmin` | The URL `:userId` is the caller, or the caller is any admin. Used for the "My Reports" list. | 403 |
@@ -243,9 +249,9 @@ The **Called from (frontend)** column names the function in `api.js`, or the com
 #### Users: `userRoutes.js` → `userController.js`
 | Method | Path | Access | Purpose | Called from |
 |---|---|---|---|---|
-| GET | `/users` | super | All accounts | `fetchRegisteredUsers()` → Users tab |
+| GET | `/users` | super | All accounts, each with `is_main_account` | `fetchRegisteredUsers()` → Users tab |
 | PUT, PATCH | `/users/:id`, `/users/:id/status` | super | Set status (Active / Pending / Suspended / Closed). You can't change your own. | `updateStatus("users")` |
-| PATCH | `/users/:id/role` | super | Set role. You can't change your own. | `updateUserRole()` |
+| PATCH | `/users/:id/role` | super | Set role. You can't change your own, or the main barangay account's. | `updateUserRole()` |
 | GET | `/users/:id` | owner | Profile (the password is never returned) | `fetchUserProfile()`: `SettingsPage`, `useAdminAuth` |
 | POST | `/users/:id/photo` | owner | Upload a photo (multipart field `photo`) | `uploadProfilePhoto()` |
 | PATCH | `/users/:id/username` | owner | Change username (must be unique) | `updateUsername()` |
@@ -302,8 +308,10 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 #### Logs: `logRoutes.js` → `logController.js`
 | Method | Path | Access | Purpose | Called from |
 |---|---|---|---|---|
-| GET | `/logs/signin` | super | Sign-in attempts from the last 90 days, with the account's current role | `fetchSignInLogs()` |
-| GET | `/logs/admin` | super | `{ admins, activity }`: each admin's online state, last login and latest action, plus the latest 500 actions | `fetchAdminLogs()` |
+| GET | `/logs/signin` | super | Sign-in attempts that aren't archived, with the account's current role. `?archived=1` lists the archived ones. | `fetchSignInLogs({ archived })` |
+| GET | `/logs/admin` | super | `{ admins, activity }`: each Admin/Official account's role, online state, last login and latest action, plus the latest 500 actions that aren't archived (`?archived=1`: up to 2,000 archived ones) | `fetchAdminLogs({ archived })` |
+| GET | `/logs/archive-settings/:log` | super | `{ days }`: the auto-archive period for `signin` or `admin` (0 = off) | `fetchLogArchiveSettings()` → `ArchiveToolbar` |
+| PUT | `/logs/archive-settings/:log` | super | Change the period (0, 30, 90, 180 or 365 days), then archive right away | `updateLogArchiveSettings()` |
 | POST | `/logs/admin/logout` | admin | Records "Logged out" and clears the online state | `logoutAdmin()` |
 
 #### Export: `exportRoutes.js` → `exportController.js` → `exportService.js`
@@ -312,7 +320,17 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 | GET | `/export/pdf/:type` | admin (super for users, signinLogs and adminLogs) | Streams a PDF file |
 | GET | `/export/excel/:type` | same | Streams an `.xlsx` file |
 
-`:type` is one of `reportsOverTime`, `statusSummary`, `emergency`, `assistance`, `pettyCrime`, `users`, `signinLogs` or `adminLogs`. The query string carries the filters: `status`, `from`, `to`, `days`, `search` and `tzOffset`. The frontend caller is `exportReport()`, which downloads the file as a blob.
+`:type` is one of `reportsOverTime`, `statusSummary`, `emergency`, `assistance`, `pettyCrime`, `users`, `signinLogs` or `adminLogs`. The query string carries the filters: `status`, `from`, `to`, `days`, `search` and `tzOffset`. The System types also take `role` (`resident`, `admin`, `super_admin`, or `unknown` for sign-ins without an account) and `archived=1`, and `adminLogs` takes `admin` (an email). The frontend caller is `exportReport()`, which downloads the file as a blob.
+
+#### Site contacts: `siteContentRoutes.js` → `siteContentController.js` → `siteContentService.js`
+| Method | Path | Access | Purpose | Called from |
+|---|---|---|---|---|
+| GET | `/site-content` | public | `{ content: { emergencyContacts, officials, socials }, options: { icons, colors } }`. Falls back to the defaults if the database can't be read. | `fetchSiteContent()` → `useSiteContent()`, Site Contacts tab |
+| PUT | `/site-content` | super | Save all three lists (validated: names, phone-number format, email, https facebook.com link, list limits) | `updateSiteContent()` → `SiteContactsPage` |
+| PUT | `/site-content/media` | super | Save `{ carousel, systemDemo, adminDemo }` (validated: only uploaded or built-in images, YouTube links reduced to the video id) | `updateSiteMedia()` → `SiteContentsPage` |
+| POST | `/site-content/upload` | super | Upload one carousel photo (JPG/PNG/WebP, 5 MB) or demo video (MP4/WebM, 100 MB), multipart field `file`; returns `{ url: "/uploads/…" }` | `uploadSiteMedia()` (XHR, with progress) |
+
+The GET above also returns `media`: the carousel photos and demo videos.
 
 #### Dashboard and Settings
 | Method | Path | Access | Notes |
@@ -326,8 +344,8 @@ Controllers read the request, validate it, call services or models, and pick the
 
 | Controller | Main responsibilities |
 |---|---|
-| `authController.js` | **Sign-up with a code:** checks the domain's MX records, stores the pending account (with a hashed password) in memory for 10 minutes, emails the code, then creates the account when the code matches. **Sign-in:** bcrypt comparison; rejects accounts that aren't Active (with a specific message for Pending, Suspended or Closed); records the attempt (IP, device, then location in the background); records "Logged in" for admins; emails a sign-in alert; returns the JWT and user, with a full photo URL. **Password reset:** a three-step code flow using its own in-memory store. |
-| `userController.js` | User list, status and role changes (you can't change your own account), and profile self-service with validation: unique username, PH number format, current password required for email or password changes. |
+| `authController.js` | **Sign-up with a code:** checks the domain's MX records, stores the pending account (with a hashed password) in memory for 10 minutes, emails the code, then creates the account when the code matches. **Sign-in:** bcrypt comparison; rejects accounts that aren't Active, returning a `code` (`ACCOUNT_SUSPENDED`, `ACCOUNT_CLOSED`, `ACCOUNT_PENDING`) that the sign-in screens turn into a translated popup; records the attempt (IP, device, then location in the background); records "Logged in" for admins; emails a sign-in alert; returns the JWT and user, with a full photo URL. **Password reset:** a three-step code flow using its own in-memory store. |
+| `userController.js` | User list, status and role changes (you can't change your own account or the main barangay account; statuses are Active, Suspended and Closed), and profile self-service (the main account's email can't be changed) with validation: unique username, PH number format, current password required for email or password changes. |
 | `reportController.js` | Emergency reports: create (through `reportService`), list, get, edit, delete, statistics and **status change** (validate the transition, update, notify the reporter with `emergency_status`). |
 | `assistanceRequestController.js` | The same for assistance requests (`assistance_status` notifications). |
 | `pettyCrimeController.js` | The same for petty crimes (`petty_crime_status` notifications). |
@@ -335,7 +353,8 @@ Controllers read the request, validate it, call services or models, and pick the
 | `archiveController.js` | Reads and changes the auto-archive period (only 0, 6 or 12 are allowed; saving applies it immediately), and archives or restores a single report. |
 | `announcementController.js` | Create and edit with the uploaded image path (`/uploads/<file>`), public list (with like and comment counts), delete, and link previews (returns 422 if the link can't be read). Also likes and comments: checks comment text (1–1,000 characters), attaches replies to their top-level comment, marks admin comments with `isAdmin`, and notifies a resident when an admin replies to them. |
 | `notificationController.js` | Admin (shared) and resident (personal) notification lists, unread counts and marking as read. |
-| `logController.js` | Sign-in logs; admin logs merged with in-memory presence (`online`, `last_seen`; a latest action of "Logged out" means offline); logout recording. |
+| `logController.js` | Sign-in logs and admin logs, current or archived (`?archived=1`); admin logs merged with in-memory presence (`online`, `last_seen`; a latest action of "Logged out" means offline); reading and changing each log's auto-archive period; logout recording. |
+| `siteContentController.js` | Returns the site contacts (public) and saves them after `siteContentService.validate()`. |
 | `dashboardController.js` | Returns `Dashboard.getStatistics()`. |
 | `exportController.js` | Checks `:type` and hands off to `ExportService`. If the file stream fails part-way, it avoids sending a second response. |
 | `systemSettingController.js` | Reads and updates generic settings. |
@@ -355,6 +374,10 @@ Services hold logic that is shared, has several steps, or talks to outside syste
 | `excelService.js` | The Excel version (`exceljs`): header rows, summary, a styled table and column widths. Streams an `.xlsx` file. |
 | `archiveService.js` | Report archiving. `ensureSchema()` adds the columns and settings table. `runAutoArchive()` sets `archived_at = NOW()` on Resolved rows whose `COALESCE(resolved_at, submitted time)` is older than the configured number of months. `setArchived(type, id, bool)` archives only Resolved reports. `startScheduler()` runs the setup, then auto-archives now and every 6 hours. |
 | `adminPresence.js` | An in-memory map from admin id to "last seen". `verifyAdmin` updates it on every admin request. An admin counts as online if seen in the last **2 minutes**; the admin panel polls every 30 seconds while open. |
+| `logArchiveService.js` | Log archiving for `signin_logs` and `admin_activity_logs`. Same idea as `archiveService`, but in days (0, 30, 90, 180 or 365; default 90) with one setting per log. `runAutoArchive(log?)` sets `archived_at` on entries older than the period; nothing is deleted. Runs on start and every 6 hours. |
+| `siteContentService.js` | The public contact details (emergency contacts, barangay officials, socials), stored as JSON under `system_settings.site_contacts`. Holds the defaults, the allowed icons and colors, and `validate()`. Default contacts keep a `sublabelKey` so their description stays translated until an Admin edits it. |
+| `siteMediaService.js` | The carousel photos and the two demo videos, stored as JSON under `system_settings.site_media`. A video is `{ source: "none" | "upload" | "youtube", url }`. Holds the defaults (the three built-in photos) and `validate()`. |
+| `mainAccount.js` | `ensureMainAccount()`: creates the barangay's main Admin account if missing, or restores it to an Active Admin. |
 | `systemSettingService.js` | Turns the `system_settings` rows into a `{ key: value }` object. |
 
 ### 3.8 Models
@@ -371,8 +394,8 @@ Each model is a class of `static async` methods that run parameterized SQL throu
 | `AnnouncementComment.js` | `announcement_comments` | `ensureTable` (also adds `parent_id` to older databases), `create(announcementId, userId, text, parentId)`, `findByAnnouncement` (joins the author's name and role), `findById`, `delete` (also deletes replies), `countsForAll` |
 | `AnnouncementLike.js` | `announcement_likes` | `ensureTable`, `toggle`, `countFor`, `countsForAll`, `likedAnnouncementIdsFor(userId)` |
 | `Notification.js` | `notifications` | `create`; staff: `findAll`, `unreadCount`, `markAsRead`, `markAllAsRead` (all where `user_id IS NULL`); personal: `findByUser`, `unreadCountForUser`, `markAsReadForUser`, `markAllAsReadForUser` |
-| `Log.js` | `signin_logs` | `ensureColumns`, `logSignin(name, email, status, { ip, device })`, `setSigninLocation`, `getSigninLogs()` (last 90 days, joined with the account's current role) |
-| `AdminActivity.js` | `admin_activity_logs` | `ensureTable`, `record(admin, action, details)`, `getRecent(500)`, `getAdminSummaries()` (each admin account with its last login and latest action) |
+| `Log.js` | `signin_logs` | `ensureColumns`, `logSignin(name, email, status, { ip, device })`, `setSigninLocation`, `getSigninLogs({ archived, role, status, from, to })` (joined with the account's current role) |
+| `AdminActivity.js` | `admin_activity_logs` | `ensureTable`, `record(admin, action, details)`, `getRecent(limit, { archived, role, from, to })` (joined with the account's current role), `getAdminSummaries()` (each Admin/Official account with its role, last login and latest action) |
 | `Dashboard.js` | several | `getStatistics()`: the user count, emergency report counts by status and the announcement count |
 | `SystemSetting.js` | `system_settings` | `getAll`, `get(key)`, `update(key, value)` |
 
@@ -381,7 +404,7 @@ Each model is a class of `static async` methods that run parameterized SQL throu
 | File | Purpose |
 |---|---|
 | `utils/jwt.js` | `generateToken(user)` signs `{ id, role }` with `JWT_SECRET`, valid for **7 days** |
-| `utils/roles.js` | Role constants (`resident`, `admin`, `super_admin`) and `isAdminRole()` / `isSuperAdminRole()` |
+| `utils/roles.js` | Role constants (`resident`, `admin`, `super_admin`), `ROLE_LABELS` / `roleLabel()` (Resident, Official, Admin), `isAdminRole()` / `isSuperAdminRole()`, and `MAIN_ACCOUNT_EMAIL` / `isMainAccount()` |
 | `utils/statusWorkflow.js` | `STATUS_ORDER = Received → In Progress → Resolved`. `validateStatusTransition(current, next)` only allows moving **one step forward**. Reports with older statuses (such as "Dispatched") can only move to "Received" first. It returns the reply message sent to the resident. |
 | `utils/reference.js` | `generateReference(getLatestFn)` returns `SC-<year>-<6-digit number>`, which restarts at 1 each year. Each report table has its own sequence. |
 | `utils/signinContext.js` | Works out the client's IP (Azure's `X-Client-IP` header, then the last `X-Forwarded-For` entry, then the socket address). Turns the User-Agent and optional browser hints into text such as "Phone · Samsung SM-S918B · Android 14 · Chrome". `lookupLocation(ip)` asks ipapi.co for "City, Region, Country · ISP" (skipped for private IPs). |
@@ -453,13 +476,13 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 `id`, `user_id` (NULL means a staff notification; otherwise it belongs to that resident), `title`, `message`, `notification_type` (`emergency`, `assistance`, `petty_crime`, `announcement`, `*_status`, `comment_reply`), `reference_id` (the report or announcement id), `is_read`, `created_at`.
 
 **`signin_logs`**
-`id`, `full_name`, `email_address`, `status` (`Success` / `Failed`), `ip_address`, `device`, `location`, `timestamp`.
+`id`, `full_name`, `email_address`, `status` (`Success` / `Failed`), `ip_address`, `device`, `location`, `timestamp`, `archived_at`.
 
 **`admin_activity_logs`**
-`id`, `admin_id`, `admin_email`, `admin_username`, `action`, `details`, `created_at`.
+`id`, `admin_id`, `admin_email`, `admin_username`, `action`, `details`, `created_at`, `archived_at`.
 
 **`system_settings`**
-`setting_key` (primary key), `setting_value`. Currently holds `report_auto_archive_months` = `0`, `6` or `12`.
+`setting_key` (primary key), `setting_value` (`TEXT`). Holds `report_auto_archive_months` (`0`, `6` or `12`), `signin_log_auto_archive_days` and `admin_log_auto_archive_days` (`0`, `30`, `90`, `180` or `365`), and `site_contacts` (JSON, once an Admin has saved changes).
 
 ---
 
@@ -546,6 +569,15 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
    - `PDFService` or `ExcelService` streams the file
 4. The browser receives a blob, and `api.js` creates a temporary `<a download>` link to save it.
 
+### Signing in to a closed or suspended account
+1. **Backend, `signin`:** after the password check, an account that isn't Active gets `{ success: false, code: "ACCOUNT_CLOSED" | "ACCOUNT_SUSPENDED" | … }`. The attempt is logged as Failed.
+2. **`Hero.jsx`:** closes the sign-in box and calls `showAccountStatusPopup(code, t, email)` (`components/shared/accountStatusPopup.js`). This shows the translated explanation with the support email from the site contacts. **`SignInModal.jsx`** on `/admin` does the same but keeps its box open.
+
+### An Admin edits the site contacts
+1. **`SiteContactsPage.jsx`** (Content → Site Contacts) loads `GET /site-content`, edits the three lists locally, and saves with `PUT /site-content`.
+2. The backend validates and stores the JSON in `system_settings`, and logs "Updated site contacts".
+3. **Public pages:** `useSiteContent()` loads `GET /site-content` once per page load (showing the last cached copy, or the defaults, until then). The floating call button (`Hero.jsx`, `EmergencyReportSection.jsx`) and `DonationFooter.jsx` read from it.
+
 ### Forgot password
 `Hero.jsx` → `POST /auth/forgot-password` (a code is emailed if the account exists) → `POST /auth/verify-reset-otp` (marks the code as verified) → `POST /auth/reset-password` (requires a verified, unexpired code and at least 8 characters; the new password must differ from the old one).
 
@@ -593,6 +625,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 |---|---|---|
 | `Navbar.jsx` | Public top navigation with smooth scrolling to sections, a mobile menu and the language toggle. | No |
 | `Hero.jsx` | The landing hero and **all account dialogs**: sign-in, sign-up (form, then 6-digit code step with a 60-second resend timer), and forgot password (email → code → new password → done). Also has an emergency-hotline call button. After sign-in it stores the token and redirects by role. | Yes: `signinUser()` and the `/auth/*` code endpoints |
+| `DemoVideoSection.jsx` | Between the carousel and "What you can do": the system demo video, or a "coming soon" placeholder. Hidden when an Admin turns it off. | Reads `useSiteMedia()` |
 | `Services.jsx` | Cards describing what SafeConnect offers (translated). | No |
 | `About.jsx` | About the project and barangay (translated). | No |
 | `Contact.jsx` | Barangay contact details and hotlines (translated). | No |
@@ -620,6 +653,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `AnnouncementCard.jsx` | One announcement: its image, the linked article's preview image, or a placeholder showing the source site. Its action bar has **Like**, **Comment** and **Share**. Comments are shown as YouTube-style threads: replies (from the barangay) sit under the comment they answer, with an @mention, a smaller avatar, a "Barangay Admin" tag and a "N replies / Hide replies" toggle. Residents can delete their own comments. |
 | `UserDropdown.jsx` | The avatar menu: My Reports, Settings, Logout. |
 | `WeatherCard.jsx` | Shows the forecast from `useWeather`. |
+| `DemoVideoCard.jsx` | Right below the weather card in News: the system demo video, when one is set and "Show in News" is on. Not an announcement (no comments or likes). |
 | `NavbarStyle.css` | Styles for all of the above. |
 
 #### Navbar hooks (`components/resident/navbar/hooks/`)
@@ -645,7 +679,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `layout/AdminLayout.jsx` | The page shell: sidebar and header around the current tab. |
-| `layout/AdminSidebar.jsx` | Navigation groups: Dashboard; Reports (Emergency, Assistance, Petty Crime); Announcements; **System** (Users, Sign-in Logs, Admin Logs), which only super admins see. On phones it becomes a drawer that also shows the signed-in admin. |
+| `layout/AdminSidebar.jsx` | Navigation groups: Dashboard; Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Site Contacts** for Admins only); **System** (Users, Sign-in Logs, Admin Logs), which only Admins see. The profile badge says "Admin" or "Official". On phones it becomes a drawer that also shows the signed-in admin. |
 | `layout/AdminHeader.jsx` | The page title, the refresh button (with the last update time), the **notification bell** (each notification type links to its tab), and the account menu with logout. |
 | `layout/AdminStats.jsx` | Clickable stat cards used on the dashboard. |
 
@@ -686,18 +720,23 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 #### Users, Logs, Modals
 | Component | What it does |
 |---|---|
-| `users/UsersPage.jsx` | Filters users by search, status and role. |
-| `users/RegisteredUsersTable.jsx` | The user table with inline `UserRoleSelect` and `UserStatusSelect`. Every change is confirmed in `UserChangeConfirmModal`, and backend errors (such as trying to change your own account) are shown. |
+| `users/UsersPage.jsx` | Filters users by search and status, then splits them into Residents and Admins & Officials. |
+| `users/RegisteredUsersTable.jsx` | Two tables, **Residents** then **Admins & Officials**, under one shared search / status filter / Generate Report row (the second `ListView` uses `showFilters={false}`). Inline `UserRoleSelect` and `UserStatusSelect`; every change is confirmed in `UserChangeConfirmModal`. Your own account and the main barangay account ("Main account" badge) are locked. |
 | `logs/LogsPage.jsx` | Switches between Sign-in Logs and Admin Logs, and filters sign-ins. |
-| `logs/SignInLogsTable.jsx` | User, time, role, IP and location, device and status for the last 90 days, with export. |
-| `logs/AdminLogsTable.jsx` | Admin cards with **online / last seen** status and latest action, plus the full searchable activity list with action badges. |
+| `logs/SignInLogsTable.jsx` | User, time, role, **Device & IP address** (device, then IP, then location) and status. An `ArchiveToolbar` switches between Active and Archived sign-ins and sets the auto-archive period. It filters and exports whichever list is showing. |
+| `logs/AdminLogsTable.jsx` | Admin & Official account cards (role badge, **online / last seen**, latest action), plus the searchable activity list with an `ArchiveToolbar` for Recent / Archived activity and its auto-archive period. |
+| `logs/logArchive.js` | The auto-archive period choices for the logs (Off, 30 days, 90 days, 6 months, 1 year). |
+| `settings/SiteContentsPage.jsx` | Content → Site Contents (Admins only): carousel photos (upload, describe, reorder, remove) and the system and admin demo videos (upload with progress or YouTube link, title, caption, show/hide switches, live preview). |
+| `settings/AccountSettingsPage.jsx` | Account Settings for the signed-in Admin or Official, opened from the account menu (and the phone drawer): photo, username, contact number, email (locked for the main account) and password. |
+| `AdminModals/AdminDemoPopup.jsx` | The admin demo video popup. Shown once after a fresh sign-in (the sign-in screens call `markAdminJustSignedIn()`) unless the person ticked "Don't show this after signing in"; also opened by "Watch demo video" in the account menu. |
+| `settings/SiteContactsPage.jsx` | Content → Site Contacts: edit the emergency contacts (name, description, number, icon, color, order), the barangay officials (name, number, order) and the socials (email, Facebook name and link). Has a sticky Save / Discard bar. |
 | `AdminModals/SignInModal.jsx` | The admin sign-in box, also shown when the session expires. |
 | `AdminModals/FormModal.jsx` | A generic "add record" form, built with `shared/formUtils.js`. It is still wired into `AdminPage` but **no button opens it** at the moment. |
 
 #### Shared admin building blocks (`shared/`)
 | Component | What it does |
 |---|---|
-| `ListView.jsx` | The standard list page: search, status filter, extra filters, sort, an "Add" button, a **Generate Report** button, and a table or card layout with **pagination**. It resets to page 1 when filters change, but not on a background refresh. |
+| `ListView.jsx` | The standard list page: search, status filter, extra filters, sort, an "Add" button, a **Generate Report** button, and a table or card layout with **pagination**. It resets to page 1 when filters change, but not on a background refresh. Optional `sectionTitle`, `showFilters` and `exportFilters` props. |
 | `Table.jsx`, `Section.jsx` | Table shell and card wrapper. |
 | `Pagination.jsx` | Page numbers with gaps ("…"), "Showing x–y of z", and a rows-per-page picker. |
 | `ReportCard.jsx` | A collapsible report row (accent color, title, badge, tag, status control, details). |
@@ -705,7 +744,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `StatusConfirmModal.jsx` | Confirms a status change and shows the reply the resident will receive. |
 | `StatusBadge.jsx` | A colored pill for any status (grey for unknown values). |
 | `GenerateReportButton.jsx` | A PDF/Excel dropdown, or opens `GenerateReportModal` when `withOptions` is set. |
-| `GenerateReportModal.jsx` | Status, date range (preset or custom) and format, then `exportReport()`. |
+| `GenerateReportModal.jsx` | Report tabs: status, period (preset or custom) and format. System tabs (`SYSTEM_REPORTS`: users, signinLogs, adminLogs): role, status (not for admin logs) and a manual From / To range. Then `exportReport()`, with the tab's own filters (e.g. `archived`) passed through `baseFilters`. |
 | `ResultPopup.jsx` | Success or error popup used instead of `alert()`. |
 | `DetailField.jsx` | A label and value pair in detail views. |
 | `chartUtils.js` | Severity and status colors, and grouping for the pie charts. |
@@ -716,7 +755,11 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 
 | Component | What it does |
 |---|---|
-| `DonationFooter.jsx` | The site footer (translated), used on the landing and resident pages. It shows the SafeConnect logo and description, the barangay officials and their numbers, the emergency hotlines, the support email and the Facebook page, and the "Created by Group Tres" credit. The hotlines come from the `emergencyContacts` prop: each page passes the same `EMERGENCY_CONTACTS` list its floating call button uses (`Hero.jsx` / `EmergencyReportSection.jsx`). |
+| `DonationFooter.jsx` | The site footer (translated), used on the landing and resident pages. It shows the SafeConnect logo and description, the barangay officials and their numbers, the emergency hotlines, the support email and the Facebook page, and the "Created by Group Tres" credit. The officials, hotlines and socials come from `useSiteContent()`, so they match the floating call button and can be edited under Content → Site Contacts. |
+| `useSiteContent.js` | Loads the site contacts once per page load and shares them with every component; caches the last copy in `localStorage` (`sf_siteContent`) and has the defaults built in. `contactDescription(contact, t)` shows the translated default description until an Admin changes it. `useSiteMedia()` does the same for the carousel photos and demo videos (`sf_siteMedia`); `mediaSrc()` turns an uploaded path into a full URL. |
+| `DemoVideoPlayer.jsx` | Plays a demo video (uploaded file or YouTube embed) in a 16:9 frame with its title and caption, or shows a placeholder when none is set. |
+| `roles.js` | `ROLE_LABELS` / `roleLabel()` (Resident, Official, Admin) and `MAIN_ACCOUNT_EMAIL`. |
+| `accountStatusPopup.js` | `showAccountStatusPopup(code, t, email)`: the popup for a closed, suspended or inactive account at sign-in. |
 | `LanguageGate.jsx` | A full-screen **English / Tagalog** picker, shown until a language is chosen. |
 | `LanguageToggle.jsx` | A small EN/TL switch for the navbars and menus. |
 | `location/LocationPickerMap.jsx` | A Leaflet map of Barangay Santa Fe with its boundary. Tap or drag to pin; Map/Satellite switch (OpenStreetMap / Esri imagery); `readOnly` mode for admin details. |

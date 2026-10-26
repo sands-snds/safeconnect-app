@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createEmergencyReport, updateEmergencyReport } from '../../Services/api';
+import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -43,7 +44,8 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 // submissions. Each modal (Emergency / Assistance / Petty Crime) tracks its
 // own cooldown independently, so submitting one doesn't block the others.
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_emergency';
-const REPORT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+const REPORT_COOLDOWN_MS = 0;
  
 // Reads the currently logged-in resident's name/contact, set at sign-in.
 // Tries several common shapes for the id field since different sign-in
@@ -217,7 +219,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         ALLOWED_MEDIA_TYPES.includes(file.type) || ALLOWED_MEDIA_EXTENSIONS.test(file.name);
  
       if (!isAllowed) {
-        alert(t('reportForm.mediaTypeError'));
+        showPopup({ type: 'warning', message: t('reportForm.mediaTypeError') });
         e.target.value = '';
         setFormData((prev) => ({ ...prev, media: null, mediaPreviewUrl: null, mediaType: null }));
         return;
@@ -227,7 +229,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
 
       if (file.size > maxSize) {
-        alert(isVideo ? t('reportForm.mediaTooLargeVideo') : t('reportForm.mediaTooLargeImage'));
+        showPopup({ type: 'warning', message: isVideo ? t('reportForm.mediaTooLargeVideo') : t('reportForm.mediaTooLargeImage') });
         e.target.value = '';
         setFormData((prev) => ({ ...prev, media: null, mediaPreviewUrl: null, mediaType: null }));
         return;
@@ -330,7 +332,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
-        alert(t('emergencyModal.cooldownAlert', { time: formatRemaining(remaining) }));
+        showPopup({ type: 'warning', message: t('emergencyModal.cooldownAlert', { time: formatRemaining(remaining) }) });
         return;
       }
     }
@@ -343,11 +345,11 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
 
     if (isEditing) {
       if (!formData.location.trim()) {
-        alert(t('reportForm.provideLocation'));
+        showPopup({ type: 'warning', message: t('reportForm.provideLocation') });
         return;
       }
     } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
-      alert(t('reportForm.pinLocation'));
+      showPopup({ type: 'warning', message: t('reportForm.pinLocation') });
       return;
     }
 
@@ -355,24 +357,24 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     // photo/video on file — only require a new one if the resident chooses
     // to replace it.
     if (!isEditing && !formData.media) {
-      alert(t('emergencyModal.mediaRequired'));
+      showPopup({ type: 'warning', message: t('emergencyModal.mediaRequired') });
       return;
     }
 
     if (reportFor === 'others' && !victimRelationship) {
-      alert(t('reportForm.selectRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.selectRelationship') });
       return;
     }
     if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
-      alert(t('reportForm.specifyRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.specifyRelationship') });
       return;
     }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
-      alert(t('reportForm.enterName'));
+      showPopup({ type: 'warning', message: t('reportForm.enterName') });
       return;
     }
     if (reportFor === 'others' && !victimDetails.trim()) {
-      alert(t('reportForm.provideDetails'));
+      showPopup({ type: 'warning', message: t('reportForm.provideDetails') });
       return;
     }
 
@@ -410,7 +412,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         if (!result.success) {
           throw new Error(result.message || t('reportForm.updateFailed'));
         }
-        alert(t('emergencyModal.updateSuccess'));
+        showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('emergencyModal.updateSuccess') });
         onUpdated && onUpdated();
         onClose();
         return;
@@ -486,7 +488,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
  
     } catch (error) {
       console.error('Error submitting report:', error);
-      alert(t('emergencyModal.submitError'));
+      showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('emergencyModal.submitError') });
     } finally {
       setIsSubmitting(false);
     }

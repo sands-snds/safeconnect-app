@@ -6,6 +6,16 @@
 
 export const translations = {
   en: {
+    popup: {
+      successTitle: 'Success',
+      warningTitle: 'Please Check',
+      errorTitle: 'Something Went Wrong',
+      updatedTitle: 'Report Updated',
+      submitFailedTitle: "Couldn't Submit Report",
+      ok: 'OK',
+      done: 'Done',
+      cancel: 'Cancel'
+    },
     nav: {
       home: 'Home',
       services: 'Services',
@@ -40,6 +50,8 @@ export const translations = {
       title: 'Emergency Contacts',
       subtitle: 'Tap a contact to call immediately',
       call: 'Call',
+      choose: 'Choose',
+      chooseWho: 'Choose who to call',
       sublabels: {
         police: 'National Emergency Hotline',
         dasma: 'Dasmariñas City PNP',
@@ -57,9 +69,16 @@ export const translations = {
     auth: {
       showPassword: 'Show password',
       hidePassword: 'Hide password',
+      close: 'Close',
       fillRequired: 'Please fill in all required fields',
       bothEmailPassword: 'Please enter both email and password',
       invalidCredentials: 'Invalid email or password.',
+      accountClosedTitle: 'Account Closed',
+      accountClosedMessage: 'This account has been permanently closed and can no longer be used to sign in to SafeConnect. Accounts are closed when a barangay official\'s term or role has ended, or when a suspended account was not resolved with the barangay administrator. If you believe this was done in error, please contact the Barangay Sta. Fe administrator at {{email}}. Thank you, and stay safe, stay informed!',
+      accountSuspendedTitle: 'Account Suspended',
+      accountSuspendedMessage: 'Your account has been suspended, so you can\'t sign in to SafeConnect right now. To resolve this and restore access, please contact the Barangay Sta. Fe administrator at {{email}}. Thank you for your understanding.',
+      accountInactiveTitle: 'Account Not Active',
+      accountInactiveMessage: 'Your account can\'t sign in right now. Please contact the Barangay Sta. Fe administrator at {{email}} for help.',
       serverError: 'Could not reach the server. Please check your connection and try again.',
       serverErrorShort: 'Could not reach the server.',
       contactDigits: 'Contact number must be exactly 10 digits',
@@ -77,6 +96,7 @@ export const translations = {
     },
     signIn: {
       title: 'Sign In',
+      subtitle: 'Welcome back! Sign in to your Safe Connect account.',
       email: 'Email Address',
       emailPlaceholder: 'Enter your email',
       password: 'Password',
@@ -85,15 +105,40 @@ export const translations = {
       submit: 'Sign In',
       submitting: 'Signing In...',
       noAccount: "Don't have an account?",
-      signUpLink: 'Sign Up'
+      signUpLink: 'Sign Up',
+      signInRequired: 'Please sign in to continue to your Safe Connect account.'
+    },
+    residentGuard: {
+      checking: 'Checking your sign-in...',
+      signingIn: 'Signing you in...',
+      offlineTitle: "Couldn't verify your sign-in",
+      offlineBody: 'We could not reach Safe Connect to confirm that you are signed in. Check your internet connection and try again.',
+      retry: 'Try Again',
+      signInAgain: 'Sign In Again'
+    },
+    rememberLogin: {
+      title: 'Save your login info?',
+      body: 'Stay signed in on this device for 30 days, so you can open Safe Connect without signing in again.',
+      warning: 'Only choose Yes on your own device, never on a shared or public computer.',
+      yes: 'Yes, save',
+      no: 'No',
+      saving: 'Saving...',
+      noExplains: 'If you choose No, you\'ll need to sign in again after closing your browser.',
+      signOutHint: 'You can sign out anytime from your account menu.'
     },
     signUp: {
       createTitle: 'Create Account',
+      subtitle: 'Join Safe Connect to report emergencies, request help, and stay informed.',
+      sectionPersonal: 'Personal Information',
+      sectionContact: 'Contact Details',
+      sectionSecurity: 'Account Security',
+      optional: '(optional)',
+      passwordRules: 'Password requirements',
       verifyTitle: 'Verify Your Email',
       firstName: 'First Name',
       firstNamePlaceholder: 'First name',
       middleName: 'Middle Name',
-      middlePlaceholder: '(Optional)',
+      middlePlaceholder: 'Middle name',
       lastName: 'Last Name',
       lastNamePlaceholder: 'Last name',
       username: 'Username',
@@ -119,7 +164,12 @@ export const translations = {
       resendIn: 'Resend code in {{s}}s',
       resend: 'Resend code',
       backToRegistration: '← Back to registration',
-      accountCreated: 'Account created successfully! Please sign in.'
+      accountCreated: 'Account created successfully! Please sign in.',
+      agreePrefix: 'I have read and agree to the',
+      agreeLink: 'Terms and Conditions',
+      viewTermsHint: 'Open the Terms and Conditions to enable this checkbox.',
+      viewTermsFirst: 'Please read the Terms and Conditions before creating an account.',
+      mustAgree: 'You must agree to the Terms and Conditions to create an account.'
     },
     forgotPassword: {
       titleEmail: 'Forgot Password',
@@ -153,7 +203,7 @@ export const translations = {
     },
     about: {
       badge: 'About SafeConnect',
-      titlePrefix: 'One app.',
+      titlePrefix: 'One website.',
       titleHighlight: 'A safer',
       titleSuffix: 'Barangay Sta. Fe.',
       intro: "SafeConnect connects every resident directly to the barangay's emergency response team — report incidents, request help, and stay informed, all in one place.",
@@ -176,6 +226,14 @@ export const translations = {
           body: 'Follow your report in real time — from received, to in progress, to resolved.'
         }
       }
+    },
+    demoVideo: {
+      eyebrow: 'Watch the demo',
+      defaultTitle: 'See SafeConnect in action',
+      subtitle: 'A quick walkthrough of how to report an emergency, request help, and follow your reports.',
+      comingSoonTitle: 'Demo video coming soon',
+      comingSoonText: 'A short video showing how to use SafeConnect will be available here.',
+      newsBadge: 'Video guide'
     },
     services: {
       badge: 'What You Can Do',
@@ -236,7 +294,134 @@ export const translations = {
       emailSupport: 'Email Support',
       copyright: '© 2025 Safe Connect. All rights reserved.',
       privacyPolicy: 'Privacy Policy',
-      termsOfService: 'Terms of Service'
+      termsOfService: 'Terms and Conditions'
+    },
+    terms: {
+      title: 'Terms and Conditions',
+      lastUpdated: 'Last updated: October 16, 2026',
+      intro: 'Please read these Terms and Conditions carefully before creating an account or using Safe Connect. They set out your rights and responsibilities as a user of the Platform.',
+      close: 'Close',
+      understand: 'I Understand',
+      sections: [
+        {
+          id: 'acceptance',
+          title: 'Acceptance of Terms',
+          points: [
+            'These Terms and Conditions ("Terms") govern your access to and use of Safe Connect (the "Platform"), operated by Barangay Sta. Fe, Dasmariñas, Cavite (the "Barangay," "we," or "us").',
+            'By creating an account, signing in, or otherwise using the Platform, you confirm that you have read, understood, and agree to be bound by these Terms.',
+            'If you do not agree with these Terms, you must not use the Platform.',
+            'Users under 18 years of age may use the Platform only with the consent and supervision of a parent or legal guardian.'
+          ]
+        },
+        {
+          id: 'about',
+          title: 'Description of the Platform',
+          points: [
+            'Safe Connect is the official online reporting platform of Barangay Sta. Fe.',
+            'The Platform allows residents to report emergencies and petty crimes, request assistance, locate evacuation centers, and receive news and announcements from the Barangay.',
+            'All reports and requests are received and handled by the Barangay\'s designated response personnel.'
+          ]
+        },
+        {
+          id: 'emergencies',
+          title: 'Emergency Situations',
+          points: [
+            'The Platform does not replace emergency hotlines. In any life-threatening situation, call 911 or the emergency numbers listed on this website immediately.',
+            'The Platform relies on internet connectivity and third-party services. Reports may therefore be delayed or interrupted.',
+            'Submitting a report does not guarantee a response within a specific period of time.'
+          ]
+        },
+        {
+          id: 'account',
+          title: 'User Accounts',
+          points: [
+            'You must provide accurate, current, and complete information when registering, including your full name, a valid email address, and a working contact number, and you must keep this information up to date.',
+            'You are responsible for keeping your password confidential and for all activity that occurs under your account.',
+            'Each person may hold only one account. You may not register on behalf of another person or impersonate anyone.',
+            'You must notify the Barangay immediately if you suspect any unauthorized use of your account.'
+          ]
+        },
+        {
+          id: 'reports',
+          title: 'Reports and Requests',
+          points: [
+            'All reports and requests must be truthful, accurate, and as complete as possible.',
+            'Your location, either your address or a pin on the map, is attached to each report so that responders can find you. Reported locations must be within Barangay Sta. Fe.',
+            'Photos and videos must show the actual incident or situation being reported. Certain report types require a photo or video so that the Barangay can verify the report.',
+            'You must not upload content that is unrelated to the report, obscene, gratuitously violent, or degrading to any person.',
+            'When reporting on behalf of another person, you may share their personal information only if they need assistance or are unable to request it themselves.'
+          ]
+        },
+        {
+          id: 'falseReports',
+          title: 'False or Misleading Reports',
+          points: [
+            'Submitting false, prank, or deliberately misleading reports is strictly prohibited.',
+            'False reports divert responders and resources away from genuine emergencies.',
+            'Accounts found to have submitted false reports may be suspended or terminated, and the matter may be referred to the appropriate authorities for action under Philippine law.'
+          ]
+        },
+        {
+          id: 'anonymous',
+          title: 'Anonymous Reporting',
+          points: [
+            'Petty crime reports may be submitted anonymously. When you choose this option, your name and contact number are not shown to Barangay personnel.',
+            'Anonymous reports remain linked to your account so that you can track them in My Reports and receive status updates.',
+            'Anonymous reporting protects your identity but does not exempt you from these Terms. The prohibition on false reports applies equally to anonymous reports.'
+          ]
+        },
+        {
+          id: 'community',
+          title: 'Community Guidelines',
+          points: [
+            'Comments on news and announcements must be respectful and relevant to the post.',
+            'You must not post content that is abusive, threatening, discriminatory, defamatory, or misleading; that discloses another person\'s personal information; or that constitutes spam.',
+            'The Barangay reserves the right to remove any content that violates these guidelines.'
+          ]
+        },
+        {
+          id: 'privacy',
+          title: 'Data Privacy',
+          points: [
+            'We collect the information you provide, including your name, email address, contact number, reports, photos and videos, location data, and comments.',
+            'This information is used solely to receive, verify, and respond to your reports; to communicate with you about them; to send you updates; and to operate and secure the Platform.',
+            'Your reports are accessible only to authorized Barangay personnel. We do not sell or rent your personal information to third parties.',
+            'Your personal information is processed in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173). You may request access to, correction of, or deletion of your personal information by contacting the Barangay.'
+          ]
+        },
+        {
+          id: 'limitations',
+          title: 'Service Availability and Limitation of Liability',
+          points: [
+            'We strive to keep the Platform available at all times but do not guarantee uninterrupted or error-free operation. The Platform may be unavailable during maintenance or because of circumstances beyond our control.',
+            'Information on the Platform, including news and evacuation center details, is provided in good faith. Always follow the instructions of responders and officials on the ground.',
+            'To the extent permitted by law, the Barangay is not liable for any loss arising from delays, interruptions, or the unavailability of the Platform.'
+          ]
+        },
+        {
+          id: 'suspension',
+          title: 'Suspension and Termination',
+          points: [
+            'The Barangay may suspend or terminate any account that violates these Terms, submits false reports, or misuses the Platform, with or without prior notice.',
+            'Serious violations may be reported to the appropriate authorities.'
+          ]
+        },
+        {
+          id: 'changes',
+          title: 'Amendments to These Terms',
+          points: [
+            'We may revise these Terms from time to time to reflect changes to the Platform or to applicable law. The "Last updated" date above indicates when the Terms were last revised.',
+            'Your continued use of the Platform after any revision constitutes your acceptance of the revised Terms.'
+          ]
+        },
+        {
+          id: 'contact',
+          title: 'Contact Information',
+          points: [
+            'Questions about these Terms or the handling of your personal information may be directed to Barangay Sta. Fe through the contact details provided in the Contact section of this website.'
+          ]
+        }
+      ]
     },
     residentNav: {
       home: 'Home',
@@ -297,39 +482,42 @@ export const translations = {
       commentPlaceholder: 'Write a comment...',
       deleteComment: 'Delete comment',
       adminBadge: 'Barangay Admin',
+      officialBadge: 'Barangay Official',
       viewOneReply: '1 reply',
       viewReplies: '{{count}} replies',
       hideReplies: 'Hide replies'
     },
     residentHero: {
-      titleLine1: 'Barangay Sta. Fe',
-      titleLine2: 'Safe Connect',
-      subtitleLine1: 'Be part of our emergency response network and stand ready to save lives when it matters most.',
-      subtitleLine2: 'Your action can bring hope in times of crisis.',
+      eyebrow: 'Barangay Sta. Fe Safe Connect',
+      titleLine1: 'Help Is Just',
+      titleLine2: 'One Tap Away',
+      subtitle: 'Report emergencies, request assistance, and get real-time barangay updates, so help reaches you and your neighbors faster.',
       hotline: 'Emergency Hotline: 911',
       available247: 'Available 24/7 for immediate emergencies'
     },
     emergencyReportSection: {
+      badge: 'Get help fast',
       title: 'Report an Incident',
-      subtitle: 'Every second counts. Choose the type of incident below and reach our response team right away, 24/7.',
+      subtitle: 'Tell the barangay what is happening and where. Your report goes straight to our response team, day or night. Choose the option that fits your situation.',
       reportButton: 'Report',
       cards: {
         emergency: {
-          title: 'Report Emergency',
-          badge: 'Critical',
-          description: 'Fires, floods, earthquakes, or any life-threatening situation happening right now'
+          title: 'Report an Emergency',
+          description: 'A life-threatening situation happening right now that needs responders immediately.',
+          cta: 'Report an emergency'
         },
         assistance: {
           title: 'Request Assistance',
-          badge: 'High',
-          description: 'Request help, rescue, or support for a non-critical situation'
+          description: 'Need relief goods, rescue, or support during or after a disaster? Let the barangay know what you need.',
+          cta: 'Request assistance'
         },
         pettyCrime: {
-          title: 'Report Petty Crimes',
-          badge: 'Medium',
-          description: 'Theft, vandalism, disturbances, or other minor offenses'
+          title: 'Report a Crime',
+          description: 'Report theft, vandalism, harassment, or suspicious activity. You can choose to stay anonymous.',
+          cta: 'Report a crime'
         }
-      }
+      },
+      dangerNote: 'In immediate danger? Call 911 or tap the red phone button for emergency hotlines.'
     },
     reportForm: {
       reportingFor: 'Who are you reporting for?',
@@ -451,7 +639,15 @@ export const translations = {
       submitRequest: 'Submit Request',
       requestSubmitted: 'Request Submitted',
       requestSubmittedBody: 'Your assistance request has been submitted successfully. Our team will contact you soon.',
-      done: 'Done'
+      done: 'Done',
+      victimOfEmergency: 'Victim of What Emergency?',
+      selectEmergency: 'Select Emergency',
+      emergencyOther: 'Other (please specify)',
+      emergencyOtherPlaceholder: 'What emergency did you experience?',
+      specifyEmergency: 'Please specify the emergency you experienced.',
+      proofPhoto: 'Photo or Video (Proof)',
+      proofHint: 'Required. It helps the barangay verify your request. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).',
+      proofRequired: 'Please attach a photo or video of your situation. It is required so the barangay can verify your request.'
     },
     pettyCrimeModal: {
       title: 'Report Petty Crime',
@@ -474,10 +670,16 @@ export const translations = {
       cooldownAlert: 'Please wait {{time}} before submitting another report.',
       cooldownBanner: 'You can submit another report in {{time}}.',
       updateSuccess: 'Petty crime report updated successfully.',
-      submitError: 'Error submitting report.',
+      submitError: 'There was an error submitting your report. Please try again.',
       submitCrimeReport: 'Submit Crime Report',
       reportSubmitted: 'Report Submitted',
-      reportSubmittedBody: 'Your petty crime report has been submitted successfully. Our team will review it shortly.'
+      reportSubmittedBody: 'Your petty crime report has been submitted successfully. Our team will review it shortly.',
+      mediaHintSelectType: 'Optional for Theft, Suspicious Activity and Harassment; required for all other crime types. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).',
+      mediaHintOptional: 'Optional for this crime type. JPG/JPEG image (max 20MB) or MP4/MOV/WEBM video (max 50MB).',
+      mediaRequired: 'Please attach a photo or video of the incident. It is required for this crime type.',
+      anonymousLabel: 'Report anonymously',
+      anonymousHint: 'Your name and contact number will be hidden from barangay staff, for your safety. You can still follow this report in My Reports.',
+      anonymousOnEdit: 'This report was submitted anonymously.'
     },
     myReports: {
       title: 'My Reports',
@@ -485,6 +687,10 @@ export const translations = {
       noAccount: 'We could not identify your account. Please sign in again.',
       loadError: 'Could not load your reports right now. Please try again later.',
       confirmDelete: 'Delete this {{type}} report? This cannot be undone.',
+      deleteTitle: 'Delete this report?',
+      deleteBody: 'Your {{type}} report "{{title}}" will be permanently removed. This cannot be undone.',
+      deletedTitle: 'Report Deleted',
+      deletedBody: 'Your report has been deleted.',
       deleteFailed: 'Failed to delete report.',
       totalReports: 'Total Reports',
       other: 'Other',
@@ -527,6 +733,7 @@ export const translations = {
       hideDetails: 'Hide Details',
       viewDetails: 'View Details',
       edit: 'Edit',
+      moreOptions: 'More options',
       delete: 'Delete',
       detail: {
         contactNumber: 'Contact Number',
@@ -546,9 +753,9 @@ export const translations = {
       savePhoto: 'Save Photo',
       cancel: 'Cancel',
       photoPendingNote: 'Photo selected — click Save Photo to apply.',
-      photoHint: 'JPG, PNG, or WEBP · Max 5MB',
+      photoHint: 'JPG, PNG, or WEBP · up to 10MB.',
       photoTypeError: 'Please choose a JPG, PNG, or WEBP image.',
-      photoSizeError: 'Photo must be under 5MB.',
+      photoSizeError: 'Photo must be under 10MB.',
       photoSuccess: 'Profile photo updated successfully.',
       photoUploadError: 'Could not upload photo.',
       serverError: 'Could not reach the server. Please try again.',
@@ -579,9 +786,9 @@ export const translations = {
       usernameUpdated: 'Username updated.',
       usernameUpdateError: 'Could not update username.',
       password: 'Password',
-      passwordSub: 'Choose a new password with at least 8 characters.',
+      passwordSub: 'Use a strong password you don\'t use anywhere else.',
       newPassword: 'New password',
-      newPasswordPlaceholder: 'At least 8 characters',
+      newPasswordPlaceholder: 'Create a strong password',
       confirmNewPassword: 'Confirm new password',
       confirmNewPasswordPlaceholder: 'Re-enter your new password',
       updatePassword: 'Update password',
@@ -595,10 +802,52 @@ export const translations = {
       accountInfoSub: 'Details about your SafeConnect account.',
       accountType: 'Account type',
       accountStatus: 'Account status',
-      memberSince: 'Member since'
+      memberSince: 'Member since',
+      nav: {
+        profile: 'Profile',
+        contact: 'Contact details',
+        security: 'Password & security',
+        account: 'Account'
+      },
+      profileSub: 'Your name and username, as the barangay sees them on your reports.',
+      fullNamePlaceholder: 'Enter your full name',
+      fullNameHint: 'Use your real name so the barangay can identify you when responding.',
+      nameEmptyError: 'Please enter your full name.',
+      nameInvalidError: 'Full name can only contain letters, spaces, periods, apostrophes and hyphens (up to 100 characters).',
+      nameUpdateError: 'Could not update your full name.',
+      profileUpdated: 'Your profile has been updated.',
+      saveChanges: 'Save changes',
+      contactDetailsUpdated: 'Your contact details have been updated.',
+      confirmWithPassword: 'Enter your current password to change your email',
+      passwordRulesError: 'Your new password must meet all the requirements below.',
+      passwordDevicesNote: 'Changing your password signs you out of saved logins on your other devices. You\'ll stay signed in here.',
+      changePhoto: 'Change photo',
+      addPhoto: 'Add a photo',
+      cropTitle: 'Adjust your photo',
+      cropSubtitle: 'Drag to reposition, and zoom in or out to fit.',
+      cropFrameLabel: 'Photo position. Drag, or use the arrow keys to move it and plus or minus to zoom.',
+      cropHelp: 'Drag the photo to move it. Pinch or scroll to zoom.',
+      cropLoadError: 'This photo couldn\'t be opened. Please choose another one.',
+      zoom: 'Zoom',
+      zoomIn: 'Zoom in',
+      zoomOut: 'Zoom out',
+      preview: 'Preview',
+      previewProfile: 'Profile',
+      previewNavbar: 'Menu bar',
+      recenter: 'Recenter'
     }
   },
   tl: {
+    popup: {
+      successTitle: 'Tagumpay',
+      warningTitle: 'Pakisuri',
+      errorTitle: 'May Nangyaring Mali',
+      updatedTitle: 'Na-update ang Ulat',
+      submitFailedTitle: 'Hindi Naisumite ang Ulat',
+      ok: 'OK',
+      done: 'Tapos na',
+      cancel: 'Kanselahin'
+    },
     nav: {
       home: 'Home',
       services: 'Serbisyo',
@@ -633,6 +882,8 @@ export const translations = {
       title: 'Mga Emergency Contact',
       subtitle: 'Pindutin ang isang contact para tumawag agad',
       call: 'Tawagan',
+      choose: 'Pumili',
+      chooseWho: 'Piliin kung sino ang tatawagan',
       sublabels: {
         police: 'Pambansang Emergency Hotline',
         dasma: 'Dasmariñas City PNP',
@@ -650,9 +901,16 @@ export const translations = {
     auth: {
       showPassword: 'Ipakita ang password',
       hidePassword: 'Itago ang password',
+      close: 'Isara',
       fillRequired: 'Pakisagutan lahat ng kinakailangang field',
       bothEmailPassword: 'Pakilagay ang email at password',
       invalidCredentials: 'Maling email o password.',
+      accountClosedTitle: 'Sarado na ang Account',
+      accountClosedMessage: 'Permanenteng isinara na ang account na ito at hindi na maaaring gamitin para mag-sign in sa SafeConnect. Isinasara ang mga account kapag natapos na ang termino o tungkulin ng isang opisyal ng barangay, o kapag ang isang na-suspend na account ay hindi naayos kasama ang administrator ng barangay. Kung sa tingin mo ay nagkamali ito, mangyaring makipag-ugnayan sa administrator ng Barangay Sta. Fe sa {{email}}. Salamat, at manatiling ligtas at may alam!',
+      accountSuspendedTitle: 'Naka-suspend ang Account',
+      accountSuspendedMessage: 'Naka-suspend ang iyong account, kaya hindi ka muna makakapag-sign in sa SafeConnect. Upang maayos ito at maibalik ang access, mangyaring makipag-ugnayan sa administrator ng Barangay Sta. Fe sa {{email}}. Salamat sa iyong pag-unawa.',
+      accountInactiveTitle: 'Hindi Aktibo ang Account',
+      accountInactiveMessage: 'Hindi makakapag-sign in ang iyong account sa ngayon. Mangyaring makipag-ugnayan sa administrator ng Barangay Sta. Fe sa {{email}} para sa tulong.',
       serverError: 'Hindi ma-access ang server. Pakisuri ang iyong koneksyon at subukang muli.',
       serverErrorShort: 'Hindi ma-access ang server.',
       contactDigits: 'Ang numero ng contact ay dapat eksaktong 10 na digit',
@@ -670,6 +928,7 @@ export const translations = {
     },
     signIn: {
       title: 'Mag-sign In',
+      subtitle: 'Maligayang pagbabalik! Mag-sign in sa iyong Safe Connect account.',
       email: 'Email Address',
       emailPlaceholder: 'Ilagay ang iyong email',
       password: 'Password',
@@ -678,15 +937,40 @@ export const translations = {
       submit: 'Mag-sign In',
       submitting: 'Nagsa-sign In...',
       noAccount: 'Wala ka pang account?',
-      signUpLink: 'Mag-sign Up'
+      signUpLink: 'Mag-sign Up',
+      signInRequired: 'Mag-sign in muna para magpatuloy sa iyong Safe Connect account.'
+    },
+    residentGuard: {
+      checking: 'Sinusuri ang iyong pag-sign in...',
+      signingIn: 'Sina-sign in ka...',
+      offlineTitle: 'Hindi ma-verify ang iyong pag-sign in',
+      offlineBody: 'Hindi namin maabot ang Safe Connect para kumpirmahing naka-sign in ka. Suriin ang iyong koneksyon sa internet at subukang muli.',
+      retry: 'Subukang Muli',
+      signInAgain: 'Mag-sign In Muli'
+    },
+    rememberLogin: {
+      title: 'I-save ang iyong login info?',
+      body: 'Manatiling naka-sign in sa device na ito nang 30 araw, para mabuksan mo ang Safe Connect nang hindi na muling nagsa-sign in.',
+      warning: 'Piliin lamang ang Oo sa sarili mong device, hindi sa shared o pampublikong computer.',
+      yes: 'Oo, i-save',
+      no: 'Hindi',
+      saving: 'Sine-save...',
+      noExplains: 'Kung pipiliin mo ang Hindi, kailangan mong mag-sign in muli pagkatapos isara ang iyong browser.',
+      signOutHint: 'Maaari kang mag-sign out anumang oras mula sa menu ng iyong account.'
     },
     signUp: {
       createTitle: 'Gumawa ng Account',
+      subtitle: 'Sumali sa Safe Connect para mag-ulat ng emergency, humingi ng tulong, at manatiling may alam.',
+      sectionPersonal: 'Personal na Impormasyon',
+      sectionContact: 'Detalye ng Pakikipag-ugnayan',
+      sectionSecurity: 'Seguridad ng Account',
+      optional: '(opsyonal)',
+      passwordRules: 'Mga kailangan sa password',
       verifyTitle: 'I-verify ang Iyong Email',
       firstName: 'Unang Pangalan',
       firstNamePlaceholder: 'Unang pangalan',
       middleName: 'Gitnang Pangalan',
-      middlePlaceholder: '(Opsyonal)',
+      middlePlaceholder: 'Gitnang pangalan',
       lastName: 'Apelyido',
       lastNamePlaceholder: 'Apelyido',
       username: 'Username',
@@ -712,7 +996,12 @@ export const translations = {
       resendIn: 'Ipadala ulit ang code sa loob ng {{s}}s',
       resend: 'Ipadala ulit ang code',
       backToRegistration: '← Bumalik sa pagpaparehistro',
-      accountCreated: 'Matagumpay na nagawa ang account! Mangyaring mag-sign in.'
+      accountCreated: 'Matagumpay na nagawa ang account! Mangyaring mag-sign in.',
+      agreePrefix: 'Nabasa ko at sumasang-ayon ako sa',
+      agreeLink: 'Mga Tuntunin at Kundisyon',
+      viewTermsHint: 'Buksan ang Mga Tuntunin at Kundisyon para magamit ang checkbox na ito.',
+      viewTermsFirst: 'Pakibasa muna ang Mga Tuntunin at Kundisyon bago gumawa ng account.',
+      mustAgree: 'Kailangan mong sumang-ayon sa Mga Tuntunin at Kundisyon para makagawa ng account.'
     },
     forgotPassword: {
       titleEmail: 'Nakalimutan ang Password',
@@ -746,7 +1035,7 @@ export const translations = {
     },
     about: {
       badge: 'Tungkol sa SafeConnect',
-      titlePrefix: 'Isang app.',
+      titlePrefix: 'Isang website.',
       titleHighlight: 'Mas ligtas na',
       titleSuffix: 'Barangay Sta. Fe.',
       intro: 'Direktang ikinokonekta ng SafeConnect ang bawat residente sa emergency response team ng barangay — mag-report ng insidente, humingi ng tulong, at manatiling updated, lahat sa iisang lugar.',
@@ -769,6 +1058,14 @@ export const translations = {
           body: 'Subaybayan ang iyong report sa real time — mula received, hanggang in progress, hanggang resolved.'
         }
       }
+    },
+    demoVideo: {
+      eyebrow: 'Panoorin ang demo',
+      defaultTitle: 'Tingnan kung paano gumagana ang SafeConnect',
+      subtitle: 'Maikling gabay kung paano mag-report ng emergency, humingi ng tulong, at subaybayan ang iyong mga report.',
+      comingSoonTitle: 'Malapit nang ilabas ang demo video',
+      comingSoonText: 'Dito ilalagay ang maikling video kung paano gamitin ang SafeConnect.',
+      newsBadge: 'Video gabay'
     },
     services: {
       badge: 'Ano ang Magagawa Mo',
@@ -829,7 +1126,134 @@ export const translations = {
       emailSupport: 'Email Support',
       copyright: '© 2025 Safe Connect. Nakalaan ang lahat ng karapatan.',
       privacyPolicy: 'Patakaran sa Privacy',
-      termsOfService: 'Mga Tuntunin ng Serbisyo'
+      termsOfService: 'Mga Tuntunin at Kundisyon'
+    },
+    terms: {
+      title: 'Mga Tuntunin at Kundisyon',
+      lastUpdated: 'Huling na-update: Oktubre 16, 2026',
+      intro: 'Pakibasa nang mabuti ang mga Tuntunin at Kundisyong ito bago gumawa ng account o gumamit ng Safe Connect. Nakasaad dito ang iyong mga karapatan at responsibilidad bilang user ng Plataporma.',
+      close: 'Isara',
+      understand: 'Naiintindihan Ko',
+      sections: [
+        {
+          id: 'acceptance',
+          title: 'Pagtanggap sa mga Tuntunin',
+          points: [
+            'Ang mga Tuntunin at Kundisyong ito ("Mga Tuntunin") ang namamahala sa iyong pag-access at paggamit ng Safe Connect (ang "Plataporma"), na pinapatakbo ng Barangay Sta. Fe, Dasmariñas, Cavite (ang "Barangay," "kami," o "namin").',
+            'Sa paggawa ng account, pag-sign in, o anumang paggamit ng Plataporma, kinukumpirma mong nabasa, naintindihan, at sumasang-ayon kang sumunod sa mga Tuntuning ito.',
+            'Kung hindi ka sumasang-ayon sa mga Tuntuning ito, hindi mo dapat gamitin ang Plataporma.',
+            'Ang mga user na wala pang 18 taong gulang ay maaari lamang gumamit ng Plataporma nang may pahintulot at gabay ng magulang o legal na tagapag-alaga.'
+          ]
+        },
+        {
+          id: 'about',
+          title: 'Paglalarawan ng Plataporma',
+          points: [
+            'Ang Safe Connect ang opisyal na online na plataporma sa pag-uulat ng Barangay Sta. Fe.',
+            'Sa pamamagitan ng Plataporma, maaaring mag-ulat ang mga residente ng emergency at petty crime, humingi ng tulong, maghanap ng evacuation center, at makatanggap ng balita at anunsyo mula sa Barangay.',
+            'Ang lahat ng ulat at kahilingan ay tinatanggap at inaasikaso ng mga itinalagang tauhan ng Barangay sa pagtugon.'
+          ]
+        },
+        {
+          id: 'emergencies',
+          title: 'Mga Sitwasyong Pang-emergency',
+          points: [
+            'Hindi pinapalitan ng Plataporma ang mga emergency hotline. Sa anumang sitwasyong nagbabanta sa buhay, tumawag agad sa 911 o sa mga emergency number na nakalista sa website na ito.',
+            'Umaasa ang Plataporma sa koneksyon sa internet at sa mga serbisyo ng ikatlong partido. Dahil dito, maaaring maantala o maputol ang pagpapadala ng mga ulat.',
+            'Ang pagsusumite ng ulat ay hindi garantiya ng pagtugon sa loob ng tiyak na panahon.'
+          ]
+        },
+        {
+          id: 'account',
+          title: 'Mga Account ng User',
+          points: [
+            'Dapat kang magbigay ng tama, kasalukuyan, at kumpletong impormasyon sa pagpaparehistro, kabilang ang iyong buong pangalan, wastong email address, at gumaganang contact number, at panatilihing updated ang impormasyong ito.',
+            'Ikaw ang responsable sa pagpapanatiling kumpidensyal ng iyong password at sa lahat ng aktibidad na nagaganap sa iyong account.',
+            'Isang account lamang ang maaaring hawakan ng bawat tao. Hindi ka maaaring magparehistro para sa ibang tao o magpanggap bilang sinuman.',
+            'Dapat mong ipaalam agad sa Barangay kung may hinala kang may hindi awtorisadong gumagamit ng iyong account.'
+          ]
+        },
+        {
+          id: 'reports',
+          title: 'Mga Ulat at Kahilingan',
+          points: [
+            'Ang lahat ng ulat at kahilingan ay dapat totoo, tama, at kumpleto hangga\'t maaari.',
+            'Kasama sa bawat ulat ang iyong lokasyon, ang iyong address o pin sa mapa, upang mahanap ka ng mga responder. Ang iniuulat na lokasyon ay dapat nasa loob ng Barangay Sta. Fe.',
+            'Ang mga larawan at video ay dapat nagpapakita ng mismong insidente o sitwasyong iniuulat. May ilang uri ng ulat na nangangailangan ng larawan o video upang maberipika ito ng Barangay.',
+            'Hindi ka dapat mag-upload ng nilalamang walang kaugnayan sa ulat, malaswa, labis na marahas, o yumuyurak sa dignidad ng sinumang tao.',
+            'Kapag nag-uulat para sa ibang tao, maaari mo lamang ibahagi ang kanilang personal na impormasyon kung kailangan nila ng tulong o hindi nila ito kayang hingin mismo.'
+          ]
+        },
+        {
+          id: 'falseReports',
+          title: 'Peke o Mapanlinlang na mga Ulat',
+          points: [
+            'Mahigpit na ipinagbabawal ang pagsusumite ng peke, biro, o sinadyang mapanlinlang na ulat.',
+            'Inililihis ng mga pekeng ulat ang mga responder at mapagkukunan palayo sa mga tunay na emergency.',
+            'Ang mga account na mapatunayang nagsumite ng pekeng ulat ay maaaring suspindihin o tanggalin, at maaaring idulog ang usapin sa kinauukulang awtoridad para sa aksyon alinsunod sa batas ng Pilipinas.'
+          ]
+        },
+        {
+          id: 'anonymous',
+          title: 'Pag-uulat nang Hindi Nagpapakilala',
+          points: [
+            'Maaaring isumite nang hindi nagpapakilala ang mga ulat ng petty crime. Kapag pinili mo ito, hindi ipapakita sa mga tauhan ng Barangay ang iyong pangalan at contact number.',
+            'Nananatiling naka-link ang mga anonymous na ulat sa iyong account upang masubaybayan mo ang mga ito sa Aking Mga Ulat at makatanggap ng mga update.',
+            'Pinoprotektahan ng anonymous na pag-uulat ang iyong pagkakakilanlan, ngunit hindi ka nito inaalis sa saklaw ng mga Tuntuning ito. Nalalapat din sa mga anonymous na ulat ang pagbabawal sa pekeng ulat.'
+          ]
+        },
+        {
+          id: 'community',
+          title: 'Mga Alituntunin ng Komunidad',
+          points: [
+            'Ang mga komento sa balita at anunsyo ay dapat magalang at may kaugnayan sa post.',
+            'Hindi ka dapat mag-post ng nilalamang mapang-abuso, nagbabanta, mapang-diskrimina, mapanirang-puri, o mapanlinlang; nagbubunyag ng personal na impormasyon ng ibang tao; o maituturing na spam.',
+            'May karapatan ang Barangay na alisin ang anumang nilalamang lumalabag sa mga alituntuning ito.'
+          ]
+        },
+        {
+          id: 'privacy',
+          title: 'Privacy ng Datos',
+          points: [
+            'Kinokolekta namin ang impormasyong ibinibigay mo, kabilang ang iyong pangalan, email address, contact number, mga ulat, larawan at video, datos ng lokasyon, at mga komento.',
+            'Ginagamit lamang ang impormasyong ito upang tanggapin, beripikahin, at tugunan ang iyong mga ulat; makipag-ugnayan sa iyo tungkol sa mga ito; magpadala sa iyo ng mga update; at patakbuhin at protektahan ang Plataporma.',
+            'Ang mga awtorisadong tauhan lamang ng Barangay ang may access sa iyong mga ulat. Hindi namin ibinebenta o pinauupahan ang iyong personal na impormasyon sa ikatlong partido.',
+            'Pinoproseso ang iyong personal na impormasyon alinsunod sa Data Privacy Act of 2012 (Republic Act No. 10173). Maaari mong hilingin na makita, itama, o burahin ang iyong personal na impormasyon sa pamamagitan ng pakikipag-ugnayan sa Barangay.'
+          ]
+        },
+        {
+          id: 'limitations',
+          title: 'Pagkakaroon ng Serbisyo at Limitasyon ng Pananagutan',
+          points: [
+            'Sinisikap naming laging magagamit ang Plataporma, ngunit hindi namin ginagarantiya na tuloy-tuloy o walang error ang operasyon nito. Maaaring hindi ito magamit habang may maintenance o dahil sa mga pangyayaring wala sa aming kontrol.',
+            'Ang impormasyon sa Plataporma, kabilang ang balita at detalye ng evacuation center, ay ibinibigay nang may mabuting hangarin. Laging sundin ang mga tagubilin ng mga responder at opisyal sa lugar.',
+            'Hanggang sa pinahihintulutan ng batas, walang pananagutan ang Barangay sa anumang pinsalang dulot ng pagkaantala, pagkaputol, o hindi pagkakaroon ng Plataporma.'
+          ]
+        },
+        {
+          id: 'suspension',
+          title: 'Pagsuspinde at Pagtanggal ng Account',
+          points: [
+            'Maaaring suspindihin o tanggalin ng Barangay ang anumang account na lumalabag sa mga Tuntuning ito, nagsusumite ng pekeng ulat, o nag-aabuso sa Plataporma, may paunang abiso man o wala.',
+            'Ang mabibigat na paglabag ay maaaring iulat sa kinauukulang awtoridad.'
+          ]
+        },
+        {
+          id: 'changes',
+          title: 'Mga Pagbabago sa mga Tuntuning Ito',
+          points: [
+            'Maaari naming baguhin ang mga Tuntuning ito paminsan-minsan upang ipakita ang mga pagbabago sa Plataporma o sa umiiral na batas. Ipinapakita ng petsang "Huling na-update" sa itaas kung kailan huling binago ang mga Tuntunin.',
+            'Ang patuloy mong paggamit ng Plataporma pagkatapos ng anumang pagbabago ay nangangahulugang tinatanggap mo ang binagong mga Tuntunin.'
+          ]
+        },
+        {
+          id: 'contact',
+          title: 'Impormasyon sa Pakikipag-ugnayan',
+          points: [
+            'Ang mga tanong tungkol sa mga Tuntuning ito o sa pangangasiwa ng iyong personal na impormasyon ay maaaring idulog sa Barangay Sta. Fe gamit ang mga detalyeng nasa seksyong Contact ng website na ito.'
+          ]
+        }
+      ]
     },
     residentNav: {
       home: 'Home',
@@ -890,39 +1314,42 @@ export const translations = {
       commentPlaceholder: 'Sumulat ng komento...',
       deleteComment: 'Burahin ang komento',
       adminBadge: 'Barangay Admin',
+      officialBadge: 'Barangay Official',
       viewOneReply: '1 sagot',
       viewReplies: '{{count}} na sagot',
       hideReplies: 'Itago ang mga sagot'
     },
     residentHero: {
-      titleLine1: 'Barangay Sta. Fe',
-      titleLine2: 'Safe Connect',
-      subtitleLine1: 'Maging bahagi ng aming emergency response network at maging handa na magligtas ng buhay kapag kailangan ito nang husto.',
-      subtitleLine2: 'Ang iyong aksyon ay makapagdadala ng pag-asa sa panahon ng krisis.',
+      eyebrow: 'Barangay Sta. Fe Safe Connect',
+      titleLine1: 'Isang Pindot Lang,',
+      titleLine2: 'May Tulong Na',
+      subtitle: 'Mag-report ng emergency, humingi ng tulong, at makatanggap ng balita mula sa barangay nang real time, para mas mabilis makarating ang tulong sa iyo at sa iyong mga kapitbahay.',
       hotline: 'Emergency Hotline: 911',
       available247: 'Bukas 24/7 para sa agarang emergency'
     },
     emergencyReportSection: {
+      badge: 'Mabilis na tulong',
       title: 'Mag-report ng Insidente',
-      subtitle: 'Bawat segundo ay mahalaga. Piliin ang uri ng insidente sa ibaba upang agad na makipag-ugnayan sa aming pangkat na handang tumugon, 24/7.',
+      subtitle: 'Sabihin sa barangay kung ano ang nangyayari at saan. Diretso sa aming response team ang iyong report, araw man o gabi. Piliin ang angkop sa iyong sitwasyon.',
       reportButton: 'I-report',
       cards: {
         emergency: {
           title: 'Mag-report ng Emergency',
-          badge: 'Kritikal',
-          description: 'Sunog, baha, lindol, o anumang nagbabantang buhay na sitwasyon ngayon'
+          description: 'Isang nagbabantang-buhay na sitwasyon na nangyayari ngayon at kailangan agad ng responder.',
+          cta: 'Mag-report ng emergency'
         },
         assistance: {
           title: 'Humingi ng Tulong',
-          badge: 'Mataas',
-          description: 'Humiling ng tulong, rescue, o suporta para sa hindi kritikal na sitwasyon'
+          description: 'Kailangan ng relief goods, rescue, o suporta habang o pagkatapos ng sakuna? Ipaalam sa barangay ang iyong kailangan.',
+          cta: 'Humingi ng tulong'
         },
         pettyCrime: {
           title: 'Mag-report ng Krimen',
-          badge: 'Katamtaman',
-          description: 'Pagnanakaw, bandalismo, gulo, o iba pang maliliit na paglabag'
+          description: 'I-report ang pagnanakaw, bandalismo, panliligalig, o kahina-hinalang gawain. Maaari kang manatiling anonymous.',
+          cta: 'Mag-report ng krimen'
         }
-      }
+      },
+      dangerNote: 'Nasa agarang panganib? Tumawag sa 911 o pindutin ang pulang phone button para sa mga emergency hotline.'
     },
     reportForm: {
       reportingFor: 'Sino ang iyong ino-report?',
@@ -1044,7 +1471,15 @@ export const translations = {
       submitRequest: 'Isumite ang Kahilingan',
       requestSubmitted: 'Naisumite ang Kahilingan',
       requestSubmittedBody: 'Matagumpay na naisumite ang iyong kahilingan ng tulong. Makikipag-ugnayan sa iyo ang aming team sa lalong madaling panahon.',
-      done: 'Tapos na'
+      done: 'Tapos na',
+      victimOfEmergency: 'Biktima ng Anong Emergency?',
+      selectEmergency: 'Piliin ang Emergency',
+      emergencyOther: 'Iba pa (pakispesipiko)',
+      emergencyOtherPlaceholder: 'Anong emergency ang naranasan mo?',
+      specifyEmergency: 'Pakispesipiko ang emergency na naranasan mo.',
+      proofPhoto: 'Larawan o Video (Patunay)',
+      proofHint: 'Kinakailangan. Makakatulong ito sa barangay na beripikahin ang iyong kahilingan. JPG/JPEG na larawan (max 20MB) o MP4/MOV/WEBM na video (max 50MB).',
+      proofRequired: 'Maglagay ng larawan o video ng iyong sitwasyon. Kinakailangan ito para maberipika ng barangay ang iyong kahilingan.'
     },
     pettyCrimeModal: {
       title: 'Mag-report ng Petty Crime',
@@ -1067,10 +1502,16 @@ export const translations = {
       cooldownAlert: 'Maghintay ng {{time}} bago magsumite ng isa pang ulat.',
       cooldownBanner: 'Makakapagsumite ka ng isa pang ulat sa loob ng {{time}}.',
       updateSuccess: 'Matagumpay na na-update ang petty crime report.',
-      submitError: 'Error sa pagsumite ng ulat.',
+      submitError: 'Nagkaroon ng error sa pagsumite ng iyong ulat. Subukang muli.',
       submitCrimeReport: 'Isumite ang Crime Report',
       reportSubmitted: 'Naisumite ang Ulat',
-      reportSubmittedBody: 'Matagumpay na naisumite ang iyong petty crime report. Susuriin ito ng aming team sa lalong madaling panahon.'
+      reportSubmittedBody: 'Matagumpay na naisumite ang iyong petty crime report. Susuriin ito ng aming team sa lalong madaling panahon.',
+      mediaHintSelectType: 'Opsyonal para sa Pagnanakaw, Kahina-hinalang Aktibidad at Panliligalig; kinakailangan para sa ibang uri ng krimen. JPG/JPEG na larawan (max 20MB) o MP4/MOV/WEBM na video (max 50MB).',
+      mediaHintOptional: 'Opsyonal para sa uring ito ng krimen. JPG/JPEG na larawan (max 20MB) o MP4/MOV/WEBM na video (max 50MB).',
+      mediaRequired: 'Maglagay ng larawan o video ng insidente. Kinakailangan ito para sa uring ito ng krimen.',
+      anonymousLabel: 'Mag-report nang hindi nagpapakilala',
+      anonymousHint: 'Itatago sa mga kawani ng barangay ang iyong pangalan at contact number, para sa iyong kaligtasan. Masusubaybayan mo pa rin ang ulat na ito sa Aking Mga Ulat.',
+      anonymousOnEdit: 'Isinumite ang ulat na ito nang hindi nagpapakilala.'
     },
     myReports: {
       title: 'Aking Mga Ulat',
@@ -1078,6 +1519,10 @@ export const translations = {
       noAccount: 'Hindi namin matukoy ang iyong account. Mangyaring mag-sign in muli.',
       loadError: 'Hindi ma-load ang iyong mga ulat ngayon. Subukan muli sa ibang pagkakataon.',
       confirmDelete: 'Burahin ang {{type}} report na ito? Hindi na ito maibabalik.',
+      deleteTitle: 'Burahin ang ulat na ito?',
+      deleteBody: 'Permanenteng mabubura ang iyong {{type}} report na "{{title}}". Hindi na ito maibabalik.',
+      deletedTitle: 'Nabura ang Ulat',
+      deletedBody: 'Nabura na ang iyong ulat.',
       deleteFailed: 'Hindi nabura ang ulat.',
       totalReports: 'Kabuuang Ulat',
       other: 'Iba pa',
@@ -1120,6 +1565,7 @@ export const translations = {
       hideDetails: 'Itago ang Detalye',
       viewDetails: 'Tingnan ang Detalye',
       edit: 'I-edit',
+      moreOptions: 'Iba pang opsyon',
       delete: 'Burahin',
       detail: {
         contactNumber: 'Numero ng Contact',
@@ -1139,9 +1585,9 @@ export const translations = {
       savePhoto: 'I-save ang Larawan',
       cancel: 'Kanselahin',
       photoPendingNote: 'Napili ang larawan — pindutin ang Save Photo para ilapat.',
-      photoHint: 'JPG, PNG, o WEBP · Max 5MB',
+      photoHint: 'JPG, PNG, o WEBP · hanggang 10MB.',
       photoTypeError: 'Pumili ng JPG, PNG, o WEBP na larawan.',
-      photoSizeError: 'Dapat mas mababa sa 5MB ang larawan.',
+      photoSizeError: 'Dapat mas mababa sa 10MB ang larawan.',
       photoSuccess: 'Matagumpay na na-update ang larawan ng profile.',
       photoUploadError: 'Hindi na-upload ang larawan.',
       serverError: 'Hindi ma-access ang server. Subukang muli.',
@@ -1172,9 +1618,9 @@ export const translations = {
       usernameUpdated: 'Na-update ang username.',
       usernameUpdateError: 'Hindi na-update ang username.',
       password: 'Password',
-      passwordSub: 'Pumili ng bagong password na hindi bababa sa 8 na karakter.',
+      passwordSub: 'Gumamit ng matibay na password na hindi mo ginagamit sa ibang lugar.',
       newPassword: 'Bagong password',
-      newPasswordPlaceholder: 'Hindi bababa sa 8 na karakter',
+      newPasswordPlaceholder: 'Gumawa ng matibay na password',
       confirmNewPassword: 'Kumpirmahin ang bagong password',
       confirmNewPasswordPlaceholder: 'Muling ilagay ang iyong bagong password',
       updatePassword: 'I-update ang password',
@@ -1188,7 +1634,39 @@ export const translations = {
       accountInfoSub: 'Mga detalye tungkol sa iyong SafeConnect account.',
       accountType: 'Uri ng account',
       accountStatus: 'Status ng account',
-      memberSince: 'Miyembro mula noong'
+      memberSince: 'Miyembro mula noong',
+      nav: {
+        profile: 'Profile',
+        contact: 'Detalye ng contact',
+        security: 'Password at seguridad',
+        account: 'Account'
+      },
+      profileSub: 'Ang iyong pangalan at username, gaya ng nakikita ng barangay sa iyong mga ulat.',
+      fullNamePlaceholder: 'Ilagay ang iyong buong pangalan',
+      fullNameHint: 'Gamitin ang iyong tunay na pangalan para makilala ka ng barangay sa pagtugon.',
+      nameEmptyError: 'Pakilagay ang iyong buong pangalan.',
+      nameInvalidError: 'Letra, espasyo, tuldok, apostrophe at gitling lamang ang maaari sa buong pangalan (hanggang 100 character).',
+      nameUpdateError: 'Hindi ma-update ang iyong buong pangalan.',
+      profileUpdated: 'Na-update na ang iyong profile.',
+      saveChanges: 'I-save ang mga pagbabago',
+      contactDetailsUpdated: 'Na-update na ang iyong detalye ng contact.',
+      confirmWithPassword: 'Ilagay ang kasalukuyang password para palitan ang iyong email',
+      passwordRulesError: 'Dapat matugunan ng bagong password ang lahat ng kailangan sa ibaba.',
+      passwordDevicesNote: 'Ang pagpapalit ng password ay magsa-sign out sa iyong mga naka-save na login sa ibang device. Mananatili kang naka-sign in dito.',
+      changePhoto: 'Palitan ang larawan',
+      addPhoto: 'Magdagdag ng larawan',
+      cropTitle: 'Ayusin ang iyong larawan',
+      cropSubtitle: 'I-drag para ilipat, at mag-zoom in o out para magkasya.',
+      cropFrameLabel: 'Posisyon ng larawan. I-drag, o gamitin ang arrow keys para ilipat at plus o minus para mag-zoom.',
+      cropHelp: 'I-drag ang larawan para ilipat. I-pinch o i-scroll para mag-zoom.',
+      cropLoadError: 'Hindi mabuksan ang larawang ito. Pumili ng iba.',
+      zoom: 'Zoom',
+      zoomIn: 'Mag-zoom in',
+      zoomOut: 'Mag-zoom out',
+      preview: 'Preview',
+      previewProfile: 'Profile',
+      previewNavbar: 'Menu bar',
+      recenter: 'Igitna'
     }
   }
 };

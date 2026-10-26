@@ -1,22 +1,23 @@
 import React from "react";
+import { ROLE_LABELS } from "../../shared/roles";
 
 // Confirmation dialog for Users tab changes (role promotion/demotion and
 // account status). Same look as shared/StatusConfirmModal.jsx.
 const CONSEQUENCES = {
     role: {
-        super_admin: "They'll get full access to the admin panel, including the System tabs (users, sign-in logs, admin logs). This applies on their next action; no re-login needed.",
-        admin: "They'll be able to handle reports and announcements, but not the System tabs (users, sign-in logs, admin logs). This applies on their next action; no re-login needed.",
+        super_admin: "As an Admin, they'll get full access to the admin panel, including the System tabs (users, logs, site contacts). This applies on their next action; no re-login needed.",
+        admin: "As an Official, they'll be able to handle reports and announcements, but not the System tabs (users, logs, site contacts). This applies on their next action; no re-login needed.",
         resident: "They'll lose access to the admin panel immediately and go back to being a regular resident account."
     },
     status: {
         Active: "They'll be able to sign in normally.",
         Pending: "They won't be able to sign in until their account is set back to Active.",
-        Suspended: "They won't be able to sign in until their account is set back to Active.",
-        Closed: "They won't be able to sign in anymore."
+        Suspended: "They won't be able to sign in until their account is set back to Active. They'll be asked to contact the barangay administrator.",
+        Closed: "The account is closed for good: they won't be able to sign in anymore, and they'll be told the account can no longer be used."
     }
 };
 
-const LABELS = { super_admin: "Super Admin", admin: "Admin", resident: "Resident" };
+const LABELS = ROLE_LABELS;
 const ROLE_RANK = { resident: 0, admin: 1, super_admin: 2 };
 
 const UserChangeConfirmModal = ({ change, onConfirm, onCancel, isSubmitting, error }) => {

@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import useSiteContent from '../shared/useSiteContent';
+import EmergencyContactList from '../shared/EmergencyContactList';
 import ResidentAssistanceModal from './ResidentAssistanceModal';
 import ResidentPettyCrimeModal from './ResidentPettyCrimeModal';
 
-// Also listed in the footer (ResidentPage passes it to DonationFooter).
-export const EMERGENCY_CONTACTS = [
-  { id: 'police',       label: '911 Emergency',     sublabelKey: 'police',   number: '911',           icon: 'bi-shield-fill-exclamation', color: '#dc2626' },
-  { id: 'dasma-police', label: 'Dasmariñas Police',  sublabelKey: 'dasma',    number: '+63462420002',  icon: 'bi-shield-fill',             color: '#1d4ed8' },
-  { id: 'cdrmc',        label: 'CDRMC',              sublabelKey: 'cdrmc',    number: '+63462300345',  icon: 'bi-heart-pulse-fill',        color: '#059669' },
-  { id: 'dswd',         label: 'DSWD',               sublabelKey: 'dswd',     number: '+63464165393',  icon: 'bi-people-fill',             color: '#ea580c' },
-  { id: 'barangay',     label: 'Barangay Sta. Fe',   sublabelKey: 'barangay', number: '+639929474309', icon: 'bi-house-fill',              color: '#7c3aed' },
-];
-
 function EmergencyCallButton() {
   const { t } = useLanguage();
+  // Editable by Admins under Content > Site Contacts; also the footer's hotlines.
+  const { emergencyContacts } = useSiteContent();
   const [open, setOpen] = useState(false);
 
   const handleCall = (number) => {
@@ -49,7 +44,10 @@ function EmergencyCallButton() {
             borderRadius: '16px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
             padding: '16px',
-            width: '280px',
+            width: '290px',
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: 'calc(100vh - 120px)',
+            overflowY: 'auto',
             animation: 'slideUpFade 0.22s ease',
           }}
         >
@@ -68,65 +66,7 @@ function EmergencyCallButton() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {EMERGENCY_CONTACTS.map((contact) => (
-              <button
-                key={contact.id}
-                onClick={() => handleCall(contact.number)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 12px',
-                  borderRadius: '10px',
-                  border: `1.5px solid ${contact.color}22`,
-                  background: `${contact.color}0d`,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'background 0.15s',
-                  width: '100%',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = `${contact.color}22`}
-                onMouseLeave={e => e.currentTarget.style.background = `${contact.color}0d`}
-              >
-                <div style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  background: contact.color,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  <i className={`bi ${contact.icon}`} style={{ color: '#fff', fontSize: '16px' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontWeight: 600, fontSize: '13px', color: '#111' }}>
-                    {contact.label}
-                  </p>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#6b7280' }}>
-                    {t(`emergencyContacts.sublabels.${contact.sublabelKey}`)}
-                  </p>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: contact.color,
-                  color: '#fff',
-                  borderRadius: '20px',
-                  padding: '4px 10px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  flexShrink: 0,
-                }}>
-                  <i className="bi bi-telephone-fill" style={{ fontSize: '10px' }} />
-                  {t('emergencyContacts.call')}
-                </div>
-              </button>
-            ))}
-          </div>
+          <EmergencyContactList contacts={emergencyContacts} onCall={handleCall} />
         </div>
       )}
 
@@ -194,8 +134,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
       image: '/images/emergency.jpg',
       gradientFrom: '#7f1d1d',
       gradientTo: '#dc2626',
-      badge: t('emergencyReportSection.cards.emergency.badge'),
-      badgeClass: 'critical',
       description: t('emergencyReportSection.cards.emergency.description')
     },
     {
@@ -204,8 +142,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
       image: '/images/assistance.jpg',
       gradientFrom: '#7c2d12',
       gradientTo: '#ea580c',
-      badge: t('emergencyReportSection.cards.assistance.badge'),
-      badgeClass: 'high',
       description: t('emergencyReportSection.cards.assistance.description')
     },
     {
@@ -214,8 +150,6 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
       image: '/images/crime.jpg',
       gradientFrom: '#450a0a',
       gradientTo: '#b91c1c',
-      badge: t('emergencyReportSection.cards.pettyCrime.badge'),
-      badgeClass: 'medium',
       description: t('emergencyReportSection.cards.pettyCrime.description')
     },
   ];
@@ -230,53 +164,93 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
     }
   };
 
+  const cardTheme = {
+    emergency: { key: 'emergency', icon: 'bi-exclamation-triangle-fill', color: '#dc2626' },
+    assistance: { key: 'assistance', icon: 'bi-life-preserver', color: '#ea580c' },
+    'petty-crime': { key: 'pettyCrime', icon: 'bi-shield-fill-exclamation', color: '#7c3aed' }
+  };
+
   return (
     <section className="emergency-report-section">
+      <style>{`
+        /* Padding is on .ir-outer: styles/App.css zeroes every <section>'s padding. */
+        .ir-outer { position: relative; padding: 96px 0 88px; background: linear-gradient(180deg, #ffffff 0%, #fbf7f8 100%); overflow: hidden; }
+        .ir-blob { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0; }
+        .ir-blob-1 { width: 340px; height: 340px; background: #dc2626; opacity: 0.08; top: -120px; left: -100px; }
+        .ir-blob-2 { width: 300px; height: 300px; background: #6B2C3E; opacity: 0.1; bottom: -120px; right: -90px; }
+        .ir-inner { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 
-      <div className="assist-header" style={{ marginTop: '60px' }}>
-        <div className="assist-icon-top">
-          <i className="bi bi-exclamation-octagon-fill"></i>
-        </div>
+        .ir-intro { max-width: 640px; margin: 0 auto 48px; text-align: center; }
+        .ir-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
+        .ir-intro h2 { margin: 0 0 14px; font-size: clamp(1.9rem, 3.8vw, 2.8rem); font-weight: 900; color: #111; line-height: 1.18; letter-spacing: -0.02em; }
+        .ir-intro p { margin: 0; color: #5b6170; line-height: 1.75; font-size: 1rem; }
 
-        <h2>{t('emergencyReportSection.title')}</h2>
+        .ir-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+        .ir-card { display: flex; flex-direction: column; background: #fff; border: 1.5px solid #f0eaec; border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(107, 44, 62, 0.07); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .ir-card:hover { transform: translateY(-5px); box-shadow: 0 18px 40px rgba(107, 44, 62, 0.13); }
+        .ir-media { position: relative; aspect-ratio: 16 / 10; background-size: cover; background-position: center; }
+        .ir-icon { position: absolute; left: 22px; bottom: -24px; width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.35rem; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18); border: 3px solid #fff; }
+        .ir-body { display: flex; flex-direction: column; flex: 1; padding: 38px 22px 22px; }
+        .ir-body h3 { margin: 0 0 8px; font-size: 1.15rem; font-weight: 800; color: #111; }
+        .ir-desc { margin: 0 0 20px; color: #4b5563; font-size: 0.92rem; line-height: 1.6; }
+        /* Same size on every card, lined up along the bottom. */
+        .ir-cta { margin-top: auto; flex: none; width: 100%; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 12px; padding: 0 16px; color: #fff; font-weight: 700; font-size: 0.95rem; white-space: nowrap; cursor: pointer; transition: filter 0.15s, transform 0.05s; }
+        .ir-cta:hover { filter: brightness(1.07); }
+        .ir-cta:active { transform: translateY(1px); }
+        .ir-cta:focus-visible { outline: 3px solid #6B2C3E; outline-offset: 2px; }
 
-        <p>
-          {t('emergencyReportSection.subtitle')}
-        </p>
-      </div>
+        .ir-danger { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 32px 0 0; text-align: center; color: #991b1b; font-size: 0.88rem; font-weight: 600; }
 
-      <div className="center-container">
-        <div className="emergency-cards">
-          {emergencies.map((emergency) => (
-            <div key={emergency.id} className={`emergency-card ${emergency.id}`}>
-              <div
-                className="card-media"
-                style={{
-                  backgroundImage: emergency.image
-                    ? `linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%), url(${emergency.image})`
-                    : `linear-gradient(135deg, ${emergency.gradientFrom} 0%, ${emergency.gradientTo} 100%)`
-                }}
-              >
-                <span className={`badge ${emergency.badgeClass}`}>
-                  {emergency.badge}
-                </span>
-              </div>
+        @media (max-width: 900px) {
+          .ir-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 600px) {
+          .ir-outer { padding: 72px 0 64px; }
+          .ir-intro { margin-bottom: 32px; }
+          .ir-cards { grid-template-columns: 1fr; gap: 18px; }
+          .ir-danger { align-items: flex-start; text-align: left; }
+        }
+      `}</style>
 
-              <div className="card-body">
-                <h3>{emergency.title}</h3>
-                <p className="card-desc">{emergency.description}</p>
-              </div>
+      <div className="ir-outer">
+        <div className="ir-blob ir-blob-1" />
+        <div className="ir-blob ir-blob-2" />
+        <div className="ir-inner">
+          <div className="ir-intro">
+            <div className="ir-badge"><i className="bi bi-lightning-charge-fill" /> {t('emergencyReportSection.badge')}</div>
+            <h2>{t('emergencyReportSection.title')}</h2>
+            <p>{t('emergencyReportSection.subtitle')}</p>
+          </div>
 
-              <div className="card-actions">
-                <button
-                  className="report-btn"
-                  onClick={() => handleCardClick(emergency)}
-                >
-                  {t('emergencyReportSection.reportButton')}
-                </button>
-              </div>
-            </div>
-          ))}
+          <div className="ir-cards">
+            {emergencies.map((emergency) => {
+              const theme = cardTheme[emergency.id];
+              return (
+                <article key={emergency.id} className={`ir-card ${emergency.id}`}>
+                  <div
+                    className="ir-media"
+                    style={{ backgroundImage: `linear-gradient(180deg, rgba(20,8,12,0.05) 0%, rgba(20,8,12,0.45) 100%), url(${emergency.image})` }}
+                  >
+                    <span className="ir-icon" style={{ background: theme.color }} aria-hidden="true"><i className={`bi ${theme.icon}`} /></span>
+                  </div>
+                  <div className="ir-body">
+                    <h3>{emergency.title}</h3>
+                    <p className="ir-desc">{emergency.description}</p>
+                    <button
+                      type="button"
+                      className="ir-cta"
+                      style={{ background: theme.color }}
+                      onClick={() => handleCardClick(emergency)}
+                    >
+                      {t(`emergencyReportSection.cards.${theme.key}.cta`)}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <p className="ir-danger"><i className="bi bi-telephone-fill" aria-hidden="true" />{t('emergencyReportSection.dangerNote')}</p>
         </div>
       </div>
 

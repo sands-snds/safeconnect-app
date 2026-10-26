@@ -52,11 +52,15 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | **Announcements** | Create, edit and delete announcements, with an image or a pasted news link (a preview is generated). Every active resident is emailed. |
 | **Announcement comments** | Read residents' comments on each announcement, comment as the barangay, **reply** to a resident (shown as a thread under their comment; the resident is notified), and delete comments for moderation. |
 | **Share** | Share an announcement on Facebook, through the device's share menu, or by copying its text. |
-| **Generate Report** | Download PDF or Excel reports, filtered by status and date range. |
-| **Notifications** | A bell that alerts admins to new reports and announcements. |
-| **Users** *(super admin)* | List all accounts and change their role or status. |
-| **Sign-in Logs** *(super admin)* | Every sign-in attempt from the last 90 days, with IP address, device and approximate location. |
-| **Admin Logs** *(super admin)* | Which admins are online, and a record of every admin action (logins, status changes, exports and more). |
+| **Generate Report** | Download PDF or Excel reports. Report tabs filter by status and period; System tabs filter by role, status and a From/To date range. |
+| **Notifications** | A bell that alerts Admins and Officials to new reports and announcements. |
+| **Users** *(Admin)* | Residents and Admins & Officials in two tables under one search and status filter. Change an account's role or status. The barangay's main account is locked. |
+| **Sign-in Logs** *(Admin)* | Every sign-in attempt, with device, IP address and approximate location in one column. Entries older than 90 days (adjustable) move to an **Archived** tab. |
+| **Admin Logs** *(Admin)* | Which Admins and Officials are online, and a record of every action (logins, status changes, exports and more). Activity older than 90 days (adjustable) moves to an **Archived** tab. |
+| **Site Contacts** *(Admin)* | Edit the floating call button's emergency numbers and the footer's barangay officials, hotlines and socials. |
+| **Site Contents** *(Admin)* | Change the landing page and resident page carousel photos, and set the two demo videos (upload an MP4/WebM up to 100 MB, or paste a YouTube link) with a title and caption. The **system demo** shows on the landing page (below the carousel) and in the resident News page (below the weather card); each place can be hidden. The **admin demo** pops up after signing in to the admin panel. |
+| **Account Settings** | From the account menu (top right), Admins and Officials can change their photo, username, contact number, email and password, and re-watch the admin demo video. |
+| **Account status popups** | Signing in to a Suspended or Closed account closes the sign-in box and explains, in English or Tagalog, what happened and who to contact. |
 
 ---
 
@@ -143,18 +147,17 @@ npm start
 ```
 This opens `http://localhost:3000`. By default the frontend calls `http://localhost:5000/api`.
 
-### Step 6: Create the first super admin
-New accounts are always **residents**. To make the first super admin:
-1. Sign up normally on the landing page (this needs SMTP for the verification code).
-2. In MySQL Workbench, promote the account:
-   ```sql
-   UPDATE registered_users SET role = 'super_admin' WHERE email_address = 'you@example.com';
-   ```
-3. Sign in again. Admin accounts are sent to `/admin` automatically.
+### Step 6: Sign in as the barangay's main Admin
+The backend always keeps one built-in **Admin** account: **safeconnect.brgy.santafe@gmail.com**. It is created on the first server start if it doesn't exist, and repaired on every start if its role or status was changed. Its role, status and email can't be changed from the admin panel, so the barangay can't be locked out after handover.
 
-After that, the super admin can promote other users from **System → Users**.
+The account starts with a random password nobody knows. To set it:
+1. On the landing page, click **Sign In → Forgot password?** and enter safeconnect.brgy.santafe@gmail.com.
+2. Enter the 6-digit code sent to that Gmail inbox, then choose a password (this needs SMTP working).
+3. Sign in. Admin and Official accounts are sent to `/admin` automatically.
 
-> The admin row inserted by `safeconnect_db.sql` stores its password as plain text. The backend compares passwords with bcrypt, so **that account cannot sign in**. Use the steps above instead.
+From **System → Users**, the main Admin can make other accounts Officials or Admins. New sign-ups are always Residents.
+
+> The admin row inserted by `safeconnect_db.sql` stores its password as plain text. The backend compares passwords with bcrypt, so **that account cannot sign in**. Use the main account above instead.
 
 ### Available scripts
 | Where | Command | What it does |
@@ -206,6 +209,7 @@ These values are **baked in at build time**, so set them before running `npm run
 
 - **Frontend:** deployed automatically by [.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml) on every push to the `pwa-setup` branch. It needs the repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. [public/staticwebapp.config.json](public/staticwebapp.config.json) sends every route to `index.html` so React Router works on refresh.
 - **Backend:** deployed by hand, as a zip of the `backend/` folder without `node_modules` or `.env` files, using `az webapp deploy`. Azure runs `npm install` during deployment. Its environment variables are set in the App Service configuration, not in a `.env` file.
+- **Search engines:** [public/index.html](public/index.html) has the title, description, link-preview (Open Graph) tags and site name (JSON-LD) that search results show. [public/robots.txt](public/robots.txt) and [public/sitemap.xml](public/sitemap.xml) point crawlers at the landing page, and `staticwebapp.config.json` sends `X-Robots-Tag: noindex` on `/admin` and `/resident` so the sign-in pages stay out of results. The `<32 hex characters>.txt` file in `public/` is the [IndexNow](https://www.indexnow.org/) key that lets us notify Bing of updates; it is meant to be public. All of these contain the site address, so update them if it changes.
 - **Uploads:** uploaded images live in `backend/uploads/` on the App Service. A zip deploy only replaces files that came from earlier deploys, so uploaded files survive. Back them up before any big change anyway.
 
 ---
@@ -257,11 +261,15 @@ safeconnect-app/
 
 ## 8. User Roles
 
-| Role | Where they land | What they can do |
-|---|---|---|
-| `resident` | `/resident` | Submit reports, and view, edit or delete their own reports; manage their profile |
-| `admin` | `/admin` | Everything in the admin panel **except** the System tabs: reports, statuses, archiving, announcements, exports |
-| `super_admin` | `/admin` | Everything, including **System → Users, Sign-in Logs and Admin Logs**, and changing the auto-archive period |
+| Shown as | Stored value | Where they land | What they can do |
+|---|---|---|---|
+| **Resident** | `resident` | `/resident` | Submit reports, and view, edit or delete their own reports; manage their profile |
+| **Official** | `admin` | `/admin` | Everything in the admin panel **except** the System tabs: reports, statuses, archiving, announcements, exports |
+| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Sign-in Logs and Admin Logs**, **Content → Site Contacts**, and changing auto-archive periods |
+
+Only the names shown on screen, in exports and in messages changed. The values stored in the database are the same as before, so existing accounts and sign-ins keep working. In code, always show `ROLE_LABELS[role]` (`backend/utils/roles.js`, `src/components/shared/roles.js`), never the stored value.
+
+**Account statuses:** **Active** (can sign in), **Suspended** (temporarily blocked; told to contact the administrator) and **Closed** (permanently blocked; told the account can't be used again). **Pending** is no longer offered, because accounts work as soon as the email is verified. Older Pending accounts can still be changed to another status.
 
 The backend checks the role **against the database on every admin request**, not only against the token. A demotion or suspension therefore takes effect immediately.
 
@@ -271,9 +279,9 @@ The backend checks the role **against the database on every admin request**, not
 
 | Data | Rule |
 |---|---|
-| Resolved reports | Archived automatically once they have been resolved for **1 year** (default). A super admin can change this to 6 months or Off. Archived reports stay in the database, still count on the dashboard and in exports, and can be restored. |
-| Sign-in logs | Only the **last 90 days** are shown and exported. Older rows stay in the database but are hidden. |
-| Admin activity logs | The Admin Logs tab shows the latest 500 actions. |
+| Resolved reports | Archived automatically once they have been resolved for **1 year** (default). An Admin can change this to 6 months or Off. Archived reports stay in the database, still count on the dashboard and in exports, and can be restored. |
+| Sign-in logs | Entries older than **90 days** (default; an Admin can choose 30 days, 90 days, 6 months, 1 year or Off) move to the **Archived** tab. Nothing is deleted. |
+| Admin activity logs | Same as sign-in logs, with its own setting (default **90 days**). The Recent tab shows the latest 500 actions; the Archived tab up to 2,000. |
 | Sign-up / reset codes | Held in server memory for 10 minutes. A server restart clears them. |
 
 ---

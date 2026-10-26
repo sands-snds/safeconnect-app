@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import ListView, { allOption } from '../shared/ListView';
 import UserStatusSelect, { USER_STATUSES } from './UserStatusSelect';
-import UserRoleSelect, { USER_ROLES } from './UserRoleSelect';
+import UserRoleSelect from './UserRoleSelect';
 import UserChangeConfirmModal from './UserChangeConfirmModal';
 
+const badgeStyle = (bg, color) => ({
+  marginLeft: 6,
+  fontSize: 10.5,
+  fontWeight: 600,
+  color,
+  background: bg,
+  padding: '1px 6px',
+  borderRadius: 999
+});
+
+// System > Users: Residents, then Admins & Officials, as two tables under
+// one shared search / status filter / Generate Report row.
 const RegisteredUsersTable = ({
-  data,
+  residents,
+  staff,
   filters,
   setFilters,
   onUpdateStatus,
@@ -35,7 +48,7 @@ const RegisteredUsersTable = ({
         return;
       }
     } else {
-      // updateStatus already alerts the backend's message on failure.
+      // updateStatus already shows the backend's message on failure.
       await onUpdateStatus(user.id, value, 'users');
       setIsSubmitting(false);
     }
@@ -45,41 +58,37 @@ const RegisteredUsersTable = ({
 
   const renderRow = (user) => {
     const isSelf = String(user.id) === String(currentAdminId);
-    const selfTitle = isSelf ? "You can't change your own account here" : undefined;
+    const locked = isSelf || user.isMainAccount;
+    const lockTitle = user.isMainAccount
+      ? "The barangay's main Admin account can't be changed"
+      : isSelf ? "You can't change your own account here" : undefined;
 
     return (
       <tr key={user.id}>
         <td className="table-cell">
           <div className="font-medium text-sm">
             {user.fullName}
-            {isSelf && (
-              <span style={{
-                marginLeft: 6,
-                fontSize: 10.5,
-                fontWeight: 600,
-                color: '#6B2C3E',
-                background: '#FDECEC',
-                padding: '1px 6px',
-                borderRadius: 999
-              }}>
-                You
+            {isSelf && <span style={badgeStyle('#FDECEC', '#6B2C3E')}>You</span>}
+            {user.isMainAccount && (
+              <span style={badgeStyle('#3b0d1b', '#fff')} title="The barangay's main Admin account">
+                <i className="bi bi-lock-fill" style={{ marginRight: 3 }} />Main account
               </span>
             )}
           </div>
           <div className="text-gray-500 text-xs">{user.email}</div>
         </td>
-        <td className="table-cell" title={selfTitle}>
+        <td className="table-cell" title={lockTitle}>
           <UserRoleSelect
             value={user.role}
-            disabled={isSelf}
+            disabled={locked}
             onChange={(e) => setPendingChange({ user, field: 'role', value: e.target.value })}
           />
         </td>
         <td className="table-cell text-sm">{user.dateRegistered}</td>
-        <td className="table-cell" title={selfTitle}>
+        <td className="table-cell" title={lockTitle}>
           <UserStatusSelect
             value={user.status}
-            disabled={isSelf}
+            disabled={locked}
             onChange={(e) => setPendingChange({ user, field: 'status', value: e.target.value })}
           />
         </td>
@@ -87,39 +96,39 @@ const RegisteredUsersTable = ({
     );
   };
 
-  const roleFilter = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <label className="font-medium text-sm">Filter by role</label>
-      <select
-        value={filters.users?.role || 'All Roles'}
-        onChange={(e) => setFilters(prev => ({
-          ...prev,
-          users: { ...prev.users, role: e.target.value }
-        }))}
-        className="form-select"
-      >
-        <option value="All Roles">All Roles</option>
-        {USER_ROLES.map((r) => (
-          <option key={r.value} value={r.value}>{r.label}</option>
-        ))}
-      </select>
-    </div>
-  );
+  const headers = ['NAME', 'ROLE', 'DATE REGISTERED', 'STATUS'];
 
   return (
     <>
       <ListView
-        data={data}
+        data={residents}
         filterType="users"
         filters={filters}
         setFilters={setFilters}
-        headers={['NAME', 'ROLE', 'DATE REGISTERED', 'STATUS']}
+        headers={headers}
         renderRow={renderRow}
+        sectionTitle={`Residents (${residents.length})`}
         statusOptions={[allOption('All Statuses'), ...USER_STATUSES]}
-        extraFilters={roleFilter}
         exportType="users"
-        itemLabel="users"
+        exportWithOptions
+        exportTitle="Registered Users"
+        itemLabel="residents"
       />
+
+      <div style={{ marginTop: 28 }}>
+        <ListView
+          data={staff}
+          filterType="users"
+          filters={filters}
+          setFilters={setFilters}
+          headers={headers}
+          renderRow={renderRow}
+          sectionTitle={`Admins & Officials (${staff.length})`}
+          statusOptions={[]}
+          showFilters={false}
+          itemLabel="accounts"
+        />
+      </div>
 
       <UserChangeConfirmModal
         change={pendingChange}

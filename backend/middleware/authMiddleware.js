@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
 const User = require("../models/User");
+const RememberedLogin = require("../models/RememberedLogin");
 const adminPresence = require("../services/adminPresence");
 const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
 
@@ -16,7 +17,7 @@ const verifyToken = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
 
         if (err) {
             return res.status(403).json({
@@ -25,9 +26,37 @@ const verifyToken = (req, res, next) => {
             });
         }
 
-        req.user = decoded;
-
-        next();
+        // A signed token alone isn't enough: tokens last 7 days, so check the
+        // account still exists and is Active. Otherwise a deleted or
+        // suspended account could keep using the API until its token
+        // expired. "Invalid token." makes the frontend sign out (api.js
+        // SESSION_ERRORS); signing in again explains the account status.
+        try {
+            const account = await User.findById(decoded.id);
+            if (!account || (account.status && account.status !== "Active")) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid token.",
+                    code: account ? "ACCOUNT_INACTIVE" : "ACCOUNT_NOT_FOUND"
+                });
+            }
+            // A saved login ("Save Login Info") is only valid while its
+            // remembered_logins row exists: signing out or changing the
+            // password revokes it, even though the token itself hasn't expired.
+            if (decoded.jti && !(await RememberedLogin.isValid(decoded.jti, decoded.id))) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid token.",
+                    code: "LOGIN_REVOKED"
+                });
+            }
+            req.user = decoded;
+            req.account = account;
+            next();
+        } catch (dbErr) {
+            console.error("verifyToken error:", dbErr);
+            return res.status(500).json({ success: false, message: "Internal server error." });
+        }
     });
 };
 
@@ -56,7 +85,7 @@ const verifyAdmin = async (req, res, next) => {
     if (!req.user) {
         return res.status(403).json({
             success: false,
-            message: "Admin access only."
+            message: "Only barangay Officials and Admins can do this."
         });
     }
 
@@ -66,7 +95,7 @@ const verifyAdmin = async (req, res, next) => {
         if (!admin || !isAdminRole(admin.role) || (admin.status && admin.status !== "Active")) {
             return res.status(403).json({
                 success: false,
-                message: "Admin access only."
+                message: "Only barangay Officials and Admins can do this."
             });
         }
 
@@ -87,7 +116,7 @@ const verifySuperAdmin = (req, res, next) => {
     if (!req.admin || !isSuperAdminRole(req.admin.role)) {
         return res.status(403).json({
             success: false,
-            message: "Super admin access only."
+            message: "Only Admins can do this."
         });
     }
     next();
@@ -171,8 +200,26 @@ const verifySelfOrAnyAdmin = async (req, res, next) => {
     }
 };
 
+// New reports are always filed under the signed-in account. The forms send
+// userId / name / contact too, but they're client-supplied, so a resident
+// could otherwise file reports as someone else (and have them show up in that
+// person's My Reports). Use after verifyToken, which loads req.account.
+const reportAsSignedInUser = (req, res, next) => {
+    const account = req.account;
+    req.body = {
+        ...req.body,
+        userId: account.id,
+        name: account.full_name,          // emergency_reports.reporter_name
+        fullname: account.full_name,      // assistance / petty crime
+        contact: account.contact_number,
+        email: account.email_address
+    };
+    next();
+};
+
 module.exports = {
     verifyToken,
+    reportAsSignedInUser,
     attachUserIfPresent,
     verifyAdmin,
     verifySuperAdmin,

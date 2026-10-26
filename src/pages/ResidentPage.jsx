@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ResidentNavbar from '../components/resident/ResidentNavbar';
 import ResidentHero from '../components/resident/ResidentHero';
-import EmergencyReportSection, { EMERGENCY_CONTACTS } from '../components/resident/EmergencyReportSection';
+import EmergencyReportSection from '../components/resident/EmergencyReportSection';
 import Footer from '../components/shared/DonationFooter';
 import ResidentEmergencyModal from '../components/resident/ResidentEmergencyModal';
 import ResidentAssistanceModal from '../components/resident/ResidentAssistanceModal';
@@ -15,6 +15,14 @@ function ResidentPage() {
   const [emergencyOpen,   setEmergencyOpen]   = useState(false);
   const [assistanceOpen,  setAssistanceOpen]  = useState(false);
   const [pettyCrimeOpen,  setPettyCrimeOpen]  = useState(false);
+  // Location of an emergency report just sent, when its "Request Assistance"
+  // button opens the assistance form.
+  const [assistancePrefill, setAssistancePrefill] = useState(null);
+
+  const openAssistance = (prefill = null) => {
+    setAssistancePrefill(prefill);
+    setAssistanceOpen(true);
+  };
 
   useEffect(() => {
     // Load current user from sessionStorage
@@ -51,32 +59,34 @@ function ResidentPage() {
       <section id="home">
         <ResidentHero
           onReportEmergency={() => setEmergencyOpen(true)}
-          onRequestHelp={() => setAssistanceOpen(true)}
+          onRequestHelp={() => openAssistance()}
         />
       </section>
 
       <section id="emergency-report">
         <EmergencyReportSection
             onReportClick={() => setEmergencyOpen(true)}
-            onAssistanceClick={() => setAssistanceOpen(true)}
+            onAssistanceClick={() => openAssistance()}
             onPettyCrimeClick={() => setPettyCrimeOpen(true)}
           />
       </section>
 
-      <Footer emergencyContacts={EMERGENCY_CONTACTS} />
+      <Footer />
 
       {/* ── Modals ── */}
       <ResidentEmergencyModal
         isOpen={emergencyOpen}
         show={emergencyOpen}
         onClose={() => setEmergencyOpen(false)}
+        onRequestAssistance={(location) => openAssistance(location)}
         currentUser={currentUser}
       />
 
       <ResidentAssistanceModal
         isOpen={assistanceOpen}
         show={assistanceOpen}
-        onClose={() => setAssistanceOpen(false)}
+        prefill={assistancePrefill}
+        onClose={() => { setAssistanceOpen(false); setAssistancePrefill(null); }}
         currentUser={currentUser}
       />
 

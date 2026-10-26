@@ -100,10 +100,22 @@ class User {
         return result.affectedRows;
     }
 
+    // Also signs the account out of every saved login ("Save Login Info"),
+    // so an old saved device can't keep using it after a password change or
+    // reset. Required here to avoid a load-order cycle with RememberedLogin.
     static async updatePassword(id, hashedPassword) {
         const [result] = await db.query(
             `UPDATE registered_users SET password = ? WHERE id = ?`,
             [hashedPassword, id]
+        );
+        await require("./RememberedLogin").deleteForUser(id);
+        return result.affectedRows;
+    }
+
+    static async updateFullName(id, fullName) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET full_name = ? WHERE id = ?`,
+            [fullName, id]
         );
         return result.affectedRows;
     }

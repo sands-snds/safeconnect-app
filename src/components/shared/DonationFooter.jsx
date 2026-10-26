@@ -1,18 +1,7 @@
 import React from "react";
 import { useLanguage } from "../../i18n/LanguageContext";
-
-const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=100080219150790";
-const SUPPORT_EMAIL = "safeconnect.brgy.santafe@gmail.com";
-
-// Numbers are shown exactly as the barangay provided them.
-const BARANGAY_OFFICIALS = [
-  { name: "PB Emmanuel B. Noora", number: "09354984838" },
-  { name: "Chief Tanod Gaudencio C. Dela Cruz", number: "0993611340" },
-  { name: "Sec Hazel R. Adriano", number: "09456355303" },
-  { name: "BHW Cecilia T. De Quiros", number: "09381259351" },
-  { name: "Kagawad Rolando Noora", number: "09683200779" },
-  { name: "BNS Myrna T. Dellomas", number: "09069709313" },
-];
+import useSiteContent from "./useSiteContent";
+import { formatMobile, hasChoices } from "./EmergencyContactList";
 
 // "+63464165393" -> "+63 46 416 5393", "+639929474309" -> "+63 992 947 4309".
 // Anything else (e.g. "911") is shown as-is.
@@ -51,11 +40,11 @@ const FooterLogo = ({ size }) => (
   </div>
 );
 
-// emergencyContacts: the same list the page's floating call button uses
-// (EMERGENCY_CONTACTS in Hero.jsx / EmergencyReportSection.jsx), so the
-// footer hotlines always match the button.
-export default function DonationFooter({ emergencyContacts = [] }) {
+// Officials, hotlines and socials are edited by Admins under System > Site
+// Contacts. The hotlines are the same list as the floating call button.
+export default function DonationFooter() {
   const { t } = useLanguage();
+  const { emergencyContacts = [], officials = [], socials = {} } = useSiteContent();
   return (
     <footer className="footer-section bg-dark text-white py-4">
       <div className="container">
@@ -95,7 +84,7 @@ export default function DonationFooter({ emergencyContacts = [] }) {
                   {t("footer.barangayOfficials")}
                 </p>
                 <div className="footer-officials">
-                  {BARANGAY_OFFICIALS.map((o) => (
+                  {officials.map((o) => (
                     <div key={o.name}>
                       <div className="text-white-50">{o.name}</div>
                       <PhoneLink number={o.number} />
@@ -112,11 +101,20 @@ export default function DonationFooter({ emergencyContacts = [] }) {
                       <i className="bi bi-telephone-fill me-2 text-danger"></i>
                       {t("footer.emergencyHotline")}
                     </p>
-                    {emergencyContacts.map((c) => (
+                    {emergencyContacts.map((c) => (hasChoices(c) ? (
+                      <div key={c.id}>
+                        {c.label}:
+                        {c.choices.map((p) => (
+                          <div key={`${p.name}-${p.number}`} className="ps-3">
+                            {p.name}: <PhoneLink number={p.number}>{formatMobile(p.number)}</PhoneLink>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
                       <div key={c.id}>
                         {c.label}: <PhoneLink number={c.number}>{formatPhone(c.number)}</PhoneLink>
                       </div>
-                    ))}
+                    )))}
                   </div>
                 )}
 
@@ -125,23 +123,27 @@ export default function DonationFooter({ emergencyContacts = [] }) {
                   <i className="bi bi-share-fill me-2 text-danger"></i>
                   {t("footer.socials")}
                 </p>
-                <div className="mb-1">
-                  <i className="bi bi-envelope-fill me-2"></i>
-                  <a href={`mailto:${SUPPORT_EMAIL}`} className="footer-link text-white-50 text-decoration-none">
-                    {SUPPORT_EMAIL}
-                  </a>
-                </div>
-                <div>
-                  <i className="bi bi-facebook me-2"></i>
-                  <a
-                    href={FACEBOOK_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="footer-link text-white-50"
-                  >
-                    Facebook: Barangay Sta. Fe
-                  </a>
-                </div>
+                {socials.email && (
+                  <div className="mb-1">
+                    <i className="bi bi-envelope-fill me-2"></i>
+                    <a href={`mailto:${socials.email}`} className="footer-link text-white-50 text-decoration-none">
+                      {socials.email}
+                    </a>
+                  </div>
+                )}
+                {socials.facebookUrl && (
+                  <div>
+                    <i className="bi bi-facebook me-2"></i>
+                    <a
+                      href={socials.facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footer-link text-white-50"
+                    >
+                      Facebook: {socials.facebookLabel || "Barangay Sta. Fe"}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </div>

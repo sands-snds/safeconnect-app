@@ -27,9 +27,34 @@ const ARCHIVE_COLUMNS = {
     archived_at: "TIMESTAMP NULL DEFAULT NULL"
 };
 
-// Adds archived_at / resolved_at to the report tables and creates the
-// settings table, so existing databases (local and Azure) don't need a
-// manual migration.
+// "Reporting for someone else" fields the report forms send. The models
+// insert all of them, so a missing one (victim_details was never added to
+// existing databases) made every resident report fail to submit.
+const REPORT_FOR_COLUMNS = {
+    report_for: "VARCHAR(20) DEFAULT 'self'",
+    victim_name: "VARCHAR(255) DEFAULT NULL",
+    victim_contact: "VARCHAR(50) DEFAULT NULL",
+    victim_relationship: "VARCHAR(100) DEFAULT NULL",
+    victim_details: "TEXT DEFAULT NULL"
+};
+
+// Photo/video attachment, stored as base64 like emergency_reports.photo_url.
+const MEDIA_COLUMNS = {
+    photo_url: "LONGTEXT DEFAULT NULL",
+    media_type: "VARCHAR(20) DEFAULT NULL"
+};
+
+// Columns only some report tables have.
+const TABLE_EXTRA_COLUMNS = {
+    // + the "report anonymously" flag
+    petty_crimes: { ...MEDIA_COLUMNS, is_anonymous: "TINYINT(1) NOT NULL DEFAULT 0" },
+    // + "Victim of What Emergency?"
+    assistance_requests: { ...MEDIA_COLUMNS, victim_of_emergency: "VARCHAR(255) DEFAULT NULL" }
+};
+
+// Adds the report-for / victim columns and archived_at / resolved_at to the
+// report tables and creates the settings table, so existing databases (local
+// and Azure) don't need a manual migration.
 async function ensureSchema() {
     for (const { table } of Object.values(REPORT_TABLES)) {
         const [existing] = await db.query(
@@ -38,9 +63,20 @@ async function ensureSchema() {
             [table]
         );
         const have = new Set(existing.map((c) => c.name));
-        for (const [name, definition] of Object.entries(ARCHIVE_COLUMNS)) {
+        const columns = {
+            ...REPORT_FOR_COLUMNS,
+            ...ARCHIVE_COLUMNS,
+            ...TABLE_EXTRA_COLUMNS[table]
+        };
+        for (const [name, definition] of Object.entries(columns)) {
             if (!have.has(name)) {
-                await db.query(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
+                try {
+                    await db.query(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
+                } catch (err) {
+                    // Another server instance added it first (e.g. two
+                    // starting at once) -- that's the outcome we wanted.
+                    if (err.code !== "ER_DUP_FIELDNAME") throw err;
+                }
             }
         }
     }

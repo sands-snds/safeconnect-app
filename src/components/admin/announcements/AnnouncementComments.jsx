@@ -5,6 +5,8 @@ import {
   deleteAnnouncementComment
 } from "../../../Services/api";
 import { timeAgo } from "../shared/timeUtils";
+import { roleLabel } from "../../shared/roles";
+import { confirmPopup } from "../../shared/popup";
 
 // Comments panel under an admin announcement card: residents' comments with
 // their replies, a box to comment as the barangay, a Reply box per comment,
@@ -80,7 +82,13 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
   const handleDelete = async (comment) => {
     const replyCount = comments.filter((c) => c.parentId === comment.id).length;
     const what = replyCount ? `this comment and its ${replyCount} ${replyCount === 1 ? "reply" : "replies"}` : "this comment";
-    if (!window.confirm(`Delete ${what}?`)) return;
+    const confirmed = await confirmPopup({
+      type: "danger",
+      title: replyCount ? "Delete Comment and Replies?" : "Delete Comment?",
+      message: `This will permanently delete ${what}. This cannot be undone.`,
+      confirmLabel: "Delete"
+    });
+    if (!confirmed) return;
 
     setError("");
     const result = await deleteAnnouncementComment(comment.id).catch(() => null);
@@ -114,7 +122,7 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
       <div className="ac-body">
         <div className="ac-head">
           <span className="ac-author">{c.author}</span>
-          {c.isAdmin && <span className="ac-admin-badge">Admin</span>}
+          {c.isAdmin && <span className="ac-admin-badge">{roleLabel(c.role)}</span>}
           <span className="ac-time">{timeAgo(c.date)}</span>
         </div>
         <p className="ac-text">

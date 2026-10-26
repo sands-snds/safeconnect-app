@@ -3,6 +3,7 @@ const dns    = require("dns").promises;
 const User   = require("../models/User");
 const AdminActivity = require("../models/AdminActivity");
 const { generateToken } = require("../utils/jwt");
+const { passwordProblem } = require("../utils/validation");
 const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
 const Log = require("../models/Log");
 const { signinContext, lookupLocation } = require("../utils/signinContext");
@@ -54,6 +55,8 @@ exports.requestOtp = async (req, res) => {
                 message: "All required fields must be filled.",
             });
         }
+        const weakPassword = passwordProblem(password);
+        if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
         const domainValid = await verifyEmailDomain(email);
         if (!domainValid) {
@@ -309,6 +312,8 @@ exports.resetPassword = async (req, res) => {
                 message: "Email and new password are required.",
             });
         }
+        const weakPassword = passwordProblem(newPassword);
+        if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
         const entry = resetStore.get(email);
         if (!entry || !entry.verified) {
@@ -413,6 +418,8 @@ exports.signup = async (req, res) => {
                 message: "All required fields must be filled.",
             });
         }
+        const weakPassword = passwordProblem(password);
+        if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
         const emailExists = await User.findByEmail(email);
         if (emailExists) {
@@ -475,15 +482,28 @@ exports.signin = async (req, res) => {
 
         if (user.status && user.status !== "Active") {
             await recordSignin(req, user.full_name, email, "Failed");
-            const STATUS_MESSAGES = {
-                Pending:   "Your account is still pending approval.",
-                Suspended: "Your account has been suspended. Please contact an administrator.",
-                Closed:    "This account has been closed.",
+            // code: the sign-in screens show a dedicated popup for each
+            // (translated on the frontend); message is the English fallback.
+            const STATUS_RESPONSES = {
+                Suspended: {
+                    code: "ACCOUNT_SUSPENDED",
+                    message: "Your account has been suspended, so you can't sign in right now. Please contact the Barangay Sta. Fe administrator to resolve this."
+                },
+                Closed: {
+                    code: "ACCOUNT_CLOSED",
+                    message: "This account has been permanently closed and can no longer be used to sign in. If you believe this is a mistake, please contact the Barangay Sta. Fe administrator."
+                },
+                // No longer assigned; kept for any older accounts.
+                Pending: {
+                    code: "ACCOUNT_PENDING",
+                    message: "Your account isn't active yet. Please contact the Barangay Sta. Fe administrator."
+                }
             };
-            return res.json({
-                success: false,
-                message: STATUS_MESSAGES[user.status] || "Your account cannot sign in right now.",
-            });
+            const response = STATUS_RESPONSES[user.status] || {
+                code: "ACCOUNT_INACTIVE",
+                message: "Your account can't sign in right now. Please contact the Barangay Sta. Fe administrator."
+            };
+            return res.json({ success: false, ...response });
         }
 
         await recordSignin(req, user.full_name, email, "Success");
@@ -495,34 +515,78 @@ exports.signin = async (req, res) => {
 
         const token = generateToken(user);
 
-        // Resolve photo_url to a full URL so the navbar avatar works immediately
-        // after login without needing a separate profile fetch.
-        const ASSET_BASE = process.env.ASSET_BASE ||
-            `http://localhost:${process.env.PORT || 5000}`;
-        const resolvePhoto = (p) => {
-            if (!p) return null;
-            if (/^https?:\/\//.test(p) || p.startsWith("data:")) return p;
-            return `${ASSET_BASE}${p}`;
-        };
-
         return res.json({
             success: true,
             isAdmin: isAdminRole(user.role),
             isSuperAdmin: isSuperAdminRole(user.role),
             token,
-            user: {
-                id:       user.id,
-                fullName: user.full_name,
-                username: user.username,
-                contact:  user.contact_number,
-                email:    user.email_address,
-                role:     user.role,
-                photoUrl: resolvePhoto(user.photo_url),
-            },
+            user: toPublicUser(user),
             message: "Login successful",
         });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ success: false, message: "Internal server error." });
+    }
+};
+// The signed-in user as the frontend stores it (sessionStorage "currentUser").
+// photo_url is resolved to a full URL so the navbar avatar works right away.
+function toPublicUser(user) {
+    const assetBase = process.env.ASSET_BASE || `http://localhost:${process.env.PORT || 5000}`;
+    const photo = user.photo_url;
+    let photoUrl = null;
+    if (photo) {
+        photoUrl = /^https?:\/\//.test(photo) || photo.startsWith("data:") ? photo : `${assetBase}${photo}`;
+    }
+    return {
+        id:       user.id,
+        fullName: user.full_name,
+        username: user.username,
+        contact:  user.contact_number,
+        email:    user.email_address,
+        role:     user.role,
+        photoUrl,
+    };
+}
+
+// GET /api/auth/me -- confirms the token belongs to an existing, Active
+// account (verifyToken checks that and loads req.account). The Resident page
+// calls it before showing anything (RequireResident.jsx).
+exports.me = (req, res) => {
+    res.json({
+        success: true,
+        isAdmin: isAdminRole(req.account.role),
+        user: toPublicUser(req.account)
+    });
+};
+
+// POST /api/auth/remember -- "Save Login Info" > Yes. Exchanges the current
+// (session) sign-in for a 30-day saved login that the server can revoke.
+exports.remember = async (req, res) => {
+    try {
+        const RememberedLogin = require("../models/RememberedLogin");
+        // Re-answering Yes replaces that device's previous saved login.
+        if (req.user.jti) await RememberedLogin.delete(req.user.jti);
+        const rememberedId = await RememberedLogin.create(req.account.id, req.headers["user-agent"]);
+        res.json({
+            success: true,
+            token: generateToken(req.account, { rememberedId }),
+            days: RememberedLogin.REMEMBER_DAYS
+        });
+    } catch (err) {
+        console.error("remember error:", err);
+        res.status(500).json({ success: false, message: "Could not save your login." });
+    }
+};
+
+// POST /api/auth/logout -- revokes a saved login so its token stops working
+// immediately (the frontend also deletes its copy). Session sign-ins have
+// nothing to revoke; they expire on their own.
+exports.logout = async (req, res) => {
+    try {
+        if (req.user.jti) await require("../models/RememberedLogin").delete(req.user.jti);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("logout error:", err);
+        res.status(500).json({ success: false, message: "Could not sign out." });
     }
 };

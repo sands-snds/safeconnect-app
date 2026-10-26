@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { fetchCurrentUser } from "../../../../Services/api";
 
 const loadCurrentUser = () => {
     try {
@@ -89,9 +90,23 @@ const loadCurrentUser = () => {
 
     };
 
+    // Picks up changes made on another device (name, photo, contact...).
+    const refreshProfile = useCallback(async () => {
+        const result = await fetchCurrentUser({ admin: false });
+        if (!result.success || !result.user) return;
+        setCurrentUser((prev) => {
+            const next = { ...(prev || {}), ...result.user };
+            if (JSON.stringify(next) === JSON.stringify(prev)) return prev;
+            saveCurrentUser(next);
+            return next;
+        });
+        setUsername(result.user.username || result.user.fullName || "User");
+    }, []);
+
     return {
 
         currentUser,
+        refreshProfile,
         username,
 
         setCurrentUser,

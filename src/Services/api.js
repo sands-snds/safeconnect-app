@@ -1,3 +1,4 @@
+import { showPopup } from "../components/shared/popup";
 const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
 const ASSET_BASE = process.env.REACT_APP_ASSET_BASE || "http://localhost:5000";
 
@@ -14,6 +15,8 @@ export const API_ENDPOINTS = {
     EXPORT:             `${API_BASE}/export`,
     NOTIFICATIONS:      `${API_BASE}/notifications`,
     SETTINGS:           `${API_BASE}/settings`,
+    SITE_CONTENT:       `${API_BASE}/site-content`,
+    ME:                 `${API_BASE}/me`,
 };
 
 export const SHEETDB_APIS = {};
@@ -31,35 +34,48 @@ const ADMIN_TOKEN_KEY = "adminAuthToken";
 const isAdminContext = () =>
     typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
 
+// "Save Login Info": a saved login (Yes) lives in localStorage and survives
+// closing the browser; an ordinary sign-in (No) lives in sessionStorage and
+// is gone when the tab/browser closes. Reads check both.
+const readToken = (key) => sessionStorage.getItem(key) || localStorage.getItem(key);
+const removeToken = (key) => {
+    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
+};
+
 export const getAuthToken = () => {
     if (isAdminContext()) {
         // Fallback: admins signed in before the split still have their
         // token under the shared key (flagged by the old "isAdmin" entry).
-        return localStorage.getItem(ADMIN_TOKEN_KEY) ||
+        return readToken(ADMIN_TOKEN_KEY) ||
             (localStorage.getItem("isAdmin") === "true" ? localStorage.getItem(RESIDENT_TOKEN_KEY) : null);
     }
-    return localStorage.getItem(RESIDENT_TOKEN_KEY);
+    return readToken(RESIDENT_TOKEN_KEY);
 };
 
-export const setAuthToken = (token, isAdmin = false) => {
-    if (isAdmin) {
-        localStorage.setItem(ADMIN_TOKEN_KEY, token);
-    } else {
-        localStorage.setItem(RESIDENT_TOKEN_KEY, token);
-        localStorage.removeItem("isAdmin");
-    }
+// Whether a resident (or admin) sign-in is stored at all, regardless of the
+// page you're on -- the home page uses it to send signed-in visitors on.
+export const hasStoredToken = (isAdmin = false) =>
+    Boolean(readToken(isAdmin ? ADMIN_TOKEN_KEY : RESIDENT_TOKEN_KEY));
+
+// remember: true only for a saved login (POST /auth/remember's token).
+export const setAuthToken = (token, isAdmin = false, remember = false) => {
+    const key = isAdmin ? ADMIN_TOKEN_KEY : RESIDENT_TOKEN_KEY;
+    removeToken(key);
+    (remember ? localStorage : sessionStorage).setItem(key, token);
+    if (!isAdmin) localStorage.removeItem("isAdmin");
 };
 
 // Clears only the session of the page you're on.
 export const clearAuthToken = () => {
     if (isAdminContext()) {
-        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        removeToken(ADMIN_TOKEN_KEY);
         if (localStorage.getItem("isAdmin") === "true") {
-            localStorage.removeItem(RESIDENT_TOKEN_KEY);
+            removeToken(RESIDENT_TOKEN_KEY);
             localStorage.removeItem("isAdmin");
         }
     } else {
-        localStorage.removeItem(RESIDENT_TOKEN_KEY);
+        removeToken(RESIDENT_TOKEN_KEY);
         localStorage.removeItem("isAdmin");
     }
 };
@@ -124,6 +140,55 @@ const getDeviceHints = async () => {
     }
 };
 
+// The signed-in account, checked by the server (GET /auth/me verifies the
+// token AND that the account still exists and is Active). Returns
+// { success, user, isAdmin }; { success: false, message } otherwise --
+// including "Invalid token.", which apiFetch() treats as signed out.
+//
+// admin: check the admin sign-in instead of the one for the current page
+// (the home page checks both). A sign-in the server rejects is deleted.
+export const fetchCurrentUser = async ({ admin = isAdminContext() } = {}) => {
+    const key = admin ? ADMIN_TOKEN_KEY : RESIDENT_TOKEN_KEY;
+    const token = readToken(key);
+    if (!token) return { success: false, message: "Access denied. No token provided." };
+    try {
+        const res = await fetch(`${API_ENDPOINTS.AUTH}/me`, {
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) return data;
+        if (res.status === 401 || res.status === 403) removeToken(key);
+        return { success: false, ...data };
+    } catch {
+        return { success: false, offline: true, message: "Could not reach the server." };
+    }
+};
+
+// "Save Login Info" > Yes: swaps the just-issued session token for a 30-day
+// saved login. Takes the token explicitly because it isn't stored yet.
+export const rememberLogin = async (token) => {
+    try {
+        const res = await fetch(`${API_ENDPOINTS.AUTH}/remember`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        });
+        return await res.json();
+    } catch {
+        return { success: false };
+    }
+};
+
+// Signing out: revokes a saved login on the server (so a copied token stops
+// working), then the caller clears the local copy. Never blocks signing out.
+export const logoutUser = async () => {
+    if (!getAuthToken()) return;
+    try {
+        await fetch(`${API_ENDPOINTS.AUTH}/logout`, { method: "POST", headers: authHeaders() });
+    } catch {
+        // offline: the local copy is still removed by the caller
+    }
+};
+
 export const signinUser = async (email, password) => {
     const device = await getDeviceHints();
     const res = await apiFetch(`${API_ENDPOINTS.AUTH}/signin`, {
@@ -161,6 +226,15 @@ export const fetchUserProfile = async (userId) => {
 };
 
 // Real routes are PATCH-only (see backend/routes/userRoutes.js) -- PUT 404s.
+export const updateFullName = async (userId, fullName) => {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/name`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ fullName }),
+    });
+    return res.json();
+};
+
 export const updateUsername = async (userId, username) => {
     const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/username`, {
         method: "PATCH",
@@ -194,7 +268,11 @@ export const changePassword = async (userId, currentPassword, newPassword) => {
         headers: authHeaders(),
         body: JSON.stringify({ currentPassword, newPassword }),
     });
-    return res.json();
+    const data = await res.json();
+    // Changing the password revokes every saved login; when this device was
+    // on one, the server sends a fresh one so it stays signed in.
+    if (data?.success && data.token) setAuthToken(data.token, isAdminContext(), true);
+    return data;
 };
 
 export const uploadProfilePhoto = async (userId, file) => {
@@ -228,6 +306,8 @@ export const fetchRegisteredUsers = async () => {
         contact: u.contact_number || '',
         role: u.role || 'resident',
         status: u.status || 'Active',
+        // The barangay's main Admin account (role/status can't be changed).
+        isMainAccount: Boolean(u.is_main_account),
         dateRegistered: u.created_at ? new Date(u.created_at).toLocaleDateString() : ''
     }));
 };
@@ -345,6 +425,9 @@ export const fetchAssistanceRequests = async () => {
         phone: r.contact_number || '',
         email: r.email_address || '',
         assistanceType: r.request_assistance_type || '',
+        victimOfEmergency: r.victim_of_emergency || '',
+        photoUrl: resolveAssetUrl(r.photo_url) || '',
+        mediaType: r.media_type || '',
         peopleAffected: r.number_of_people_needing_help || '0',
         location: r.current_location || '',
         latitude: r.latitude,
@@ -374,7 +457,7 @@ export const createAssistanceRequest = async (data) => {
     return res.json();
 };
 
-export const updateAssistanceRequest = async (id, data) => {
+export const updateAssistanceRequest = async ({ id, ...data }) => {
     const res = await apiFetch(`${API_ENDPOINTS.ASSISTANCE}/${id}`, {
         method: "PUT",
         headers: authHeaders(),
@@ -418,6 +501,9 @@ export const fetchPettyCrimes = async () => {
         longitude: r.longitude,
         description: r.description || '',
         suspectInfo: r.suspect_info || '',
+        photoUrl: resolveAssetUrl(r.photo_url) || '',
+        mediaType: r.media_type || '',
+        isAnonymous: Boolean(r.is_anonymous),
         date: r.timestamp ? new Date(r.timestamp).toLocaleString() : '',
         rawDate: r.timestamp || null,
         status: r.status || 'Received',
@@ -440,7 +526,7 @@ export const createPettyCrimeReport = async (data) => {
     return res.json();
 };
 
-export const updatePettyCrimeReport = async (id, data) => {
+export const updatePettyCrimeReport = async ({ id, ...data }) => {
     const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}`, {
         method: "PUT",
         headers: authHeaders(),
@@ -451,7 +537,7 @@ export const updatePettyCrimeReport = async (id, data) => {
 
 export const updatePettyCrimeStatus = async (id, status) => {
     const res = await apiFetch(`${API_ENDPOINTS.PETTY_CRIMES}/${id}/status`, {
-        method: "PUT",
+        method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ status }),
     });
@@ -516,6 +602,9 @@ export const fetchAnnouncements = async () => {
         message: a.message || '',
         date: a.date_posted ? new Date(a.date_posted).toLocaleDateString() : '',
         rawDate: a.date_posted || a.created_at || null,
+        // When it was actually posted. date_posted is a date only (midnight),
+        // which made a post from minutes ago read as "13 hours ago".
+        publishedAt: a.created_at || a.date_posted || null,
         imageUrl: resolveAssetUrl(a.image_path) || null,
         sourceUrl: a.source_url || null,
         sourceTitle: a.source_title || null,
@@ -598,8 +687,10 @@ export const fetchLinkPreview = async (url) => {
 // camelCase. IP address, device and approximate location are recorded by the
 // backend at sign-in (backend/utils/signinContext.js); logs from before that
 // have none and show "Not tracked" rather than made-up values.
-export const fetchSignInLogs = async () => {
-    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/signin`, { headers: authHeaders() });
+// archived: true loads the Archived tab (entries older than the
+// auto-archive period) instead of the current ones.
+export const fetchSignInLogs = async ({ archived = false } = {}) => {
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/signin${archived ? "?archived=1" : ""}`, { headers: authHeaders() });
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
@@ -610,9 +701,9 @@ export const fetchSignInLogs = async () => {
         loginTime: log.timestamp ? new Date(log.timestamp).toLocaleString() : '',
         role: log.role || '',
         // Logs from before IP/device tracking was added have neither.
-        ipAddress: log.ip_address || 'Not tracked',
+        ipAddress: log.ip_address || 'IP not tracked',
         location: log.location || '',
-        device: log.device || 'Not tracked',
+        device: log.device || 'Device not tracked',
         status: log.status || ''
     }));
 };
@@ -620,8 +711,9 @@ export const fetchSignInLogs = async () => {
 // { admins, activity } -- see backend/controllers/logController.js.
 // admins: one entry per admin account (online state, last login, latest action).
 // activity: every logged admin action, newest first.
-export const fetchAdminLogs = async () => {
-    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/admin`, { headers: authHeaders() });
+// archived: true loads archived activity entries instead of the current ones.
+export const fetchAdminLogs = async ({ archived = false } = {}) => {
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/admin${archived ? "?archived=1" : ""}`, { headers: authHeaders() });
     const data = await res.json();
     if (!data?.success) return { admins: [], activity: [] };
 
@@ -631,6 +723,7 @@ export const fetchAdminLogs = async () => {
             fullName: a.full_name || '',
             username: a.username || '',
             email: a.email_address || '',
+            role: a.role || '',
             status: a.status || 'Active',
             photoUrl: resolveAssetUrl(a.photo_url),
             online: Boolean(a.online),
@@ -645,11 +738,78 @@ export const fetchAdminLogs = async () => {
             adminId: log.admin_id,
             email: log.admin_email || '',
             username: log.admin_username || '',
+            role: log.role || '',
             action: log.action || '',
             details: log.details || '',
             createdAt: log.created_at || null
         }))
     };
+};
+
+// Auto-archive period for a System log. log: "signin" | "admin".
+// Returns the number of days (0 = off), or null if it couldn't be loaded.
+export const fetchLogArchiveSettings = async (log) => {
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/archive-settings/${log}`, { headers: authHeaders() });
+    const data = await res.json().catch(() => null);
+    return data?.success ? data.days : null;
+};
+
+export const updateLogArchiveSettings = async (log, days) => {
+    const res = await apiFetch(`${API_ENDPOINTS.LOGS}/archive-settings/${log}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ days }),
+    });
+    return res.json().catch(() => ({ success: false }));
+};
+
+// ── Site contacts ─────────────────────────────────────────────────────────────
+// Emergency contacts (floating call button + footer hotlines), barangay
+// officials and socials. Public to read; only Admins (super_admin) can save.
+// Returns { content, media, options } or null. media = carousel photos and
+// demo videos (Content > Site Contents).
+export const fetchSiteContent = async () => {
+    const res = await apiFetch(API_ENDPOINTS.SITE_CONTENT);
+    const data = await res.json().catch(() => null);
+    return data?.success ? { content: data.content, media: data.media || null, options: data.options || null } : null;
+};
+
+export const updateSiteMedia = async (media) => {
+    const res = await apiFetch(`${API_ENDPOINTS.SITE_CONTENT}/media`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(media),
+    });
+    return res.json().catch(() => ({ success: false }));
+};
+
+// Uploads a carousel photo or demo video (Admins only). Uses XHR so big
+// videos can show progress: onProgress(0-100). Resolves { success, url, message }.
+export const uploadSiteMedia = (file, onProgress) => new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_ENDPOINTS.SITE_CONTENT}/upload`);
+    const token = getAuthToken();
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+        try { resolve(JSON.parse(xhr.responseText)); }
+        catch { resolve({ success: false, message: "The upload failed. Please try again." }); }
+    };
+    xhr.onerror = () => resolve({ success: false, message: "Couldn't reach the server. Please check your connection." });
+    const form = new FormData();
+    form.append("file", file);
+    xhr.send(form);
+});
+
+export const updateSiteContent = async (content) => {
+    const res = await apiFetch(API_ENDPOINTS.SITE_CONTENT, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(content),
+    });
+    return res.json().catch(() => ({ success: false }));
 };
 
 // Records the logout in the admin activity log. Must run before the token is cleared.
@@ -694,6 +854,49 @@ export const fetchNotifications = async () => {
 
 // Resident bell (useNotifications.js): identity comes from the JWT, no
 // userId in the URL -- the route is /mine, not /user/:id.
+// ── Synced account state (backend/services/userStateService.js) ─────────────
+// What the signed-in account has read or dismissed ("announcement:12",
+// "weather:2026-10-26", "admin-demo:hidden") and its language, so they
+// follow the person across devices. Resolve to null when offline / signed out.
+export const fetchMyState = async () => {
+    if (!getAuthToken()) return null;
+    try {
+        const res = await apiFetch(`${API_ENDPOINTS.ME}/state`, { headers: authHeaders() });
+        const result = await res.json();
+        return result.success ? result : null;
+    } catch {
+        return null;
+    }
+};
+
+export const markItemsRead = async (keys) => {
+    if (!getAuthToken() || !keys.length) return false;
+    try {
+        const res = await apiFetch(`${API_ENDPOINTS.ME}/read`, {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({ keys }),
+        });
+        return (await res.json()).success === true;
+    } catch {
+        return false;
+    }
+};
+
+export const saveLanguagePreference = async (language) => {
+    if (!getAuthToken()) return false;
+    try {
+        const res = await apiFetch(`${API_ENDPOINTS.ME}/preferences`, {
+            method: "PUT",
+            headers: authHeaders(),
+            body: JSON.stringify({ language }),
+        });
+        return (await res.json()).success === true;
+    } catch {
+        return false;
+    }
+};
+
 export const fetchMyNotifications = async () => {
     const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine`, { headers: authHeaders() });
     const result = await res.json();
@@ -834,7 +1037,7 @@ export const updateStatus = async (type, id, status) => {
     }
 
     if (!res.ok || result.success === false) {
-        if (result.message) alert(result.message);
+        if (result.message) showPopup({ type: "error", title: "Couldn't Update Status", message: result.message });
         return false;
     }
 

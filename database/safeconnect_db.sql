@@ -49,6 +49,11 @@ CREATE TABLE emergency_reports (
   special_needs TEXT DEFAULT NULL,
   photo_url LONGTEXT DEFAULT NULL,
   media_type VARCHAR(20) DEFAULT NULL,
+  report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)
+  victim_name VARCHAR(255) DEFAULT NULL,
+  victim_contact VARCHAR(50) DEFAULT NULL,
+  victim_relationship VARCHAR(100) DEFAULT NULL,
+  victim_details TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received',
   assigned_to INT(11) DEFAULT NULL,
   assigned_at TIMESTAMP NULL DEFAULT NULL,
@@ -78,6 +83,14 @@ CREATE TABLE assistance_requests (
   urgency_level VARCHAR(50) NOT NULL,
   describe_your_situation TEXT NOT NULL,
   special_needs TEXT DEFAULT NULL,
+  victim_of_emergency VARCHAR(255) DEFAULT NULL, -- "Victim of What Emergency?" (e.g. Flood Emergency, or typed under Other)
+  photo_url LONGTEXT DEFAULT NULL, -- optional proof photo/video (base64)
+  media_type VARCHAR(20) DEFAULT NULL,
+  report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)
+  victim_name VARCHAR(255) DEFAULT NULL,
+  victim_contact VARCHAR(50) DEFAULT NULL,
+  victim_relationship VARCHAR(100) DEFAULT NULL,
+  victim_details TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received', -- Received -> In Progress -> Resolved (forward-only)
   resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
@@ -102,6 +115,14 @@ CREATE TABLE petty_crimes (
   longitude DECIMAL(10,7) DEFAULT NULL,
   description TEXT NOT NULL,
   suspect_info TEXT DEFAULT NULL,
+  photo_url LONGTEXT DEFAULT NULL, -- optional for Theft / Suspicious Activity / Harassment, required otherwise
+  media_type VARCHAR(20) DEFAULT NULL,
+  is_anonymous TINYINT(1) NOT NULL DEFAULT 0, -- reporter chose to hide their name/contact from admins
+  report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)
+  victim_name VARCHAR(255) DEFAULT NULL,
+  victim_contact VARCHAR(50) DEFAULT NULL,
+  victim_relationship VARCHAR(100) DEFAULT NULL,
+  victim_details TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received',
   resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
@@ -238,3 +259,20 @@ VALUES (
   'Active'
 );
 
+-- --------------------------------------------------------
+-- remembered_logins: "Save Login Info" (Yes after signing in). One row per
+-- saved login; its 30-day token carries the row id as jti and only works
+-- while the row exists. Sign-out deletes the row; a password change deletes
+-- all of the user's rows. (Also created on server start by
+-- backend/models/RememberedLogin.js.)
+-- --------------------------------------------------------
+CREATE TABLE remembered_logins (
+  id CHAR(36) NOT NULL,
+  user_id INT(11) NOT NULL,
+  device VARCHAR(255) DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  PRIMARY KEY (id),
+  KEY user_id (user_id),
+  CONSTRAINT fk_remembered_user FOREIGN KEY (user_id) REFERENCES registered_users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

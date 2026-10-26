@@ -5,7 +5,7 @@ const path     = require("path");
 const fs       = require("fs");
 
 const controller = require("../controllers/assistanceRequestController");
-const { verifyToken, verifyAdmin, verifyReportAccess } = require("../middleware/authMiddleware");
+const { verifyToken, verifyAdmin, verifyReportAccess, reportAsSignedInUser } = require("../middleware/authMiddleware");
 const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
 
 const logStatus = logActivity("Updated request status", describeStatusChange("assistance_requests", "Assistance request"));
@@ -30,7 +30,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-router.post("/",             verifyToken,             upload.array("media", 10), controller.createRequest);
+router.post("/",             verifyToken,             upload.array("media", 10), reportAsSignedInUser, controller.createRequest);
 router.get("/",              verifyToken, verifyAdmin, controller.getRequests);
 router.get("/statistics",    verifyToken, verifyAdmin, controller.getStatistics);
 router.get("/:id",           verifyToken, verifyReportAccess("assistance_requests", "admin"), controller.getRequest);

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPettyCrimeReport, updatePettyCrimeReport } from '../../Services/api';
+import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
+import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const CRIME_TYPES = [
   { key: 'theft', value: 'Theft' },
   { key: 'vandalism', value: 'Vandalism' },
@@ -12,6 +14,9 @@ const CRIME_TYPES = [
   { key: 'harassment', value: 'Harassment' },
   { key: 'other', value: 'Other' }
 ];
+// A photo/video is optional for these crime types and required for the rest.
+// Keep in sync with PHOTO_OPTIONAL_CRIME_TYPES in backend/services/pettyCrimeService.js.
+const PHOTO_OPTIONAL_CRIME_TYPES = ['Theft', 'Suspicious Activity', 'Harassment'];
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
   city: 'Dasmariñas',
@@ -22,7 +27,8 @@ const SERVICE_AREA = {
 };
 // Anti-spam: minimum time a resident must wait between report submissions.
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_pettycrime';
-const REPORT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+const REPORT_COOLDOWN_MS = 0;
 
 // Not everyone in the barangay knows the person they're reporting for by
 // name — these relationships make the name field optional instead of required.
@@ -87,6 +93,13 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  // Photo rule: none until a crime type is picked, then optional or required
+  // by type. When editing, a photo already on file satisfies it.
+  const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
+  const isPhotoRequired = Boolean(formData.crimeType) && !PHOTO_OPTIONAL_CRIME_TYPES.includes(formData.crimeType);
+  const needsNewMedia = isPhotoRequired && !hasExistingMedia;
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   // Map pin, "Use my current location" and the Santa Fe boundary check
   // (../shared/location/useLocationPin.js). A new pin fills in the address.
@@ -162,7 +175,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
-        alert(t('pettyCrimeModal.cooldownAlert', { time: formatRemaining(remaining) }));
+        showPopup({ type: 'warning', message: t('pettyCrimeModal.cooldownAlert', { time: formatRemaining(remaining) }) });
         return;
       }
     }
@@ -174,31 +187,36 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 
     if (isEditing) {
       if (!formData.location.trim()) {
-        alert(t('reportForm.provideLocation'));
+        showPopup({ type: 'warning', message: t('reportForm.provideLocation') });
         return;
       }
     } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
-      alert(t('reportForm.pinLocation'));
+      showPopup({ type: 'warning', message: t('reportForm.pinLocation') });
       return;
     }
     if (reportFor === 'others' && !victimRelationship) {
-      alert(t('reportForm.selectRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.selectRelationship') });
       return;
     }
     if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
-      alert(t('reportForm.specifyRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.specifyRelationship') });
       return;
     }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
-      alert(t('reportForm.enterName'));
+      showPopup({ type: 'warning', message: t('reportForm.enterName') });
       return;
     }
     if (reportFor === 'others' && !victimDetails.trim()) {
-      alert(t('reportForm.provideDetails'));
+      showPopup({ type: 'warning', message: t('reportForm.provideDetails') });
+      return;
+    }
+    if (needsNewMedia && !media.file) {
+      showPopup({ type: 'warning', message: t('pettyCrimeModal.mediaRequired') });
       return;
     }
     setIsSubmitting(true);
     try {
+      const photoUrl = media.file ? await readAsDataUrl(media.file) : null;
       if (isEditing) {
         const result = await updatePettyCrimeReport({
           id: editingReport.id,
@@ -207,12 +225,14 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
           description: formData.description,
-          suspectInfo: formData.suspectInfo || null
+          suspectInfo: formData.suspectInfo || null,
+          // Only replace the saved photo/video if a new one was attached
+          ...(photoUrl ? { photoUrl, mediaType: media.type } : {})
         });
         if (!result.success) {
           throw new Error(result.message || t('reportForm.updateFailed'));
         }
-        alert(t('pettyCrimeModal.updateSuccess'));
+        showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('pettyCrimeModal.updateSuccess') });
         onUpdated && onUpdated();
         onClose();
         return;
@@ -241,6 +261,10 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         longitude: gpsCoords ? gpsCoords.lng : null,
         description: formData.description,
         suspectInfo: formData.suspectInfo || null,
+        photoUrl,
+        mediaType: photoUrl ? media.type : null,
+        // The backend drops the name/contact for anonymous reports
+        isAnonymous,
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
         victimContact: reportFor === 'others' ? victimContact.trim() : null,
@@ -271,14 +295,14 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       setVictimRelationship('');
       setVictimRelationshipOther('');
       setVictimDetails('');
+      clearMedia();
+      setIsAnonymous(false);
       setGpsCoords(null);
       setLocationError('');
       setShowSuccessPopup(true);
     } catch (error) {
       console.log(error);
-      alert(
-        t('pettyCrimeModal.submitError')
-      );
+      showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('pettyCrimeModal.submitError') });
     } finally {
       setIsSubmitting(false);
     }
@@ -397,13 +421,48 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               </button>
             </div>
           </div>
+          {isEditing ? (
+            editingReport.is_anonymous ? (
+              <div style={{ marginBottom: '16px', fontSize: '13px', color: '#374151', background: '#f3f4f6', borderRadius: '8px', padding: '10px 14px' }}>
+                <i className="bi bi-incognito" style={{ marginRight: '6px' }}></i>{t('pettyCrimeModal.anonymousOnEdit')}
+              </div>
+            ) : null
+          ) : (
+            <label style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+              marginBottom: '16px',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              border: `2px solid ${isAnonymous ? '#dc3545' : '#d1d5db'}`,
+              background: isAnonymous ? '#fef2f2' : '#fff',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                disabled={isSubmitting}
+                style={{ accentColor: '#dc3545', marginTop: '3px' }}
+              />
+              <span>
+                <span style={{ display: 'block', fontWeight: 600, fontSize: '13px', color: isAnonymous ? '#dc3545' : '#374151' }}>
+                  <i className="bi bi-incognito" style={{ marginRight: '6px' }}></i>{t('pettyCrimeModal.anonymousLabel')}
+                </span>
+                <span style={{ display: 'block', fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                  {t('pettyCrimeModal.anonymousHint')}
+                </span>
+              </span>
+            </label>
+          )}
           {reportFor === 'others' && (
             <div style={{ marginBottom: '16px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', padding: '14px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
                 <i className="bi bi-person-exclamation"></i> {t('reportForm.personBoxLabel')}
               </label>
               <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.relationship')} <span style={{ color: '#dc3545' }}>*</span></label>
-              <select value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
+              <select className="form-select" value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
                 <option value="">{t('reportForm.relationshipPlaceholder')}</option>
                 <option value="Family Member">{t('reportForm.relationshipOptions.family')}</option>
@@ -461,7 +520,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               {t('pettyCrimeModal.crimeType')}
 <span style={{color:'#dc3545'}}>*</span>
 </label>
-<select
+<select className="form-select"
               name="crimeType"
               required
               value={formData.crimeType}
@@ -706,6 +765,26 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               }}
             />
 </div>
+<MediaAttachmentField
+            t={t}
+            style={{ marginBottom: '16px' }}
+            label={t('reportForm.photoOrVideo')}
+            required={needsNewMedia}
+            requiredMark={needsNewMedia}
+            optionalMark={Boolean(formData.crimeType)}
+            hint={hasExistingMedia
+              ? t('reportForm.mediaHintEdit')
+              : !formData.crimeType
+                ? t('pettyCrimeModal.mediaHintSelectType')
+                : isPhotoRequired
+                  ? t('reportForm.mediaHintRequired')
+                  : t('pettyCrimeModal.mediaHintOptional')}
+            disabled={isSubmitting}
+            media={media}
+            fileInputRef={fileInputRef}
+            onChange={handleMediaChange}
+            onRemove={clearMedia}
+          />
 <div style={{marginBottom:'20px'}}>
 <label style={{
               display:'flex',

@@ -5,6 +5,17 @@ const NotificationService = require("./notificationService");
 const { sendAnnouncementToAll } = require("./emailService");
 const db = require("../config/db");
 
+// YYYY-MM-DD for date_posted, or null when missing/unparseable (the update
+// then keeps the stored date instead of failing on a value like "10/2/2026").
+const toSqlDate = (value) => {
+    if (!value) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const d = new Date(value);
+    if (isNaN(d)) return null;
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
 class AnnouncementService {
     static async create(data, imagePath) {
         const id = await Announcement.create({
@@ -55,7 +66,7 @@ class AnnouncementService {
             title: data.title,
             category: data.category,
             message: data.message,
-            datePosted: data.date,
+            datePosted: toSqlDate(data.date),
             imagePath: imagePath || null,
             sourceUrl: data.source_url || null,
             sourceTitle: data.source_title || null,

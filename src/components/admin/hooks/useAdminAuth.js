@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     clearAuthToken,
+    logoutUser,
+    fetchCurrentUser,
     getAuthToken,
     fetchUserProfile,
     resolveAssetUrl,
@@ -36,14 +38,18 @@ export default function useAdminAuth() {
 
     const navigate = useNavigate();
 
-    const initialAuth =
-        sessionStorage.getItem("adminAuthenticated") === "true";
+    // Nothing admin-only shows until the SERVER confirms an Active admin
+    // account (GET /auth/me). The "adminAuthenticated" flag in
+    // sessionStorage is only a hint and can't grant access by itself --
+    // anyone can set it, residents included. (Admin data is also refused by
+    // the server for non-admins: verifyAdmin.)
+    const [authChecked, setAuthChecked] = useState(false);
 
     const [isAuthenticated, setIsAuthenticated] =
-        useState(initialAuth);
+        useState(false);
 
     const [showSigninModal, setShowSignInModal] =
-        useState(!initialAuth);
+        useState(false);
 
     // The signed-in admin's profile ({ id, fullName, username, email, photoUrl, ... }).
     const [adminUser, setAdminUserState] =
@@ -57,6 +63,29 @@ export default function useAdminAuth() {
             sessionStorage.removeItem(ADMIN_USER_KEY);
         }
     };
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const result = getAuthToken() ? await fetchCurrentUser({ admin: true }) : { success: false };
+            if (cancelled) return;
+            if (result.success && result.isAdmin) {
+                sessionStorage.setItem("adminAuthenticated", "true");
+                setIsAuthenticated(true);
+                setShowSignInModal(false);
+            } else {
+                // Not signed in, not an admin (e.g. a resident), or rejected.
+                sessionStorage.removeItem("adminAuthenticated");
+                setAdminUser(null);
+                if (!result.offline) clearAuthToken();
+                setIsAuthenticated(false);
+                setShowSignInModal(true);
+            }
+            setAuthChecked(true);
+        })();
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Refresh the profile from the backend (using the id in the token) each
     // time the panel opens: older sessions didn't store it at all, and the
@@ -101,8 +130,10 @@ export default function useAdminAuth() {
 
     const handleLogout = async () => {
 
-        // Needs the token, so it runs before clearAuthToken().
+        // Need the token, so they run before clearAuthToken(). logoutUser
+        // revokes a saved login ("Save Login Info") on the server.
         await logoutAdmin();
+        await logoutUser();
 
         sessionStorage.removeItem(
             "adminAuthenticated"
@@ -116,13 +147,15 @@ export default function useAdminAuth() {
 
         setShowSignInModal(true);
 
-        navigate("/");
+        // Straight to the home page, without its "already signed in" forwarding.
+        navigate("/", { replace: true, state: { signedOut: true } });
     };
 
     const isSuperAdmin = adminUser?.role === "super_admin";
 
     return {
 
+        authChecked,
         isAuthenticated,
         isSuperAdmin,
         setIsAuthenticated,

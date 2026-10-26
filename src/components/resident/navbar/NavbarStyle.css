@@ -654,7 +654,7 @@
     align-items: center;
     justify-content: center;
     font-size: 1.2rem;
-    color: #FFC107;
+    color: #fff;
     flex-shrink: 0;
 }
 
@@ -879,6 +879,15 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     padding: clamp(1.5rem, 3vw, 2.5rem);
 }
 
+.news-card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.9rem 0 0.2rem;
+}
+
 .news-card-top-row {
     display: flex;
     align-items: center;
@@ -904,13 +913,14 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-size: 0.85rem;
 }
 
+/* Date and time posted: darker so it reads clearly. */
 .news-card-date {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     font-size: 0.8rem;
-    color: #9ca3af;
-    font-weight: 500;
+    color: #4b5563;
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -1162,43 +1172,31 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     cursor: not-allowed;
 }
 
-/* On mobile the dropdown was positioned relative to the bell icon, which
-   sits to the LEFT of the hamburger button -- not flush with the screen's
-   right edge. A width of calc(100vw - 2rem) anchored there overshot past
-   the left edge of the viewport, cutting off everything on the left side
-   of each row (icons included). A full-screen takeover sidesteps that
-   positioning math entirely, and matches how Settings/My Reports/News
-   already behave on mobile. */
+/* On mobile the panel is a card under the header, spanning the screen
+   with a small margin (anchoring it to the bell overshot the left edge),
+   instead of a full-screen takeover. */
 @media (max-width: 768px) {
     .mobile-header-actions .panel-dropdown {
         position: fixed;
-        inset: 0;
-        top: 0;
-        right: 0;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        max-height: none;
-        border-radius: 0;
-        transform: translateY(20px);
+        top: calc(var(--resident-navbar-height, 76px) + 8px);
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-height: calc(100vh - var(--resident-navbar-height, 76px) - 24px);
+        max-height: calc(100dvh - var(--resident-navbar-height, 76px) - 24px);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
         z-index: 2000;
     }
 
-    .mobile-header-actions .panel-dropdown.show {
-        transform: translateY(0);
-    }
-
-    .mobile-header-actions .panel-header {
-        padding-top: max(14px, env(safe-area-inset-top, 0px));
+    .mobile-header-actions .panel-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
     }
 
     .mobile-header-actions .panel-close-btn {
         display: flex;
-    }
-
-    .mobile-header-actions .panel-footer-link {
-        padding-bottom: max(11px, env(safe-area-inset-bottom, 0px));
-        border-radius: 0;
     }
 }
 
@@ -1371,8 +1369,11 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 @media (max-width: 768px) {
 
+    /* Bell right beside the menu button, on the right of the header. */
     .mobile-header-actions {
         display: flex;
+        margin-left: auto;
+        margin-right: 2px;
     }
 
     .mobile-menu-toggle {

@@ -25,8 +25,21 @@ const reverseGeocode = async (lat, lng) => {
   };
 };
 
+// { lat, lng } as numbers, or null. Saved reports come back from MySQL with
+// DECIMAL coordinates as strings ("14.3198000"); a string pin made Leaflet's
+// bounds.contains() recurse until the stack overflowed, crashing the page
+// whenever a report was opened for editing, and made the Santa Fe check
+// compare strings.
+const toCoords = (coords) => {
+  if (!coords) return null;
+  const lat = Number(coords.lat);
+  const lng = Number(coords.lng);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+};
+
 export default function useLocationPin({ onAddress } = {}) {
-  const [gpsCoords, setGpsCoords] = useState(null); // { lat, lng } or null
+  const [gpsCoords, setStoredCoords] = useState(null); // { lat, lng } numbers, or null
+  const setGpsCoords = useCallback((coords) => setStoredCoords(toCoords(coords)), []);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
   const lookupId = useRef(0);
@@ -57,7 +70,7 @@ export default function useLocationPin({ onAddress } = {}) {
       console.error('Reverse geocoding error:', err);
       // Non-fatal: the pin itself is still exact; the resident can type the address.
     }
-  }, [onAddress]);
+  }, [onAddress, setGpsCoords]);
 
   const handleUseCurrentLocation = useCallback(() => {
     setLocationError('');

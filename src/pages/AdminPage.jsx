@@ -6,6 +6,10 @@ import Dashboard from '../components/admin/dashboard/Dashboard';
 import AdminLayout from "../components/admin/layout/AdminLayout";
 import UsersPage from "../components/admin/users/UsersPage";
 import LogsPage from "../components/admin/logs/LogsPage";
+import SiteContactsPage from "../components/admin/settings/SiteContactsPage";
+import SiteContentsPage from "../components/admin/settings/SiteContentsPage";
+import AccountSettingsPage from "../components/admin/settings/AccountSettingsPage";
+import AdminDemoPopup from "../components/admin/AdminModals/AdminDemoPopup";
 import ReportsPage from "../components/admin/reports/ReportsPage";
 import AnnouncementsPage from "../components/admin/announcements/AnnouncementsPage";
 import PettyCrimePage from '../components/admin/reports/pettyCrime';
@@ -14,6 +18,8 @@ import useAdminAuth from "../components/admin/hooks/useAdminAuth";
 import useAdminNavigation from "../components/admin/hooks/useAdminNavigation";
 import FormModal from '../components/admin/AdminModals/FormModal';
 import SignInModal from '../components/admin/AdminModals/SignInModal';
+import { refreshSyncedState, useSyncOnFocus } from '../components/shared/useSyncedState';
+import useLiveUpdates from '../components/shared/useLiveUpdates';
 
 const AdminPage = () => {
   const {
@@ -26,7 +32,8 @@ const AdminPage = () => {
     setSessionExpired,
     adminUser,
     setAdminUser,
-    handleLogout
+    handleLogout,
+    authChecked
   } = useAdminAuth();
   
   const {
@@ -49,6 +56,7 @@ const AdminPage = () => {
     loadAllData,
     refreshAllData,   
     loadAnnouncements,
+    loadNotifications,
     handleRefresh,
     updateStatus,
     updateUserRole,
@@ -76,6 +84,9 @@ const AdminPage = () => {
   // pendingCreateAnnouncement effect for the other half of this.
   const [pendingCreateAnnouncement, setPendingCreateAnnouncement] = useState(false);
 
+  // Admin demo video opened from the account menu ("Watch demo video").
+  const [showDemo, setShowDemo] = useState(false);
+
   const handleCreateAnnouncementShortcut = () => {
     setPendingCreateAnnouncement(true);
     handleNavigation("announcement-page");
@@ -100,11 +111,15 @@ const AdminPage = () => {
   "create-announcement": "Create Announcement",
   "registered-users": "Registered Users",
   "sign-in-logs": "Sign-in Logs",
-  "admin-logs": "Admin Logs"
+  "admin-logs": "Admin Logs",
+  "site-contacts": "Site Contacts",
+  "site-contents": "Site Contents",
+  "account-settings": "Account Settings"
 };
 
-// Tabs under SYSTEM in the sidebar: super admin only.
-const SYSTEM_VIEWS = ["registered-users", "sign-in-logs", "admin-logs"];
+// Admin-only tabs (super_admin): the SYSTEM tabs plus Site Contacts and
+// Site Contents under CONTENT.
+const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts", "site-contents"];
 
   const alerts = [];
     const emergencyPending =
@@ -125,11 +140,13 @@ const SYSTEM_VIEWS = ["registered-users", "sign-in-logs", "admin-logs"];
     if (crimePending > 0)
         alerts.push(`🚔 ${crimePending} Crime Reports Pending`);
   
+  // Only after the server has confirmed the admin (useAdminAuth) -- the
+  // sessionStorage flag on its own must not open the panel.
   useEffect(() => {
-    if (!showSigninModal && sessionStorage.getItem('adminAuthenticated') === 'true' && !isAuthenticated) {
+    if (authChecked && !showSigninModal && sessionStorage.getItem('adminAuthenticated') === 'true' && !isAuthenticated) {
         setIsAuthenticated(true);
     }
-  }, [showSigninModal, isAuthenticated]);
+  }, [authChecked, showSigninModal, isAuthenticated, setIsAuthenticated]);
 
   useEffect(() => {
     if (showMobileMenu) {
@@ -176,8 +193,49 @@ useEffect(() => {
     return () => clearInterval(interval);
 }, [isAuthenticated, activeView, refreshAllData]);
 
+  // Account settings saved on other devices (language, demo video choice).
+  useSyncOnFocus(isAuthenticated);
+
+  // Live: the admin bell (a new report or a read on another device brings
+  // the reports along too), announcements and synced settings.
+  useLiveUpdates(isAuthenticated, {
+    'admin-notifications': () => refreshAllData(),
+    announcements: loadAnnouncements,
+    state: refreshSyncedState,
+    reconnected: () => { refreshAllData(); refreshSyncedState(); loadNotifications(); }
+  });
+
+  if (!authChecked) {
+    return (
+      <div role="status" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', background: '#f5f2f3', color: '#374151' }}>
+        <div className="spinner-border" style={{ color: '#6B2C3E' }} aria-hidden="true"></div>
+        <p style={{ margin: 0, fontSize: '0.95rem' }}>Checking your sign-in...</p>
+      </div>
+    );
+  }
+
   if (!isAuthenticated && !showSigninModal) {
     return null;
+  }
+
+  // Not a confirmed admin: only the sign-in box, on a plain background --
+  // none of the dashboard (sidebar, menus, pages) is rendered.
+  if (!isAuthenticated) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #6B2C3E 0%, #3d1823 100%)' }}>
+        <SignInModal
+            notice={sessionExpired
+                ? "Your session has ended. Please sign in again to continue. Anything you were typing is still there."
+                : ""}
+            onSuccess={(user) => {
+                setAdminUser(user || null);
+                setIsAuthenticated(true);
+                setShowSignInModal(false);
+                setSessionExpired(false);
+            }}
+        />
+      </div>
+    );
   }
   
   if (isLoading && isAuthenticated) {
@@ -204,9 +262,9 @@ useEffect(() => {
   const adminName =
     adminUser?.fullName || adminUser?.username || "Administrator";
 
-  // Normal admins never see the System tabs; fall back to the dashboard if
-  // one is somehow selected (e.g. a stat card or a demoted super admin).
-  const visibleView = !isSuperAdmin && SYSTEM_VIEWS.includes(activeView)
+  // Officials never see the Admin-only tabs; fall back to the dashboard if
+  // one is somehow selected (e.g. a stat card or a demoted Admin).
+  const visibleView = !isSuperAdmin && ADMIN_ONLY_VIEWS.includes(activeView)
     ? "dashboard"
     : activeView;
 
@@ -299,6 +357,19 @@ useEffect(() => {
                   adminLogs={adminLogs}
                   filters={filters}
                   setFilters={setFilters}
+                  isSuperAdmin={isSuperAdmin}
+                  onRefresh={() => handleRefresh(activeView)}
+              />
+          );
+      case "site-contacts":
+          return <SiteContactsPage />;
+      case "site-contents":
+          return <SiteContentsPage />;
+      case "account-settings":
+          return (
+              <AccountSettingsPage
+                  adminUser={adminUser}
+                  onProfileUpdate={(updates) => setAdminUser({ ...(adminUser || {}), ...updates })}
               />
           );
       default:
@@ -346,11 +417,20 @@ useEffect(() => {
             onMarkAllRead={markAllRead}
             onMarkOneRead={markOneRead}
             adminUser={adminUser}
+            onWatchDemo={() => setShowDemo(true)}
           >
               {isAuthenticated
                   ? renderActiveView()
                   : null}
           </AdminLayout>
+
+          {isAuthenticated && (
+              <AdminDemoPopup
+                  userId={adminUser?.id}
+                  manualOpen={showDemo}
+                  onManualClose={() => setShowDemo(false)}
+              />
+          )}
 
           {showSigninModal && (
               <SignInModal

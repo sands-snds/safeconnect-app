@@ -208,7 +208,7 @@ export default function AnnouncementCard({
             <div className="news-comment-body">
                 <div className="news-comment-head">
                     <span className="news-comment-author">{c.author}</span>
-                    {c.isAdmin && <span className="news-comment-admin">{t('news.adminBadge')}</span>}
+                    {c.isAdmin && <span className="news-comment-admin">{t(c.role === 'admin' ? 'news.officialBadge' : 'news.adminBadge')}</span>}
                     <span className="news-comment-time">{formatCommentTime(c.date)}</span>
                 </div>
                 <p className="news-comment-text">
@@ -269,15 +269,6 @@ export default function AnnouncementCard({
                         loading="lazy"
                         onError={() => setImageFailed(true)}
                     />
-                    <div className="news-card-media-overlay">
-                        <span className="news-card-category news-card-category-glass" style={{ color: theme.color }}>
-                            <i className={`bi ${theme.icon}`} />
-                            {announcement.category}
-                        </span>
-                        <span className="news-card-date news-card-date-glass">
-                            <i className="bi bi-clock" /> {formatNewsDate(announcement.date)}
-                        </span>
-                    </div>
                 </div>
             ) : announcement.sourceUrl ? (
                 // Plain text announcements get no media block at all; only
@@ -286,17 +277,6 @@ export default function AnnouncementCard({
             ) : null}
 
             <div className="news-card-content">
-                {!showImage && (
-                    <div className="news-card-top-row">
-                        <span className="news-card-category" style={{ background: `${theme.color}18`, color: theme.color }}>
-                            <i className={`bi ${theme.icon}`} />
-                            {announcement.category}
-                        </span>
-                        <span className="news-card-date">
-                            <i className="bi bi-clock" /> {formatNewsDate(announcement.date)}
-                        </span>
-                    </div>
-                )}
 
                 <h3>
                     {announcement.title}
@@ -321,6 +301,17 @@ export default function AnnouncementCard({
                             ` ${t('news.on')} ${announcement.sourceSite || hostnameOf(announcement.sourceUrl)}`}
                     </a>
                 )}
+
+                {/* Category and time posted: below the photo and text, never on top of them. */}
+                <div className="news-card-meta-row">
+                    <span className="news-card-category" style={{ background: `${theme.color}18`, color: theme.color }}>
+                        <i className={`bi ${theme.icon}`} />
+                        {announcement.category}
+                    </span>
+                    <span className="news-card-date">
+                        <i className="bi bi-clock" /> <time dateTime={announcement.date}>{formatNewsDate(announcement.date)}</time>
+                    </span>
+                </div>
 
                 <div className="news-card-engagement">
                     <button

@@ -2,8 +2,15 @@ const AssistanceRequest = require("../models/AssistanceRequest");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
 
+// A proof photo/video is required on every request (ResidentAssistanceModal.jsx).
+const PROOF_REQUIRED_MESSAGE = "Please attach a photo or video of your situation. It is required so the barangay can verify your request.";
+
 class AssistanceRequestService {
     static async create(data) {
+        if (!data.photoUrl) {
+            return { success: false, status: 400, message: PROOF_REQUIRED_MESSAGE };
+        }
+
         const reference = await generateReference(AssistanceRequest.getLatestReference);
 
         const requestId = await AssistanceRequest.create({
@@ -19,6 +26,9 @@ class AssistanceRequestService {
             urgency: data.urgency,
             situation: data.situation,
             specialNeeds: data.special,
+            victimOfEmergency: data.victimOfEmergency,
+            photoUrl: data.photoUrl,
+            mediaType: data.mediaType,
             reportFor: data.reportFor,
             victimName: data.victimName,
             victimContact: data.victimContact,
@@ -41,6 +51,12 @@ class AssistanceRequestService {
     }
 
     static async update(id, data) {
+        // Editing keeps the photo on file unless a new one is attached;
+        // only a request that has none yet must attach one.
+        if (!data.photoUrl && !(await AssistanceRequest.hasMedia(id))) {
+            return { success: false, status: 400, message: PROOF_REQUIRED_MESSAGE };
+        }
+
         const affected = await AssistanceRequest.update(id, {
             assistanceType: data.type,
             location: data.location,
@@ -48,7 +64,10 @@ class AssistanceRequestService {
             longitude: data.longitude,
             urgency: data.urgency,
             situation: data.situation,
-            specialNeeds: data.special
+            specialNeeds: data.special,
+            victimOfEmergency: data.victimOfEmergency,
+            photoUrl: data.photoUrl,
+            mediaType: data.mediaType
         });
 
         return { success: affected > 0 };

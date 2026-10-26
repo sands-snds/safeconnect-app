@@ -41,8 +41,10 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Reports carry their photo/video as base64, which is ~4/3 the file size:
+// the forms allow 50MB videos, so the body can reach ~67MB.
+app.use(express.json({ limit: '75mb' }));
+app.use(express.urlencoded({ limit: '75mb', extended: true }));
 
 // ── Helmet: keep security headers but allow cross-origin image loads ──
 app.use(helmet({
@@ -63,6 +65,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/settings", systemSettingRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/site-content", require("./routes/siteContentRoutes"));
+app.use("/api/me", require("./routes/userStateRoutes"));
 
 // ── Static uploads: explicitly set cross-origin header ──
 app.use("/uploads", (req, res, next) => {
@@ -100,6 +104,15 @@ Log.ensureColumns().catch((err) =>
 );
 
 // Creates the News Like/Comment tables on existing databases (no manual migration needed).
+// Saved logins ("Save Login Info"); expired rows are cleared daily.
+const RememberedLogin = require("./models/RememberedLogin");
+RememberedLogin.ensureTable()
+    .then(() => RememberedLogin.deleteExpired())
+    .catch((err) => console.error("Could not create remembered_logins table:", err.message));
+setInterval(() => {
+    RememberedLogin.deleteExpired().catch((err) => console.error("Saved-login cleanup failed:", err.message));
+}, 24 * 60 * 60 * 1000).unref();
+
 AnnouncementLike.ensureTable().catch((err) =>
   console.error("Could not create announcement_likes table:", err.message)
 );
@@ -110,3 +123,22 @@ AnnouncementComment.ensureTable().catch((err) =>
 // Adds the report archive columns/setting, then auto-archives old resolved
 // reports now and every 6 hours.
 require("./services/archiveService").startScheduler();
+
+// Archives sign-in / admin activity log entries older than each log's
+// period (default 90 days) now and every 6 hours.
+require("./services/logArchiveService").startScheduler();
+
+// Lets the editable site contacts (Content > Site Contacts) fit in system_settings.
+require("./services/siteContentService").ensureSchema().catch((err) =>
+  console.error("Could not prepare site contacts storage:", err.message)
+);
+
+// Per-account read state and language, synced across devices.
+require("./services/userStateService").ensureSchema().catch((err) =>
+  console.error("Could not prepare synced account settings storage:", err.message)
+);
+
+// The barangay's main Admin account always exists and stays an Active Admin.
+require("./services/mainAccount").ensureMainAccount().catch((err) =>
+  console.error("Could not check the main barangay account:", err.message)
+);

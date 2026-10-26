@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { exportReport } from '../../../Services/api';
 
-// "Generate Report" form for the report tabs (emergency, assistance, petty
-// crime): pick which statuses, which dates and PDF or Excel, then download.
-// Other tabs keep the plain PDF/Excel dropdown in GenerateReportButton.
+// "Generate Report" form.
+//   Report tabs (emergency, assistance, petty crime): status, a period
+//   (presets or custom dates) and PDF or Excel.
+//   System tabs (users, sign-in logs, admin logs; see SYSTEM_REPORTS): role,
+//   status and a manual From / To date range instead of presets.
+// baseFilters (System tabs) are sent along unchanged, e.g. the tab's search
+// or archived: '1' when generated from an Archived tab.
 
 const STATUS_CHOICES = [
   { value: '', label: 'All Reports' },
@@ -55,10 +59,33 @@ const chipStyle = (active) => ({
 
 const sectionLabel = { display: 'block', fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 8 };
 
-const GenerateReportModal = ({ type, title, defaultStatus = '', onClose }) => {
+// Role names follow the shown labels: admin = Official, super_admin = Admin.
+const ALL_ROLES = { value: '', label: 'All roles' };
+const SYSTEM_REPORTS = {
+  users: {
+    roles: [ALL_ROLES, { value: 'resident', label: 'Residents' }, { value: 'admin', label: 'Officials' }, { value: 'super_admin', label: 'Admins' }],
+    statuses: [{ value: '', label: 'All statuses' }, { value: 'Active', label: 'Active' }, { value: 'Suspended', label: 'Suspended' }, { value: 'Closed', label: 'Closed' }],
+    dateLabel: 'Date registered'
+  },
+  signinLogs: {
+    roles: [ALL_ROLES, { value: 'resident', label: 'Residents' }, { value: 'admin', label: 'Officials' }, { value: 'super_admin', label: 'Admins' }, { value: 'unknown', label: 'No account' }],
+    statuses: [{ value: '', label: 'All attempts' }, { value: 'Success', label: 'Successful' }, { value: 'Failed', label: 'Failed' }],
+    dateLabel: 'Sign-in date'
+  },
+  adminLogs: {
+    roles: [ALL_ROLES, { value: 'admin', label: 'Officials' }, { value: 'super_admin', label: 'Admins' }],
+    statuses: null,
+    dateLabel: 'Activity date'
+  }
+};
+
+const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}, onClose }) => {
+  const system = SYSTEM_REPORTS[type];
+  const statusChoices = system ? (system.statuses || []) : STATUS_CHOICES;
   const [status, setStatus] = useState(
-    STATUS_CHOICES.some((s) => s.value === defaultStatus) ? defaultStatus : ''
+    statusChoices.some((s) => s.value === defaultStatus) ? defaultStatus : ''
   );
+  const [role, setRole] = useState('');
   const [period, setPeriod] = useState('all');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -87,6 +114,8 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', onClose }) => {
     setError('');
     try {
       await exportReport(type, format, {
+        ...(system ? baseFilters : {}),
+        ...(system ? { role } : {}),
         status,
         from,
         to,
@@ -130,6 +159,51 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', onClose }) => {
         <h3 style={{ margin: '0 0 4px', fontSize: 18 }}>Generate Report</h3>
         <p style={{ margin: '0 0 20px', fontSize: 13, color: '#6b7280' }}>{title}</p>
 
+        {system && (
+          <>
+            <div style={{ marginBottom: 18 }}>
+              <span style={sectionLabel}>Role</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {system.roles.map((r) => (
+                  <button key={r.label} type="button" onClick={() => setRole(r.value)} style={chipStyle(role === r.value)} aria-pressed={role === r.value}>
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {system.statuses && (
+              <div style={{ marginBottom: 18 }}>
+                <span style={sectionLabel}>Status</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {system.statuses.map((s) => (
+                    <button key={s.label} type="button" onClick={() => setStatus(s.value)} style={chipStyle(status === s.value)} aria-pressed={status === s.value}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 18 }}>
+              <span style={sectionLabel}>{system.dateLabel}</span>
+              <p style={{ margin: '-4px 0 8px', fontSize: 12, color: '#6b7280' }}>Leave both empty to include every date.</p>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <label style={{ flex: '1 1 150px', fontSize: 13, color: '#374151' }}>
+                  From
+                  <input type="date" className="form-input" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} style={{ marginTop: 4, width: '100%' }} />
+                </label>
+                <label style={{ flex: '1 1 150px', fontSize: 13, color: '#374151' }}>
+                  To
+                  <input type="date" className="form-input" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} style={{ marginTop: 4, width: '100%' }} />
+                </label>
+              </div>
+            </div>
+          </>
+        )}
+
+        {!system && (
+        <>
         <div style={{ marginBottom: 18 }}>
           <span style={sectionLabel}>Reports to include</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -190,6 +264,8 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', onClose }) => {
             </div>
           )}
         </div>
+        </>
+        )}
 
         <div style={{ marginBottom: 20 }}>
           <span style={sectionLabel}>File type</span>

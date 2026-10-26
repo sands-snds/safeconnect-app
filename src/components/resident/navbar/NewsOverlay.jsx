@@ -2,6 +2,7 @@ import React from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import AnnouncementCard from "./AnnouncementCard";
 import WeatherCard from "./WeatherCard";
+import DemoVideoCard from "./DemoVideoCard";
 
 const NewsOverlay = ({
     isOpen,
@@ -13,6 +14,7 @@ const NewsOverlay = ({
     announcementsError,
 
     formatNewsDate,
+    formatPublishedAt,
     describeWeatherCode,
 
     RAIN_ALERT_THRESHOLD
@@ -84,11 +86,13 @@ const NewsOverlay = ({
                             RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
                         />
 
+                        <DemoVideoCard />
+
                         {announcements.map((item) => (
                             <AnnouncementCard
                                 key={item.id}
                                 announcement={item}
-                                formatNewsDate={formatNewsDate}
+                                formatNewsDate={formatPublishedAt || formatNewsDate}
                             />
                         ))}
                     </div>

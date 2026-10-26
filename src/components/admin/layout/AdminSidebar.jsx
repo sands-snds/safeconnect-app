@@ -44,6 +44,16 @@ const AdminSidebar = ({
         {
           id: "announcement-page",
           label: "Announcements"
+        },
+        {
+          id: "site-contacts",
+          label: "Site Contacts",
+          superAdminOnly: true
+        },
+        {
+          id: "site-contents",
+          label: "Site Contents",
+          superAdminOnly: true
         }
       ]
     },
@@ -74,7 +84,7 @@ const AdminSidebar = ({
       {/* Logo */}
       <div
         style={{
-          padding: "22px 20px",
+          padding: "16px 20px",
           borderBottom: "1px solid rgba(255,255,255,.12)",
           display: "flex",
           alignItems: "center",
@@ -88,8 +98,7 @@ const AdminSidebar = ({
             borderRadius: "50%",
             overflow: "hidden",
             flexShrink: 0,
-            // The logo's inside is transparent; white keeps the maroon house
-            // visible against the maroon sidebar.
+
             background: "#fff",
             boxShadow: "0 2px 8px rgba(0,0,0,.25)"
           }}
@@ -154,7 +163,7 @@ const AdminSidebar = ({
                 flexShrink: 0
               }}
             >
-              {adminName.trim().split(/s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+              {adminName.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
             </div>
           )}
           <div style={{ minWidth: 0 }}>
@@ -177,8 +186,15 @@ const AdminSidebar = ({
                 fontWeight: 600
               }}
             >
-              {isSuperAdmin ? "Super Admin" : "Admin"}
+              {isSuperAdmin ? "Admin" : "Official"}
             </span>
+            <button
+              type="button"
+              onClick={() => { onNavigate("account-settings"); onCloseMobileMenu(); }}
+              style={{ display: "block", marginTop: 8, padding: 0, border: "none", background: "none", color: "#fff", fontSize: 12.5, fontWeight: 600, textDecoration: "underline", cursor: "pointer" }}
+            >
+              <i className="bi bi-person-gear" style={{ marginRight: 4 }} />Account Settings
+            </button>
           </div>
         </div>
       )}
@@ -194,7 +210,7 @@ const AdminSidebar = ({
           .map((section) => (
           <div
             key={section.title}
-            style={{ marginBottom: "18px" }}
+            style={{ marginBottom: "12px" }}
           >
             <div
               style={{
@@ -202,14 +218,17 @@ const AdminSidebar = ({
                 fontWeight: "700",
                 opacity: ".65",
                 letterSpacing: "1px",
-                marginBottom: "10px",
+                marginBottom: "6px",
                 padding: "0 10px"
               }}
             >
               {section.title}
             </div>
 
-            {section.items.map((item) => (
+            {section.items
+              // Admin-only items (e.g. Site Contacts) are hidden from Officials.
+              .filter((item) => isSuperAdmin || !item.superAdminOnly)
+              .map((item) => (
               <div
                 key={item.id}
                 onClick={() => {
@@ -220,8 +239,8 @@ const AdminSidebar = ({
                   display: "flex",
                   alignItems: "center",
                   gap: "10px",
-                  padding: "11px 12px",
-                  marginBottom: "4px",
+                  padding: "9px 12px",
+                  marginBottom: "2px",
                   borderRadius: "8px",
                   cursor: "pointer",
                   transition: ".2s",
@@ -241,31 +260,36 @@ const AdminSidebar = ({
           </div>
         ))}
 
-        {/* Divider */}
-        <div
-          style={{
-            borderTop:
-              "1px solid rgba(255,255,255,.12)",
-            margin: "8px 0 12px"
-          }}
-        />
+        {/* Logout: phone drawer only. On computers it is in the account menu (top right). */}
+        {showProfile && (
+          <>
+            {/* Divider */}
+            <div
+              style={{
+                borderTop:
+                  "1px solid rgba(255,255,255,.12)",
+                margin: "8px 0 12px"
+              }}
+            />
 
-        {/* Logout */}
-        <div
-          onClick={onLogout}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            padding: "11px 12px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontSize: "14px",
-            transition: ".2s"
-          }}
-        >
-          <span>Logout</span>
-        </div>
+            {/* Logout */}
+            <div
+              onClick={onLogout}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "11px 12px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "14px",
+                transition: ".2s"
+              }}
+            >
+              <span>Logout</span>
+            </div>
+          </>
+        )}
       </div>
     </>
   );

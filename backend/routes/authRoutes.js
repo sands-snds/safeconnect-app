@@ -1,10 +1,19 @@
 const express = require("express");
 const router  = express.Router();
 const authController = require("../controllers/authController");
+const { verifyToken } = require("../middleware/authMiddleware");
 
 // Sign up / Sign in
 router.post("/signup",      authController.signup);
 router.post("/signin",      authController.signin);
+
+// The signed-in account (verifies the token against the database)
+router.get("/me",          verifyToken, authController.me);
+
+// "Save Login Info": Yes swaps the session sign-in for a 30-day saved login;
+// logout revokes a saved login on the server (models/RememberedLogin.js)
+router.post("/remember",   verifyToken, authController.remember);
+router.post("/logout",     verifyToken, authController.logout);
 
 // Email verification (signup OTP)
 router.post("/request-otp", authController.requestOtp);

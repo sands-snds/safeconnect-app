@@ -1,4 +1,8 @@
 const db = require("../config/db");
+const live = require("../services/liveUpdates");
+
+// Open pages reload their bell as soon as a notification is added or read.
+const changedFor = (userId) => (userId ? live.notifyUser(userId, "notifications") : live.notifyAdmins("admin-notifications"));
 
 class Notification {
     static async create(data) {
@@ -23,6 +27,7 @@ class Notification {
                 data.referenceId
             ]
         );
+        changedFor(data.userId || null);
         return result.insertId;
     }
 
@@ -62,6 +67,7 @@ class Notification {
             `,
             [id]
         );
+        changedFor(null);
         return result.affectedRows;
     }
 
@@ -73,6 +79,7 @@ class Notification {
             WHERE is_read = FALSE AND user_id IS NULL
             `
         );
+        changedFor(null);
         return result.affectedRows;
     }
 
@@ -85,6 +92,7 @@ class Notification {
             `,
             [id, userId]
         );
+        changedFor(userId);
         return result.affectedRows;
     }
 
@@ -97,6 +105,7 @@ class Notification {
             `,
             [userId]
         );
+        changedFor(userId);
         return result.affectedRows;
     }
 

@@ -939,7 +939,7 @@ header {
 }
 
 .modal-overlay {
-    display: none;
+    display: flex; /* overlays are only rendered while open */
     position: fixed;
     top: 0;
     left: 0;
@@ -2561,4 +2561,27 @@ body {
         justify-content: start;
         column-gap: 32px;
     }
+}
+
+/* Resident hero: small yellow line above the heading, and the heading's
+   second line in yellow (like the home page hero). */
+#residentHeroCarousel .resident-hero-eyebrow {
+    margin: 0 0 0.9rem;
+    color: #FFC107;
+    font-weight: 800;
+    font-size: clamp(0.72rem, 1.6vw, 0.95rem);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+#residentHeroCarousel .hero-title .hero-title-accent {
+    color: #FFC107;
+}
+
+/* Natural letter spacing for the hero heading on every screen size, like the
+   other headings on the site (the size-specific rules above used 1-7px). */
+#residentHeroCarousel .hero-title {
+    letter-spacing: -0.01em;
+    line-height: 1.15;
 }

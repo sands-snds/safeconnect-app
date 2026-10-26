@@ -57,7 +57,10 @@ const REPORT_TIMEZONE = "Asia/Manila";
 const fmtDate = (value) =>
     (value ? new Date(value).toLocaleString("en-PH", { timeZone: REPORT_TIMEZONE }) : "");
 
-const ROLE_LABELS = { super_admin: "Super Admin", admin: "Admin", resident: "Resident" };
+const { ALL_ROLES, roleLabel } = require("../utils/roles");
+
+const USER_STATUSES = ["Active", "Pending", "Suspended", "Closed"];
+const SIGNIN_STATUSES = ["Success", "Failed"];
 
 const isDayKey = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
 
@@ -67,8 +70,7 @@ const isDayKey = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
 //   tzOffset - the browser's getTimezoneOffset(), see localDayKey
 // Returns model filters ({ status, from, to } with Date bounds) plus a
 // human-readable description for the report's subtitle.
-const reportOptions = (filters = {}) => {
-    const status = REPORT_STATUSES.includes(filters.status) ? filters.status : null;
+const dateRange = (filters = {}) => {
     const tzOffset = Number.isFinite(Number(filters.tzOffset)) ? Number(filters.tzOffset) : -480;
     const localMidnight = (key) => new Date(new Date(`${key}T00:00:00Z`).getTime() + tzOffset * 60000);
 
@@ -85,10 +87,35 @@ const reportOptions = (filters = {}) => {
         : isDayKey(filters.to) ? `Until ${dayKeyLabel(filters.to)}`
         : "All dates";
 
+    return { from, to, period };
+};
+
+const reportOptions = (filters = {}) => {
+    const status = REPORT_STATUSES.includes(filters.status) ? filters.status : null;
+    const { from, to, period } = dateRange(filters);
     return {
         modelFilters: { status, from, to },
         subtitle: `Status: ${status || "All"}  |  Period: ${period}`
     };
+};
+
+// Options from the System tabs' Generate Report form (Users, Sign-in Logs,
+// Admin Logs): role, status (checked against `statuses`), from / to and
+// archived (the tab the report was generated from).
+const systemOptions = (filters = {}, statuses, { allowUnknownRole = false } = {}) => {
+    const role = ALL_ROLES.includes(filters.role) || (allowUnknownRole && filters.role === "unknown")
+        ? filters.role
+        : null;
+    const status = statuses.includes(filters.status) ? filters.status : null;
+    const archived = filters.archived === "1" || filters.archived === "true";
+    const { from, to, period } = dateRange(filters);
+
+    const parts = [`Role: ${role ? (role === "unknown" ? "No account" : roleLabel(role)) : "All"}`];
+    if (statuses.length) parts.push(`Status: ${status || "All"}`);
+    parts.push(`Period: ${period}`);
+    if (archived) parts.push("Archived entries");
+
+    return { role, status, from, to, archived, subtitle: parts.join("  |  ") };
 };
 
 // Each entry describes how to build one exportable dataset: a human title,
@@ -293,11 +320,17 @@ const EXPORTERS = {
         }
     },
 
+    // System > Users. filters: role, status, from / to (date registered).
     users: {
         reportTitle: "Registered Users Report",
         filenamePrefix: "Registered_Users",
-        async build() {
-            const users = await User.getAll();
+        async build(filters = {}) {
+            const { role, status, from, to, subtitle } = systemOptions(filters, USER_STATUSES);
+            let users = await User.getAll();
+            if (role) users = users.filter((u) => u.role === role);
+            if (status) users = users.filter((u) => u.status === status);
+            if (from) users = users.filter((u) => new Date(u.created_at) >= from);
+            if (to) users = users.filter((u) => new Date(u.created_at) < to);
 
             const roleCounts = users.reduce((acc, u) => {
                 acc[u.role] = (acc[u.role] || 0) + 1;
@@ -305,11 +338,12 @@ const EXPORTERS = {
             }, {});
 
             return {
+                subtitle,
                 summary: [
                     { label: "Total Users", value: users.length },
                     { label: "Residents", value: roleCounts.resident || 0 },
-                    { label: "Admins", value: roleCounts.admin || 0 },
-                    { label: "Super Admins", value: roleCounts.super_admin || 0 }
+                    { label: "Officials", value: roleCounts.admin || 0 },
+                    { label: "Admins", value: roleCounts.super_admin || 0 }
                 ],
                 columns: [
                     { label: "Name", key: "name" },
@@ -325,7 +359,7 @@ const EXPORTERS = {
                     u.username,
                     u.email_address,
                     u.contact_number,
-                    u.role,
+                    roleLabel(u.role),
                     u.status,
                     fmtDate(u.created_at)
                 ])
@@ -333,14 +367,18 @@ const EXPORTERS = {
         }
     },
 
+    // System > Sign-in Logs. filters: archived, role ("unknown" = no
+    // account), status (Success / Failed), from / to.
     signinLogs: {
         reportTitle: "Sign-In Logs Report",
         filenamePrefix: "SignIn_Logs",
-        async build() {
-            const logs = await Log.getSigninLogs();
+        async build(filters = {}) {
+            const { role, status, from, to, archived, subtitle } = systemOptions(filters, SIGNIN_STATUSES, { allowUnknownRole: true });
+            const logs = await Log.getSigninLogs({ archived, role, status, from, to });
             const success = logs.filter((l) => l.status === "Success").length;
 
             return {
+                subtitle,
                 summary: [
                     { label: "Total Attempts", value: logs.length },
                     { label: "Successful", value: success },
@@ -350,19 +388,17 @@ const EXPORTERS = {
                     { label: "Name", key: "name" },
                     { label: "Email", key: "email", weight: 1.6 },
                     { label: "Role", key: "role", weight: 0.8 },
-                    { label: "IP Address", key: "ip", weight: 1.1 },
-                    { label: "Location", key: "location", weight: 1.6 },
-                    { label: "Device", key: "device", weight: 1.6 },
+                    { label: "Device & IP Address", key: "device", weight: 2.2 },
+                    { label: "Location", key: "location", weight: 1.5 },
                     { label: "Status", key: "status", weight: 0.7 },
                     { label: "Timestamp", key: "date", weight: 1.2 }
                 ],
                 rows: logs.map((l) => [
                     l.full_name,
                     l.email_address,
-                    ROLE_LABELS[l.role] || "Unknown",
-                    l.ip_address || "Not tracked",
+                    roleLabel(l.role),
+                    `${l.device || "Device not tracked"}\n${l.ip_address || "IP not tracked"}`,
                     l.location || "",
-                    l.device || "Not tracked",
                     l.status,
                     fmtDate(l.timestamp)
                 ])
@@ -370,11 +406,14 @@ const EXPORTERS = {
         }
     },
 
+    // System > Admin Logs. filters: archived, role (official / admin),
+    // from / to, plus the tab's own admin (email) and search.
     adminLogs: {
         reportTitle: "Admin Activity Report",
         filenamePrefix: "Admin_Activity",
         async build(filters = {}) {
-            let logs = await AdminActivity.getRecent(5000);
+            const { role, from, to, archived, subtitle } = systemOptions(filters, []);
+            let logs = await AdminActivity.getRecent(5000, { archived, role, from, to });
 
             if (filters.admin) {
                 logs = logs.filter((l) => l.admin_email === filters.admin);
@@ -387,16 +426,18 @@ const EXPORTERS = {
                 );
             }
 
-            const admins = new Set(logs.map((l) => l.admin_email)).size;
+            const accounts = new Set(logs.map((l) => l.admin_email)).size;
 
             return {
+                subtitle,
                 summary: [
                     { label: "Total Actions", value: logs.length },
-                    { label: "Admins", value: admins }
+                    { label: "Accounts", value: accounts }
                 ],
                 columns: [
-                    { label: "Admin", key: "admin" },
+                    { label: "Name", key: "admin" },
                     { label: "Email", key: "email" },
+                    { label: "Role", key: "role", weight: 0.7 },
                     { label: "Action", key: "action" },
                     { label: "Details", key: "details" },
                     { label: "Time", key: "date" }
@@ -404,6 +445,7 @@ const EXPORTERS = {
                 rows: logs.map((l) => [
                     l.admin_username || "",
                     l.admin_email,
+                    roleLabel(l.role),
                     l.action,
                     l.details || "",
                     fmtDate(l.created_at)

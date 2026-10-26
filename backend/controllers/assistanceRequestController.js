@@ -3,10 +3,16 @@ const AssistanceRequestService = require("../services/assistanceRequestService")
 const Notification = require("../models/Notification");
 const { validateStatusTransition } = require("../utils/statusWorkflow");
 
+// Services return { success: false, status: 400, message } for invalid input.
+const sendResult = (res, result, successStatus = 200) => {
+    const { status, ...body } = result;
+    res.status(result.success === false && status ? status : successStatus).json(body);
+};
+
 exports.createRequest = async (req, res) => {
     try {
         const result = await AssistanceRequestService.create(req.body);
-        res.status(201).json(result);
+        sendResult(res, result, 201);
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to submit assistance request." });
@@ -36,7 +42,7 @@ exports.getRequest = async (req, res) => {
 exports.updateRequest = async (req, res) => {
     try {
         const result = await AssistanceRequestService.update(req.params.id, req.body);
-        res.json(result);
+        sendResult(res, result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to update assistance request." });

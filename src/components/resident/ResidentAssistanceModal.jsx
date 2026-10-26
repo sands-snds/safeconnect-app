@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
+import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
+import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
   city: 'Dasmariñas',
@@ -18,18 +20,21 @@ const SPECIAL_NEEDS_OPTIONS = [
   { key: 'pregnant', value: 'Pregnant' },
   { key: 'pets', value: 'Pets' }
 ];
-const URGENCY_OPTIONS = [
-  { key: 'low', value: 'Low' },
-  { key: 'medium', value: 'Medium' },
-  { key: 'high', value: 'High' },
-  { key: 'critical', value: 'Critical' }
-];
 
+// "Victim of What Emergency?" choices: the Report Emergency form's types
+// (same stored values), plus Other, where the resident types it in.
+const EMERGENCY_OPTIONS = [
+  { value: 'Fire Emergency', labelKey: 'emergencyModal.typeFire' },
+  { value: 'Flood Emergency', labelKey: 'emergencyModal.typeFlood' },
+  { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake' }
+];
+const OTHER_EMERGENCY = 'Other';
 // Not everyone in the barangay knows the person they're requesting for by
 // name — these relationships make the name field optional instead of required.
 const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_assistance';
-const REPORT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+const REPORT_COOLDOWN_MS = 0;
 
 const getCurrentUser = () => {
   let raw = {};
@@ -65,11 +70,15 @@ const formatRemaining = (ms) => {
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
 };
-function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated }) {
+// prefill: { location, latitude, longitude } from an emergency report just
+// sent (its "Request Assistance" button), so the same spot is pinned here.
+function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated, prefill }) {
   const { t } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     assistanceType: '',
+    emergency: '',
+    emergencyOther: '',
     houseNumber: '',
     street: '',
     floorUnit: '',
@@ -77,9 +86,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     location: '',
     situation: '',
     special: [],
-    urgency: '',
     consent: false
   });
+  const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
+  // Proof photo/video is required; when editing, one already on file counts.
+  const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
+  const needsNewMedia = !hasExistingMedia;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
@@ -112,12 +124,16 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 
   useEffect(() => {
     if (!editingReport) return;
+    // A value that isn't one of the listed types was typed in under Other.
+    const savedEmergency = editingReport.victim_of_emergency || '';
+    const isListed = EMERGENCY_OPTIONS.some((o) => o.value === savedEmergency);
     setFormData((prev) => ({
       ...prev,
+      emergency: !savedEmergency ? '' : isListed ? savedEmergency : OTHER_EMERGENCY,
+      emergencyOther: savedEmergency && !isListed ? savedEmergency : '',
       assistanceType: editingReport.title || '',
       location: editingReport.location || '',
       situation: editingReport.description || '',
-      urgency: editingReport.urgency || '',
       special: editingReport.specialNeeds
         ? editingReport.specialNeeds.split(',').map((s) => s.trim()).filter(Boolean)
         : []
@@ -126,6 +142,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setGpsCoords({ lat: editingReport.latitude, lng: editingReport.longitude });
     }
   }, [editingReport, setGpsCoords]);
+  useEffect(() => {
+    if (!show || editingReport || !prefill) return;
+    if (prefill.latitude != null && prefill.longitude != null) {
+      setGpsCoords({ lat: prefill.latitude, lng: prefill.longitude });
+    }
+  }, [show, prefill, editingReport, setGpsCoords]);
   useEffect(() => {
     document.body.style.overflow = show ? 'hidden' : 'auto';
     return () => {
@@ -163,7 +185,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
-        alert(t('assistanceModal.cooldownAlert', { time: formatRemaining(remaining) }));
+        showPopup({ type: 'warning', message: t('assistanceModal.cooldownAlert', { time: formatRemaining(remaining) }) });
         return;
       }
     }
@@ -175,29 +197,40 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 
     if (isEditing) {
       if (!formData.location.trim()) {
-        alert(t('reportForm.provideLocation'));
+        showPopup({ type: 'warning', message: t('reportForm.provideLocation') });
         return;
       }
     } else if (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())) {
-      alert(t('reportForm.pinLocation'));
+      showPopup({ type: 'warning', message: t('reportForm.pinLocation') });
       return;
     }
     if (reportFor === 'others' && !victimRelationship) {
-      alert(t('reportForm.selectRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.selectRelationship') });
       return;
     }
     if (reportFor === 'others' && victimRelationship === 'Other' && !victimRelationshipOther.trim()) {
-      alert(t('reportForm.specifyRelationship'));
+      showPopup({ type: 'warning', message: t('reportForm.specifyRelationship') });
       return;
     }
     if (reportFor === 'others' && !isVictimNameOptional && !victimName.trim()) {
-      alert(t('assistanceModal.enterNameRequesting'));
+      showPopup({ type: 'warning', message: t('assistanceModal.enterNameRequesting') });
       return;
     }
     if (reportFor === 'others' && !victimDetails.trim()) {
-      alert(t('assistanceModal.provideDetailsRequesting'));
+      showPopup({ type: 'warning', message: t('assistanceModal.provideDetailsRequesting') });
       return;
     }
+    if (needsNewMedia && !media.file) {
+      showPopup({ type: 'warning', message: t('assistanceModal.proofRequired') });
+      return;
+    }
+    if (formData.emergency === OTHER_EMERGENCY && !formData.emergencyOther.trim()) {
+      showPopup({ type: 'warning', message: t('assistanceModal.specifyEmergency') });
+      return;
+    }
+    const victimOfEmergency = formData.emergency === OTHER_EMERGENCY
+      ? formData.emergencyOther.trim()
+      : formData.emergency;
     const currentUser = getCurrentUser();
     if (!currentUser.id) {
       console.warn(
@@ -206,21 +239,25 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     }
     setIsSubmitting(true);
     try {
+      const photoUrl = media.file ? await readAsDataUrl(media.file) : null;
       if (isEditing) {
         const result = await updateAssistanceRequest({
           id: editingReport.id,
           type: formData.assistanceType || 'General Assistance',
+          victimOfEmergency,
+          // Only replace the saved photo/video if a new one was attached
+          ...(photoUrl ? { photoUrl, mediaType: media.type } : {}),
           location: formData.location.trim(),
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
           situation: formData.situation,
           special: formData.special.join(', ') || null,
-          urgency: formData.urgency || null
+          urgency: null
         });
         if (!result.success) {
           throw new Error(result.message || t('assistanceModal.updateFailed'));
         }
-        alert(t('assistanceModal.updateSuccess'));
+        showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('assistanceModal.updateSuccess') });
         onUpdated && onUpdated();
         onClose();
         return;
@@ -241,6 +278,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       ].filter(Boolean).join(', ') + (landmark ? ` (Landmark: ${landmark})` : '');
       const result = await createAssistanceRequest({
         type: formData.assistanceType || 'General Assistance',
+        victimOfEmergency,
+        photoUrl,
+        mediaType: photoUrl ? media.type : null,
         userId: currentUser.id || null,
         fullname: fullName,
         contact,
@@ -250,7 +290,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         longitude: gpsCoords ? gpsCoords.lng : null,
         situation: formData.situation,
         special: formData.special.join(', ') || null,
-        urgency: formData.urgency || null,
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
         victimContact: reportFor === 'others' ? victimContact.trim() : null,
@@ -266,6 +305,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setCooldownRemaining(REPORT_COOLDOWN_MS);
       setFormData({
         assistanceType: '',
+        emergency: '',
+        emergencyOther: '',
         houseNumber: '',
         street: '',
         floorUnit: '',
@@ -273,18 +314,18 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         location: '',
         situation: '',
         special: [],
-        urgency: '',
         consent: false
       });
       setReportFor('self');
       setVictimName(''); setVictimContact(''); setVictimRelationship('');
       setVictimRelationshipOther(''); setVictimDetails('');
+      clearMedia();
       setGpsCoords(null);
       setLocationError('');
       setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert(t('assistanceModal.submitError'));
+      showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('assistanceModal.submitError') });
     } finally {
       setIsSubmitting(false);
     }
@@ -411,7 +452,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 <i className="bi bi-person-exclamation"></i> {t('assistanceModal.personBoxLabel')}
               </label>
               <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.relationship')} <span style={{ color: '#dc3545' }}>*</span></label>
-              <select value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
+              <select className="form-select" value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
                 <option value="">{t('reportForm.relationshipPlaceholder')}</option>
                 <option value="Family Member">{t('reportForm.relationshipOptions.family')}</option>
@@ -473,7 +514,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 ></i>
               {t('assistanceModal.assistanceType')} <span style={{ color: '#dc3545' }}>*</span>
 </label>
-<select
+<select className="form-select"
               name="assistanceType"
               value={formData.assistanceType}
               onChange={handleChange}
@@ -500,41 +541,75 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 </option>
 </select>
 </div>
-<div style={{ marginBottom: '16px' }}>
+<div className="rf-2col" style={{ gap: '12px', marginBottom: '16px', alignItems: 'start' }}>
+<div>
 <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginBottom: '8px',
-              fontWeight: '600',
-              color: '#374151',
-              fontSize: '13px'
-            }}>
-<i
-                className="bi bi-exclamation-diamond-fill"
-                style={{ color: '#374151', fontSize: '14px' }}
-></i>
-              {t('assistanceModal.urgency')}
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '8px',
+                fontWeight: '600',
+                color: '#374151',
+                fontSize: '13px'
+              }}>
+<i className="bi bi-exclamation-circle-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
+                {t('assistanceModal.victimOfEmergency')} <span style={{ color: '#dc3545' }}>*</span>
 </label>
-<select
-              name="urgency"
-              value={formData.urgency}
-              onChange={handleChange}
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                fontSize: '14px',
-                outline: 'none'
-              }}
+<select className="form-select"
+                name="emergency"
+                value={formData.emergency}
+                onChange={(e) => setFormData((prev) => ({ ...prev, emergency: e.target.value, emergencyOther: '' }))}
+                required
+                disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
 >
-<option value="">{t('assistanceModal.selectUrgency')}</option>
-              {URGENCY_OPTIONS.map((opt) => (
-<option key={opt.key} value={opt.value}>{t(`assistanceModal.urgencyOptions.${opt.key}`)}</option>
-              ))}
+<option value="">{t('assistanceModal.selectEmergency')}</option>
+                {EMERGENCY_OPTIONS.map((opt) => (
+<option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+                ))}
+<option value={OTHER_EMERGENCY}>{t('assistanceModal.emergencyOther')}</option>
 </select>
+              {formData.emergency === OTHER_EMERGENCY && (
+<input
+                  type="text"
+                  name="emergencyOther"
+                  value={formData.emergencyOther}
+                  onChange={handleChange}
+                  required
+                  maxLength={100}
+                  disabled={isSubmitting}
+                  placeholder={t('assistanceModal.emergencyOtherPlaceholder')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    fontSize: '14px',
+                    outline: 'none',
+                    marginTop: '8px'
+                  }}
+                />
+              )}
+</div>
+<MediaAttachmentField
+              t={t}
+              label={t('assistanceModal.proofPhoto')}
+              required={needsNewMedia}
+              requiredMark={needsNewMedia}
+              hint={hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}
+              disabled={isSubmitting}
+              media={media}
+              fileInputRef={fileInputRef}
+              onChange={handleMediaChange}
+              onRemove={clearMedia}
+            />
 </div>
 <div style={{
               display: 'flex',

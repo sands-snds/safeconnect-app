@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   fetchMyReports,
   deleteEmergencyReport,
@@ -6,6 +7,7 @@ import {
   deletePettyCrimeReport
 } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { showPopup, confirmPopup } from '../shared/popup';
 import ResidentEmergencyModal from "./ResidentEmergencyModal";
 import ResidentAssistanceModal from "./ResidentAssistanceModal";
 import ResidentPettyCrimeModal from "./ResidentPettyCrimeModal";
@@ -105,6 +107,32 @@ function MyReportsPage({ isOpen, onClose, userId }) {
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showCrimeModal, setShowCrimeModal] = useState(false);
+  // Card whose three-dot (Edit / Delete) menu is open, by report key.
+  const [openMenuKey, setOpenMenuKey] = useState(null);
+
+  useEffect(() => {
+    if (!openMenuKey) return undefined;
+    const onPointerDown = (e) => {
+      if (!e.target.closest(`[data-menu-key="${openMenuKey}"]`)) setOpenMenuKey(null);
+    };
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      document.querySelector(`[data-menu-key="${openMenuKey}"] .mr-menu-btn`)?.focus();
+      setOpenMenuKey(null);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [openMenuKey]);
+
+  useEffect(() => {
+    if (!isOpen) setOpenMenuKey(null);
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -137,13 +165,6 @@ function MyReportsPage({ isOpen, onClose, userId }) {
     return c;
   }, [reports]);
 
-  const stats = useMemo(() => {
-    const pending = reports.filter((r) => r.status === 'Received' || r.status === 'Pending').length;
-    const inProgress = reports.filter((r) => r.status === 'In Progress').length;
-    const resolved = reports.filter((r) => r.status === 'Resolved' || r.status === 'Completed').length;
-    const total = reports.length;
-    return { total, pending, inProgress, resolved, other: total - pending - inProgress - resolved };
-  }, [reports]);
 
   const filteredReports = useMemo(() => {
     let list = activeFilter === 'All' ? reports : reports.filter((r) => r.type === activeFilter);
@@ -187,21 +208,32 @@ function MyReportsPage({ isOpen, onClose, userId }) {
   };
 
   const handleDelete = async (report) => {
-    if (!window.confirm(t('myReports.confirmDelete', { type: typeLabel(report.type, t).toLowerCase() }))) return;
+    const confirmed = await confirmPopup({
+      type: 'danger',
+      title: t('myReports.deleteTitle'),
+      message: t('myReports.deleteBody', { type: typeLabel(report.type, t).toLowerCase(), title: report.title }),
+      confirmLabel: t('myReports.delete')
+    });
+    if (!confirmed) return;
 
     let result;
-    if (report.type === 'Emergency') {
-      result = await deleteEmergencyReport(report.id);
-    } else if (report.type === 'Assistance') {
-      result = await deleteAssistanceRequest(report.id);
-    } else if (report.type === 'Petty Crime') {
-      result = await deletePettyCrimeReport(report.id);
+    try {
+      if (report.type === 'Emergency') {
+        result = await deleteEmergencyReport(report.id);
+      } else if (report.type === 'Assistance') {
+        result = await deleteAssistanceRequest(report.id);
+      } else if (report.type === 'Petty Crime') {
+        result = await deletePettyCrimeReport(report.id);
+      }
+    } catch {
+      result = null;
     }
 
     if (result?.success) {
       await loadReports();
+      showPopup({ type: 'success', title: t('myReports.deletedTitle'), message: t('myReports.deletedBody') });
     } else {
-      alert(t('myReports.deleteFailed'));
+      showPopup({ type: 'error', message: t('myReports.deleteFailed') });
     }
   };
 
@@ -253,7 +285,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           align-items: center;
           justify-content: center;
           font-size: 1.2rem;
-          color: #FFC107;
+          color: #fff;
           flex-shrink: 0;
         }
 
@@ -280,98 +312,17 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
         .mr-wrap { max-width: 880px; margin: 0 auto; }
 
-        /* ── Overview: one wide segmented-bar card instead of four generic stat tiles ── */
-        .mr-overview {
-          background: #fff;
-          border-radius: 18px;
-          padding: 1.5rem 1.75rem;
-          box-shadow: 0 4px 18px rgba(0,0,0,0.06);
-          display: flex;
-          align-items: center;
-          gap: 1.75rem;
-          margin-bottom: 1.75rem;
-        }
-
-        @media (max-width: 600px) {
-          .mr-overview { flex-direction: column; align-items: stretch; gap: 1rem; }
-        }
-
-        .mr-overview-total {
-          text-align: center;
-          flex-shrink: 0;
-          padding-right: 1.75rem;
-          border-right: 1px solid #f0eaec;
-        }
-
-        @media (max-width: 600px) {
-          .mr-overview-total { border-right: none; border-bottom: 1px solid #f0eaec; padding: 0 0 1rem; }
-        }
-
-        .mr-overview-total-num {
-          display: block;
-          font-size: 2.2rem;
-          font-weight: 900;
-          color: #6B2C3E;
-          line-height: 1;
-        }
-
-        .mr-overview-total-label {
-          display: block;
-          font-size: 0.72rem;
-          font-weight: 700;
-          color: #9ca3af;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          margin-top: 0.35rem;
-        }
-
-        .mr-overview-bar-wrap { flex: 1; min-width: 0; }
-
-        .mr-overview-bar {
-          display: flex;
-          width: 100%;
-          height: 10px;
-          border-radius: 999px;
-          overflow: hidden;
-          background: #f3f4f6;
-          margin-bottom: 0.85rem;
-        }
-
-        .mr-seg { height: 100%; transition: width 0.4s ease; }
-        .mr-seg.pending { background: #f59e0b; }
-        .mr-seg.progress { background: #3b82f6; }
-        .mr-seg.resolved { background: #22c55e; }
-        .mr-seg.other { background: #ef4444; }
-
-        .mr-overview-legend {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.4rem 1.1rem;
-          font-size: 0.8rem;
-          color: #4b5563;
-          font-weight: 600;
-        }
-
-        .mr-overview-legend .dot {
-          display: inline-block;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          margin-right: 0.4rem;
-        }
-        .dot.pending { background: #f59e0b; }
-        .dot.progress { background: #3b82f6; }
-        .dot.resolved { background: #22c55e; }
-        .dot.other { background: #ef4444; }
-
         /* ── Toolbar: underline tabs instead of pill buttons ── */
         .mr-toolbar { margin-bottom: 1.5rem; }
 
+        /* No scrolling: the tabs fit (tighter on phones) and wrap only on very
+           narrow screens. (overflow-x: auto plus the tabs' -2px underline
+           overlap used to show a scrollbar.) */
         .mr-tabs {
           display: flex;
-          gap: 1.5rem;
+          flex-wrap: wrap;
+          gap: 0.4rem 1.5rem;
           border-bottom: 2px solid #eee2e5;
-          overflow-x: auto;
         }
 
         .mr-tab {
@@ -382,7 +333,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           padding: 0 0.15rem 0.7rem;
           font-size: 0.88rem;
           font-weight: 700;
-          color: #9ca3af;
+          color: #4b5563;
           cursor: pointer;
           white-space: nowrap;
           display: inline-flex;
@@ -408,6 +359,13 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
         .mr-tab.active .count { background: #fbe4e9; color: #6B2C3E; }
 
+        /* Phones: all four tabs on one row (after the rules above so it wins). */
+        @media (max-width: 576px) {
+          .mr-tabs { justify-content: space-between; column-gap: 0.35rem; }
+          .mr-tab { font-size: 0.76rem; gap: 0.25rem; padding: 0 0 0.6rem; }
+          .mr-tab .count { font-size: 0.62rem; padding: 0 5px; }
+        }
+
         .mr-toolbar-row2 {
           display: flex;
           gap: 0.6rem;
@@ -426,7 +384,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           left: 14px;
           top: 50%;
           transform: translateY(-50%);
-          color: #9ca3af;
+          color: #6b7280;
           font-size: 0.9rem;
         }
 
@@ -470,7 +428,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
         .mr-refresh-btn:hover { background: #6B2C3E; color: white; }
 
-        .mr-result-count { font-size: 0.8rem; color: #9ca3af; margin: -0.6rem 0 1rem; }
+        .mr-result-count { font-size: 0.8rem; color: #4b5563; margin: -0.6rem 0 1rem; }
 
         .myreports-state-message {
           max-width: 900px;
@@ -605,7 +563,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
         .mr-stepper-label {
           font-size: 0.66rem;
           font-weight: 600;
-          color: #9ca3af;
+          color: #6b7280;
           white-space: nowrap;
         }
 
@@ -639,7 +597,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           flex-wrap: wrap;
           gap: 0.35rem 1rem;
           font-size: 0.79rem;
-          color: #9ca3af;
+          color: #4b5563;
         }
 
         .mr-card-meta span { display: flex; align-items: center; gap: 0.3rem; }
@@ -701,22 +659,66 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           padding: 0.3rem 0;
         }
 
-        .mr-actions { display: flex; gap: 8px; }
+        /* Three-dot menu (Edit / Delete). Opens upward so the last card's
+           menu isn't cut off at the bottom of the list. */
+        .mr-menu-wrap { position: relative; }
 
-        .mr-edit-btn, .mr-delete-btn {
+        .mr-menu-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
           border: none;
-          padding: 7px 14px;
-          border-radius: 8px;
+          background: transparent;
+          color: #4b5563;
+          font-size: 1.15rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
-          font-weight: 600;
-          font-size: 0.8rem;
-          transition: 0.2s;
+          transition: background 0.2s, color 0.2s;
         }
 
-        .mr-edit-btn { background: #2563eb; color: white; }
-        .mr-edit-btn:hover { background: #1d4ed8; }
-        .mr-delete-btn { background: #dc2626; color: white; }
-        .mr-delete-btn:hover { background: #b91c1c; }
+        .mr-menu-btn:hover, .mr-menu-btn[aria-expanded="true"] { background: #f3eef0; color: #6B2C3E; }
+        .mr-menu-btn:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; }
+
+        .mr-menu {
+          position: absolute;
+          right: 0;
+          bottom: calc(100% + 6px);
+          min-width: 160px;
+          background: #fff;
+          border: 1px solid #f0eaec;
+          border-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+          padding: 6px;
+          z-index: 20;
+          animation: mr-menu-in 0.12s ease-out;
+        }
+
+        @keyframes mr-menu-in {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: none; }
+        }
+
+        .mr-menu-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+          padding: 9px 12px;
+          border: none;
+          background: none;
+          border-radius: 8px;
+          font-size: 0.86rem;
+          font-weight: 600;
+          color: #374151;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .mr-menu-item:hover, .mr-menu-item:focus-visible { background: #f7f3f4; outline: none; }
+        .mr-menu-item.danger { color: #dc2626; }
+        .mr-menu-item.danger:hover, .mr-menu-item.danger:focus-visible { background: #fef2f2; }
 
         .mr-details {
           margin-top: 0.9rem;
@@ -726,7 +728,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
         .mr-details-desc {
           font-size: 0.88rem;
-          color: #4b5563;
+          color: #374151;
           line-height: 1.6;
           margin: 0 0 0.9rem;
         }
@@ -746,10 +748,10 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.02em;
-          color: #9ca3af;
+          color: #4b5563;
         }
 
-        .mr-detail-value { font-size: 0.85rem; color: #374151; }
+        .mr-detail-value { font-size: 0.85rem; color: #1f2937; }
 
         .mr-detail-value a { color: #6B2C3E; font-weight: 600; text-decoration: none; }
         .mr-detail-value a:hover { text-decoration: underline; }
@@ -822,29 +824,6 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
       <div className="myreports-body">
         <div className="mr-wrap">
-
-          {!loading && !error && reports.length > 0 && (
-            <div className="mr-overview">
-              <div className="mr-overview-total">
-                <span className="mr-overview-total-num">{stats.total}</span>
-                <span className="mr-overview-total-label">{t('myReports.totalReports')}</span>
-              </div>
-              <div className="mr-overview-bar-wrap">
-                <div className="mr-overview-bar">
-                  {stats.pending > 0 && <div className="mr-seg pending" style={{ width: `${(stats.pending / stats.total) * 100}%` }} />}
-                  {stats.inProgress > 0 && <div className="mr-seg progress" style={{ width: `${(stats.inProgress / stats.total) * 100}%` }} />}
-                  {stats.resolved > 0 && <div className="mr-seg resolved" style={{ width: `${(stats.resolved / stats.total) * 100}%` }} />}
-                  {stats.other > 0 && <div className="mr-seg other" style={{ width: `${(stats.other / stats.total) * 100}%` }} />}
-                </div>
-                <div className="mr-overview-legend">
-                  <span><i className="dot pending"></i>{t('myReports.status.pending')} ({stats.pending})</span>
-                  <span><i className="dot progress"></i>{t('myReports.status.inProgress')} ({stats.inProgress})</span>
-                  <span><i className="dot resolved"></i>{t('myReports.status.resolved')} ({stats.resolved})</span>
-                  {stats.other > 0 && <span><i className="dot other"></i>{t('myReports.other')} ({stats.other})</span>}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="mr-toolbar">
             <div className="mr-tabs">
@@ -1083,13 +1062,38 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                       ) : <span />}
 
                       {canEditOrDelete && (
-                        <div className="mr-actions">
-                          <button className="mr-edit-btn" onClick={() => handleEdit(r)}>
-                            <i className="bi bi-pencil"></i> {t('myReports.edit')}
+                        <div className="mr-menu-wrap" data-menu-key={key}>
+                          <button
+                            type="button"
+                            className="mr-menu-btn"
+                            aria-label={t('myReports.moreOptions')}
+                            aria-haspopup="menu"
+                            aria-expanded={openMenuKey === key}
+                            onClick={() => setOpenMenuKey((open) => (open === key ? null : key))}
+                          >
+                            <i className="bi bi-three-dots-vertical"></i>
                           </button>
-                          <button className="mr-delete-btn" onClick={() => handleDelete(r)}>
-                            <i className="bi bi-trash"></i> {t('myReports.delete')}
-                          </button>
+                          {openMenuKey === key && (
+                            <div className="mr-menu" role="menu" aria-label={t('myReports.moreOptions')}>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="mr-menu-item"
+                                autoFocus
+                                onClick={() => { setOpenMenuKey(null); handleEdit(r); }}
+                              >
+                                <i className="bi bi-pencil"></i> {t('myReports.edit')}
+                              </button>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="mr-menu-item danger"
+                                onClick={() => { setOpenMenuKey(null); handleDelete(r); }}
+                              >
+                                <i className="bi bi-trash"></i> {t('myReports.delete')}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1101,6 +1105,13 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
         </div>
 
+        {/* Rendered into <body>: .myreports-fullscreen has a transform (its
+            slide-in), which makes it the containing block for position:fixed
+            children -- the edit modals were laid out inside it, pushed down
+            by the navbar's height (their Save button off-screen) and stacked
+            under the navbar. */}
+        {createPortal(
+        <>
         <ResidentEmergencyModal
           show={showEmergencyModal}
           editingReport={editingReport}
@@ -1130,6 +1141,9 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           }}
           onUpdated={loadReports}
         />
+        </>,
+        document.body
+        )}
       </div>
     </div>
   );

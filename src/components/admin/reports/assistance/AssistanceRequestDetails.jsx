@@ -48,9 +48,17 @@ const AssistanceRequestDetails = ({ request }) => {
         />
 
         <DetailField
-          label="Urgency Level"
-          value={request.urgency}
+          label="Victim of Emergency"
+          value={request.victimOfEmergency}
         />
+
+        {/* Only older requests have one: residents no longer choose an urgency. */}
+        {request.urgency && (
+          <DetailField
+            label="Urgency Level"
+            value={request.urgency}
+          />
+        )}
 
         <DetailField
           label="People Needing Help"
@@ -78,7 +86,7 @@ const AssistanceRequestDetails = ({ request }) => {
         />
       </div>
 
-      <ReportImage photo={photo} />
+      <ReportImage photo={photo} mediaType={request.mediaType || request.media_type} />
 
       <ReportLocationMap latitude={request.latitude} longitude={request.longitude} />
     </div>

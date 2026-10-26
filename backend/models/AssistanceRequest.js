@@ -23,6 +23,9 @@ class AssistanceRequest {
                 urgency_level,
                 describe_your_situation,
                 special_needs,
+                victim_of_emergency,
+                photo_url,
+                media_type,
                 report_for,
                 victim_name,
                 victim_contact,
@@ -30,7 +33,7 @@ class AssistanceRequest {
                 victim_details,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 request.reportReference,
@@ -43,9 +46,12 @@ class AssistanceRequest {
                 request.latitude || null,
                 request.longitude || null,
                 request.peopleAffected || 1,
-                request.urgency || "Medium",
+                request.urgency || "", // residents no longer pick one; blank, not a made-up level
                 request.situation,
                 request.specialNeeds || null,
+                request.victimOfEmergency || null,
+                request.photoUrl || null,
+                request.mediaType || null,
                 request.reportFor || "self",
                 request.victimName || null,
                 request.victimContact || null,
@@ -107,6 +113,15 @@ class AssistanceRequest {
         return rows[0];
     }
 
+    // Whether a photo/video is already on file, without loading it.
+    static async hasMedia(id) {
+        const [rows] = await db.query(
+            `SELECT photo_url IS NOT NULL AND photo_url <> '' AS has_media FROM assistance_requests WHERE id = ?`,
+            [id]
+        );
+        return Boolean(rows[0]?.has_media);
+    }
+
     static async update(id, request) {
         const [result] = await db.query(
             `
@@ -116,9 +131,12 @@ class AssistanceRequest {
                 current_location = ?,
                 latitude = ?,
                 longitude = ?,
-                urgency_level = ?,
+                urgency_level = COALESCE(?, urgency_level),
                 describe_your_situation = ?,
-                special_needs = ?
+                special_needs = ?,
+                victim_of_emergency = COALESCE(?, victim_of_emergency),
+                photo_url = COALESCE(?, photo_url),
+                media_type = COALESCE(?, media_type)
             WHERE id = ?
             `,
             [
@@ -126,9 +144,12 @@ class AssistanceRequest {
                 request.location,
                 request.latitude || null,
                 request.longitude || null,
-                request.urgency || "Medium",
+                request.urgency || null, // keep the saved level when none is sent
                 request.situation,
                 request.specialNeeds || null,
+                request.victimOfEmergency || null,
+                request.photoUrl || null,
+                request.mediaType || null,
                 id
             ]
         );

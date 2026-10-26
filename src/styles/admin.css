@@ -18,12 +18,25 @@
   justify-content: space-between;
 }
 
+/* Stays on screen while the page scrolls. */
 .desktop-sidebar {
   width: 250px;
+  flex-shrink: 0;
   background: #6B2C3E;
   color: white;
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  /* Only scrolls on very short screens, without a visible scrollbar. */
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.desktop-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .mobile-menu-overlay {
@@ -138,6 +151,15 @@
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+}
+
+/* Bootstrap's .modal-content (loaded later) takes its background from a
+   variable only set inside its own .modal, which left these boxes see-through. */
+.modal-overlay > .modal-content {
+  background: #fff;
+  color: #1f2937;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
 .form-field {

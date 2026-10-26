@@ -1,7 +1,11 @@
+import { ROLE_LABELS } from "../../shared/roles";
+
+// Stored values stay the same; labels are the shown names
+// (admin = Official, super_admin = Admin).
 export const USER_ROLES = [
-    { value: "resident", label: "Resident" },
-    { value: "admin", label: "Admin" },
-    { value: "super_admin", label: "Super Admin" }
+    { value: "resident", label: ROLE_LABELS.resident },
+    { value: "admin", label: ROLE_LABELS.admin },
+    { value: "super_admin", label: ROLE_LABELS.super_admin }
 ];
 
 const ROLE_COLORS = {

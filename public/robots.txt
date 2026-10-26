@@ -1,0 +1,8 @@
+# Safe Connect -- search engines may crawl the public site.
+# /admin and /resident are sign-in pages; staticwebapp.config.json marks them
+# "noindex" so they stay out of results (they aren't blocked here, or crawlers
+# couldn't see that).
+User-agent: *
+Allow: /
+
+Sitemap: https://polite-plant-04bf1e000.3.azurestaticapps.net/sitemap.xml
