@@ -8,7 +8,7 @@ function Navbar() {
   // Removed: navigate
   // Removed: showAdminModal, adminEmail, adminPassword, error, setShowAdminModal, setAdminEmail, setAdminPassword, setError
   
-  const [isMobile, setIsMobile] = useState(false);
+  const [, setIsMobile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   
   // Removed: showDropdown

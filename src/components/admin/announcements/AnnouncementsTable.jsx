@@ -83,6 +83,7 @@ const AnnouncementsTable = ({
 
   useEffect(() => {
     loadAnnouncements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Dashboard FAB clicked -> already navigated to this tab -> open the

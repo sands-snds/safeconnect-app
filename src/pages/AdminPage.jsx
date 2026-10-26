@@ -12,7 +12,6 @@ import AccountSettingsPage from "../components/admin/settings/AccountSettingsPag
 import AdminDemoPopup from "../components/admin/AdminModals/AdminDemoPopup";
 import ReportsPage from "../components/admin/reports/ReportsPage";
 import AnnouncementsPage from "../components/admin/announcements/AnnouncementsPage";
-import PettyCrimePage from '../components/admin/reports/pettyCrime';
 import useAdminData from "../components/admin/hooks/useAdminData";
 import useAdminAuth from "../components/admin/hooks/useAdminAuth";
 import useAdminNavigation from "../components/admin/hooks/useAdminNavigation";
@@ -66,7 +65,6 @@ const AdminPage = () => {
 
   const {
     activeView,
-    setActiveView,
     showModal,
     setShowModal,
     showMobileMenu,
@@ -164,6 +162,7 @@ useEffect(() => {
 
     // Initial load only
     loadAllData();
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, [isAuthenticated]);
 
 // The role can arrive after the first load (it comes from the profile

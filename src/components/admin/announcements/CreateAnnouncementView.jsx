@@ -67,6 +67,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
     } else {
       resetForm();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingAnnouncement]);
 
   useEffect(() => {

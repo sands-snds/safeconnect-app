@@ -1,6 +1,6 @@
 import PieChartCard from "./PieChartCard";
 import GenerateReportButton from "../shared/GenerateReportButton";
-import { STATUS_COLORS, SEVERITY_COLORS, buildPieData } from "../shared/chartUtils";
+import { STATUS_COLORS, buildPieData } from "../shared/chartUtils";
 
 export default function DashboardCharts({
     emergencyReports = [],
