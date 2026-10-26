@@ -2578,3 +2578,10 @@ body {
 #residentHeroCarousel .hero-title .hero-title-accent {
     color: #FFC107;
 }
+
+/* Natural letter spacing for the hero heading on every screen size, like the
+   other headings on the site (the size-specific rules above used 1-7px). */
+#residentHeroCarousel .hero-title {
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+}
