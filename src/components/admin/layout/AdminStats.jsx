@@ -28,7 +28,7 @@ const AdminStats = ({
   return (
     <div className="stats-grid">
       <StatCard 
-        label="TOTAL INCIDENTS REPORTED" 
+        label="EMERGENCY REPORTS" 
         value={emergencyReports.length} 
         color="#dbeafe" 
         onClick={() => onStatCardClick('emergency-reports')}

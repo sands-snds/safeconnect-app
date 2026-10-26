@@ -180,6 +180,25 @@ const SiteContactsPage = () => {
                     style={{ width: 22, height: 22, borderRadius: "50%", background: color, cursor: "pointer", border: c.color === color ? "3px solid #111827" : "2px solid #fff", boxShadow: "0 0 0 1px #d1d5db" }}
                   />
                 ))}
+                {(() => {
+                  const custom = !options.colors.some((p) => p.toLowerCase() === (c.color || "").toLowerCase());
+                  return (
+                    // The browser's own color picker, opened by the + button.
+                    <label
+                      title="Custom color"
+                      aria-label="Custom color"
+                      style={{ position: "relative", width: 22, height: 22, borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", background: custom ? c.color : "#fff", color: custom ? "#fff" : "#374151", border: custom ? "3px solid #111827" : "2px solid #fff", boxShadow: "0 0 0 1px #d1d5db", fontSize: 14, lineHeight: 1 }}
+                    >
+                      <i className="bi bi-plus" />
+                      <input
+                        type="color"
+                        value={/^#[0-9a-f]{6}$/i.test(c.color || "") ? c.color : "#000000"}
+                        onChange={(e) => updateContact(i, { color: e.target.value })}
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", border: 0, padding: 0 }}
+                      />
+                    </label>
+                  );
+                })()}
               </div>
             </div>
             <div style={{ display: "flex", gap: 6, marginTop: 20 }}>

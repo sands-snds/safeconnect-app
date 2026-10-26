@@ -45,7 +45,7 @@ const DEFAULT_CONTENT = {
     }
 };
 
-// Icons and colors an Admin can pick for an emergency contact.
+// Icons and preset colors an Admin can pick for an emergency contact.
 const CONTACT_ICONS = [
     "bi-telephone-fill", "bi-shield-fill-exclamation", "bi-shield-fill", "bi-heart-pulse-fill",
     "bi-people-fill", "bi-house-fill", "bi-fire", "bi-hospital-fill", "bi-truck", "bi-lightning-charge-fill"
@@ -140,7 +140,8 @@ function validate(input = {}) {
             description,
             number,
             icon: CONTACT_ICONS.includes(c.icon) ? c.icon : CONTACT_ICONS[0],
-            color: CONTACT_COLORS.includes(c.color) ? c.color : CONTACT_COLORS[0]
+            // A preset, or any custom #rrggbb picked with the color picker.
+            color: typeof c.color === "string" && /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : CONTACT_COLORS[0]
         };
         // Keep the translation key only while the description is unchanged.
         const original = DEFAULT_CONTENT.emergencyContacts.find((d) => d.sublabelKey && d.sublabelKey === c.sublabelKey);
