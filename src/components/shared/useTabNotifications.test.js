@@ -87,3 +87,26 @@ test('reading notifications stops the blinking too', () => {
   jest.advanceTimersByTime(3000);
   expect(document.title).toBe('Safe Connect | Barangay Sta. Fe');
 });
+
+test('the installed app icon shows the same count and clears at zero and on leaving', () => {
+  const useTabNotifications = load();
+  const calls = [];
+  navigator.setAppBadge = jest.fn((n) => { calls.push(['set', n]); return Promise.resolve(); });
+  navigator.clearAppBadge = jest.fn(() => { calls.push(['clear']); return Promise.resolve(); });
+  const { rerender, unmount } = renderHook(({ n }) => useTabNotifications(n, { sound: false }), { initialProps: { n: 3 } });
+  rerender({ n: 5 });
+  rerender({ n: 0 });
+  rerender({ n: 2 });
+  unmount();
+  expect(calls).toEqual([['set', 3], ['set', 5], ['clear'], ['set', 2], ['clear']]);
+  delete navigator.setAppBadge;
+  delete navigator.clearAppBadge;
+});
+
+test('no app badge support: nothing breaks', () => {
+  const useTabNotifications = load();
+  expect(navigator.setAppBadge).toBeUndefined();
+  const { rerender } = renderHook(({ n }) => useTabNotifications(n, { sound: false }), { initialProps: { n: 1 } });
+  rerender({ n: 4 });
+  expect(document.title).toBe('(4) Safe Connect | Barangay Sta. Fe');
+});

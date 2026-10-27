@@ -53,6 +53,21 @@ export const playNotificationSound = () => {
   }
 };
 
+// The number on the installed app's icon (home screen / taskbar / dock),
+// where the browser supports it: Chrome and Edge on Windows and Mac, and
+// Safari on iPhone / iPad (iOS 16.4+, once notifications are allowed).
+// Elsewhere this does nothing.
+export const setAppIconBadge = (n) => {
+  try {
+    const nav = typeof navigator !== 'undefined' ? navigator : null;
+    if (!nav || typeof nav.setAppBadge !== 'function') return;
+    const done = n > 0 ? nav.setAppBadge(n) : (nav.clearAppBadge ? nav.clearAppBadge() : nav.setAppBadge(0));
+    if (done && typeof done.catch === 'function') done.catch(() => {});
+  } catch {
+    // not supported here
+  }
+};
+
 const iconLinks = () => [...document.querySelectorAll('link[rel~="icon"]')];
 
 // The tab icon with a red count bubble, as a data URL (null if drawing fails).
@@ -159,6 +174,7 @@ export default function useTabNotifications(count, { sound = true, blinkText = '
   useEffect(() => {
     const n = Math.max(0, Number(count) || 0);
     label.current = n > 0 ? (n > 99 ? '99+' : String(n)) : '';
+    setAppIconBadge(n);
     if (!originalIcons.current) {
       originalIcons.current = iconLinks().map((link) => [link, link.getAttribute('href')]);
     }
@@ -197,6 +213,7 @@ export default function useTabNotifications(count, { sound = true, blinkText = '
     if (blinkTimer.current) clearInterval(blinkTimer.current);
     document.title = BASE_TITLE;
     restoreIcon();
+    setAppIconBadge(0); // signed out / left the page
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
