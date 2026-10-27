@@ -38,7 +38,9 @@ const STYLES = `
     background: #fdf0f3; color: #6B2C3E;
     display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden;
   }
-  .auth-badge img { width: 100%; height: 100%; display: block; }
+  .auth-badge img { width: 100%; height: 100%; display: block; object-fit: contain; }
+  /* The logo is white, so its badge is maroon. */
+  .auth-badge.logo { background: linear-gradient(135deg, #6B2C3E, #8B3A52); padding: 9px; }
   .auth-title { margin: 0; font-size: 1.4rem; font-weight: 800; color: #1f2937; letter-spacing: -0.01em; }
   .auth-subtitle { margin: 4px 0 0; font-size: 0.88rem; color: #6b7280; line-height: 1.45; }
   .auth-body { padding: 18px 30px 26px; }
@@ -147,8 +149,8 @@ export const AuthModal = ({ title, subtitle, icon, wide = false, onClose, closeL
           <i className="bi bi-x-lg"></i>
         </button>
         <div className="auth-head">
-          <div className="auth-badge" aria-hidden="true">
-            {icon ? <i className={`bi ${icon}`}></i> : <img src="/images/safeconnect-logo.svg" alt="" />}
+          <div className={`auth-badge${icon ? '' : ' logo'}`} aria-hidden="true">
+            {icon ? <i className={`bi ${icon}`}></i> : <img src="/images/safeconnect-logo-main.png" alt="" />}
           </div>
           <h2 className="auth-title" id={labelledBy}>{title}</h2>
           {subtitle && <p className="auth-subtitle">{subtitle}</p>}

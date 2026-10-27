@@ -95,18 +95,14 @@ const AdminSidebar = ({
           style={{
             width: "42px",
             height: "42px",
-            borderRadius: "50%",
-            overflow: "hidden",
-            flexShrink: 0,
-
-            background: "#fff",
-            boxShadow: "0 2px 8px rgba(0,0,0,.25)"
+            flexShrink: 0
+            // The logo is white: no circle behind it on the dark sidebar.
           }}
         >
           <img
-            src="/images/safeconnect-logo.svg"
+            src="/images/safeconnect-logo-main.png"
             alt="Safe Connect logo"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />
         </div>
 

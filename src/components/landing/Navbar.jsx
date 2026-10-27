@@ -144,16 +144,16 @@ function Navbar() {
           background-color: rgba(255, 255, 255, 0.1);
         }
         
+        /* The logo is white: it sits straight on the maroon bar (no circle). */
         .navbar-custom .brand-icon {
           width: 42px;
           height: 42px;
-          background-color: white;
-          border-radius: 50%;
+          background: none;
+          border-radius: 0;
+          box-shadow: none;
           display: flex;
           align-items: center;
           justify-content: center;
-          overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
           flex-shrink: 0;
         }
         
@@ -174,7 +174,7 @@ function Navbar() {
         .navbar-custom .brand-icon img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
         }
         
         /* Desktop Navigation */
@@ -363,7 +363,7 @@ function Navbar() {
           <div className="navbar-container">
             <button className="navbar-brand" onClick={handleHomeClick}>
               <div className="brand-icon">
-                <img src="/images/safeconnect-logo.svg" alt="Safe Connect logo" />
+                <img src="/images/safeconnect-logo-main.png" alt="Safe Connect logo" />
               </div>
               <span>Safe Connect</span>
             </button>

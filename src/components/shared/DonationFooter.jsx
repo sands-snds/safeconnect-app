@@ -26,16 +26,13 @@ const FooterLogo = ({ size }) => (
     style={{
       width: `${size}px`,
       height: `${size}px`,
-      background: "#fff",
-      borderRadius: "50%",
-      overflow: "hidden",
-      flexShrink: 0,
+      flexShrink: 0, // the logo is white: no circle behind it on the dark footer
     }}
   >
     <img
-      src="/images/safeconnect-logo.svg"
+      src="/images/safeconnect-logo-main.png"
       alt="Safe Connect logo"
-      style={{ width: "100%", height: "100%", display: "block" }}
+      style={{ width: "100%", height: "100%", display: "block", objectFit: "contain" }}
     />
   </div>
 );
