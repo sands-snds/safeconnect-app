@@ -14,6 +14,7 @@ import { clearAuthToken, logoutUser } from "../../Services/api";
 import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
 import useLiveUpdates from "../shared/useLiveUpdates";
 import useTabNotifications from "../shared/useTabNotifications";
+import { MAIN_LOGO } from "../shared/logos";
 import "./navbar/NavbarStyle.css";
 
 // Fallback refresh while the tab is visible (live updates usually arrive
@@ -411,7 +412,7 @@ function ResidentNavbar() {
             {/* Brand */}
             <button className="navbar-brand" onClick={handleHomeClick}>
               <div className="brand-icon">
-                <img src="/images/safeconnect-logo-main.png" alt="Safe Connect logo" />
+                <img src={MAIN_LOGO} alt="Safe Connect logo" />
               </div>
               <span>Safe Connect</span>
             </button>

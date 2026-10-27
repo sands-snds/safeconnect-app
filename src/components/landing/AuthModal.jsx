@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { MAIN_LOGO } from '../shared/logos';
 
 // Shared look for the home page's account windows (Sign In, Sign Up, email
 // verification, Forgot Password, Save Login Info) in Hero.jsx: a white card
@@ -150,7 +151,7 @@ export const AuthModal = ({ title, subtitle, icon, wide = false, onClose, closeL
         </button>
         <div className="auth-head">
           <div className={`auth-badge${icon ? '' : ' logo'}`} aria-hidden="true">
-            {icon ? <i className={`bi ${icon}`}></i> : <img src="/images/safeconnect-logo-main.png" alt="" />}
+            {icon ? <i className={`bi ${icon}`}></i> : <img src={MAIN_LOGO} alt="" />}
           </div>
           <h2 className="auth-title" id={labelledBy}>{title}</h2>
           {subtitle && <p className="auth-subtitle">{subtitle}</p>}

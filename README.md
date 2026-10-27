@@ -295,3 +295,12 @@ The backend checks the role **against the database on every admin request**, not
 - **`backend/.env.example` doesn't list the `SMTP_*` variables.**
 - **`backend/.env` is committed to git** even though `.gitignore` lists it. It holds real passwords, and each teammate's local database password overwrites the others' when they pull. Stop tracking it with `git rm --cached backend/.env`, and change the passwords that are already in the history.
 - **Report photos and videos are stored as base64 text** in the report tables (`photo_url`, `LONGTEXT`). This works, but makes those rows large, and the admin report lists download every report's media on each refresh.
+
+## Logos
+
+The logo files are in `public/images/logos/`. To change one, replace the file there with a new PNG, keeping the same name, then commit and push:
+
+- `Safe Connect Logo 2.png`: the logo on every page (navbars, admin sidebar, footer, Sign In / Sign Up). It sits on maroon and dark backgrounds, so a white or light logo works best.
+- `Safe Connect Logo.png`: the browser-tab icon.
+
+After replacing `Safe Connect Logo.png`, also run `powershell -ExecutionPolicy Bypass -File scripts\update-app-icons.ps1` to rebuild the installed-app, iPhone and link-preview icons and the PDF report logo (the PDF logo needs the backend redeployed).

@@ -1,4 +1,5 @@
 import React from "react";
+import { MAIN_LOGO } from "../../shared/logos";
 
 const AdminSidebar = ({
   activeView,
@@ -100,7 +101,7 @@ const AdminSidebar = ({
           }}
         >
           <img
-            src="/images/safeconnect-logo-main.png"
+            src={MAIN_LOGO}
             alt="Safe Connect logo"
             style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />

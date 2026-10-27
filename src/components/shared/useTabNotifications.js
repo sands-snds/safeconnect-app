@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { TAB_ICON } from './logos';
 
 // Shows the unread notification count in the browser tab -- "(3) Safe
 // Connect | ..." in the title and a red number on the tab icon -- and plays
@@ -110,7 +111,7 @@ export default function useTabNotifications(count, { sound = true } = {}) {
     }
     let cancelled = false;
     if (n > 0) {
-      const base = (originalIcons.current.find(([l]) => /48/.test(l.getAttribute('sizes') || '')) || originalIcons.current[0] || [])[1] || '/favicon-48.png';
+      const base = (originalIcons.current[0] || [])[1] || TAB_ICON;
       drawBadgedIcon(base, label).then((url) => {
         if (!cancelled && url) originalIcons.current.forEach(([link]) => link.setAttribute('href', url));
       });

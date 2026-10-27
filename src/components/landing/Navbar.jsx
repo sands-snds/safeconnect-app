@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import LanguageToggle from '../shared/LanguageToggle';
+import { MAIN_LOGO } from '../shared/logos';
 // Removed: useNavigate
 
 function Navbar() {
@@ -363,7 +364,7 @@ function Navbar() {
           <div className="navbar-container">
             <button className="navbar-brand" onClick={handleHomeClick}>
               <div className="brand-icon">
-                <img src="/images/safeconnect-logo-main.png" alt="Safe Connect logo" />
+                <img src={MAIN_LOGO} alt="Safe Connect logo" />
               </div>
               <span>Safe Connect</span>
             </button>
