@@ -727,3 +727,24 @@ section {
     padding: 0;
   }
 }
+/* Carousel indicators as circles (home + resident heroes). Bootstrap's own
+   ".carousel-indicators [data-bs-target]" rule drew them as bars and won
+   over ".carousel-indicators button". */
+.carousel-indicators [data-bs-target] {
+  box-sizing: content-box;
+  width: 10px;
+  height: 10px;
+  margin: 0 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: #fff;
+  background-clip: border-box;
+  opacity: 0.55;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.carousel-indicators [data-bs-target].active {
+  opacity: 1;
+  transform: scale(1.25);
+}

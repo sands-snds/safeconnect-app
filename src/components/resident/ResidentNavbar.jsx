@@ -13,6 +13,7 @@ import useClickOutside from "./navbar/hooks/useClickOutside";
 import { clearAuthToken, logoutUser } from "../../Services/api";
 import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
 import useLiveUpdates from "../shared/useLiveUpdates";
+import useTabNotifications from "../shared/useTabNotifications";
 import "./navbar/NavbarStyle.css";
 
 // Fallback refresh while the tab is visible (live updates usually arrive
@@ -231,6 +232,9 @@ function ResidentNavbar() {
       focusRefresh.current();
     }
   });
+
+  // Unread count in the browser tab (title + icon), chime for new ones.
+  useTabNotifications(totalBadgeCount);
 
   // "Mark all read" also clears today's rain advisory, so the bell's count
   // always drops to zero.

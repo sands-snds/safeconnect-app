@@ -174,7 +174,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
     <section className="emergency-report-section">
       <style>{`
         /* Padding is on .ir-outer: styles/App.css zeroes every <section>'s padding. */
-        .ir-outer { position: relative; padding: 96px 0 88px; background: linear-gradient(180deg, #ffffff 0%, #fbf7f8 100%); overflow: hidden; }
+        .ir-outer { position: relative; padding: 96px 0 140px; background: linear-gradient(180deg, #ffffff 0%, #fbf7f8 100%); overflow: hidden; }
         .ir-blob { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0; }
         .ir-blob-1 { width: 340px; height: 340px; background: #dc2626; opacity: 0.08; top: -120px; left: -100px; }
         .ir-blob-2 { width: 300px; height: 300px; background: #6B2C3E; opacity: 0.1; bottom: -120px; right: -90px; }
@@ -205,7 +205,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
           .ir-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 600px) {
-          .ir-outer { padding: 72px 0 64px; }
+          .ir-outer { padding: 72px 0 104px; }
           .ir-intro { margin-bottom: 32px; }
           .ir-cards { grid-template-columns: 1fr; gap: 18px; }
           .ir-danger { align-items: flex-start; text-align: left; }

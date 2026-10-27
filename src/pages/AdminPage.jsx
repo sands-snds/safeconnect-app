@@ -19,6 +19,7 @@ import FormModal from '../components/admin/AdminModals/FormModal';
 import SignInModal from '../components/admin/AdminModals/SignInModal';
 import { refreshSyncedState, useSyncOnFocus } from '../components/shared/useSyncedState';
 import useLiveUpdates from '../components/shared/useLiveUpdates';
+import useTabNotifications from '../components/shared/useTabNotifications';
 
 const AdminPage = () => {
   const {
@@ -203,6 +204,9 @@ useEffect(() => {
     state: refreshSyncedState,
     reconnected: () => { refreshAllData(); refreshSyncedState(); loadNotifications(); }
   });
+
+  // Unread count in the browser tab (title + icon), chime for new ones.
+  useTabNotifications(isAuthenticated ? unreadCount : 0);
 
   if (!authChecked) {
     return (

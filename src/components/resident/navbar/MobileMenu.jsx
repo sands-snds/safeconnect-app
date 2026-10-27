@@ -100,36 +100,6 @@ export default function MobileMenu({
 
                 </button>
 
-                <button
-                    className="mobile-nav-item"
-                    onClick={() => {
-
-                        setShowMobileMenu(false);
-
-                        setShowNotifications(true);
-
-                    }}
-                >
-
-                    <i className="bi bi-bell-fill"></i>
-
-                    <span>
-                        {t('residentNav.notifications')}
-                    </span>
-
-                    {totalBadgeCount > 0 && (
-
-                        <span className="notification-badge">
-
-                            {totalBadgeCount > 9
-                                ? "9+"
-                                : totalBadgeCount}
-
-                        </span>
-
-                    )}
-
-                </button>
 
                 <button
                     className={`mobile-nav-item ${activeView === 'reports' ? 'active' : ''}`}

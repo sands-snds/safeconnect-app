@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   fetchMyReports,
@@ -22,6 +22,24 @@ const STATUS_LABEL_KEYS = {
 const statusLabel = (status, t) => (STATUS_LABEL_KEYS[status] ? t(`myReports.status.${STATUS_LABEL_KEYS[status]}`) : status);
 
 const STAGE_KEYS = ['received', 'inProgress', 'resolved'];
+
+// Status filter choices (Pending counts as Received, Completed as Resolved).
+const STATUS_FILTERS = ['Received', 'In Progress', 'Resolved'];
+
+const PAGE_SIZE = 5;
+
+// Page numbers with gaps, e.g. 1 … 4 5 6 … 12.
+const pageItems = (page, count) => {
+  if (count <= 7) return Array.from({ length: count }, (_, i) => i + 1);
+  const items = [1];
+  const from = Math.max(2, page - 1);
+  const to = Math.min(count - 1, page + 1);
+  if (from > 2) items.push('gap-start');
+  for (let p = from; p <= to; p += 1) items.push(p);
+  if (to < count - 1) items.push('gap-end');
+  items.push(count);
+  return items;
+};
 
 // Per-type accent color/icon so the three report kinds are easy to tell
 // apart at a glance across the overview bar, tabs, and cards.
@@ -101,6 +119,9 @@ function MyReportsPage({ isOpen, onClose, userId }) {
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const listTopRef = useRef(null);
   const [copiedKey, setCopiedKey] = useState('');
   const [expandedKeys, setExpandedKeys] = useState({});
   const [editingReport, setEditingReport] = useState(null);
@@ -169,6 +190,11 @@ function MyReportsPage({ isOpen, onClose, userId }) {
   const filteredReports = useMemo(() => {
     let list = activeFilter === 'All' ? reports : reports.filter((r) => r.type === activeFilter);
 
+    if (statusFilter !== 'all') {
+      const stage = getStageIndex(statusFilter);
+      list = list.filter((r) => getStageIndex(r.status) === stage);
+    }
+
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       list = list.filter((r) =>
@@ -184,7 +210,18 @@ function MyReportsPage({ isOpen, onClose, userId }) {
       const db = new Date(b.date).getTime() || 0;
       return sortOrder === 'oldest' ? da - db : db - da;
     });
-  }, [reports, activeFilter, searchQuery, sortOrder]);
+  }, [reports, activeFilter, statusFilter, searchQuery, sortOrder]);
+
+  // Pages of PAGE_SIZE; back to page 1 whenever the filters change.
+  const pageCount = Math.max(1, Math.ceil(filteredReports.length / PAGE_SIZE));
+  useEffect(() => { setPage(1); }, [activeFilter, statusFilter, searchQuery, sortOrder]);
+  useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
+  const pagedReports = filteredReports.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const goToPage = (p) => {
+    setPage(p);
+    if (listTopRef.current) listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const copyReference = async (key, reference) => {
     try {
@@ -237,7 +274,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
     }
   };
 
-  const isSearchOrFilterActive = activeFilter !== 'All' || searchQuery.trim().length > 0;
+  const isSearchOrFilterActive = activeFilter !== 'All' || statusFilter !== 'all' || searchQuery.trim().length > 0;
 
   return (
     <div className={`myreports-fullscreen ${isOpen ? 'show' : ''}`}>
@@ -400,15 +437,41 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
         .mr-search input:focus { border-color: #6B2C3E; }
 
+        /* Sort / status dropdowns: their own chevron, well away from the edge. */
         .mr-sort {
-          padding: 0.6rem 0.9rem;
+          -webkit-appearance: none;
+          appearance: none;
+          padding: 0.6rem 2.4rem 0.6rem 0.9rem;
           border-radius: 10px;
           border: 1px solid #e5d9dc;
           font-size: 0.85rem;
-          background: white;
+          background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%236B2C3E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3 6l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 0.9rem center / 12px;
           color: #374151;
           cursor: pointer;
           outline: none;
+        }
+
+        .mr-sort:focus { border-color: #6B2C3E; }
+
+        @media (max-width: 576px) {
+          .mr-search { flex-basis: 100%; min-width: 0; }
+          .mr-sort { flex: 1; min-width: 0; }
+        }
+
+        /* Pagination */
+        .mr-pagination { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+        .mr-page-range { font-size: 0.82rem; color: #4b5563; }
+        .mr-pages { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .mr-page-btn { min-width: 38px; height: 38px; padding: 0 10px; border-radius: 10px; border: 1px solid #e5d9dc; background: #fff; color: #374151; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+        .mr-page-btn:hover:not(:disabled) { border-color: #6B2C3E; color: #6B2C3E; }
+        .mr-page-btn.active { background: #6B2C3E; border-color: #6B2C3E; color: #fff; }
+        .mr-page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .mr-page-btn:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; }
+        .mr-page-gap { padding: 0 4px; color: #9ca3af; }
+        @media (max-width: 576px) {
+          .mr-pagination { justify-content: center; }
+          .mr-page-range { width: 100%; text-align: center; }
+          .mr-page-btn .mr-page-word { display: none; }
         }
 
         .mr-refresh-btn {
@@ -850,7 +913,13 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <select className="mr-sort" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+                <select className="mr-sort" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label={t('myReports.statusFilterLabel')}>
+                  <option value="all">{t('myReports.allStatuses')}</option>
+                  {STATUS_FILTERS.map((st) => (
+                    <option key={st} value={st}>{statusLabel(st, t)}</option>
+                  ))}
+                </select>
+                <select className="mr-sort" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} aria-label={t('myReports.sortLabel')}>
                   <option value="newest">{t('myReports.newestFirst')}</option>
                   <option value="oldest">{t('myReports.oldestFirst')}</option>
                 </select>
@@ -899,14 +968,16 @@ function MyReportsPage({ isOpen, onClose, userId }) {
               <p className="myreports-empty-title">
                 {searchQuery.trim()
                   ? t('myReports.noSearchMatch')
+                  : statusFilter !== 'all'
+                    ? t('myReports.noFilterMatch')
                   : activeFilter === 'All'
                     ? t('myReports.emptyAll')
                     : t('myReports.emptyFiltered', { type: typeLabel(activeFilter, t) })}
               </p>
-              {(searchQuery.trim() || activeFilter !== 'All') && (
+              {(searchQuery.trim() || activeFilter !== 'All' || statusFilter !== 'all') && (
                 <button
                   className="myreports-clear-search"
-                  onClick={() => { setSearchQuery(''); setActiveFilter('All'); }}
+                  onClick={() => { setSearchQuery(''); setActiveFilter('All'); setStatusFilter('all'); }}
                 >
                   {t('myReports.clearFilters')}
                 </button>
@@ -914,9 +985,10 @@ function MyReportsPage({ isOpen, onClose, userId }) {
             </div>
           )}
 
+          <div ref={listTopRef} style={{ scrollMarginTop: '1rem' }} />
           {!loading && !error && filteredReports.length > 0 && (
             <div className="mr-list">
-              {filteredReports.map((r) => {
+              {pagedReports.map((r) => {
                 const key = `${r.type}-${r.id}`;
                 const statusStyle = getStatusStyle(r.status);
                 const theme = getTypeTheme(r.type);
@@ -1101,6 +1173,39 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                 );
               })}
             </div>
+          )}
+
+          {!loading && !error && filteredReports.length > PAGE_SIZE && (
+            <nav className="mr-pagination" aria-label={t('myReports.paginationLabel')}>
+              <span className="mr-page-range">
+                {t('myReports.pageRange', {
+                  from: (page - 1) * PAGE_SIZE + 1,
+                  to: Math.min(page * PAGE_SIZE, filteredReports.length),
+                  total: filteredReports.length
+                })}
+              </span>
+              <div className="mr-pages">
+                <button type="button" className="mr-page-btn" onClick={() => goToPage(page - 1)} disabled={page === 1} aria-label={t('myReports.prevPage')}>
+                  <i className="bi bi-chevron-left" aria-hidden="true" /> <span className="mr-page-word">{t('myReports.prevPage')}</span>
+                </button>
+                {pageItems(page, pageCount).map((p) => (typeof p === 'number' ? (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`mr-page-btn ${p === page ? 'active' : ''}`}
+                    aria-current={p === page ? 'page' : undefined}
+                    onClick={() => goToPage(p)}
+                  >
+                    {p}
+                  </button>
+                ) : (
+                  <span key={p} className="mr-page-gap" aria-hidden="true">…</span>
+                )))}
+                <button type="button" className="mr-page-btn" onClick={() => goToPage(page + 1)} disabled={page === pageCount} aria-label={t('myReports.nextPage')}>
+                  <span className="mr-page-word">{t('myReports.nextPage')}</span> <i className="bi bi-chevron-right" aria-hidden="true" />
+                </button>
+              </div>
+            </nav>
           )}
 
         </div>
