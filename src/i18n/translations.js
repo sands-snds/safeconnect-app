@@ -526,9 +526,9 @@ export const translations = {
           cta: 'Request assistance'
         },
         pettyCrime: {
-          title: 'Report a Crime',
+          title: 'Report a Petty Crime',
           description: 'Report theft, vandalism, harassment, or suspicious activity. You can choose to stay anonymous.',
-          cta: 'Report a crime'
+          cta: 'Report a petty crime'
         }
       },
       dangerNote: 'In immediate danger? Call 911 or tap the red phone button for emergency hotlines.'
@@ -1391,9 +1391,9 @@ export const translations = {
           cta: 'Humingi ng tulong'
         },
         pettyCrime: {
-          title: 'Mag-report ng Krimen',
+          title: 'Mag-report ng Maliit na Krimen',
           description: 'I-report ang pagnanakaw, bandalismo, panliligalig, o kahina-hinalang gawain. Maaari kang manatiling anonymous.',
-          cta: 'Mag-report ng krimen'
+          cta: 'Mag-report ng maliit na krimen'
         }
       },
       dangerNote: 'Nasa agarang panganib? Tumawag sa 911 o pindutin ang pulang phone button para sa mga emergency hotline.'
