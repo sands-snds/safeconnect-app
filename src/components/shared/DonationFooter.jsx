@@ -2,7 +2,7 @@ import React from "react";
 import { useLanguage } from "../../i18n/LanguageContext";
 import useSiteContent from "./useSiteContent";
 import { formatMobile, hasChoices } from "./EmergencyContactList";
-import { MAIN_LOGO } from "./logos";
+import { MAIN_LOGO, FOOTER_LOGO } from "./logos";
 
 // "+63464165393" -> "+63 46 416 5393", "+639929474309" -> "+63 992 947 4309".
 // Anything else (e.g. "911") is shown as-is.
@@ -31,7 +31,9 @@ const FooterLogo = ({ size }) => (
     }}
   >
     <img
-      src={MAIN_LOGO}
+      src={FOOTER_LOGO}
+      // Until "Safe Connect Logo 3.png" is in public/images/logos/.
+      onError={(e) => { if (!e.currentTarget.src.endsWith(MAIN_LOGO)) e.currentTarget.src = MAIN_LOGO; }}
       alt="Safe Connect logo"
       style={{ width: "100%", height: "100%", display: "block", objectFit: "contain" }}
     />

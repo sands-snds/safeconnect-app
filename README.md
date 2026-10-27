@@ -300,7 +300,8 @@ The backend checks the role **against the database on every admin request**, not
 
 The logo files are in `public/images/logos/`. To change one, replace the file there with a new PNG, keeping the same name, then commit and push:
 
-- `Safe Connect Logo 2.png`: the logo on every page (navbars, admin sidebar, footer, Sign In / Sign Up). It sits on maroon and dark backgrounds, so a white or light logo works best.
+- `Safe Connect Logo 2.png`: the logo on the pages (navbars, admin sidebar, Sign In / Sign Up). It sits on maroon and dark backgrounds, so a white or light logo works best.
+- `Safe Connect Logo 3.png`: the footer logo. Until this file exists, the footer shows `Safe Connect Logo 2.png`.
 - `Safe Connect Logo.png`: the browser-tab icon.
 
 After replacing `Safe Connect Logo.png`, also run `powershell -ExecutionPolicy Bypass -File scripts\update-app-icons.ps1` to rebuild the installed-app, iPhone and link-preview icons and the PDF report logo (the PDF logo needs the backend redeployed).

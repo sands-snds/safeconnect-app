@@ -41,7 +41,7 @@ test('chimes only for new notifications, not for ones already there on open', ()
   const { rerender } = renderHook(({ n }) => useTabNotifications(n), { initialProps: { n: 0 } });
   rerender({ n: 4 }); // loaded right after opening
   expect(tones).toBe(0);
-  jest.advanceTimersByTime(5000);
+  jest.advanceTimersByTime(7000);
   rerender({ n: 5 }); // a new one arrives
   expect(tones).toBe(2); // two-tone chime
   rerender({ n: 3 }); // read some: no sound
@@ -51,8 +51,39 @@ test('chimes only for new notifications, not for ones already there on open', ()
 test('no sound when turned off', () => {
   const useTabNotifications = load();
   const { rerender } = renderHook(({ n }) => useTabNotifications(n, { sound: false }), { initialProps: { n: 0 } });
-  jest.advanceTimersByTime(5000);
+  jest.advanceTimersByTime(7000);
   rerender({ n: 1 });
   expect(tones).toBe(0);
   expect(document.title).toBe('(1) Safe Connect | Barangay Sta. Fe');
+});
+
+test('a new notification makes the tab blink until the bell is opened', () => {
+  const useTabNotifications = load();
+  const { markNotificationsViewed } = useTabNotificationsModule;
+  const { rerender } = renderHook(({ n }) => useTabNotifications(n, { sound: false }), { initialProps: { n: 1 } });
+  jest.advanceTimersByTime(7000);
+  rerender({ n: 2 });
+  jest.advanceTimersByTime(1000);
+  expect(document.title).toBe('🔔 New notification | Safe Connect | Barangay Sta. Fe');
+  jest.advanceTimersByTime(1000);
+  expect(document.title).toBe('(2) Safe Connect | Barangay Sta. Fe');
+  jest.advanceTimersByTime(1000);
+  expect(document.title.startsWith('🔔')).toBe(true);
+  markNotificationsViewed(); // the bell opened
+  expect(document.title).toBe('(2) Safe Connect | Barangay Sta. Fe');
+  jest.advanceTimersByTime(3000);
+  expect(document.title).toBe('(2) Safe Connect | Barangay Sta. Fe');
+});
+
+test('reading notifications stops the blinking too', () => {
+  const useTabNotifications = load();
+  const { rerender } = renderHook(({ n }) => useTabNotifications(n, { sound: false }), { initialProps: { n: 0 } });
+  jest.advanceTimersByTime(7000);
+  rerender({ n: 1 });
+  jest.advanceTimersByTime(1000);
+  expect(document.title.startsWith('🔔')).toBe(true);
+  rerender({ n: 0 });
+  expect(document.title).toBe('Safe Connect | Barangay Sta. Fe');
+  jest.advanceTimersByTime(3000);
+  expect(document.title).toBe('Safe Connect | Barangay Sta. Fe');
 });

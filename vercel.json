@@ -1,5 +1,7 @@
 {
   "headers": [
+    { "source": "/images/logos/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+    { "source": "/(icon-192|icon-512|apple-touch-icon).png", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
     { "source": "/admin(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     { "source": "/resident(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     { "source": "/(.*)", "headers": [{ "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }] }

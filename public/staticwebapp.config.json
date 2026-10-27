@@ -1,6 +1,22 @@
 {
   "routes": [
     {
+      "route": "/images/logos/*",
+      "headers": { "Cache-Control": "no-cache" }
+    },
+    {
+      "route": "/icon-192.png",
+      "headers": { "Cache-Control": "no-cache" }
+    },
+    {
+      "route": "/icon-512.png",
+      "headers": { "Cache-Control": "no-cache" }
+    },
+    {
+      "route": "/apple-touch-icon.png",
+      "headers": { "Cache-Control": "no-cache" }
+    },
+    {
       "route": "/admin*",
       "headers": { "X-Robots-Tag": "noindex, nofollow" }
     },

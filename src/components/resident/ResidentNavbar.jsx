@@ -13,7 +13,8 @@ import useClickOutside from "./navbar/hooks/useClickOutside";
 import { clearAuthToken, logoutUser } from "../../Services/api";
 import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
 import useLiveUpdates from "../shared/useLiveUpdates";
-import useTabNotifications from "../shared/useTabNotifications";
+import useTabNotifications, { markNotificationsViewed } from "../shared/useTabNotifications";
+import { useLanguage } from "../../i18n/LanguageContext";
 import { MAIN_LOGO } from "../shared/logos";
 import "./navbar/NavbarStyle.css";
 
@@ -235,7 +236,8 @@ function ResidentNavbar() {
   });
 
   // Unread count in the browser tab (title + icon), chime for new ones.
-  useTabNotifications(totalBadgeCount);
+  const { t } = useLanguage();
+  useTabNotifications(totalBadgeCount, { blinkText: t('notificationPanel.tabNew'), alertCount: unreadCount });
 
   // "Mark all read" also clears today's rain advisory, so the bell's count
   // always drops to zero.
@@ -267,6 +269,7 @@ function ResidentNavbar() {
     setShowNotifications(!showNotifications);
     setShowDropdown(false);
     if (!showNotifications) {
+      markNotificationsViewed(); // stops the tab blinking
       reloadAnnouncements();
       reloadPersonalNotifications();
     }

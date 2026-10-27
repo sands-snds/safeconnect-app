@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { markNotificationsViewed } from "../../shared/useTabNotifications";
 import { timeAgo } from "../shared/timeUtils";
 import useIsMobile from "../hooks/useIsMobile";
 import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
@@ -212,6 +213,7 @@ const userMenuRef = useRef(null);
                 <div ref={notificationsRef} style={{ position: "relative" }}>
                     <button
                         onClick={() => {
+                            if (!showNotifications) markNotificationsViewed(); // stops the tab blinking
                             setShowNotifications(!showNotifications);
                             setShowUserMenu(false);
                         }}

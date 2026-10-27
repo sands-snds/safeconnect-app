@@ -433,6 +433,7 @@ export const translations = {
       logout: 'Logout'
     },
     notificationPanel: {
+      tabNew: 'New notification',
       title: 'Notifications',
       markAllRead: 'Mark all read',
       all: 'All',
@@ -1297,6 +1298,7 @@ export const translations = {
       logout: 'Mag-logout'
     },
     notificationPanel: {
+      tabNew: 'Bagong notification',
       title: 'Abiso',
       markAllRead: 'Nabasa na lahat',
       all: 'Lahat',

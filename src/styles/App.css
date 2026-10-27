@@ -727,24 +727,30 @@ section {
     padding: 0;
   }
 }
-/* Carousel indicators as circles (home + resident heroes). Bootstrap's own
-   ".carousel-indicators [data-bs-target]" rule drew them as bars and won
-   over ".carousel-indicators button". */
+/* Carousel indicators as short lines (home + resident heroes). Bootstrap's
+   own ".carousel-indicators [data-bs-target]" rule needs this exact selector
+   to be overridden. */
 .carousel-indicators [data-bs-target] {
   box-sizing: content-box;
-  width: 10px;
-  height: 10px;
-  margin: 0 6px;
+  width: 28px;
+  height: 4px;
+  margin: 0 4px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 2px;
   background-color: #fff;
   background-clip: border-box;
-  opacity: 0.55;
-  transition: opacity 0.3s, transform 0.3s;
+  opacity: 0.5;
+  transition: opacity 0.3s, width 0.3s;
 }
 
 .carousel-indicators [data-bs-target].active {
+  width: 40px;
   opacity: 1;
-  transform: scale(1.25);
+  transform: none; /* the older circle rule scaled the active one */
+}
+
+@media (max-width: 576px) {
+  .carousel-indicators [data-bs-target] { width: 20px; height: 3px; }
+  .carousel-indicators [data-bs-target].active { width: 30px; }
 }
