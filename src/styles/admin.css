@@ -464,14 +464,49 @@
   text-align: center;
 }
 
+/* Icon beside the "Total Reports" label, the number below. */
+.dash-stats-total-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .dash-stats-total-icon {
-  font-size: 26px;
+  font-size: 20px;
   opacity: .85;
 }
 
 .dash-stats-total-label {
   font-size: 15px;
   font-weight: 600;
+}
+
+/* Phones (compact): no counters, so Create + Total Reports fill the width. */
+.dash-stats.is-compact {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "side";
+}
+
+.dash-stats.is-compact .dash-stats-total {
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.dash-stats.is-compact .dash-stats-total-value {
+  font-size: 34px;
+}
+
+.dash-stats.is-compact .dash-stats-create .bi {
+  display: inline-block;
+}
+
+.dash-stats.is-compact .dash-stats-total-label {
+  font-size: 15px;
+}
+
+.dash-stats.is-compact .dash-stats-total-icon {
+  font-size: 20px;
 }
 
 .dash-stats-total-value {
@@ -555,6 +590,24 @@
   .dash-stats-create .bi {
     display: none;
   }
+
+  /* Keep "Total Reports" on one line beside its icon in the narrow column. */
+  .dash-stats-total {
+    padding: 16px 10px;
+  }
+
+  .dash-stats-total-head {
+    gap: 6px;
+  }
+
+  .dash-stats-total-icon {
+    font-size: 16px;
+  }
+
+  .dash-stats-total-label {
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
 }
 
 /* Narrow (phones): one column. Create, then a short Total Reports bar,
@@ -576,7 +629,7 @@
     text-align: left;
   }
 
-  .dash-stats-total-label {
+  .dash-stats-total-head {
     flex: 1;
   }
 

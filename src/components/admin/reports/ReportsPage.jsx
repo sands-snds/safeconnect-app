@@ -17,9 +17,7 @@ const ReportsPage = ({
     onUpdateStatus,
     onArchive,
     onRefresh,
-    isSuperAdmin,
-
-    getSeverityColor
+    isSuperAdmin
 }) => {
     // Archived reports are still loaded (the dashboard counts them) but
     // only listed here when the "Archived" tab is selected.
@@ -98,7 +96,6 @@ const ReportsPage = ({
                         setFilters={setFilters}
                         onUpdateStatus={onUpdateStatus}
                         onArchive={onArchive}
-                        getSeverityColor={getSeverityColor}
                     />
                 </>
             );

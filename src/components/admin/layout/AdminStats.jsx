@@ -3,7 +3,8 @@ import React from 'react';
 // Dashboard counters (dash-stat* classes in styles/admin.css). Report counts
 // are filled pink cards on top, the other totals outlined cards below, and
 // Create Announcement + the big Total Reports card in a column on the right.
-// Tablets put the outlined cards in a 2x2 grid; phones stack everything.
+// Tablets put the outlined cards in a 2x2 grid. Phones (compact) show only
+// Create Announcement and Total Reports.
 
 const StatCard = ({ label, value, icon, variant, onClick }) => (
   <button type="button" className={`dash-stat dash-stat-${variant}`} onClick={onClick}>
@@ -25,7 +26,8 @@ const AdminStats = ({
   pettyCrimeReports = [],
   onStatCardClick = () => {},
   onCreateAnnouncement,
-  isSuperAdmin = false
+  isSuperAdmin = false,
+  compact = false
 }) => {
   const reports = [
     { label: 'Emergency Reports', value: emergencyReports.length, icon: 'bi-exclamation-triangle-fill', view: 'emergency-reports' },
@@ -44,12 +46,14 @@ const AdminStats = ({
   const totalReports = emergencyReports.length + assistanceRequests.length + pettyCrimeReports.length;
 
   return (
-    <div className="dash-stats">
-      <div className="dash-stats-reports">
-        {reports.map((c) => (
-          <StatCard key={c.view} {...c} variant="filled" onClick={() => onStatCardClick(c.view)} />
-        ))}
-      </div>
+    <div className={`dash-stats${compact ? ' is-compact' : ''}`}>
+      {!compact && (
+        <div className="dash-stats-reports">
+          {reports.map((c) => (
+            <StatCard key={c.view} {...c} variant="filled" onClick={() => onStatCardClick(c.view)} />
+          ))}
+        </div>
+      )}
 
       <div className="dash-stats-side">
         {onCreateAnnouncement && (
@@ -58,17 +62,21 @@ const AdminStats = ({
           </button>
         )}
         <div className="dash-stats-total">
-          <i className="bi bi-clipboard-data-fill dash-stats-total-icon" aria-hidden="true" />
-          <span className="dash-stats-total-label">Total Reports</span>
+          <span className="dash-stats-total-head">
+            <i className="bi bi-clipboard-data-fill dash-stats-total-icon" aria-hidden="true" />
+            <span className="dash-stats-total-label">Total Reports</span>
+          </span>
           <span className="dash-stats-total-value">{totalReports}</span>
         </div>
       </div>
 
-      <div className={`dash-stats-others${others.length === 1 ? ' is-single' : ''}`}>
-        {others.map((c) => (
-          <StatCard key={c.view} {...c} variant="outline" onClick={() => onStatCardClick(c.view)} />
-        ))}
-      </div>
+      {!compact && (
+        <div className={`dash-stats-others${others.length === 1 ? ' is-single' : ''}`}>
+          {others.map((c) => (
+            <StatCard key={c.view} {...c} variant="outline" onClick={() => onStatCardClick(c.view)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

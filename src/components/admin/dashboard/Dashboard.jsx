@@ -6,8 +6,9 @@ import ReportsOverTimeChart from "./ReportsOverTimeChart";
 import DashboardRecentReports from "./DashboardRecentReports";
 import useIsMobile from "../hooks/useIsMobile";
 
-// Phones: the summary card (with its counters), then a toggle between Recent
-// Reports (the default) and Analytics (the charts), instead of one very long page.
+// Phones: the summary card (Create Announcement and Total Reports only, no
+// counters), then a toggle between Recent Reports (the default) and Analytics
+// (the charts), instead of one very long page.
 const MOBILE_TABS = [
     { key: "recent", label: "Recent Reports" },
     { key: "analytics", label: "Analytics" }
@@ -57,6 +58,7 @@ export default function Dashboard({
             onStatCardClick={onStatCardClick}
             onCreateAnnouncement={onCreateAnnouncement}
             isSuperAdmin={isSuperAdmin}
+            compact={isMobile}
         />
     );
 

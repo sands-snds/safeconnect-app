@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/admin.css';
-import { getSeverityColor } from "../components/admin/shared/chartUtils";
 
 import Dashboard from '../components/admin/dashboard/Dashboard';
 import AdminLayout from "../components/admin/layout/AdminLayout";
@@ -285,7 +284,6 @@ useEffect(() => {
             pettyCrimeReports={pettyCrimeReports}
             onShowSignInModal={() => setShowSignInModal(true)}
             onStatCardClick={handleStatCardClick}
-            getSeverityColor={getSeverityColor}
             onNavigate={handleNavigation}
             onCreateAnnouncement={handleCreateAnnouncementShortcut}
             adminName={adminName}
@@ -311,8 +309,7 @@ useEffect(() => {
                   onRefresh={() => handleRefresh(activeView)}
                   isSuperAdmin={isSuperAdmin}
 
-                  getSeverityColor={getSeverityColor}
-              />
+                    />
           );
 
       case "create-announcement":
@@ -388,7 +385,6 @@ useEffect(() => {
             pettyCrimeReports={pettyCrimeReports}
             onShowSignInModal={() => setShowSignInModal(true)}
             onStatCardClick={handleStatCardClick}
-            getSeverityColor={getSeverityColor}
             onNavigate={handleNavigation}
             onCreateAnnouncement={handleCreateAnnouncementShortcut}
             adminName={adminName}

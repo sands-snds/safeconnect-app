@@ -43,11 +43,6 @@ const EmergencyReportDetails = ({ report }) => {
         />
 
         <DetailField
-          label="Severity"
-          value={report.severity}
-        />
-
-        <DetailField
           label="Location"
           value={report.location}
         />

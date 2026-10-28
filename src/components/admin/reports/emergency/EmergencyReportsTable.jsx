@@ -19,8 +19,7 @@ const EmergencyReportsTable = ({
   filters,
   setFilters,
   onUpdateStatus,
-  onArchive,
-  getSeverityColor
+  onArchive
 }) => {
   const [expandedRowId, setExpandedRowId] = useState(null);
 
@@ -33,7 +32,7 @@ const EmergencyReportsTable = ({
   const renderRow = (report) => (
     <ReportCard
       key={report.id}
-      accentColor={getSeverityColor(report.severity)}
+      accentColor="#dc2626"
       title={report.emergency}
       tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
