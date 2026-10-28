@@ -22,14 +22,10 @@ const PhoneLink = ({ number, children }) => (
   </a>
 );
 
-const FooterLogo = ({ size }) => (
-  <div
-    style={{
-      width: `${size}px`,
-      height: `${size}px`,
-      flexShrink: 0, // the logo is white: no circle behind it on the dark footer
-    }}
-  >
+// Sized by .footer-logo in styles/resident.css (64px, 88px from 992px).
+// The logo is white: no circle behind it on the dark footer.
+const FooterLogo = () => (
+  <div className="footer-logo">
     <img
       src={FOOTER_LOGO}
       // Until "Safe Connect Logo 3.png" is in public/images/logos/.
@@ -40,7 +36,7 @@ const FooterLogo = ({ size }) => (
   </div>
 );
 
-// Officials, hotlines and socials are edited by Admins under System > Site
+// Officials, hotlines and socials are edited by Admins under Content > Page
 // Contacts. The hotlines are the same list as the floating call button.
 export default function DonationFooter() {
   const { t } = useLanguage();
@@ -48,104 +44,89 @@ export default function DonationFooter() {
   return (
     <footer className="footer-section bg-dark text-white py-4">
       <div className="container">
-        <div className="row align-items-lg-center">
-          {/* Brand Section, desktop: large logo on its own on the left,
-              name + description beside it. */}
-          <div className="d-none d-lg-flex col-lg-4 align-items-center gap-4 footer-brand">
-            <FooterLogo size={96} />
+        {/* Three columns from 992px: brand | Contact Us + officials | hotlines + socials.
+            Tablets: brand on top, the other two side by side. Phones: stacked. */}
+        <div className="row gy-4 align-items-lg-center">
+          {/* 1. Brand: logo beside the name and description (stacked and centered below 992px) */}
+          <div className="col-12 col-lg-4 footer-brand d-flex flex-column flex-lg-row align-items-center gap-3 gap-lg-4 text-center text-lg-start">
+            <FooterLogo />
             <div>
               <div className="footer-logo-text text-white fs-2 lh-sm">Safe Connect</div>
-              <p className="footer-about small text-white-50 mt-3 mb-0">
+              <p className="footer-about small text-white-50 mt-2 mb-0">
                 {t("footer.description")}
               </p>
             </div>
           </div>
 
-          {/* Brand Section, phones/tablets: logo + name centered, description below. */}
-          <div className="col-12 d-lg-none mb-4 footer-brand">
-            <div className="d-flex align-items-center justify-content-center gap-3">
-              <FooterLogo size={64} />
-              <span className="footer-logo-text text-white fw-bold fs-4">Safe Connect</span>
+          {/* 2. Contact Us: barangay officials */}
+          <div className="col-12 col-md-6 col-lg-4 footer-contact">
+            <h5 className="footer-heading mb-3 text-md-start text-center">{t("footer.contactUs")}</h5>
+            <div className="small text-white-50 footer-contact-list">
+              <p className="footer-subheading text-white fw-semibold mb-2">
+                <i className="bi bi-people-fill me-2 text-danger"></i>
+                {t("footer.barangayOfficials")}
+              </p>
+              <div className="footer-officials">
+                {officials.map((o) => (
+                  <div key={o.name}>
+                    <div className="text-white-50">{o.name}</div>
+                    <PhoneLink number={o.number} />
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="footer-about small text-white-50 mt-3 mb-0 text-center">
-              {t("footer.description")}
-            </p>
           </div>
 
-          {/* Contact Us */}
-          <div className="col-12 col-lg-8 footer-contact">
-            <h5 className="footer-heading mb-3 text-lg-start text-center">{t("footer.contactUs")}</h5>
-
-            <div className="row small text-white-50 footer-contact-list">
-              {/* Barangay officials */}
-              <div className="col-12 col-md-7 mb-3">
+          {/* 3. Emergency hotlines (same numbers as the floating call button) and socials */}
+          <div className="col-12 col-md-6 col-lg-4 small text-white-50 footer-contact-list">
+            {emergencyContacts.length > 0 && (
+              <div className="mb-3">
                 <p className="footer-subheading text-white fw-semibold mb-2">
-                  <i className="bi bi-people-fill me-2 text-danger"></i>
-                  {t("footer.barangayOfficials")}
+                  <i className="bi bi-telephone-fill me-2 text-danger"></i>
+                  {t("footer.emergencyHotline")}
                 </p>
-                <div className="footer-officials">
-                  {officials.map((o) => (
-                    <div key={o.name}>
-                      <div className="text-white-50">{o.name}</div>
-                      <PhoneLink number={o.number} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="col-12 col-md-5 mb-3">
-                {/* Emergency hotlines (same numbers as the floating call button) */}
-                {emergencyContacts.length > 0 && (
-                  <div className="mb-3">
-                    <p className="footer-subheading text-white fw-semibold mb-2">
-                      <i className="bi bi-telephone-fill me-2 text-danger"></i>
-                      {t("footer.emergencyHotline")}
-                    </p>
-                    {emergencyContacts.map((c) => (hasChoices(c) ? (
-                      <div key={c.id}>
-                        {c.label}:
-                        {c.choices.map((p) => (
-                          <div key={`${p.name}-${p.number}`} className="ps-3">
-                            {p.name}: <PhoneLink number={p.number}>{formatMobile(p.number)}</PhoneLink>
-                          </div>
-                        ))}
+                {emergencyContacts.map((c) => (hasChoices(c) ? (
+                  <div key={c.id}>
+                    {c.label}:
+                    {c.choices.map((p) => (
+                      <div key={`${p.name}-${p.number}`} className="ps-3">
+                        {p.name}: <PhoneLink number={p.number}>{formatMobile(p.number)}</PhoneLink>
                       </div>
-                    ) : (
-                      <div key={c.id}>
-                        {c.label}: <PhoneLink number={c.number}>{formatPhone(c.number)}</PhoneLink>
-                      </div>
-                    )))}
+                    ))}
                   </div>
-                )}
-
-                {/* Socials */}
-                <p className="footer-subheading text-white fw-semibold mb-2">
-                  <i className="bi bi-share-fill me-2 text-danger"></i>
-                  {t("footer.socials")}
-                </p>
-                {socials.email && (
-                  <div className="mb-1">
-                    <i className="bi bi-envelope-fill me-2"></i>
-                    <a href={`mailto:${socials.email}`} className="footer-link text-white-50 text-decoration-none">
-                      {socials.email}
-                    </a>
+                ) : (
+                  <div key={c.id}>
+                    {c.label}: <PhoneLink number={c.number}>{formatPhone(c.number)}</PhoneLink>
                   </div>
-                )}
-                {socials.facebookUrl && (
-                  <div>
-                    <i className="bi bi-facebook me-2"></i>
-                    <a
-                      href={socials.facebookUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="footer-link text-white-50"
-                    >
-                      Facebook: {socials.facebookLabel || "Barangay Sta. Fe"}
-                    </a>
-                  </div>
-                )}
+                )))}
               </div>
-            </div>
+            )}
+
+            <p className="footer-subheading text-white fw-semibold mb-2">
+              <i className="bi bi-share-fill me-2 text-danger"></i>
+              {t("footer.socials")}
+            </p>
+            {socials.email && (
+              <div className="mb-1">
+                <i className="bi bi-envelope-fill me-2"></i>
+                <a href={`mailto:${socials.email}`} className="footer-link text-white-50 text-decoration-none">
+                  {socials.email}
+                </a>
+              </div>
+            )}
+            {socials.facebookUrl && (
+              <div>
+                <i className="bi bi-facebook me-2"></i>
+                <a
+                  href={socials.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="footer-link text-white-50"
+                >
+                  Facebook: {socials.facebookLabel || "Barangay Sta. Fe"}
+                </a>
+              </div>
+            )}
           </div>
         </div>
 

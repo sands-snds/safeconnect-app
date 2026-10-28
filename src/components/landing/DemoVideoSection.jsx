@@ -4,7 +4,7 @@ import DemoVideoPlayer from '../shared/DemoVideoPlayer';
 import { useSiteMedia, hasVideo } from '../shared/useSiteContent';
 
 // Landing page: the system demo video, between the carousel and "What you
-// can do". Admins set or hide it under Content > Site Contents; until a
+// can do". Admins set or hide it under Content > Page Contents; until a
 // video is added it shows a "coming soon" placeholder. Styled like the
 // Services / Contact / About sections (badge, heading, soft blobs, card).
 export default function DemoVideoSection() {

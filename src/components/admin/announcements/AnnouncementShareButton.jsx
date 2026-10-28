@@ -68,7 +68,7 @@ const AnnouncementShareButton = ({ announcement }) => {
 
       <button
         type="button"
-        className="button button-secondary"
+        className="button button-soft"
         style={{ fontSize: 12.5, padding: "8px 18px" }}
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"

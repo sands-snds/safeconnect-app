@@ -57,8 +57,8 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | **Users** *(Admin)* | Residents and Admins & Officials in two tables under one search and status filter. Change an account's role or status. The barangay's main account is locked. |
 | **Sign-in Logs** *(Admin)* | Every sign-in attempt, with device, IP address and approximate location in one column. Entries older than 90 days (adjustable) move to an **Archived** tab. |
 | **Admin Logs** *(Admin)* | Which Admins and Officials are online, and a record of every action (logins, status changes, exports and more). Activity older than 90 days (adjustable) moves to an **Archived** tab. |
-| **Site Contacts** *(Admin)* | Edit the floating call button's emergency numbers and the footer's barangay officials, hotlines and socials. |
-| **Site Contents** *(Admin)* | Change the landing page and resident page carousel photos, and set the two demo videos (upload an MP4/WebM up to 100 MB, or paste a YouTube link) with a title and caption. The **system demo** shows on the landing page (below the carousel) and in the resident News page (below the weather card); each place can be hidden. The **admin demo** pops up after signing in to the admin panel. |
+| **Page Contacts** *(Admin)* | Edit the floating call button's emergency numbers and the footer's barangay officials, hotlines and socials. |
+| **Page Contents** *(Admin)* | Change the landing page and resident page carousel photos, and set the two demo videos (upload an MP4/WebM up to 100 MB, or paste a YouTube link) with a title and caption. The **system demo** shows on the landing page (below the carousel) and in the resident News page (below the weather card); each place can be hidden. The **admin demo** pops up after signing in to the admin panel. |
 | **Account Settings** | From the account menu (top right), Admins and Officials can change their photo, username, contact number, email and password, and re-watch the admin demo video. |
 | **Account status popups** | Signing in to a Suspended or Closed account closes the sign-in box and explains, in English or Tagalog, what happened and who to contact. |
 
@@ -267,7 +267,7 @@ safeconnect-app/
 |---|---|---|---|
 | **Resident** | `resident` | `/resident` | Submit reports, and view, edit or delete their own reports; manage their profile |
 | **Official** | `admin` | `/admin` | Everything in the admin panel **except** the System tabs: reports, statuses, archiving, announcements, exports |
-| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Sign-in Logs and Admin Logs**, **Content → Site Contacts**, and changing auto-archive periods |
+| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Sign-in Logs and Admin Logs**, **Content → Page Contacts**, and changing auto-archive periods |
 
 Only the names shown on screen, in exports and in messages changed. The values stored in the database are the same as before, so existing accounts and sign-ins keep working. In code, always show `ROLE_LABELS[role]` (`backend/utils/roles.js`, `src/components/shared/roles.js`), never the stored value.
 

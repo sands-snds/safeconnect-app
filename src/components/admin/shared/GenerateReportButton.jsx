@@ -60,7 +60,7 @@ const GenerateReportButton = ({
       {!inline && <label className="font-medium text-sm" style={{ visibility: 'hidden' }}>.</label>}
       <button
         type="button"
-        className="button button-secondary"
+        className="button button-primary"
         onClick={() => (withOptions ? setShowForm(true) : setOpen((o) => !o))}
         disabled={loading}
         style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}

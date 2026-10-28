@@ -35,7 +35,7 @@ const apiPost = async (path, body) => {
 // ── EmergencyCallButton ───────────────────────────────────────────────────────
 function EmergencyCallButton() {
     const { t } = useLanguage();
-    // Editable by Admins under Content > Site Contacts; also the footer's hotlines.
+    // Editable by Admins under Content > Page Contacts; also the footer's hotlines.
     const { emergencyContacts } = useSiteContent();
     const [showContacts, setShowContacts] = useState(false);
     const handleCall = (n) => { window.location.href = `tel:${n}`; setShowContacts(false); };
@@ -86,7 +86,7 @@ function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs }) {
 function Hero() {
     const { t } = useLanguage();
     const siteContent = useSiteContent(); // support email for the account popups
-    // Background photos: editable by Admins under Content > Site Contents.
+    // Background photos: editable by Admins under Content > Page Contents.
     const { carousel: slides = [] } = useSiteMedia();
     const slidesKey = slides.map((s) => s.src).join('|');
     const carouselRef = useRef(null);

@@ -325,7 +325,7 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 #### Site contacts: `siteContentRoutes.js` → `siteContentController.js` → `siteContentService.js`
 | Method | Path | Access | Purpose | Called from |
 |---|---|---|---|---|
-| GET | `/site-content` | public | `{ content: { emergencyContacts, officials, socials }, options: { icons, colors } }`. Falls back to the defaults if the database can't be read. | `fetchSiteContent()` → `useSiteContent()`, Site Contacts tab |
+| GET | `/site-content` | public | `{ content: { emergencyContacts, officials, socials }, options: { icons, colors } }`. Falls back to the defaults if the database can't be read. | `fetchSiteContent()` → `useSiteContent()`, Page Contacts tab |
 | PUT | `/site-content` | super | Save all three lists (validated: names, phone-number format, email, https facebook.com link, list limits) | `updateSiteContent()` → `SiteContactsPage` |
 | PUT | `/site-content/media` | super | Save `{ carousel, systemDemo, adminDemo }` (validated: only uploaded or built-in images, YouTube links reduced to the video id) | `updateSiteMedia()` → `SiteContentsPage` |
 | POST | `/site-content/upload` | super | Upload one carousel photo (JPG/PNG/WebP, 5 MB) or demo video (MP4/WebM, 100 MB), multipart field `file`; returns `{ url: "/uploads/…" }` | `uploadSiteMedia()` (XHR, with progress) |
@@ -574,8 +574,8 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 2. **`Hero.jsx`:** closes the sign-in box and calls `showAccountStatusPopup(code, t, email)` (`components/shared/accountStatusPopup.js`). This shows the translated explanation with the support email from the site contacts. **`SignInModal.jsx`** on `/admin` does the same but keeps its box open.
 
 ### An Admin edits the site contacts
-1. **`SiteContactsPage.jsx`** (Content → Site Contacts) loads `GET /site-content`, edits the three lists locally, and saves with `PUT /site-content`.
-2. The backend validates and stores the JSON in `system_settings`, and logs "Updated site contacts".
+1. **`SiteContactsPage.jsx`** (Content → Page Contacts) loads `GET /site-content`, edits the three lists locally, and saves with `PUT /site-content`.
+2. The backend validates and stores the JSON in `system_settings`, and logs "Updated page contacts".
 3. **Public pages:** `useSiteContent()` loads `GET /site-content` once per page load (showing the last cached copy, or the defaults, until then). The floating call button (`Hero.jsx`, `EmergencyReportSection.jsx`) and `DonationFooter.jsx` read from it.
 
 ### Forgot password
@@ -679,7 +679,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `layout/AdminLayout.jsx` | The page shell: sidebar and header around the current tab. |
-| `layout/AdminSidebar.jsx` | Navigation groups: Dashboard; Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Site Contacts** for Admins only); **System** (Users, Sign-in Logs, Admin Logs), which only Admins see. The profile badge says "Admin" or "Official". On phones it becomes a drawer that also shows the signed-in admin. |
+| `layout/AdminSidebar.jsx` | Navigation groups: Dashboard; Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Page Contacts** for Admins only); **System** (Users, Sign-in Logs, Admin Logs), which only Admins see. The profile badge says "Admin" or "Official". On phones it becomes a drawer that also shows the signed-in admin. |
 | `layout/AdminHeader.jsx` | The page title, the refresh button (with the last update time), the **notification bell** (each notification type links to its tab), and the account menu with logout. |
 | `layout/AdminStats.jsx` | Clickable stat cards used on the dashboard. |
 
@@ -726,10 +726,10 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `logs/SignInLogsTable.jsx` | User, time, role, **Device & IP address** (device, then IP, then location) and status. An `ArchiveToolbar` switches between Active and Archived sign-ins and sets the auto-archive period. It filters and exports whichever list is showing. |
 | `logs/AdminLogsTable.jsx` | Admin & Official account cards (role badge, **online / last seen**, latest action), plus the searchable activity list with an `ArchiveToolbar` for Recent / Archived activity and its auto-archive period. |
 | `logs/logArchive.js` | The auto-archive period choices for the logs (Off, 30 days, 90 days, 6 months, 1 year). |
-| `settings/SiteContentsPage.jsx` | Content → Site Contents (Admins only): carousel photos (upload, describe, reorder, remove) and the system and admin demo videos (upload with progress or YouTube link, title, caption, show/hide switches, live preview). |
+| `settings/SiteContentsPage.jsx` | Content → Page Contents (Admins only): carousel photos (upload, describe, reorder, remove) and the system and admin demo videos (upload with progress or YouTube link, title, caption, show/hide switches, live preview). |
 | `settings/AccountSettingsPage.jsx` | Account Settings for the signed-in Admin or Official, opened from the account menu (and the phone drawer): photo, username, contact number, email (locked for the main account) and password. |
 | `AdminModals/AdminDemoPopup.jsx` | The admin demo video popup. Shown once after a fresh sign-in (the sign-in screens call `markAdminJustSignedIn()`) unless the person ticked "Don't show this after signing in"; also opened by "Watch demo video" in the account menu. |
-| `settings/SiteContactsPage.jsx` | Content → Site Contacts: edit the emergency contacts (name, description, number, icon, color, order), the barangay officials (name, number, order) and the socials (email, Facebook name and link). Has a sticky Save / Discard bar. |
+| `settings/SiteContactsPage.jsx` | Content → Page Contacts: edit the emergency contacts (name, description, number, icon, color, order), the barangay officials (name, number, order) and the socials (email, Facebook name and link). Has a sticky Save / Discard bar. |
 | `AdminModals/SignInModal.jsx` | The admin sign-in box, also shown when the session expires. |
 | `AdminModals/FormModal.jsx` | A generic "add record" form, built with `shared/formUtils.js`. It is still wired into `AdminPage` but **no button opens it** at the moment. |
 
@@ -755,7 +755,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 
 | Component | What it does |
 |---|---|
-| `DonationFooter.jsx` | The site footer (translated), used on the landing and resident pages. It shows the SafeConnect logo and description, the barangay officials and their numbers, the emergency hotlines, the support email and the Facebook page, and the "Created by Group Tres" credit. The officials, hotlines and socials come from `useSiteContent()`, so they match the floating call button and can be edited under Content → Site Contacts. |
+| `DonationFooter.jsx` | The site footer (translated), used on the landing and resident pages. It shows the SafeConnect logo and description, the barangay officials and their numbers, the emergency hotlines, the support email and the Facebook page, and the "Created by Group Tres" credit. The officials, hotlines and socials come from `useSiteContent()`, so they match the floating call button and can be edited under Content → Page Contacts. |
 | `useSiteContent.js` | Loads the site contacts once per page load and shares them with every component; caches the last copy in `localStorage` (`sf_siteContent`) and has the defaults built in. `contactDescription(contact, t)` shows the translated default description until an Admin changes it. `useSiteMedia()` does the same for the carousel photos and demo videos (`sf_siteMedia`); `mediaSrc()` turns an uploaded path into a full URL. |
 | `DemoVideoPlayer.jsx` | Plays a demo video (uploaded file or YouTube embed) in a 16:9 frame with its title and caption, or shows a placeholder when none is set. |
 | `roles.js` | `ROLE_LABELS` / `roleLabel()` (Resident, Official, Admin) and `MAIN_ACCOUNT_EMAIL`. |

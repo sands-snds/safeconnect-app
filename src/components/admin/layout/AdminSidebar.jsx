@@ -48,12 +48,12 @@ const AdminSidebar = ({
         },
         {
           id: "site-contacts",
-          label: "Site Contacts",
+          label: "Page Contacts",
           superAdminOnly: true
         },
         {
           id: "site-contents",
-          label: "Site Contents",
+          label: "Page Contents",
           superAdminOnly: true
         }
       ]
@@ -223,7 +223,7 @@ const AdminSidebar = ({
             </div>
 
             {section.items
-              // Admin-only items (e.g. Site Contacts) are hidden from Officials.
+              // Admin-only items (e.g. Page Contacts) are hidden from Officials.
               .filter((item) => isSuperAdmin || !item.superAdminOnly)
               .map((item) => (
               <div

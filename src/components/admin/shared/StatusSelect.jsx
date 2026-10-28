@@ -59,14 +59,11 @@ const StatusSelect = ({
       {nextStatus && (
         <button
           type="button"
+          className="button button-soft"
           onClick={() => setPendingNext(nextStatus)}
           style={{
             fontSize: 12,
             padding: "4px 10px",
-            borderRadius: 6,
-            border: "1px solid #d1d5db",
-            background: "#fff",
-            cursor: "pointer",
             whiteSpace: "nowrap"
           }}
         >

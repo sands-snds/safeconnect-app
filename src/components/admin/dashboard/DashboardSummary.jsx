@@ -1,17 +1,13 @@
-export default function DashboardSummary({
-    emergencyReports = [],
-    assistanceRequests = [],
-    pettyCrimeReports = [],
-    onCreateAnnouncement,
-    adminName = "Administrator"
-}) {
-    const totalReports =
-        emergencyReports.length +
-        assistanceRequests.length +
-        pettyCrimeReports.length;
+import AdminStats from "../layout/AdminStats";
 
+// Dashboard top card: welcome line, then the counters (AdminStats), which
+// also hold Create Announcement and Total Reports. dash-summary-* classes:
+// sizes and the phone layout in styles/admin.css.
+export default function DashboardSummary({
+    adminName = "Administrator",
+    ...stats
+}) {
     return (
-        // dash-summary-* classes: compact phone layout in styles/admin.css.
         <div
             className="dash-summary"
             style={{
@@ -22,90 +18,48 @@ export default function DashboardSummary({
                 border: "1px solid #e5e7eb"
             }}
         >
-            {/* Top Row */}
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "24px",
-                    flexWrap: "wrap",
-                    gap: "16px"
-                }}
-            >
-                <div>
-                    <span
-                        style={{
-                            display: "inline-block",
-                            background: "#FDECEC",
-                            color: "#B91C1C",
-                            padding: "6px 14px",
-                            borderRadius: "999px",
-                            fontWeight: 600,
-                            fontSize: ".85rem",
-                            marginBottom: "12px"
-                        }}
-                    >
-                        SafeConnect Admin
-                    </span>
-
-                    <h1
-                        className="dash-summary-title"
-                        style={{
-                            margin: 0,
-                            fontWeight: 700
-                        }}
-                    >
-                        Welcome back, {adminName} 👋
-                    </h1>
-                </div>
-
-                <button
-                    className="button button-primary dash-summary-create"
-                    onClick={onCreateAnnouncement}
+            <div style={{ marginBottom: "20px" }}>
+                <span
+                    style={{
+                        display: "inline-block",
+                        background: "#FDECEC",
+                        color: "#B91C1C",
+                        padding: "6px 14px",
+                        borderRadius: "999px",
+                        fontWeight: 600,
+                        fontSize: ".85rem",
+                        marginBottom: "12px"
+                    }}
                 >
-                    + Create Announcement
-                </button>
-            </div>
+                    SafeConnect Admin
+                </span>
 
-            {/* Bottom Row */}
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: "24px"
-                }}
-            >
+                <h1
+                    className="dash-summary-title"
+                    style={{
+                        margin: 0,
+                        fontWeight: 700
+                    }}
+                >
+                    Welcome back, {adminName} 👋
+                </h1>
+
                 <p
                     className="dash-summary-intro"
                     style={{
                         color: "#6b7280",
                         maxWidth: "650px",
-                        lineHeight: 1.7,
-                        margin: 0
+                        lineHeight: 1.6,
+                        margin: "6px 0 0"
                     }}
                 >
                     Monitor emergency incidents, assistance requests,
                     petty crime reports, and community announcements
                     from one centralized dashboard.
                 </p>
-
-                <div className="dash-summary-total" style={{
-                        minWidth: "220px",
-                        background: "#6B2C3E",
-                        color: "#fff",
-                        borderRadius: "14px",
-                        padding: "24px",
-                        textAlign: "center"
-                    }}>
-                    <div style={{ fontSize: "3rem", fontWeight: "bold" }}                  >
-                        {totalReports}
-                    </div>
-                    <div>Total Reports</div>
-                </div>
             </div>
+
+            <AdminStats {...stats} />
         </div>
     );
 }

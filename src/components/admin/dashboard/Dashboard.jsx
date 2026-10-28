@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 
-import AdminStats from "../layout/AdminStats";
 import DashboardSummary from "./DashboardSummary";
 import DashboardCharts from "./DashboardCharts";
 import ReportsOverTimeChart from "./ReportsOverTimeChart";
 import DashboardRecentReports from "./DashboardRecentReports";
 import useIsMobile from "../hooks/useIsMobile";
 
-// Phones: only the summary card, then a toggle between Recent Reports (the
-// default) and Analytics (the charts), instead of one very long page.
+// Phones: the summary card (with its counters), then a toggle between Recent
+// Reports (the default) and Analytics (the charts), instead of one very long page.
 const MOBILE_TABS = [
     { key: "recent", label: "Recent Reports" },
     { key: "analytics", label: "Analytics" }
@@ -45,6 +44,22 @@ export default function Dashboard({
     const isMobile = useIsMobile();
     const [mobileTab, setMobileTab] = useState("recent");
 
+    const summary = (
+        <DashboardSummary
+            adminName={adminName}
+            emergencyReports={emergencyReports}
+            assistanceRequests={assistanceRequests}
+            pettyCrimeReports={pettyCrimeReports}
+            registeredUsers={registeredUsers}
+            signInLogs={signInLogs}
+            adminLogs={adminLogs}
+            announcements={announcements}
+            onStatCardClick={onStatCardClick}
+            onCreateAnnouncement={onCreateAnnouncement}
+            isSuperAdmin={isSuperAdmin}
+        />
+    );
+
     const charts = (
         <>
             <div style={{ marginTop: "24px" }}>
@@ -75,13 +90,7 @@ export default function Dashboard({
     if (isMobile) {
         return (
             <>
-                <DashboardSummary
-                    emergencyReports={emergencyReports}
-                    assistanceRequests={assistanceRequests}
-                    pettyCrimeReports={pettyCrimeReports}
-                    onCreateAnnouncement={onCreateAnnouncement}
-                    adminName={adminName}
-                />
+                {summary}
 
                 <div role="tablist" style={{ display: "flex", gap: 8 }}>
                     {MOBILE_TABS.map((tab) => (
@@ -105,25 +114,7 @@ export default function Dashboard({
 
     return (
         <>
-            <DashboardSummary
-                emergencyReports={emergencyReports}
-                assistanceRequests={assistanceRequests}
-                pettyCrimeReports={pettyCrimeReports}
-                onCreateAnnouncement={onCreateAnnouncement}
-                adminName={adminName}
-            />
-
-            <AdminStats
-                emergencyReports={emergencyReports}
-                assistanceRequests={assistanceRequests}
-                registeredUsers={registeredUsers}
-                signInLogs={signInLogs}
-                adminLogs={adminLogs}
-                announcements={announcements}
-                pettyCrimeReports={pettyCrimeReports}
-                onStatCardClick={onStatCardClick}
-                isSuperAdmin={isSuperAdmin}
-            />
+            {summary}
 
             {charts}
 

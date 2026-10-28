@@ -5,8 +5,8 @@ import { ROLE_LABELS } from "../../shared/roles";
 // account status). Same look as shared/StatusConfirmModal.jsx.
 const CONSEQUENCES = {
     role: {
-        super_admin: "As an Admin, they'll get full access to the admin panel, including the System tabs (users, logs, site contacts). This applies on their next action; no re-login needed.",
-        admin: "As an Official, they'll be able to handle reports and announcements, but not the System tabs (users, logs, site contacts). This applies on their next action; no re-login needed.",
+        super_admin: "As an Admin, they'll get full access to the admin panel, including the System tabs (users, logs) and the Page Contacts and Page Contents tabs. This applies on their next action; no re-login needed.",
+        admin: "As an Official, they'll be able to handle reports and announcements, but not the System tabs (users, logs) or the Page Contacts and Page Contents tabs. This applies on their next action; no re-login needed.",
         resident: "They'll lose access to the admin panel immediately and go back to being a regular resident account."
     },
     status: {

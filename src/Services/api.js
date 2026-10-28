@@ -767,7 +767,7 @@ export const updateLogArchiveSettings = async (log, days) => {
 // Emergency contacts (floating call button + footer hotlines), barangay
 // officials and socials. Public to read; only Admins (super_admin) can save.
 // Returns { content, media, options } or null. media = carousel photos and
-// demo videos (Content > Site Contents).
+// demo videos (Content > Page Contents).
 export const fetchSiteContent = async () => {
     const res = await apiFetch(API_ENDPOINTS.SITE_CONTENT);
     const data = await res.json().catch(() => null);

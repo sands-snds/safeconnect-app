@@ -1,77 +1,74 @@
 import React from 'react';
 
-const StatCard = ({ label, value, color, onClick }) => (
-  <div 
-    className="stat-card" 
-    onClick={onClick}
-    style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
-    onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-    onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-  >
-    <div className="text-gray-500 text-sm">{label}</div>
-    <div className="font-bold text-xl">{value}</div>
-    <div style={{ height: '4px', borderRadius: '2px', background: color }}></div>
-  </div>
+// Dashboard counters (dash-stat* classes in styles/admin.css). Report counts
+// are filled pink cards on top, the other totals outlined cards below, and
+// Create Announcement + the big Total Reports card in a column on the right.
+// Tablets put the outlined cards in a 2x2 grid; phones stack everything.
+
+const StatCard = ({ label, value, icon, variant, onClick }) => (
+  <button type="button" className={`dash-stat dash-stat-${variant}`} onClick={onClick}>
+    <span className="dash-stat-label">{label}</span>
+    <span className="dash-stat-bottom">
+      <span className="dash-stat-value">{value}</span>
+      <span className="dash-stat-icon" aria-hidden="true"><i className={`bi ${icon}`} /></span>
+    </span>
+  </button>
 );
 
-const AdminStats = ({ 
-  emergencyReports = [], 
-  assistanceRequests = [], 
-  registeredUsers = [], 
-  signInLogs = [], 
+const AdminStats = ({
+  emergencyReports = [],
+  assistanceRequests = [],
+  registeredUsers = [],
+  signInLogs = [],
   adminLogs = { admins: [] },
   announcements = [],
   pettyCrimeReports = [],
-  onStatCardClick,
+  onStatCardClick = () => {},
+  onCreateAnnouncement,
   isSuperAdmin = false
 }) => {
+  const reports = [
+    { label: 'Emergency Reports', value: emergencyReports.length, icon: 'bi-exclamation-triangle-fill', view: 'emergency-reports' },
+    { label: 'Assistance Requests', value: assistanceRequests.length, icon: 'bi-box2-heart-fill', view: 'assistance-requests' },
+    { label: 'Petty Crime Reports', value: pettyCrimeReports.length, icon: 'bi-shield-fill-exclamation', view: 'petty-crime-reports' }
+  ];
+  const others = [
+    { label: 'Total Announcements', value: announcements.length, icon: 'bi-megaphone-fill', view: 'announcement-page' },
+    // System tab stats: Admins only, like the tabs they open.
+    ...(isSuperAdmin ? [
+      { label: 'Registered Users', value: registeredUsers.length, icon: 'bi-people-fill', view: 'registered-users' },
+      { label: 'Total Sign-ins', value: signInLogs.length, icon: 'bi-box-arrow-in-right', view: 'sign-in-logs' },
+      { label: 'Admins & Officials', value: adminLogs.admins?.length || 0, icon: 'bi-person-badge-fill', view: 'admin-logs' }
+    ] : [])
+  ];
+  const totalReports = emergencyReports.length + assistanceRequests.length + pettyCrimeReports.length;
+
   return (
-    <div className="stats-grid">
-      <StatCard 
-        label="EMERGENCY REPORTS" 
-        value={emergencyReports.length} 
-        color="#dbeafe" 
-        onClick={() => onStatCardClick('emergency-reports')}
-      />
-      <StatCard 
-        label="ASSISTANCE REQUESTS" 
-        value={assistanceRequests.length} 
-        color="#fef3c7" 
-        onClick={() => onStatCardClick('assistance-requests')}
-      />
-      <StatCard 
-        label="PETTY CRIME REPORTS" 
-        value={pettyCrimeReports.length} 
-        color="#fee2e2" 
-        onClick={() => onStatCardClick('petty-crime-reports')}
-      />
-      <StatCard 
-        label="TOTAL ANNOUNCEMENTS" 
-        value={announcements.length} 
-        color="#e0f2fe" 
-        onClick={() => onStatCardClick('announcement-page')}
-      />
-      {/* System tab stats: super admin only, like the tabs they open. */}
-      {isSuperAdmin && (<>
-      <StatCard 
-        label="REGISTERED USERS" 
-        value={registeredUsers.length} 
-        color="#e9d5ff" 
-        onClick={() => onStatCardClick('registered-users')}
-      />
-      <StatCard 
-        label="TOTAL SIGN INS" 
-        value={signInLogs.length} 
-        color="#fecaca" 
-        onClick={() => onStatCardClick('sign-in-logs')}
-      />
-      <StatCard 
-        label="ADMIN ACCOUNTS" 
-        value={adminLogs.admins?.length || 0} 
-        color="#ddd6fe" 
-        onClick={() => onStatCardClick('admin-logs')}
-      />
-      </>)}
+    <div className="dash-stats">
+      <div className="dash-stats-reports">
+        {reports.map((c) => (
+          <StatCard key={c.view} {...c} variant="filled" onClick={() => onStatCardClick(c.view)} />
+        ))}
+      </div>
+
+      <div className="dash-stats-side">
+        {onCreateAnnouncement && (
+          <button type="button" className="button button-primary dash-stats-create" onClick={onCreateAnnouncement}>
+            <i className="bi bi-plus-lg" aria-hidden="true" /> Create Announcement
+          </button>
+        )}
+        <div className="dash-stats-total">
+          <i className="bi bi-clipboard-data-fill dash-stats-total-icon" aria-hidden="true" />
+          <span className="dash-stats-total-label">Total Reports</span>
+          <span className="dash-stats-total-value">{totalReports}</span>
+        </div>
+      </div>
+
+      <div className={`dash-stats-others${others.length === 1 ? ' is-single' : ''}`}>
+        {others.map((c) => (
+          <StatCard key={c.view} {...c} variant="outline" onClick={() => onStatCardClick(c.view)} />
+        ))}
+      </div>
     </div>
   );
 };

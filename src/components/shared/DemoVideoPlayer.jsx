@@ -1,7 +1,7 @@
 import React from 'react';
 import { mediaSrc, hasVideo } from './useSiteContent';
 
-// Plays a demo video from Content > Site Contents: an uploaded MP4/WebM or
+// Plays a demo video from Content > Page Contents: an uploaded MP4/WebM or
 // a YouTube video, in a 16:9 frame, with its title and a short caption.
 //   demo        - { title, caption, video: { source, url } }
 //   showText    - false hides the title/caption (when the parent shows them)

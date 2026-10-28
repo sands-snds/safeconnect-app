@@ -274,7 +274,7 @@ const AnnouncementsTable = ({
             <div className="announcement-admin-card-engage">
               <button
                 type="button"
-                className={`button button-secondary ${openComments[announcement.id] ? "is-active" : ""}`}
+                className={`button button-soft ${openComments[announcement.id] ? "is-active" : ""}`}
                 style={{ fontSize: 12.5, padding: '8px 18px' }}
                 onClick={() => toggleComments(announcement.id)}
                 aria-expanded={!!openComments[announcement.id]}
@@ -290,7 +290,7 @@ const AnnouncementsTable = ({
 
             <button
               type="button"
-              className="button button-secondary"
+              className="button button-primary"
               style={{ fontSize: 12.5, padding: '8px 18px' }}
               onClick={() => setEditingAnnouncement && setEditingAnnouncement(announcement)}
             >
@@ -299,7 +299,7 @@ const AnnouncementsTable = ({
 
             <button
               type="button"
-              className="button button-secondary"
+              className="button button-primary"
               style={{ fontSize: 12.5, padding: '8px 18px' }}
               onClick={() => handleDelete(announcement.id)}
             >
@@ -413,8 +413,7 @@ const AnnouncementsTable = ({
         }
 
         .announcement-admin-card-actions .is-active {
-          border-color: #6B2C3E;
-          color: #6B2C3E;
+          background: #f9d6da;
         }
 
         .announcement-admin-count {

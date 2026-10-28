@@ -135,20 +135,19 @@ const userMenuRef = useRef(null);
                     width: 42px;
                     height: 42px;
                     padding: 0;
-                    border: 1px solid #e5e7eb;
+                    border: none;
                     border-radius: 10px;
-                    background: #fff;
-                    color: #374151;
+                    background: #6B2C3E;
+                    color: #fff;
                     font-size: 18px;
                     line-height: 1;
                     cursor: pointer;
-                    transition: background .15s, border-color .15s;
+                    transition: background .15s;
                 }
-                .admin-header-icon-btn:hover:not(:disabled) {
-                    background: #f9fafb;
-                    border-color: #d1d5db;
-                }
-                .admin-header-icon-btn:disabled { background: #f3f4f6; }
+                .admin-header-icon-btn:hover:not(:disabled) { background: #5a2434; }
+                .admin-header-icon-btn:disabled { background: #8a5463; }
+                /* White ring so the red unread count stands out on the maroon button. */
+                .admin-header-icon-btn .admin-header-badge { box-shadow: 0 0 0 2px #fff; }
                 .admin-header-refresh-icon { display: inline-block; }
                 .admin-header-refresh-icon.spinning {
                     animation: adminHeaderSpin 0.8s linear infinite;
@@ -225,6 +224,7 @@ const userMenuRef = useRef(null);
 
                         {unreadCount > 0 && (
                             <span
+                                className="admin-header-badge"
                                 style={{
                                     position: "absolute",
                                     top: -5,

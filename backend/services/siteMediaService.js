@@ -1,13 +1,13 @@
 const db = require("../config/db");
 
 // Photos and videos on the public site, editable by an Admin (super_admin)
-// under Content > Site Contents:
+// under Content > Page Contents:
 //   carousel    - the landing page's background slideshow
 //   systemDemo  - "See SafeConnect in action" video: on the landing page
 //                 (below the carousel, above "What you can do") and in the
 //                 resident News page (below the weather card); each can be hidden
 //   adminDemo   - walkthrough video shown when someone signs in to the
-//                 admin panel; can also be watched again from Site Contents
+//                 admin panel; can also be watched again from Page Contents
 // Stored as JSON in system_settings (key "site_media"). Until an Admin saves
 // changes, DEFAULT_MEDIA is used. Uploaded files live in backend/uploads.
 //

@@ -8,7 +8,7 @@ import { markSyncedRead, useSyncedReadItems } from "../../shared/useSyncedState"
 // this popup consumes it. "Don't show this again" is remembered per account
 // for the account, on every device (useSyncedState). Anyone can watch it again from the account menu
 // (manualOpen). Admins set the video, or turn the popup off, under
-// Content > Site Contents.
+// Content > Page Contents.
 
 export const JUST_SIGNED_IN_KEY = "sf_showAdminDemo";
 const hiddenKey = (userId) => `sf_adminDemoHidden_${userId}`; // older, this browser only

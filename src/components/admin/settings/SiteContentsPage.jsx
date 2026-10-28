@@ -4,7 +4,7 @@ import { showPopup } from "../../shared/popup";
 import { setSiteMedia, mediaSrc } from "../../shared/useSiteContent";
 import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
 
-// Content > Site Contents (Admins only): the landing page carousel photos,
+// Content > Page Contents (Admins only): the landing page carousel photos,
 // the system demo video (landing page + News) and the admin demo video
 // (shown when someone signs in to the admin panel). Saved with
 // PUT /api/site-content/media (backend/services/siteMediaService.js).
@@ -250,8 +250,8 @@ export default function SiteContentsPage() {
 
   const dirty = useMemo(() => JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
 
-  if (loadError) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>Couldn't load the site contents. Make sure the backend is up to date, then refresh the page.</div>;
-  if (!draft) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>Loading site contents...</div>;
+  if (loadError) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>Couldn't load the page contents. Make sure the backend is up to date, then refresh the page.</div>;
+  if (!draft) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>Loading page contents...</div>;
 
   const handleSave = async () => {
     // A YouTube choice with no valid link would be refused; catch it here.
@@ -271,7 +271,7 @@ export default function SiteContentsPage() {
       setSaved(result.media);
       setDraft(result.media);
       setSiteMedia(result.media);
-      showPopup({ type: "success", title: "Site Contents Saved", message: "The landing page, resident page, News and admin sign-in now use these photos and videos." });
+      showPopup({ type: "success", title: "Page Contents Saved", message: "The landing page, resident page, News and admin sign-in now use these photos and videos." });
     } finally {
       setSaving(false);
     }

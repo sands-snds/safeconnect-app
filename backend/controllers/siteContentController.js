@@ -2,13 +2,13 @@ const SiteContent = require("../services/siteContentService");
 const SiteMedia = require("../services/siteMediaService");
 
 // Public: the landing page, resident page, footer and admin panel read this.
-// content = contact details (Content > Site Contacts)
-// media   = carousel photos and demo videos (Content > Site Contents)
+// content = contact details (Content > Page Contacts)
+// media   = carousel photos and demo videos (Content > Page Contents)
 exports.getContent = async (req, res) => {
     const options = { icons: SiteContent.CONTACT_ICONS, colors: SiteContent.CONTACT_COLORS };
     try {
         const [content, media] = await Promise.all([SiteContent.getContent(), SiteMedia.getMedia()]);
-        // options: choices for the Site Contacts editor.
+        // options: choices for the Page Contacts editor.
         res.json({ success: true, content, media, options });
     } catch (err) {
         console.error(err);
@@ -41,7 +41,7 @@ exports.updateMedia = async (req, res) => {
         res.json({ success: true, media });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: "Couldn't save the site contents." });
+        res.status(500).json({ success: false, message: "Couldn't save the page contents." });
     }
 };
 

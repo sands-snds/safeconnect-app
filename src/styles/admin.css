@@ -72,17 +72,6 @@
   padding: 20px;
 }
 
-.stat-card {
-  background: white;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
 .section {
   background: white;
   border-radius: 8px;
@@ -203,9 +192,25 @@
   color: white;
 }
 
+.button-primary:hover:not(:disabled) {
+  background: #5a2434;
+}
+
 .button-secondary {
   background: #e5e7eb;
   color: #374151;
+}
+
+/* Light pink with a maroon outline (like Page Contents' "Replace uploaded
+   video"): secondary actions such as Comments, Share, Move to ..., Archive. */
+.button-soft {
+  background: #FDECEC;
+  color: #6B2C3E;
+  border: 1px solid #6B2C3E;
+}
+
+.button-soft:hover:not(:disabled) {
+  background: #f9d6da;
 }
 
 .status-badge {
@@ -292,11 +297,313 @@
 }
 
 /* Grid layouts */
-.stats-grid {
+/* ------------------------------------------------------------------ */
+/* Dashboard counters (AdminStats.jsx). Sized by the summary card's    */
+/* own width (container queries), so the layout follows the space left */
+/* next to the sidebar, not the screen width.                          */
+/*   wide:   3 report cards | Create + Total, other totals in one row  */
+/*   medium: same, other totals in a 2x2 grid (portrait tablets)       */
+/*   narrow: stacked; Create + Total first (phones)                    */
+/* ------------------------------------------------------------------ */
+.dash-summary {
+  container-type: inline-size;
+}
+
+.dash-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: minmax(0, 3fr) minmax(170px, 1fr);
+  grid-template-areas:
+    "reports side"
+    "others  side";
   gap: 16px;
-  margin-bottom: 24px;
+}
+
+.dash-stats-reports {
+  grid-area: reports;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dash-stats-others {
+  grid-area: others;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.dash-stats-side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dash-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  min-height: 104px;
+  padding: 16px;
+  border-radius: 14px;
+  font: inherit;
+  text-align: left;
+  color: #6B2C3E;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, background .15s;
+}
+
+.dash-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(107, 44, 62, 0.15);
+}
+
+.dash-stat:focus-visible,
+.dash-stats-create:focus-visible {
+  outline: 2px solid #6B2C3E;
+  outline-offset: 2px;
+}
+
+.dash-stat-filled {
+  background: #FDECEC;
+  border: 1px solid #f5cdd3;
+}
+
+.dash-stat-outline {
+  background: #fff;
+  border: 1px solid #e3b7bf;
+  min-height: 92px;
+}
+
+/* Label on top (full width, so words don't break), then number + icon. */
+.dash-stat-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(107, 44, 62, 0.2);
+}
+
+.dash-stat-outline .dash-stat-bottom {
+  border-bottom-color: #FDECEC;
+}
+
+.dash-stat-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.dash-stat-outline .dash-stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+.dash-stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 17px;
+}
+
+.dash-stat-filled .dash-stat-icon {
+  background: #6B2C3E;
+  color: #fff;
+}
+
+.dash-stat-outline .dash-stat-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
+  background: #FDECEC;
+  color: #6B2C3E;
+}
+
+.dash-stat-value {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dash-stat-outline .dash-stat-value {
+  font-size: 24px;
+}
+
+.dash-stats-create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dash-stats-total {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 16px;
+  border-radius: 14px;
+  background: #6B2C3E;
+  color: #fff;
+  text-align: center;
+}
+
+.dash-stats-total-icon {
+  font-size: 26px;
+  opacity: .85;
+}
+
+.dash-stats-total-label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dash-stats-total-value {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Medium (portrait tablets): the other totals in a 2x2 grid beside Total Reports. */
+@container (max-width: 860px) {
+  .dash-stats,
+  .dash-stats-reports,
+  .dash-stats-others,
+  .dash-stats-side {
+    gap: 12px;
+  }
+
+  .dash-stats {
+    grid-template-columns: minmax(0, 3fr) minmax(130px, 1fr);
+  }
+
+  .dash-stats-others {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-stats-others.is-single {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-stat {
+    padding: 12px;
+    min-height: 92px;
+  }
+
+  .dash-stat-label {
+    font-size: 12.5px;
+  }
+
+  .dash-stat-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .dash-stat-value {
+    font-size: 26px;
+  }
+
+  .dash-stats-create {
+    font-size: 13px;
+    padding: 10px;
+    white-space: normal;
+  }
+
+  .dash-stats-total-value {
+    font-size: 46px;
+  }
+}
+
+/* Portrait tablets with the sidebar open (~450px): smaller report cards. */
+@container (max-width: 640px) {
+  .dash-stats-reports .dash-stat {
+    padding: 10px;
+  }
+
+  .dash-stats-reports .dash-stat-label {
+    font-size: 11.5px;
+  }
+
+  .dash-stats-reports .dash-stat-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 12.5px;
+    border-radius: 8px;
+  }
+
+  .dash-stat-value {
+    font-size: 22px;
+  }
+
+  .dash-stats-create .bi {
+    display: none;
+  }
+}
+
+/* Narrow (phones): one column. Create, then a short Total Reports bar,
+   then the report counts in a row of three and the others two per row. */
+@container (max-width: 420px) {
+  .dash-stats {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "side"
+      "reports"
+      "others";
+  }
+
+  .dash-stats-total {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    text-align: left;
+  }
+
+  .dash-stats-total-label {
+    flex: 1;
+  }
+
+  .dash-stats-total-value {
+    font-size: 34px;
+  }
+
+  .dash-stats-create .bi {
+    display: inline-block;
+  }
+
+  /* Capitals don't fit two-per-row on a phone ("ANNOUNCEMENTS"). */
+  .dash-stat-outline .dash-stat-label {
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+}
+
+@container (max-width: 340px) {
+  .dash-stats-reports .dash-stat-icon {
+    display: none;
+  }
+
+  .dash-stat-label {
+    font-size: 11.5px;
+  }
 }
 
 .form-grid {
@@ -359,21 +666,6 @@
   color: #1e40af;
 }
 
-.stat-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.stat-card:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.stat-card:active {
-  transform: translateY(0);
-}
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -527,7 +819,7 @@
     padding: 14px 12px !important;
   }
 
-  /* Dashboard summary card: welcome, Create Announcement, Total Reports. */
+  /* Dashboard summary card: welcome line and counters. */
   .dash-summary {
     padding: 18px 16px;
     margin-bottom: 16px !important;
@@ -537,17 +829,8 @@
     font-size: 1.35rem;
   }
 
-  .dash-summary-create {
-    width: 100%;
-  }
-
   .dash-summary-intro {
     display: none;
-  }
-
-  .dash-summary-total {
-    width: 100%;
-    min-width: 0 !important;
   }
 
   .dash-pie-wide {

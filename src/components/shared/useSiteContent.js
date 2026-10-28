@@ -3,7 +3,7 @@ import { fetchSiteContent, resolveAssetUrl } from '../../Services/api';
 
 // Contact details for the public site (floating call button, footer):
 // { emergencyContacts, officials, socials }. Admins edit them under
-// Content > Site Contacts (backend/services/siteContentService.js).
+// Content > Page Contacts (backend/services/siteContentService.js).
 //
 // Shows the last copy this browser saw (or the defaults below) right away,
 // then refreshes from the server once per page load.
@@ -41,7 +41,7 @@ export const DEFAULT_SITE_CONTENT = {
   }
 };
 
-// Carousel photos and demo videos (Content > Site Contents). Same as
+// Carousel photos and demo videos (Content > Page Contents). Same as
 // DEFAULT_MEDIA in backend/services/siteMediaService.js.
 const MEDIA_CACHE_KEY = 'sf_siteMedia';
 export const DEFAULT_SITE_MEDIA = {
@@ -113,7 +113,7 @@ export const refreshSiteContent = () => {
   return request;
 };
 
-// Lets the Content > Site Contents editor show its changes immediately.
+// Lets the Content > Page Contents editor show its changes immediately.
 export const setSiteMedia = (media) => setCurrentMedia(media);
 
 export function useSiteMedia() {
@@ -137,7 +137,7 @@ export const mediaSrc = (src) =>
 export const hasVideo = (demo) =>
   Boolean(demo?.video && demo.video.source !== 'none' && demo.video.url);
 
-// Lets the Content > Site Contacts editor show its changes immediately.
+// Lets the Content > Page Contacts editor show its changes immediately.
 export const setSiteContent = (content) => setCurrent(content);
 
 export default function useSiteContent() {

@@ -29,15 +29,11 @@ const ArchiveButton = ({ report, reportType, onArchive }) => {
       onClick={handleClick}
       disabled={isSubmitting}
       title={isArchived ? "Move back to the active list" : "Move to the archive"}
+      className="button button-soft"
       style={{
         padding: "4px 12px",
-        borderRadius: 20,
-        border: "1px solid #d1d5db",
-        background: "#fff",
-        color: "#374151",
         cursor: isSubmitting ? "wait" : "pointer",
         fontSize: 12,
-        fontWeight: 600,
         whiteSpace: "nowrap"
       }}
     >

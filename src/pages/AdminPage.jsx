@@ -111,13 +111,13 @@ const AdminPage = () => {
   "registered-users": "Registered Users",
   "sign-in-logs": "Sign-in Logs",
   "admin-logs": "Admin Logs",
-  "site-contacts": "Site Contacts",
-  "site-contents": "Site Contents",
+  "site-contacts": "Page Contacts",
+  "site-contents": "Page Contents",
   "account-settings": "Account Settings"
 };
 
-// Admin-only tabs (super_admin): the SYSTEM tabs plus Site Contacts and
-// Site Contents under CONTENT.
+// Admin-only tabs (super_admin): the SYSTEM tabs plus Page Contacts and
+// Page Contents under CONTENT.
 const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts", "site-contents"];
 
   const alerts = [];

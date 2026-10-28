@@ -35,11 +35,6 @@ const EmergencyReportsTable = ({
       key={report.id}
       accentColor={getSeverityColor(report.severity)}
       title={report.emergency}
-      badge={{
-        text: report.severity,
-        bg: "#f3f4f6",
-        color: getSeverityColor(report.severity)
-      }}
       tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
       statusControl={

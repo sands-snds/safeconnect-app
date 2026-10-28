@@ -4,7 +4,7 @@ import { useSiteMedia, mediaSrc, DEFAULT_SITE_MEDIA } from "../shared/useSiteCon
 
 function ResidentHero() {
   const { t } = useLanguage();
-  // Admins change these under Content > Site Contents.
+  // Admins change these under Content > Page Contents.
   const { residentCarousel } = useSiteMedia();
   const heroImages = (residentCarousel?.length ? residentCarousel : DEFAULT_SITE_MEDIA.residentCarousel)
     .map((slide) => mediaSrc(slide.src));

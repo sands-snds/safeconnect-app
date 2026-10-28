@@ -3,7 +3,7 @@ import { fetchSiteContent, updateSiteContent } from "../../../Services/api";
 import { showPopup } from "../../shared/popup";
 import { setSiteContent } from "../../shared/useSiteContent";
 
-// Content > Site Contacts (Admins only): edits what the public site shows
+// Content > Page Contacts (Admins only): edits what the public site shows
 //   - Emergency contacts: the floating call button (landing + resident
 //     pages) and the footer's "Emergency Hotline" column
 //   - Barangay officials: the footer's "Barangay Officials" column
@@ -85,9 +85,9 @@ const SiteContactsPage = () => {
   const dirty = useMemo(() => JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
 
   if (loadError) {
-    return <div style={sectionStyle}>Couldn't load the site contacts. Please refresh the page.</div>;
+    return <div style={sectionStyle}>Couldn't load the page contacts. Please refresh the page.</div>;
   }
-  if (!draft) return <div style={sectionStyle}>Loading site contacts...</div>;
+  if (!draft) return <div style={sectionStyle}>Loading page contacts...</div>;
 
   const setContacts = (fn) => setDraft((d) => ({ ...d, emergencyContacts: fn(d.emergencyContacts) }));
   const setOfficials = (fn) => setDraft((d) => ({ ...d, officials: fn(d.officials) }));

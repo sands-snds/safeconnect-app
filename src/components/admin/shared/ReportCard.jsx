@@ -82,16 +82,12 @@ const ReportCard = ({
 
         <button
           type="button"
-          className="report-card-toggle"
+          className="report-card-toggle button button-primary"
           onClick={onToggle}
+          aria-expanded={!!expanded}
           style={{
             padding: "6px 12px",
-            borderRadius: 6,
-            border: "1px solid #d1d5db",
-            background: "#f9fafb",
-            cursor: "pointer",
             fontSize: 12.5,
-            fontWeight: 500,
             whiteSpace: "nowrap",
             flexShrink: 0
           }}

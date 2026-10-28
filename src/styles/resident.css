@@ -2563,6 +2563,43 @@ body {
     }
 }
 
+/* Phones: the centered list keeps its two columns centered too. */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .footer-section .footer-officials {
+        justify-content: center;
+    }
+}
+
+/* Three-column footer: the officials share a third of the width, so long
+   names wrap inside two equal columns instead of overflowing. */
+@media (min-width: 992px) {
+    .footer-section .footer-officials {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 20px;
+    }
+}
+
+.footer-section .footer-logo {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+@media (min-width: 992px) {
+    .footer-section .footer-logo {
+        width: 88px;
+        height: 88px;
+    }
+}
+
+/* Tablets: brand centered on top, so keep its description centered too. */
+@media (max-width: 991.98px) {
+    .footer-section .footer-brand .footer-about {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
 /* Resident hero: small yellow line above the heading, and the heading's
    second line in yellow (like the home page hero). */
 #residentHeroCarousel .resident-hero-eyebrow {

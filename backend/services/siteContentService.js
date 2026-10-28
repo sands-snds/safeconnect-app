@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 // Contact details shown on the public site, editable by an Admin
-// (super_admin) under Content > Site Contacts:
+// (super_admin) under Content > Page Contacts:
 //   emergencyContacts - the floating call button's list, also the footer's
 //                       "Emergency Hotline" column. A contact may have
 //                       "choices" ([{ name, number }], up to 4): the call

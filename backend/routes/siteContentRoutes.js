@@ -47,14 +47,14 @@ const handleUpload = (req, res, next) =>
 // carousel photos and demo videos.
 router.get("/", controller.getContent);
 
-// Admin (super_admin) only: Content > Site Contacts.
+// Admin (super_admin) only: Content > Page Contacts.
 router.put("/", ...adminOnly,
-    logActivity("Updated site contacts", () => "Emergency contacts, officials and socials"),
+    logActivity("Updated page contacts", () => "Emergency contacts, officials and socials"),
     controller.updateContent);
 
-// Admin (super_admin) only: Content > Site Contents.
+// Admin (super_admin) only: Content > Page Contents.
 router.put("/media", ...adminOnly,
-    logActivity("Updated site contents", () => "Carousel photos and demo videos"),
+    logActivity("Updated page contents", () => "Carousel photos and demo videos"),
     controller.updateMedia);
 router.post("/upload", ...adminOnly, handleUpload, checkImageSize, controller.uploadMedia);
 
