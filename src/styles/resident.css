@@ -2586,8 +2586,3 @@ body {
     line-height: 1.15;
 }
 
-/* Leave room on the right for the floating call button so the banner text
-   is not covered (desktop, where the text sits on the right). */
-@media (min-width: 992px) {
-    .emergency-banner { padding-right: 92px; } /* the button's left edge is 84px from the screen edge */
-}
