@@ -160,6 +160,11 @@ export default function About() {
         .ab-step-text p { margin: 0 auto; max-width: 420px; color: #777; line-height: 1.75; font-size: 0.95rem; }
         .ab-step-row:not(.reverse) .ab-step-text p { margin-left: 0; }
         .ab-step-row.reverse .ab-step-text p { margin-right: 0; }
+        /* Reversed rows (picture on the right): heading and text both line up
+           against the picture, like the other rows. */
+        @media (min-width: 761px) {
+          .ab-step-row.reverse .ab-step-text { text-align: right; }
+        }
         @media (max-width: 760px) {
           .ab-step-text p { margin: 0 auto; }
         }

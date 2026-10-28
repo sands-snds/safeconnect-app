@@ -506,9 +506,7 @@ export const translations = {
       titleLine1: 'Help Is Just',
       titleLine2: 'One Tap Away',
       subtitle: 'Report emergencies, request assistance, and get real-time barangay updates, so help reaches you and your neighbors faster.',
-      hotline: 'Emergency Hotline: 911',
-      // No 24/7 promise: the barangay can't guarantee round-the-clock response.
-      available247: 'For life-threatening emergencies, call 911 immediately.'
+      hotline: 'Emergency Hotline: 911'
     },
     emergencyReportSection: {
       badge: 'Get help fast',
@@ -1372,8 +1370,7 @@ export const translations = {
       titleLine1: 'Isang Pindot Lang,',
       titleLine2: 'May Tulong Na',
       subtitle: 'Mag-report ng emergency, humingi ng tulong, at makatanggap ng balita mula sa barangay nang real time, para mas mabilis makarating ang tulong sa iyo at sa iyong mga kapitbahay.',
-      hotline: 'Emergency Hotline: 911',
-      available247: 'Para sa emergency na nagbabanta sa buhay, tumawag agad sa 911.'
+      hotline: 'Emergency Hotline: 911'
     },
     emergencyReportSection: {
       badge: 'Mabilis na tulong',

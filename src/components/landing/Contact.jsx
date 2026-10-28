@@ -79,6 +79,11 @@ export default function Contact() {
         .ct-sos-btn:hover { transform: scale(1.05); }
 
         .ct-list { display: flex; flex-direction: column; gap: 12px; }
+        /* Side by side with the 911 card: the three numbers share its height, so
+           their tops and bottoms line up with it. */
+        @media (min-width: 821px) {
+          .ct-list .ct-row { flex: 1; padding: 18px 22px; }
+        }
         .ct-row {
           display: flex;
           align-items: center;

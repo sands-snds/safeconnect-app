@@ -86,11 +86,6 @@ function ResidentHero() {
           <i className="bi bi-telephone-forward-fill me-2"></i>
           <span>{t('residentHero.hotline')}</span>
         </div>
-
-        <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
-          <i className="bi bi-info-circle-fill me-2"></i>
-          {t('residentHero.available247')}
-        </div>
       </div>
     </>
   );
