@@ -1,8 +1,9 @@
 import React from "react";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useSiteMedia, mediaSrc, DEFAULT_SITE_MEDIA } from "../shared/useSiteContent";
+import { openCallPanel } from "./navbar/weatherCodes";
 
-function ResidentHero() {
+function ResidentHero({ onReportEmergency, onRequestHelp }) {
   const { t } = useLanguage();
   // Admins change these under Content > Site Contents.
   const { residentCarousel } = useSiteMedia();
@@ -38,6 +39,15 @@ function ResidentHero() {
                     </h3>
 
                     <p className="hero-subtitle">{t('residentHero.subtitle')}</p>
+
+                    <div className="resident-hero-actions">
+                      <button type="button" className="rh-btn rh-btn-primary" onClick={onReportEmergency}>
+                        <i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {t('residentHero.ctaReport')}
+                      </button>
+                      <button type="button" className="rh-btn rh-btn-outline" onClick={onRequestHelp}>
+                        <i className="bi bi-life-preserver" aria-hidden="true" /> {t('residentHero.ctaAssist')}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -79,17 +89,19 @@ function ResidentHero() {
         </div>
       </div>
 
-      {/* Emergency Banner -- kept outside the carousel so the indicators and
-          arrows don't sit on top of it */}
-      <div className="emergency-banner text-center text-lg-start">
-        <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
-          <i className="bi bi-telephone-forward-fill me-2"></i>
-          <span>{t('residentHero.hotline')}</span>
-        </div>
-
-        <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
-          <i className="bi bi-clock-fill me-2"></i>
-          {t('residentHero.available247')}
+      {/* Hotline strip -- outside the carousel so its arrows and indicators
+          don't sit on top of it. No 24/7 promise: for life-threatening
+          emergencies residents call 911. */}
+      <div className="resident-hotline-strip">
+        <div className="rhs-inner">
+          <p className="rhs-text">
+            <i className="bi bi-telephone-fill" aria-hidden="true" />
+            <span>{t('residentHero.lifeThreatening')}</span>
+          </p>
+          <div className="rhs-actions">
+            <a className="rhs-btn rhs-btn-solid" href="tel:911">{t('residentHero.call911')}</a>
+            <button type="button" className="rhs-btn rhs-btn-ghost" onClick={openCallPanel}>{t('residentHero.hotlinesButton')}</button>
+          </div>
         </div>
       </div>
     </>

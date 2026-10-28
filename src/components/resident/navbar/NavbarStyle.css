@@ -1871,6 +1871,16 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .news-weather-tip i { font-size: 1.1rem; color: #2563eb; margin-top: 1px; }
 
+/* Desktop: the weather stays in view while the articles scroll (only when
+   the window is tall enough to show all of it). */
+@media (min-width: 1100px) and (min-height: 700px) {
+    .news-layout.with-weather .news-weather-slot {
+        position: sticky;
+        top: 20px;
+        align-self: start;
+    }
+}
+
 /* Desktop: the weather fills the right column (taller, roomier). */
 @media (min-width: 1100px) {
     .news-weather { padding: 26px; gap: 22px; min-height: 480px; }
