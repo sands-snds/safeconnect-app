@@ -14,7 +14,6 @@ import { clearAuthToken, logoutUser } from "../../Services/api";
 import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
 import useLiveUpdates from "../shared/useLiveUpdates";
 import useTabNotifications, { markNotificationsViewed } from "../shared/useTabNotifications";
-import { describeWeatherCode, OPEN_RESIDENT_VIEW_EVENT } from "./navbar/weatherCodes";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { MAIN_LOGO } from "../shared/logos";
 import "./navbar/NavbarStyle.css";
@@ -25,6 +24,15 @@ const POLL_INTERVAL_MS = 30 * 1000;
 
 const RAIN_ALERT_THRESHOLD = 40;
 
+const describeWeatherCode = (code) => {
+  if ([0].includes(code)) return { key: 'clear', label: 'Clear sky', icon: 'bi-sun-fill' };
+  if ([1, 2, 3].includes(code)) return { key: 'partlyCloudy', label: 'Partly cloudy', icon: 'bi-cloud-sun-fill' };
+  if ([45, 48].includes(code)) return { key: 'foggy', label: 'Foggy', icon: 'bi-cloud-fog2-fill' };
+  if ([51, 53, 55, 56, 57].includes(code)) return { key: 'drizzle', label: 'Drizzle', icon: 'bi-cloud-drizzle-fill' };
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { key: 'rain', label: 'Rain', icon: 'bi-cloud-rain-fill' };
+  if ([95, 96, 99].includes(code)) return { key: 'thunderstorm', label: 'Thunderstorm', icon: 'bi-cloud-lightning-rain-fill' };
+  return { key: 'update', label: 'Weather update', icon: 'bi-cloud-fill' };
+};
 
 const formatNewsDate = (dateStr) => {
   if (!dateStr) return '';
@@ -352,18 +360,6 @@ function ResidentNavbar() {
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 300);
   };
-
-  // Links elsewhere on the page ("At a glance") open News / My Reports.
-  const viewOpeners = useRef({});
-  viewOpeners.current = { news: openNewsPage, reports: openReportsPage };
-  useEffect(() => {
-    const open = (e) => {
-      const fn = viewOpeners.current[e.detail];
-      if (fn) fn();
-    };
-    window.addEventListener(OPEN_RESIDENT_VIEW_EVENT, open);
-    return () => window.removeEventListener(OPEN_RESIDENT_VIEW_EVENT, open);
-  }, []);
 
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);
 

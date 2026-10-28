@@ -7,7 +7,6 @@ jest.mock('../components/resident/ResidentHero', () => () => null);
 jest.mock('../components/resident/EmergencyReportSection', () => () => null);
 jest.mock('../components/shared/DonationFooter', () => () => null);
 jest.mock('../components/resident/ResidentPettyCrimeModal', () => () => null);
-jest.mock('../components/resident/ResidentGlance', () => () => null);
 // Stand-ins: the emergency form's "Request Assistance" button after a report
 // is sent, and the assistance form showing whether it's open.
 jest.mock('../components/resident/ResidentEmergencyModal', () => ({ onRequestAssistance }) => (

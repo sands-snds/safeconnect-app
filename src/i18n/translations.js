@@ -501,33 +501,19 @@ export const translations = {
       viewReplies: '{{count}} replies',
       hideReplies: 'Hide replies'
     },
-    residentGlance: {
-      title: 'At a glance',
-      subtitle: 'Your reports, the latest barangay update, and today\'s weather.',
-      reportsTitle: 'My reports',
-      noReports: 'You haven\'t sent any reports yet.',
-      viewReports: 'View my reports',
-      newsTitle: 'Latest update',
-      noNews: 'No announcements yet.',
-      viewNews: 'See all news',
-      viewForecast: 'View forecast',
-      loading: 'Loading...'
-    },
     residentHero: {
       eyebrow: 'Barangay Sta. Fe Safe Connect',
       titleLine1: 'Help Is Just',
       titleLine2: 'One Tap Away',
       subtitle: 'Report emergencies, request assistance, and get real-time barangay updates, so help reaches you and your neighbors faster.',
-      ctaReport: 'Report an emergency',
-      ctaAssist: 'Request assistance',
-      lifeThreatening: 'In a life-threatening emergency, call 911 right away.',
-      call911: 'Call 911',
-      hotlinesButton: 'Barangay hotlines'
+      hotline: 'Emergency Hotline: 911',
+      // No 24/7 promise: the barangay can't guarantee round-the-clock response.
+      available247: 'For life-threatening emergencies, call 911 immediately.'
     },
     emergencyReportSection: {
       badge: 'Get help fast',
       title: 'Report an Incident',
-      subtitle: 'Tell the barangay what is happening and where. Your report goes straight to the barangay\'s response team. Choose the option that fits your situation.',
+      subtitle: 'Tell the barangay what is happening and where. Your report goes straight to the barangay response team. Choose the option that fits your situation.',
       reportButton: 'Report',
       cards: {
         emergency: {
@@ -1381,28 +1367,13 @@ export const translations = {
       viewReplies: '{{count}} na sagot',
       hideReplies: 'Itago ang mga sagot'
     },
-    residentGlance: {
-      title: 'Sa isang tingin',
-      subtitle: 'Ang iyong mga ulat, ang pinakabagong balita ng barangay, at ang panahon ngayon.',
-      reportsTitle: 'Aking mga ulat',
-      noReports: 'Wala ka pang naipapadalang ulat.',
-      viewReports: 'Tingnan ang aking mga ulat',
-      newsTitle: 'Pinakabagong balita',
-      noNews: 'Wala pang anunsyo.',
-      viewNews: 'Tingnan ang lahat ng balita',
-      viewForecast: 'Tingnan ang panahon',
-      loading: 'Naglo-load...'
-    },
     residentHero: {
       eyebrow: 'Barangay Sta. Fe Safe Connect',
       titleLine1: 'Isang Pindot Lang,',
       titleLine2: 'May Tulong Na',
       subtitle: 'Mag-report ng emergency, humingi ng tulong, at makatanggap ng balita mula sa barangay nang real time, para mas mabilis makarating ang tulong sa iyo at sa iyong mga kapitbahay.',
-      ctaReport: 'Mag-report ng emergency',
-      ctaAssist: 'Humingi ng tulong',
-      lifeThreatening: 'Kung nagbabanta sa buhay ang emergency, tumawag agad sa 911.',
-      call911: 'Tumawag sa 911',
-      hotlinesButton: 'Mga hotline ng barangay'
+      hotline: 'Emergency Hotline: 911',
+      available247: 'Para sa emergency na nagbabanta sa buhay, tumawag agad sa 911.'
     },
     emergencyReportSection: {
       badge: 'Mabilis na tulong',

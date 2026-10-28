@@ -1,23 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import useSiteContent from '../shared/useSiteContent';
 import EmergencyContactList from '../shared/EmergencyContactList';
 import ResidentAssistanceModal from './ResidentAssistanceModal';
 import ResidentPettyCrimeModal from './ResidentPettyCrimeModal';
-import { OPEN_CALL_PANEL_EVENT } from './navbar/weatherCodes';
 
 function EmergencyCallButton() {
   const { t } = useLanguage();
   // Editable by Admins under Content > Site Contacts; also the footer's hotlines.
   const { emergencyContacts } = useSiteContent();
   const [open, setOpen] = useState(false);
-
-  // The "Barangay hotlines" button under the hero opens this panel.
-  useEffect(() => {
-    const show = () => setOpen(true);
-    window.addEventListener(OPEN_CALL_PANEL_EVENT, show);
-    return () => window.removeEventListener(OPEN_CALL_PANEL_EVENT, show);
-  }, []);
 
   const handleCall = (number) => {
     window.location.href = `tel:${number}`;

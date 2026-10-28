@@ -6,7 +6,6 @@ import Footer from '../components/shared/DonationFooter';
 import ResidentEmergencyModal from '../components/resident/ResidentEmergencyModal';
 import ResidentAssistanceModal from '../components/resident/ResidentAssistanceModal';
 import ResidentPettyCrimeModal from '../components/resident/ResidentPettyCrimeModal';
-import ResidentGlance from '../components/resident/ResidentGlance';
 import "../styles/emergencyreport.css";
 import "../styles/residentemergencymodal.css";
 
@@ -63,8 +62,6 @@ function ResidentPage() {
           onRequestHelp={() => openAssistance()}
         />
       </section>
-
-      <ResidentGlance userId={currentUser?.id} />
 
       <section id="emergency-report">
         <EmergencyReportSection
