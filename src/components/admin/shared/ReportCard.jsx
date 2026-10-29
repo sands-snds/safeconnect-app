@@ -57,8 +57,8 @@ const ReportCard = ({
             {badge && (
               <span
                 style={{
-                  fontSize: 11,
-                  padding: "2px 8px",
+                  fontSize: 12,
+                  padding: "3px 10px",
                   borderRadius: 20,
                   background: badge.bg,
                   color: badge.color,

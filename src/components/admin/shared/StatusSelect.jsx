@@ -10,6 +10,12 @@ const STATUS_COLORS = {
   "Dismissed": { bg: "#fee2e2", text: "#991b1b" }
 };
 
+// The status as a pill, for ReportCard's badge next to the report's title.
+export const statusBadge = (status) => {
+  const colors = STATUS_COLORS[status] || { bg: "#f3f4f6", text: "#374151" };
+  return { text: status, bg: colors.bg, color: colors.text };
+};
+
 // "Move to ..." takes the color of the status it moves to (admin.css).
 const NEXT_BUTTON_CLASS = {
   "In Progress": "button-status-progress",
@@ -28,7 +34,9 @@ const StatusSelect = ({
   value,
   reportId,
   reportType,
-  onUpdateStatus
+  onUpdateStatus,
+  // false when the status is already shown elsewhere (next to the title).
+  showBadge = true
 }) => {
   const [pendingNext, setPendingNext] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,19 +62,21 @@ const StatusSelect = ({
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-      <span
-        style={{
-          padding: "4px 12px",
-          borderRadius: 20,
-          fontSize: 12,
-          fontWeight: 600,
-          background: colors.bg,
-          color: colors.text,
-          whiteSpace: "nowrap"
-        }}
-      >
-        {value}
-      </span>
+      {showBadge && (
+        <span
+          style={{
+            padding: "4px 12px",
+            borderRadius: 20,
+            fontSize: 12,
+            fontWeight: 600,
+            background: colors.bg,
+            color: colors.text,
+            whiteSpace: "nowrap"
+          }}
+        >
+          {value}
+        </span>
+      )}
 
       {nextStatus && (
         <button

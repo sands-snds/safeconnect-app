@@ -4,7 +4,7 @@ import ListView, { allOption } from "../../shared/ListView";
 import ReportCard from "../../shared/ReportCard";
 
 import PettyCrimeReportDetails from "./PettyCrimeReportDetails";
-import StatusSelect from "../../shared/StatusSelect";
+import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
 import DismissalNote from "../shared/DismissalNote";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
@@ -36,6 +36,7 @@ const PettyCrimeReportsTable = ({
       key={report.id}
       accentColor="#b45309"
       title={report.crimeType}
+      badge={statusBadge(report.status)}
       tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
       statusControl={
@@ -45,6 +46,7 @@ const PettyCrimeReportsTable = ({
             reportId={report.id}
             reportType="pettyCrime"
             onUpdateStatus={onUpdateStatus}
+            showBadge={false}
           />
           <ArchiveButton report={report} reportType="pettyCrime" onArchive={onArchive} />
         </div>

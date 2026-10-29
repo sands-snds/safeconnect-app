@@ -432,9 +432,10 @@
   border-bottom-color: rgba(var(--stat-rgb), 0.55);
 }
 
+/* Other totals: filled light pink (the Total Reports card is the outlined one). */
 .dash-stat-outline {
-  background: #fff;
-  border: 2px solid #B91C1C;
+  background: #FDECEC;
+  border: 2px solid #FDECEC;
   min-height: 114px;
 }
 
@@ -515,7 +516,8 @@
   gap: 6px;
   padding: 20px 16px;
   border-radius: 14px;
-  background: #FDECEC;
+  background: #fff;
+  border: 2px solid #B91C1C;
   color: #B91C1C;
   text-align: center;
 }

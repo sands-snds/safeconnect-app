@@ -4,7 +4,7 @@ import ListView, { allOption } from "../../shared/ListView";
 import ReportCard from "../../shared/ReportCard";
 
 import AssistanceRequestDetails from "./AssistanceRequestDetails";
-import StatusSelect from "../../shared/StatusSelect";
+import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
 import DismissalNote from "../shared/DismissalNote";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
@@ -36,12 +36,15 @@ const AssistanceRequestsTable = ({
       key={request.id}
       accentColor="#6B2C3E"
       title={request.victimOfEmergency ? `${request.assistanceType} · ${request.victimOfEmergency}` : request.assistanceType}
-      badge={{
-        text: `${request.peopleAffected || 1} people`,
-        bg: "#f3f4f6",
-        color: "#374151"
-      }}
-      tag={<ReportForTag report={request} />}
+      badge={statusBadge(request.status)}
+      tag={
+        <>
+          <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: "#f3f4f6", color: "#374151", fontWeight: 600, whiteSpace: "nowrap" }}>
+            {request.peopleAffected || 1} people
+          </span>
+          <ReportForTag report={request} />
+        </>
+      }
       subtitle={`${request.requester} · ${request.location} · ${request.date}`}
       statusControl={
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -50,6 +53,7 @@ const AssistanceRequestsTable = ({
             reportId={request.id}
             reportType="assistance"
             onUpdateStatus={onUpdateStatus}
+            showBadge={false}
           />
           <ArchiveButton report={request} reportType="assistance" onArchive={onArchive} />
         </div>
