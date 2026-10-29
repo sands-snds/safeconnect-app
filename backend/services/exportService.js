@@ -33,8 +33,9 @@ const dayKeyLabel = (key) =>
     });
 
 // Every report type now shares the same forward-only status workflow
-// (see backend/utils/statusWorkflow.js): Received -> In Progress -> Resolved.
-const REPORT_STATUSES = ["Received", "In Progress", "Resolved"];
+// (see backend/utils/statusWorkflow.js): Received -> In Progress -> Resolved,
+// or Rejected.
+const REPORT_STATUSES = ["Received", "In Progress", "Resolved", "Rejected"];
 
 const countByStatus = (rows) => {
     const counts = {};

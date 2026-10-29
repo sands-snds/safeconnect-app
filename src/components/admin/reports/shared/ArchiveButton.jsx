@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { showPopup } from "../../../shared/popup";
 
-// Archive / Restore button shown next to a report's status. Only Resolved
-// reports can be archived; archived ones get a Restore button instead.
+// Archive / Restore button shown next to a report's status. Only Resolved and
+// Rejected reports can be archived; archived ones get a Restore button instead.
 // onArchive(id, type, archived) -> { success, message } (useAdminData's
 // setReportArchived).
 const ArchiveButton = ({ report, reportType, onArchive }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isArchived = Boolean(report.archivedAt);
-  if (!onArchive || (!isArchived && report.status !== "Resolved")) return null;
+  if (!onArchive || (!isArchived && !["Resolved", "Rejected"].includes(report.status))) return null;
 
   const handleClick = async () => {
     setIsSubmitting(true);

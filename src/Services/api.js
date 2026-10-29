@@ -370,7 +370,8 @@ export const fetchEmergencyReports = async () => {
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
-        archivedAt: r.archived_at || null
+        archivedAt: r.archived_at || null,
+        rejectionReason: r.rejection_reason || ''
     }));
 };
 
@@ -442,7 +443,8 @@ export const fetchAssistanceRequests = async () => {
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
-        archivedAt: r.archived_at || null
+        archivedAt: r.archived_at || null,
+        rejectionReason: r.rejection_reason || ''
     }));
 };
 
@@ -511,7 +513,8 @@ export const fetchPettyCrimes = async () => {
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
-        archivedAt: r.archived_at || null
+        archivedAt: r.archived_at || null,
+        rejectionReason: r.rejection_reason || ''
     }));
 };
 
@@ -1008,7 +1011,8 @@ export const exportReport = async (type, format, filters = {}) => {
 
 // ── Status update (generic) ───────────────────────────────────────────────────
 // type: "emergency" | "assistance" | "pettyCrime" | "users"
-export const updateStatus = async (type, id, status) => {
+// reason: required when status is "Rejected" (sent to the reporter).
+export const updateStatus = async (type, id, status, reason) => {
     // Method differs per resource: emergency/assistance accept PUT or PATCH,
     // but petty crime and users are PATCH-only (see backend/routes/*).
     // Using the wrong method 404s.
@@ -1025,7 +1029,7 @@ export const updateStatus = async (type, id, status) => {
     const res = await apiFetch(entry.url, {
         method: entry.method,
         headers: authHeaders(),
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(reason ? { status, reason } : { status }),
     });
 
     let result = {};

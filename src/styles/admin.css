@@ -350,30 +350,31 @@
   border-radius: 14px;
   font: inherit;
   text-align: left;
-  color: #6B2C3E;
+  /* Colors of the "SafeConnect Admin" badge above the welcome line. */
+  color: #B91C1C;
   cursor: pointer;
   transition: transform .15s, box-shadow .15s, background .15s;
 }
 
 .dash-stat:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(107, 44, 62, 0.15);
+  box-shadow: 0 6px 14px rgba(185, 28, 28, 0.15);
 }
 
 .dash-stat:focus-visible,
 .dash-stats-create:focus-visible {
-  outline: 2px solid #6B2C3E;
+  outline: 2px solid #B91C1C;
   outline-offset: 2px;
 }
 
 .dash-stat-filled {
   background: #FDECEC;
-  border: 1px solid #f5cdd3;
+  border: 1px solid #FDECEC;
 }
 
 .dash-stat-outline {
   background: #fff;
-  border: 1px solid #e3b7bf;
+  border: 1px solid #B91C1C;
   min-height: 92px;
 }
 
@@ -384,11 +385,7 @@
   justify-content: space-between;
   gap: 8px;
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(107, 44, 62, 0.2);
-}
-
-.dash-stat-outline .dash-stat-bottom {
-  border-bottom-color: #FDECEC;
+  border-bottom: 2px solid rgba(185, 28, 28, 0.55);
 }
 
 .dash-stat-label {
@@ -411,21 +408,14 @@
   flex-shrink: 0;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  font-size: 17px;
-}
-
-.dash-stat-filled .dash-stat-icon {
-  background: #6B2C3E;
-  color: #fff;
+  font-size: 24px;
+  color: #B91C1C;
 }
 
 .dash-stat-outline .dash-stat-icon {
-  width: 32px;
-  height: 32px;
-  font-size: 15px;
-  background: #FDECEC;
-  color: #6B2C3E;
+  width: 28px;
+  height: 28px;
+  font-size: 17px;
 }
 
 .dash-stat-value {
@@ -446,8 +436,14 @@
   width: 100%;
   padding: 11px 14px;
   border-radius: 10px;
-  font-weight: 600;
+  background: #FDECEC;
+  color: #B91C1C;
+  font-weight: 700;
   white-space: nowrap;
+}
+
+.dash-stats-create:hover:not(:disabled) {
+  background: #f9d6da;
 }
 
 .dash-stats-total {
@@ -459,8 +455,8 @@
   gap: 6px;
   padding: 20px 16px;
   border-radius: 14px;
-  background: #6B2C3E;
-  color: #fff;
+  background: #FDECEC;
+  color: #B91C1C;
   text-align: center;
 }
 
@@ -473,12 +469,12 @@
 
 .dash-stats-total-icon {
   font-size: 20px;
-  opacity: .85;
 }
 
 .dash-stats-total-label {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #7f1d1d;
 }
 
 /* Phones (compact): no counters, so Create + Total Reports fill the width. */

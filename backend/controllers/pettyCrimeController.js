@@ -1,7 +1,7 @@
 const PettyCrime = require("../models/PettyCrime");
 const PettyCrimeService = require("../services/pettyCrimeService");
 const Notification = require("../models/Notification");
-const { validateStatusTransition } = require("../utils/statusWorkflow");
+const { validateStatusTransition, validateRejectionReason, rejectionMessage, REJECTED } = require("../utils/statusWorkflow");
 
 // Anonymous reports: admins get no way to link the report to an account.
 // (Name and contact were never stored; this removes reporter_id.)
@@ -65,13 +65,18 @@ exports.updateStatus = async (req, res) => {
         }
 
         let replyMessage;
+        let rejectionReason = null;
         try {
             replyMessage = validateStatusTransition(report.status, req.body.status);
+            if (req.body.status === REJECTED) {
+                rejectionReason = validateRejectionReason(req.body.reason);
+                replyMessage = rejectionMessage(rejectionReason);
+            }
         } catch (validationError) {
             return res.status(400).json({ success: false, message: validationError.message });
         }
 
-        const affected = await PettyCrime.updateStatus(req.params.id, req.body.status);
+        const affected = await PettyCrime.updateStatus(req.params.id, req.body.status, rejectionReason);
 
         if (report.reporter_id && replyMessage) {
             await Notification.create({

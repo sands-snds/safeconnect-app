@@ -5,8 +5,8 @@ import { setSiteMedia, mediaSrc } from "../../shared/useSiteContent";
 import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
 
 // Content > Page Contents (Admins only): the landing page carousel photos,
-// the system demo video (landing page + News) and the admin demo video
-// (shown when someone signs in to the admin panel). Saved with
+// the landing page video (systemDemo: a demo or any video for residents)
+// and the admin demo video (shown when someone signs in to the admin panel). Saved with
 // PUT /api/site-content/media (backend/services/siteMediaService.js).
 
 const card = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, marginBottom: 20 };
@@ -255,7 +255,7 @@ export default function SiteContentsPage() {
 
   const handleSave = async () => {
     // A YouTube choice with no valid link would be refused; catch it here.
-    for (const [key, name] of [["systemDemo", "System demo"], ["adminDemo", "Admin demo"]]) {
+    for (const [key, name] of [["systemDemo", "Landing page"], ["adminDemo", "Admin demo"]]) {
       if (draft[key].video.source === "youtube" && !draft[key].video.url) {
         showPopup({ type: "warning", title: "Check the YouTube Link", message: `The ${name} video needs a valid YouTube link, or choose "No video".` });
         return;
@@ -299,9 +299,9 @@ export default function SiteContentsPage() {
       <div style={card}>
         <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>
           <i className="bi bi-play-circle-fill" style={{ color: "#6B2C3E", marginRight: 8 }} />
-          System Demo Video
+          Landing Page Video
         </h3>
-        <p style={hint}>For residents and visitors: shown on the landing page (below the carousel, above "What you can do") Until a video is added, the landing page shows a "coming soon" placeholder.</p>
+        <p style={hint}>Include a video that residents and visitors will see on the landing page (below the carousel, above "What you can do"), such as a guide to using Safe Connect, an advisory or a barangay update. Until a video is added, the landing page shows a "coming soon" placeholder.</p>
         <VideoEditor demo={draft.systemDemo} onChange={(systemDemo) => setDraft((d) => ({ ...d, systemDemo }))}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
             <Toggle checked={draft.systemDemo.showOnLanding} onChange={(v) => setDraft((d) => ({ ...d, systemDemo: { ...d.systemDemo, showOnLanding: v } }))}>

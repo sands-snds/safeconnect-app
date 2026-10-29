@@ -57,7 +57,7 @@ const AdminStats = ({
 
       <div className="dash-stats-side">
         {onCreateAnnouncement && (
-          <button type="button" className="button button-primary dash-stats-create" onClick={onCreateAnnouncement}>
+          <button type="button" className="button dash-stats-create" onClick={onCreateAnnouncement}>
             <i className="bi bi-plus-lg" aria-hidden="true" /> Create Announcement
           </button>
         )}

@@ -23,8 +23,20 @@ const statusLabel = (status, t) => (STATUS_LABEL_KEYS[status] ? t(`myReports.sta
 
 const STAGE_KEYS = ['received', 'inProgress', 'resolved'];
 
-// Status filter choices (Pending counts as Received, Completed as Resolved).
-const STATUS_FILTERS = ['Received', 'In Progress', 'Resolved'];
+// Status filter choices (Pending counts as Received, Completed as Resolved,
+// Cancelled as Rejected).
+const STATUS_FILTERS = ['Received', 'In Progress', 'Resolved', 'Rejected'];
+
+// The short message under each report's details, by status (Rejected also
+// shows the reason the barangay gave).
+const STATUS_MESSAGES = {
+  Received: { key: 'received', icon: 'bi-inbox-fill' },
+  Pending: { key: 'received', icon: 'bi-inbox-fill' },
+  'In Progress': { key: 'inProgress', icon: 'bi-truck' },
+  Resolved: { key: 'resolved', icon: 'bi-patch-check-fill' },
+  Completed: { key: 'resolved', icon: 'bi-patch-check-fill' },
+  Rejected: { key: 'rejected', icon: 'bi-x-circle-fill' }
+};
 
 const PAGE_SIZE = 5;
 
@@ -655,6 +667,22 @@ function MyReportsPage({ isOpen, onClose, userId }) {
           margin: 0.9rem 0 0.7rem;
         }
 
+        /* Status message under the meta row (In Progress: "Help is on the way..."). */
+        .mr-status-msg {
+          display: flex;
+          gap: 0.6rem;
+          align-items: flex-start;
+          margin: 0.8rem 0 0.2rem;
+          padding: 0.65rem 0.85rem;
+          border-radius: 10px;
+          font-size: 0.86rem;
+          line-height: 1.45;
+        }
+
+        .mr-status-msg i { font-size: 1rem; margin-top: 0.05rem; }
+        .mr-status-msg p { margin: 0; font-weight: 600; }
+        .mr-status-msg .mr-status-reason { margin-top: 0.3rem; font-weight: 400; }
+
         .mr-card-meta {
           display: flex;
           flex-wrap: wrap;
@@ -1063,6 +1091,20 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                       )}
                     </div>
 
+                    {STATUS_MESSAGES[r.status] && (
+                      <div className="mr-status-msg" style={{ background: statusStyle.bg, color: statusStyle.color }}>
+                        <i className={`bi ${STATUS_MESSAGES[r.status].icon}`} aria-hidden="true"></i>
+                        <div>
+                          <p>{t(`myReports.statusMessage.${STATUS_MESSAGES[r.status].key}`)}</p>
+                          {r.status === 'Rejected' && r.rejection_reason && (
+                            <p className="mr-status-reason">
+                              <strong>{t('myReports.statusMessage.reason')}</strong> {r.rejection_reason}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {r.report_for === 'others' && r.victim_name && (
                       <div className="mr-onbehalf">
                         <i className="bi bi-people-fill"></i>
@@ -1071,18 +1113,11 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                       </div>
                     )}
 
-                    {(r.severity || r.urgency) && (
+                    {r.type === 'Assistance' && r.urgency && (
                       <div className="mr-badges">
-                        {r.type === 'Emergency' && r.severity && (
-                          <span className="mr-mini-badge" style={{ background: getLevelStyle(r.severity).bg, color: getLevelStyle(r.severity).color }}>
-                            {t('myReports.severity')}: {r.severity}
-                          </span>
-                        )}
-                        {r.type === 'Assistance' && r.urgency && (
-                          <span className="mr-mini-badge" style={{ background: getLevelStyle(r.urgency).bg, color: getLevelStyle(r.urgency).color }}>
-                            {t('assistanceModal.urgency')}: {r.urgency}
-                          </span>
-                        )}
+                        <span className="mr-mini-badge" style={{ background: getLevelStyle(r.urgency).bg, color: getLevelStyle(r.urgency).color }}>
+                          {t('assistanceModal.urgency')}: {r.urgency}
+                        </span>
                       </div>
                     )}
 

@@ -156,11 +156,17 @@ class AssistanceRequest {
         return result.affectedRows;
     }
 
-    static async updateStatus(id, status) {
+    // rejectionReason: only for status "Rejected" (utils/statusWorkflow.js).
+    static async updateStatus(id, status, rejectionReason = null) {
         const [result] = await db.query(
-            // resolved_at starts the auto-archive countdown (services/archiveService.js).
-            `UPDATE assistance_requests SET status = ?, resolved_at = IF(? = 'Resolved', NOW(), resolved_at) WHERE id = ?`,
-            [status, status, id]
+            // resolved_at (the closing time) starts the auto-archive countdown
+            // for Resolved and Rejected reports (services/archiveService.js).
+            `UPDATE assistance_requests
+             SET status = ?,
+                 resolved_at = IF(? IN ('Resolved', 'Rejected'), NOW(), resolved_at),
+                 rejection_reason = IF(? = 'Rejected', ?, rejection_reason)
+             WHERE id = ?`,
+            [status, status, status, rejectionReason, id]
         );
         return result.affectedRows;
     }

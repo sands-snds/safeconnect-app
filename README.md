@@ -48,6 +48,7 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | **Dashboard** | Totals, a "reports over time" chart, status pie charts and the latest reports. |
 | **Report management** | Emergency, Assistance and Petty Crime tabs with search, filters and pagination. Each card shows the full details, the photo and the map pin. |
 | **Status workflow** | A report can only move forward (Received → In Progress → Resolved). The resident gets an automatic update at each step. |
+| **Reject a report** | An open report that is a repeat, a prank or a known false accusation can be **Rejected** with a reason, instead of suspending the account. The reason is sent to the resident and shown in My Reports. Rejected reports can be archived like resolved ones. |
 | **Archiving** | Resolved reports can be archived by hand, or automatically after 6 months or 1 year. Archived reports can be restored. |
 | **Announcements** | Create, edit and delete announcements, with an image or a pasted news link (a preview is generated). Every active resident is emailed. |
 | **Announcement comments** | Read residents' comments on each announcement, comment as the barangay, **reply** to a resident (shown as a thread under their comment; the resident is notified), and delete comments for moderation. |

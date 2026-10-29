@@ -2570,34 +2570,21 @@ body {
     }
 }
 
-/* Three-column footer: the officials share a third of the width, so long
-   names wrap inside two equal columns instead of overflowing. */
-@media (min-width: 992px) {
-    .footer-section .footer-officials {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 20px;
-    }
+/* Footer columns 2 and 3: content-sized, centered in their column (DonationFooter.jsx). */
+.footer-section .footer-col {
+    max-width: 100%;
 }
 
 .footer-section .footer-logo {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     flex-shrink: 0;
 }
 
-@media (min-width: 992px) {
-    .footer-section .footer-logo {
-        width: 88px;
-        height: 88px;
-    }
-}
-
-/* Tablets: brand centered on top, so keep its description centered too. */
-@media (max-width: 991.98px) {
-    .footer-section .footer-brand .footer-about {
-        margin-left: auto;
-        margin-right: auto;
-    }
+/* The brand column is centered, so keep its description centered too. */
+.footer-section .footer-brand .footer-about {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Resident hero: small yellow line above the heading, and the heading's

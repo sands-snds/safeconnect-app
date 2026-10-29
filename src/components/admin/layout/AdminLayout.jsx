@@ -46,6 +46,7 @@ const AdminLayout = ({
                     showMobileMenu={showMobileMenu}
                     onCloseMobileMenu={onCloseMobileMenu}
                     adminUser={adminUser}
+                    onWatchDemo={onWatchDemo}
                 />
 
                 <main className="main-content">

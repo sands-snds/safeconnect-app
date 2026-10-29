@@ -3,9 +3,13 @@ import { fetchSiteContent, updateSiteContent } from "../../../Services/api";
 import { showPopup } from "../../shared/popup";
 import { setSiteContent } from "../../shared/useSiteContent";
 
-// Content > Page Contacts (Admins only): edits what the public site shows
+// Content > Page Contacts (Admins only): edits what the public site shows,
+// in two groups:
+//   Call button
 //   - Emergency contacts: the floating call button (landing + resident
-//     pages) and the footer's "Emergency Hotline" column
+//     pages). The footer's "Emergency Hotline" column lists the same numbers,
+//     without the people to choose from (they're in Barangay Officials).
+//   Footer
 //   - Barangay officials: the footer's "Barangay Officials" column
 //   - Socials: the footer's support email and Facebook page
 // Saved with PUT /api/site-content (backend/services/siteContentService.js).
@@ -55,6 +59,19 @@ const iconButton = (danger) => ({
   alignItems: "center",
   justifyContent: "center"
 });
+
+// Title above each group of sections (Call Button, Footer).
+const GroupHeading = ({ icon, title, children }) => (
+  <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0 12px" }}>
+    <span style={{ width: 38, height: 38, borderRadius: 10, background: "#FDECEC", color: "#B91C1C", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+      <i className={`bi ${icon}`} aria-hidden="true" />
+    </span>
+    <div>
+      <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700, color: "#111827" }}>{title}</h2>
+      <p style={{ margin: 0, fontSize: 13, color: "#6b7280" }}>{children}</p>
+    </div>
+  </div>
+);
 
 const move = (list, index, delta) => {
   const next = [...list];
@@ -128,6 +145,10 @@ const SiteContactsPage = () => {
 
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto", paddingBottom: 80 }}>
+      <GroupHeading icon="bi-telephone-outbound-fill" title="Call Button">
+        The red floating button on the landing and resident pages.
+      </GroupHeading>
+
       {/* ── Emergency contacts ── */}
       <div style={sectionStyle}>
         <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>
@@ -135,8 +156,8 @@ const SiteContactsPage = () => {
           Emergency Contacts
         </h3>
         <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6b7280" }}>
-          Shown in the red floating call button on the landing and resident pages, and in the footer's
-          Emergency Hotline column. Listed in this order.
+          The numbers in the call button, in this order. The footer's Emergency Hotline column lists
+          the same numbers, without the people to choose from (they're already in Barangay Officials).
         </p>
 
         {draft.emergencyContacts.map((c, i) => (
@@ -243,6 +264,11 @@ const SiteContactsPage = () => {
           <i className="bi bi-plus-lg" /> Add emergency contact
         </button>
       </div>
+
+      <GroupHeading icon="bi-layout-text-window-reverse" title="Footer">
+        The bottom of the landing and resident pages: Barangay Officials, the Emergency Hotline
+        (from the call button above) and Socials.
+      </GroupHeading>
 
       {/* ── Barangay officials ── */}
       <div style={sectionStyle}>

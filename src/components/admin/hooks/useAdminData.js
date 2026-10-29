@@ -168,7 +168,8 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         }
     };
 
-    const updateStatus = async (id, newStatus, type) => {
+    // reason: only for "Rejected".
+    const updateStatus = async (id, newStatus, type, reason) => {
 
         if (!["emergency", "assistance", "pettyCrime", "users"].includes(type)) {
             return false;
@@ -179,7 +180,8 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         const success = await updateSheetStatus(
             type,
             id,
-            newStatus
+            newStatus,
+            reason
         );
 
         if (!success) return false;
@@ -189,7 +191,8 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
                 item.id === id
                     ? {
                           ...item,
-                          status: newStatus
+                          status: newStatus,
+                          ...(reason ? { rejectionReason: reason } : {})
                       }
                     : item
             );

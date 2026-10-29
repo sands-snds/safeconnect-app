@@ -1,8 +1,9 @@
 const db = require("../config/db");
+const { CLOSED_STATUSES } = require("../utils/statusWorkflow");
 
-// Report archiving. A Resolved report can be archived by hand from its card,
-// and the scheduled job below archives Resolved reports automatically once
-// they have been resolved for longer than the configured period
+// Report archiving. A Resolved or Rejected report can be archived by hand from
+// its card, and the scheduled job below archives them automatically once
+// they have been closed for longer than the configured period
 // (Off / 6 months / 1 year, stored in system_settings). Archived reports stay
 // in their tables with archived_at set -- they're hidden from the admin
 // report lists (shown under "Archived" instead) but still count on the
@@ -24,7 +25,9 @@ const JOB_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 const ARCHIVE_COLUMNS = {
     resolved_at: "TIMESTAMP NULL DEFAULT NULL",
-    archived_at: "TIMESTAMP NULL DEFAULT NULL"
+    archived_at: "TIMESTAMP NULL DEFAULT NULL",
+    // Why an Official/Admin rejected the report (status "Rejected").
+    rejection_reason: "VARCHAR(500) DEFAULT NULL"
 };
 
 // "Reporting for someone else" fields the report forms send. The models
@@ -111,8 +114,8 @@ async function setAutoArchiveMonths(months) {
     );
 }
 
-// Archives Resolved reports resolved more than `months` ago. Reports resolved
-// before resolved_at existed fall back to when they were submitted.
+// Archives Resolved/Rejected reports closed more than `months` ago. Reports
+// closed before resolved_at existed fall back to when they were submitted.
 async function runAutoArchive() {
     const months = await getAutoArchiveMonths();
     if (!months) return 0;
@@ -122,19 +125,19 @@ async function runAutoArchive() {
         const [result] = await db.query(
             `UPDATE ${table}
              SET archived_at = NOW()
-             WHERE status = 'Resolved'
+             WHERE status IN ('Resolved', 'Rejected')
                AND archived_at IS NULL
                AND COALESCE(resolved_at, ${createdCol}) < NOW() - INTERVAL ? MONTH`,
             [months]
         );
         total += result.affectedRows;
     }
-    if (total) console.log(`Auto-archived ${total} resolved report(s).`);
+    if (total) console.log(`Auto-archived ${total} closed report(s).`);
     return total;
 }
 
-// archived: true to archive, false to restore. Only Resolved reports can be
-// archived. Returns { success, status?, message? }.
+// archived: true to archive, false to restore. Only Resolved and Rejected
+// reports can be archived. Returns { success, status?, message? }.
 async function setArchived(type, id, archived) {
     const config = REPORT_TABLES[type];
     if (!config) return { success: false, status: 400, message: "Unknown report type." };
@@ -145,8 +148,8 @@ async function setArchived(type, id, archived) {
     );
     if (!report) return { success: false, status: 404, message: "Report not found." };
 
-    if (archived && report.status !== "Resolved") {
-        return { success: false, status: 400, message: "Only resolved reports can be archived." };
+    if (archived && !CLOSED_STATUSES.includes(report.status)) {
+        return { success: false, status: 400, message: "Only resolved or rejected reports can be archived." };
     }
 
     await db.query(

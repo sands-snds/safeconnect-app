@@ -6,12 +6,14 @@ import ReportCard from "../../shared/ReportCard";
 import AssistanceRequestDetails from "./AssistanceRequestDetails";
 import StatusSelect from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
+import RejectionNote from "../shared/RejectionNote";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 
 const STATUS_OPTIONS = [
   "Received",
   "In Progress",
-  "Resolved"
+  "Resolved",
+  "Rejected"
 ];
 
 const AssistanceRequestsTable = ({
@@ -55,6 +57,7 @@ const AssistanceRequestsTable = ({
       expanded={expandedRowId === request.id}
       onToggle={() => toggleDetails(request.id)}
     >
+      <RejectionNote report={request} />
       <AssistanceRequestDetails request={request} />
     </ReportCard>
   );

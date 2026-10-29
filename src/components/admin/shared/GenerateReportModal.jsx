@@ -13,7 +13,8 @@ const STATUS_CHOICES = [
   { value: '', label: 'All Reports' },
   { value: 'Received', label: 'Received' },
   { value: 'In Progress', label: 'In Progress' },
-  { value: 'Resolved', label: 'Resolved' }
+  { value: 'Resolved', label: 'Resolved' },
+  { value: 'Rejected', label: 'Rejected' }
 ];
 
 const FORMAT_CHOICES = [

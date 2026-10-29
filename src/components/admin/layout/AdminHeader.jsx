@@ -135,18 +135,19 @@ const userMenuRef = useRef(null);
                     width: 42px;
                     height: 42px;
                     padding: 0;
-                    border: none;
+                    /* Like the dashboard's outlined counters (Total Announcements row). */
+                    border: 1px solid #B91C1C;
                     border-radius: 10px;
-                    background: #6B2C3E;
-                    color: #fff;
+                    background: #fff;
+                    color: #B91C1C;
                     font-size: 18px;
                     line-height: 1;
                     cursor: pointer;
                     transition: background .15s;
                 }
-                .admin-header-icon-btn:hover:not(:disabled) { background: #5a2434; }
-                .admin-header-icon-btn:disabled { background: #8a5463; }
-                /* White ring so the red unread count stands out on the maroon button. */
+                .admin-header-icon-btn:hover:not(:disabled) { background: #FDECEC; }
+                .admin-header-icon-btn:disabled { background: #FDECEC; opacity: .7; }
+                /* White ring so the red unread count stands out against the red border. */
                 .admin-header-icon-btn .admin-header-badge { box-shadow: 0 0 0 2px #fff; }
                 .admin-header-refresh-icon { display: inline-block; }
                 .admin-header-refresh-icon.spinning {

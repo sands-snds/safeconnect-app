@@ -1,7 +1,7 @@
 const AssistanceRequest = require("../models/AssistanceRequest");
 const AssistanceRequestService = require("../services/assistanceRequestService");
 const Notification = require("../models/Notification");
-const { validateStatusTransition } = require("../utils/statusWorkflow");
+const { validateStatusTransition, validateRejectionReason, rejectionMessage, REJECTED } = require("../utils/statusWorkflow");
 
 // Services return { success: false, status: 400, message } for invalid input.
 const sendResult = (res, result, successStatus = 200) => {
@@ -57,13 +57,18 @@ exports.updateStatus = async (req, res) => {
         }
 
         let replyMessage;
+        let rejectionReason = null;
         try {
             replyMessage = validateStatusTransition(request.status, req.body.status);
+            if (req.body.status === REJECTED) {
+                rejectionReason = validateRejectionReason(req.body.reason);
+                replyMessage = rejectionMessage(rejectionReason);
+            }
         } catch (validationError) {
             return res.status(400).json({ success: false, message: validationError.message });
         }
 
-        const affected = await AssistanceRequest.updateStatus(req.params.id, req.body.status);
+        const affected = await AssistanceRequest.updateStatus(req.params.id, req.body.status, rejectionReason);
 
         if (request.reporter_id && replyMessage) {
             await Notification.create({

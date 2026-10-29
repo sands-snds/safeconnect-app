@@ -1,5 +1,6 @@
 import React from "react";
 import { MAIN_LOGO } from "../../shared/logos";
+import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 
 const AdminSidebar = ({
   activeView,
@@ -8,8 +9,10 @@ const AdminSidebar = ({
   onLogout,
   showMobileMenu,
   onCloseMobileMenu,
-  adminUser
+  adminUser,
+  onWatchDemo
 }) => {
+  const { adminDemo } = useSiteMedia();
   const adminName = adminUser?.fullName || adminUser?.username || "Administrator";
 
   const menuSections = [
@@ -192,6 +195,16 @@ const AdminSidebar = ({
             >
               <i className="bi bi-person-gear" style={{ marginRight: 4 }} />Account Settings
             </button>
+            {/* Same as the account menu's "Watch demo video" on computers. */}
+            {hasVideo(adminDemo) && onWatchDemo && (
+              <button
+                type="button"
+                onClick={() => { onCloseMobileMenu(); onWatchDemo(); }}
+                style={{ display: "block", marginTop: 6, padding: 0, border: "none", background: "none", color: "#fff", fontSize: 12.5, fontWeight: 600, textDecoration: "underline", cursor: "pointer" }}
+              >
+                <i className="bi bi-play-circle" style={{ marginRight: 4 }} />Watch demo video
+              </button>
+            )}
           </div>
         </div>
       )}
