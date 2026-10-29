@@ -80,7 +80,7 @@ const StatusSelect = ({
       {canDismiss && (
         <button
           type="button"
-          className="button button-soft"
+          className="button button-danger-soft"
           onClick={() => setPendingNext("Dismissed")}
           title="Dismiss a repeat, prank or false report"
           style={{

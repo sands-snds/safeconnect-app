@@ -119,7 +119,7 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                         type="button"
                         onClick={() => onConfirm(isDismiss ? trimmed : undefined)}
                         disabled={!canConfirm}
-                        className="button button-primary"
+                        className={`button ${isDismiss ? "button-danger" : "button-primary"}`}
                         style={{ opacity: canConfirm ? 1 : 0.6 }}
                     >
                         {isSubmitting ? "Updating…" : isDismiss ? "Dismiss Report" : "Confirm"}

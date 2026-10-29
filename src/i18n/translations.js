@@ -1597,14 +1597,14 @@ export const translations = {
         inProgress: 'Isinasagawa',
         resolved: 'Naresolba',
         completed: 'Nakumpleto',
-        dismissed: 'Ibinasura',
+        dismissed: 'Kinansela',
         cancelled: 'Kinansela'
       },
       statusMessage: {
         received: 'Natanggap ang ulat. Susuriin ito ng barangay sa lalong madaling panahon.',
         inProgress: 'Parating na ang tulong. Natanggap na ng aming mga responder ang iyong ulat at papunta na sila.',
         resolved: 'Naresolba na ang ulat na ito. Salamat sa pagtulong na panatilihing ligtas ang ating komunidad.',
-        dismissed: 'Ibinasura ng barangay ang ulat na ito. Kung sa tingin mo ay may pagkakamali, makipag-ugnayan sa barangay.',
+        dismissed: 'Kinansela ng barangay ang ulat na ito. Kung sa tingin mo ay may pagkakamali, makipag-ugnayan sa barangay.',
         reason: 'Dahilan:'
       },
       searchPlaceholder: 'Maghanap ayon sa pamagat, deskripsyon, lokasyon, o reference...',

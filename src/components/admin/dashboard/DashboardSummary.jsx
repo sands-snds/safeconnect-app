@@ -47,8 +47,9 @@ export default function DashboardSummary({
                 <p
                     className="dash-summary-intro"
                     style={{
+                        // One line on computers (no width cap); wraps only on narrower screens.
                         color: "#6b7280",
-                        maxWidth: "650px",
+                        fontSize: "14.5px",
                         lineHeight: 1.6,
                         margin: "6px 0 0"
                     }}
