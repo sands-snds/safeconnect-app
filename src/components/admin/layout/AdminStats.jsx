@@ -6,8 +6,14 @@ import React from 'react';
 // Tablets put the outlined cards in a 2x2 grid. Phones (compact) show only
 // Create Announcement and Total Reports.
 
-const StatCard = ({ label, value, icon, variant, onClick }) => (
-  <button type="button" className={`dash-stat dash-stat-${variant}`} onClick={onClick}>
+// theme: the report type's colors ({ color, rgb }) for the filled cards.
+const StatCard = ({ label, value, icon, variant, theme, onClick }) => (
+  <button
+    type="button"
+    className={`dash-stat dash-stat-${variant}`}
+    onClick={onClick}
+    style={theme ? { '--stat-color': theme.color, '--stat-rgb': theme.rgb } : undefined}
+  >
     <span className="dash-stat-label">{label}</span>
     <span className="dash-stat-bottom">
       <span className="dash-stat-value">{value}</span>
@@ -15,6 +21,14 @@ const StatCard = ({ label, value, icon, variant, onClick }) => (
     </span>
   </button>
 );
+
+// The same colors as the resident page's "Report an Incident" cards
+// (components/resident/EmergencyReportSection.jsx).
+const REPORT_THEMES = {
+  emergency: { color: '#dc2626', rgb: '220, 38, 38' },
+  assistance: { color: '#ea580c', rgb: '234, 88, 12' },
+  pettyCrime: { color: '#7c3aed', rgb: '124, 58, 237' }
+};
 
 const AdminStats = ({
   emergencyReports = [],
@@ -30,9 +44,9 @@ const AdminStats = ({
   compact = false
 }) => {
   const reports = [
-    { label: 'Emergency Reports', value: emergencyReports.length, icon: 'bi-exclamation-triangle-fill', view: 'emergency-reports' },
-    { label: 'Assistance Requests', value: assistanceRequests.length, icon: 'bi-box2-heart-fill', view: 'assistance-requests' },
-    { label: 'Petty Crime Reports', value: pettyCrimeReports.length, icon: 'bi-shield-fill-exclamation', view: 'petty-crime-reports' }
+    { label: 'Emergency Reports', value: emergencyReports.length, icon: 'bi-exclamation-triangle-fill', view: 'emergency-reports', theme: REPORT_THEMES.emergency },
+    { label: 'Assistance Requests', value: assistanceRequests.length, icon: 'bi-box2-heart-fill', view: 'assistance-requests', theme: REPORT_THEMES.assistance },
+    { label: 'Petty Crime Reports', value: pettyCrimeReports.length, icon: 'bi-shield-fill-exclamation', view: 'petty-crime-reports', theme: REPORT_THEMES.pettyCrime }
   ];
   const others = [
     { label: 'Total Announcements', value: announcements.length, icon: 'bi-megaphone-fill', view: 'announcement-page' },

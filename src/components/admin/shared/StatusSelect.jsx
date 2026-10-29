@@ -10,6 +10,12 @@ const STATUS_COLORS = {
   "Dismissed": { bg: "#fee2e2", text: "#991b1b" }
 };
 
+// "Move to ..." takes the color of the status it moves to (admin.css).
+const NEXT_BUTTON_CLASS = {
+  "In Progress": "button-status-progress",
+  "Resolved": "button-status-resolved"
+};
+
 // Reports that are still open can also be dismissed (with a reason).
 const CLOSED_STATUSES = ["Resolved", "Dismissed"];
 
@@ -65,7 +71,7 @@ const StatusSelect = ({
       {nextStatus && (
         <button
           type="button"
-          className="button button-soft"
+          className={`button ${NEXT_BUTTON_CLASS[nextStatus] || "button-soft"}`}
           onClick={() => setPendingNext(nextStatus)}
           style={{
             fontSize: 12,

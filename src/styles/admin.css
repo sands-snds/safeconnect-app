@@ -226,6 +226,27 @@
   background: #fecaca;
 }
 
+/* "Move to In Progress" / "Move to Resolved": the colors of those statuses' badges. */
+.button-status-progress {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #1e40af;
+}
+
+.button-status-progress:hover:not(:disabled) {
+  background: #bfdbfe;
+}
+
+.button-status-resolved {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #166534;
+}
+
+.button-status-resolved:hover:not(:disabled) {
+  background: #bbf7d0;
+}
+
 .button-danger {
   background: #B91C1C;
   color: #fff;
@@ -389,9 +410,26 @@
   outline-offset: 2px;
 }
 
+/* Report counts: each in its report type's color (--stat-color / --stat-rgb
+   from AdminStats.jsx), like the resident page's report cards. */
 .dash-stat-filled {
-  background: #FDECEC;
-  border: 1px solid #FDECEC;
+  --stat-color: #B91C1C;
+  --stat-rgb: 185, 28, 28;
+  background: rgba(var(--stat-rgb), 0.1);
+  border: 1px solid rgba(var(--stat-rgb), 0.1);
+  color: var(--stat-color);
+}
+
+.dash-stat-filled:hover {
+  box-shadow: 0 6px 14px rgba(var(--stat-rgb), 0.18);
+}
+
+.dash-stat-filled .dash-stat-icon {
+  color: var(--stat-color);
+}
+
+.dash-stat-filled .dash-stat-bottom {
+  border-bottom-color: rgba(var(--stat-rgb), 0.55);
 }
 
 .dash-stat-outline {
