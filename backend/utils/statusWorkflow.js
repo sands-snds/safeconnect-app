@@ -3,14 +3,14 @@
 // the very next status in this order -- never backward, never skipped.
 const STATUS_ORDER = ["Received", "In Progress", "Resolved"];
 
-// Officials and Admins can also reject a report that isn't resolved yet (a
+// Officials and Admins can also dismiss a report that isn't resolved yet (a
 // repeat report, a prank, a known false accusation) instead of escalating
 // the reporter's account. A reason is required and is sent to the reporter.
-// Rejected is final, like Resolved.
-const REJECTED = "Rejected";
-const CLOSED_STATUSES = ["Resolved", REJECTED];
-const REJECTION_REASON_MIN = 5;
-const REJECTION_REASON_MAX = 500;
+// Dismissed is final, like Resolved.
+const DISMISSED = "Dismissed";
+const CLOSED_STATUSES = ["Resolved", DISMISSED];
+const DISMISSAL_REASON_MIN = 5;
+const DISMISSAL_REASON_MAX = 500;
 
 // Canned auto-reply sent to the reporter when their report's status changes.
 // Keyed by the status being moved INTO.
@@ -22,14 +22,14 @@ const STATUS_MESSAGES = {
 // Throws with a user-facing message if the transition isn't allowed.
 // Returns the canned reply message for the new status (or null if none).
 const validateStatusTransition = (currentStatus, newStatus) => {
-    if (currentStatus === REJECTED) {
-        throw new Error("This report was rejected, so its status can't be changed.");
+    if (currentStatus === DISMISSED) {
+        throw new Error("This report was dismissed, so its status can't be changed.");
     }
-    if (newStatus === REJECTED) {
+    if (newStatus === DISMISSED) {
         if (currentStatus === "Resolved") {
-            throw new Error("A resolved report can't be rejected.");
+            throw new Error("A resolved report can't be dismissed.");
         }
-        return null; // the controller sends the reason instead (rejectionMessage)
+        return null; // the controller sends the reason instead (dismissalMessage)
     }
 
     const currentIndex = STATUS_ORDER.indexOf(currentStatus);
@@ -56,29 +56,29 @@ const validateStatusTransition = (currentStatus, newStatus) => {
     return STATUS_MESSAGES[newStatus] || null;
 };
 
-// Checks the reason sent with a rejection. Returns the trimmed reason, or
+// Checks the reason sent with a dismissal. Returns the trimmed reason, or
 // throws with a user-facing message.
-const validateRejectionReason = (reason) => {
+const validateDismissalReason = (reason) => {
     const text = typeof reason === "string" ? reason.trim() : "";
-    if (text.length < REJECTION_REASON_MIN) {
-        throw new Error(`Please give a reason for rejecting this report (at least ${REJECTION_REASON_MIN} characters).`);
+    if (text.length < DISMISSAL_REASON_MIN) {
+        throw new Error(`Please give a reason for dismissing this report (at least ${DISMISSAL_REASON_MIN} characters).`);
     }
-    if (text.length > REJECTION_REASON_MAX) {
-        throw new Error(`The reason can be up to ${REJECTION_REASON_MAX} characters.`);
+    if (text.length > DISMISSAL_REASON_MAX) {
+        throw new Error(`The reason can be up to ${DISMISSAL_REASON_MAX} characters.`);
     }
     return text;
 };
 
-// The notification the reporter gets when their report is rejected.
-const rejectionMessage = (reason) =>
-    `Your report was not accepted by the barangay. Reason: ${reason} If you think this is a mistake, please contact the barangay.`;
+// The notification the reporter gets when their report is dismissed.
+const dismissalMessage = (reason) =>
+    `Your report was dismissed by the barangay. Reason: ${reason} If you think this is a mistake, please contact the barangay.`;
 
 module.exports = {
     STATUS_ORDER,
     STATUS_MESSAGES,
-    REJECTED,
+    DISMISSED,
     CLOSED_STATUSES,
     validateStatusTransition,
-    validateRejectionReason,
-    rejectionMessage
+    validateDismissalReason,
+    dismissalMessage
 };

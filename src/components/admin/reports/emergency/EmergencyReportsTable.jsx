@@ -6,14 +6,14 @@ import ReportCard from "../../shared/ReportCard";
 import EmergencyReportDetails from "./EmergencyReportDetails";
 import StatusSelect from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
-import RejectionNote from "../shared/RejectionNote";
+import DismissalNote from "../shared/DismissalNote";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 
 const STATUS_OPTIONS = [
   "Received",
   "In Progress",
   "Resolved",
-  "Rejected"
+  "Dismissed"
 ];
 
 const EmergencyReportsTable = ({
@@ -52,7 +52,7 @@ const EmergencyReportsTable = ({
       expanded={expandedRowId === report.id}
       onToggle={() => toggleDetails(report.id)}
     >
-      <RejectionNote report={report} />
+      <DismissalNote report={report} />
       <EmergencyReportDetails report={report} />
     </ReportCard>
   );

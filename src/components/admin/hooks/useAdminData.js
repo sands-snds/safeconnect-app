@@ -168,7 +168,7 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         }
     };
 
-    // reason: only for "Rejected".
+    // reason: only for "Dismissed".
     const updateStatus = async (id, newStatus, type, reason) => {
 
         if (!["emergency", "assistance", "pettyCrime", "users"].includes(type)) {
@@ -192,7 +192,7 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
                     ? {
                           ...item,
                           status: newStatus,
-                          ...(reason ? { rejectionReason: reason } : {})
+                          ...(reason ? { dismissalReason: reason } : {})
                       }
                     : item
             );

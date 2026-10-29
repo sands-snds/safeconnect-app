@@ -2,11 +2,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import AnnouncementCard from "./AnnouncementCard";
 import WeatherCard from "./WeatherCard";
+import DemoVideoCard from "./DemoVideoCard";
+import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 
 // News page, laid out as a grid:
 //   phones / tablets: search + categories, then the weather, then the feed
 //   desktop:          search + categories and the feed on the left, the
 //                     weather on the right
+// The residents' video (if an Admin turned it on for News) sits under the
+// weather.
 //
 // Filters reset whenever the page opens, so a notification that jumps to
 // a post (ResidentNavbar scrolls to #news-item-<id>) always finds it.
@@ -27,6 +31,7 @@ const NewsOverlay = ({
 }) => {
 
     const { t } = useLanguage();
+    const { systemDemo } = useSiteMedia();
     const [category, setCategory] = useState("all");
     const [query, setQuery] = useState("");
 
@@ -55,7 +60,9 @@ const NewsOverlay = ({
     }, [announcements, category, query]);
 
     const filtering = category !== "all" || query.trim() !== "";
-    const hasContent = announcements.length > 0 || weather;
+    const showVideo = Boolean(systemDemo?.showInNews && hasVideo(systemDemo));
+    const hasSide = Boolean(weather) || showVideo;
+    const hasContent = announcements.length > 0 || hasSide;
 
     return (
         <div
@@ -107,7 +114,7 @@ const NewsOverlay = ({
                 )}
 
                 {hasContent && (
-                    <div className={`news-layout ${weather ? "with-weather" : ""}`}>
+                    <div className={`news-layout ${hasSide ? "with-weather" : ""}`}>
 
                         {announcements.length > 0 && (
                             <div className="news-toolbar">
@@ -148,14 +155,17 @@ const NewsOverlay = ({
                             </div>
                         )}
 
-                        {weather && (
+                        {hasSide && (
                             <div className="news-weather-slot">
-                                <WeatherCard
-                                    weather={weather}
-                                    formatNewsDate={formatNewsDate}
-                                    describeWeatherCode={describeWeatherCode}
-                                    RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
-                                />
+                                {weather && (
+                                    <WeatherCard
+                                        weather={weather}
+                                        formatNewsDate={formatNewsDate}
+                                        describeWeatherCode={describeWeatherCode}
+                                        RAIN_ALERT_THRESHOLD={RAIN_ALERT_THRESHOLD}
+                                    />
+                                )}
+                                <DemoVideoCard />
                             </div>
                         )}
 

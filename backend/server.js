@@ -128,10 +128,11 @@ require("./services/archiveService").startScheduler();
 // period (default 90 days) now and every 6 hours.
 require("./services/logArchiveService").startScheduler();
 
-// Lets the editable site contacts (Content > Page Contacts) fit in system_settings.
-require("./services/siteContentService").ensureSchema().catch((err) =>
-  console.error("Could not prepare site contacts storage:", err.message)
-);
+// Lets the editable site contacts (Content > Page Contacts) fit in system_settings,
+// then turns the News tab's video off once (see siteMediaService.hideNewsVideoOnce).
+require("./services/siteContentService").ensureSchema()
+  .then(() => require("./services/siteMediaService").hideNewsVideoOnce())
+  .catch((err) => console.error("Could not prepare site contacts storage:", err.message));
 
 // Per-account read state and language, synced across devices.
 require("./services/userStateService").ensureSchema().catch((err) =>

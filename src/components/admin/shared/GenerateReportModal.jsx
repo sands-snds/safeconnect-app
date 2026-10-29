@@ -14,7 +14,7 @@ const STATUS_CHOICES = [
   { value: 'Received', label: 'Received' },
   { value: 'In Progress', label: 'In Progress' },
   { value: 'Resolved', label: 'Resolved' },
-  { value: 'Rejected', label: 'Rejected' }
+  { value: 'Dismissed', label: 'Dismissed' }
 ];
 
 const FORMAT_CHOICES = [

@@ -1,9 +1,9 @@
 import React from "react";
 
-// Shown at the top of a rejected report's details: why it was rejected
+// Shown at the top of a dismissed report's details: why it was dismissed
 // (the same reason the reporter was sent).
-const RejectionNote = ({ report }) => {
-  if (report.status !== "Rejected") return null;
+const DismissalNote = ({ report }) => {
+  if (report.status !== "Dismissed") return null;
 
   return (
     <div
@@ -22,13 +22,13 @@ const RejectionNote = ({ report }) => {
     >
       <i className="bi bi-x-circle-fill" aria-hidden="true" style={{ marginTop: 1 }} />
       <div>
-        <div style={{ fontWeight: 700 }}>This report was rejected</div>
+        <div style={{ fontWeight: 700 }}>This report was dismissed</div>
         <div style={{ color: "#7f1d1d", marginTop: 2, whiteSpace: "pre-wrap" }}>
-          {report.rejectionReason || "No reason was recorded."}
+          {report.dismissalReason || "No reason was recorded."}
         </div>
       </div>
     </div>
   );
 };
 
-export default RejectionNote;
+export default DismissalNote;

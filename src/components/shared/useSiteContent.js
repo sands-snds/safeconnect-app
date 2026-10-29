@@ -66,7 +66,7 @@ export const DEFAULT_SITE_MEDIA = {
     caption: 'A quick tour of how to report an emergency, request help and follow your report.',
     video: { source: 'none', url: '' },
     showOnLanding: true,
-    showInNews: true
+    showInNews: false
   },
   adminDemo: {
     title: 'Welcome to the SafeConnect admin panel',

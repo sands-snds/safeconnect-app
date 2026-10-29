@@ -7,17 +7,17 @@ const STATUS_COLORS = {
   "Received": { bg: "#fef3c7", text: "#92400e" },
   "In Progress": { bg: "#dbeafe", text: "#1e40af" },
   "Resolved": { bg: "#dcfce7", text: "#166534" },
-  "Rejected": { bg: "#fee2e2", text: "#991b1b" }
+  "Dismissed": { bg: "#fee2e2", text: "#991b1b" }
 };
 
-// Reports that are still open can also be rejected (with a reason).
-const CLOSED_STATUSES = ["Resolved", "Rejected"];
+// Reports that are still open can also be dismissed (with a reason).
+const CLOSED_STATUSES = ["Resolved", "Dismissed"];
 
 // Forward-only status control. Instead of a free dropdown (which let admins
 // jump to any status, including backward), this shows the current status as
 // a badge plus a single button to advance to the next step -- so an invalid
 // transition simply isn't an available action, and there's no cramped
-// <select> with cut-off text. "Reject" closes an open report instead.
+// <select> with cut-off text. "Dismiss" closes an open report instead.
 const StatusSelect = ({
   value,
   reportId,
@@ -33,9 +33,9 @@ const StatusSelect = ({
     : null;
 
   const colors = STATUS_COLORS[value] || { bg: "#f3f4f6", text: "#374151" };
-  const canReject = !CLOSED_STATUSES.includes(value);
+  const canDismiss = !CLOSED_STATUSES.includes(value);
 
-  // reason: from the confirm dialog, only when rejecting.
+  // reason: from the confirm dialog, only when dismissing.
   const confirmAdvance = async (reason) => {
     setIsSubmitting(true);
     try {
@@ -77,19 +77,19 @@ const StatusSelect = ({
         </button>
       )}
 
-      {canReject && (
+      {canDismiss && (
         <button
           type="button"
           className="button button-soft"
-          onClick={() => setPendingNext("Rejected")}
-          title="Reject a repeat, prank or false report"
+          onClick={() => setPendingNext("Dismissed")}
+          title="Dismiss a repeat, prank or false report"
           style={{
             fontSize: 12,
             padding: "4px 10px",
             whiteSpace: "nowrap"
           }}
         >
-          <i className="bi bi-x-circle" aria-hidden="true" /> Reject
+          <i className="bi bi-x-circle" aria-hidden="true" /> Dismiss
         </button>
       )}
 

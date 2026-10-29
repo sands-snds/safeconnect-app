@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { fetchSiteContent, updateSiteMedia, uploadSiteMedia } from "../../../Services/api";
 import { showPopup } from "../../shared/popup";
-import { setSiteMedia, mediaSrc } from "../../shared/useSiteContent";
+import { setSiteMedia, mediaSrc, hasVideo } from "../../shared/useSiteContent";
 import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
 
 // Content > Page Contents (Admins only): the landing page carousel photos,
-// the landing page video (systemDemo: a demo or any video for residents)
+// the video for residents (systemDemo: landing page and/or News tab)
 // and the admin demo video (shown when someone signs in to the admin panel). Saved with
 // PUT /api/site-content/media (backend/services/siteMediaService.js).
 
@@ -255,7 +255,7 @@ export default function SiteContentsPage() {
 
   const handleSave = async () => {
     // A YouTube choice with no valid link would be refused; catch it here.
-    for (const [key, name] of [["systemDemo", "Landing page"], ["adminDemo", "Admin demo"]]) {
+    for (const [key, name] of [["systemDemo", "Video for Residents"], ["adminDemo", "Admin demo"]]) {
       if (draft[key].video.source === "youtube" && !draft[key].video.url) {
         showPopup({ type: "warning", title: "Check the YouTube Link", message: `The ${name} video needs a valid YouTube link, or choose "No video".` });
         return;
@@ -299,13 +299,16 @@ export default function SiteContentsPage() {
       <div style={card}>
         <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>
           <i className="bi bi-play-circle-fill" style={{ color: "#6B2C3E", marginRight: 8 }} />
-          Landing Page Video
+          Video for Residents
         </h3>
-        <p style={hint}>Include a video that residents and visitors will see on the landing page (below the carousel, above "What you can do"), such as a guide to using Safe Connect, an advisory or a barangay update. Until a video is added, the landing page shows a "coming soon" placeholder.</p>
+        <p style={hint}>Include a video that residents and visitors will see on the landing page (below the carousel, above "What you can do") and in the resident News tab (below the weather), such as a guide to using Safe Connect, an advisory or a barangay update. Choose where it shows below. Until a video is added, the landing page shows a "coming soon" placeholder.</p>
         <VideoEditor demo={draft.systemDemo} onChange={(systemDemo) => setDraft((d) => ({ ...d, systemDemo }))}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
             <Toggle checked={draft.systemDemo.showOnLanding} onChange={(v) => setDraft((d) => ({ ...d, systemDemo: { ...d.systemDemo, showOnLanding: v } }))}>
               Show on the landing page
+            </Toggle>
+            <Toggle checked={draft.systemDemo.showInNews} onChange={(v) => setDraft((d) => ({ ...d, systemDemo: { ...d.systemDemo, showInNews: v } }))}>
+              Show in the resident News tab {hasVideo(draft.systemDemo) ? "" : "(once a video is added)"}
             </Toggle>
           </div>
         </VideoEditor>

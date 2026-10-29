@@ -1,7 +1,7 @@
 const Report = require("../models/Report");
 const ReportService = require("../services/reportService");
 const Notification = require("../models/Notification");
-const { validateStatusTransition, validateRejectionReason, rejectionMessage, REJECTED } = require("../utils/statusWorkflow");
+const { validateStatusTransition, validateDismissalReason, dismissalMessage, DISMISSED } = require("../utils/statusWorkflow");
 
 /* =========================================================
                     Create Report
@@ -115,12 +115,12 @@ exports.updateStatus = async (req, res) => {
         }
 
         let replyMessage;
-        let rejectionReason = null;
+        let dismissalReason = null;
         try {
             replyMessage = validateStatusTransition(report.status, req.body.status);
-            if (req.body.status === REJECTED) {
-                rejectionReason = validateRejectionReason(req.body.reason);
-                replyMessage = rejectionMessage(rejectionReason);
+            if (req.body.status === DISMISSED) {
+                dismissalReason = validateDismissalReason(req.body.reason);
+                replyMessage = dismissalMessage(dismissalReason);
             }
         } catch (validationError) {
             return res.status(400).json({ success: false, message: validationError.message });
@@ -129,7 +129,7 @@ exports.updateStatus = async (req, res) => {
         await Report.updateStatus(
             req.params.id,
             req.body.status,
-            rejectionReason
+            dismissalReason
         );
 
         if (report.reporter_id && replyMessage) {

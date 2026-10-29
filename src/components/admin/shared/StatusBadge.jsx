@@ -15,6 +15,7 @@ const STATUS_STYLES = {
   Resolved: { bg: '#d1fae5', color: '#065f46' },
   Approved: { bg: '#d1fae5', color: '#065f46' },
   Rejected: { bg: '#fee2e2', color: '#991b1b' },
+  Dismissed: { bg: '#fee2e2', color: '#991b1b' },
   Disabled: { bg: '#f3f4f6', color: '#374151' },
   Banned: { bg: '#fee2e2', color: '#991b1b' }
 };

@@ -725,14 +725,14 @@ export const translations = {
         inProgress: 'In Progress',
         resolved: 'Resolved',
         completed: 'Completed',
-        rejected: 'Rejected',
+        dismissed: 'Dismissed',
         cancelled: 'Cancelled'
       },
       statusMessage: {
         received: 'Report received. The barangay will review it shortly.',
         inProgress: 'Help is on the way. Our responders have received your report and are on their way.',
         resolved: 'This report has been resolved. Thank you for helping keep our community safe.',
-        rejected: 'This report was not accepted by the barangay. If you think this is a mistake, please contact the barangay.',
+        dismissed: 'This report was dismissed by the barangay. If you think this is a mistake, please contact the barangay.',
         reason: 'Reason:'
       },
       searchPlaceholder: 'Search by title, description, location, or reference...',
@@ -1597,14 +1597,14 @@ export const translations = {
         inProgress: 'Isinasagawa',
         resolved: 'Naresolba',
         completed: 'Nakumpleto',
-        rejected: 'Tinanggihan',
+        dismissed: 'Ibinasura',
         cancelled: 'Kinansela'
       },
       statusMessage: {
         received: 'Natanggap ang ulat. Susuriin ito ng barangay sa lalong madaling panahon.',
         inProgress: 'Parating na ang tulong. Natanggap na ng aming mga responder ang iyong ulat at papunta na sila.',
         resolved: 'Naresolba na ang ulat na ito. Salamat sa pagtulong na panatilihing ligtas ang ating komunidad.',
-        rejected: 'Hindi tinanggap ng barangay ang ulat na ito. Kung sa tingin mo ay may pagkakamali, makipag-ugnayan sa barangay.',
+        dismissed: 'Ibinasura ng barangay ang ulat na ito. Kung sa tingin mo ay may pagkakamali, makipag-ugnayan sa barangay.',
         reason: 'Dahilan:'
       },
       searchPlaceholder: 'Maghanap ayon sa pamagat, deskripsyon, lokasyon, o reference...',

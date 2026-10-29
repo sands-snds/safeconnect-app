@@ -1580,7 +1580,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 .news-toolbar { grid-area: toolbar; min-width: 0; }
-.news-weather-slot { grid-area: weather; min-width: 0; }
+.news-weather-slot { grid-area: weather; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 .news-feed { grid-area: feed; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 
 @media (min-width: 1100px) {

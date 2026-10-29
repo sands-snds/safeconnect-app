@@ -3,9 +3,9 @@ const db = require("../config/db");
 // Photos and videos on the public site, editable by an Admin (super_admin)
 // under Content > Page Contents:
 //   carousel    - the landing page's background slideshow
-//   systemDemo  - "See SafeConnect in action" video: on the landing page
-//                 (below the carousel, above "What you can do") and in the
-//                 resident News page (below the weather card); each can be hidden
+//   systemDemo  - the video for residents: on the landing page (below the
+//                 carousel, above "What you can do") and/or in the resident
+//                 News tab (below the weather card); each can be turned off
 //   adminDemo   - walkthrough video shown when someone signs in to the
 //                 admin panel; can also be watched again from Page Contents
 // Stored as JSON in system_settings (key "site_media"). Until an Admin saves
@@ -35,7 +35,7 @@ const DEFAULT_MEDIA = {
         caption: "A quick tour of how to report an emergency, request help and follow your report.",
         video: { source: "none", url: "" },
         showOnLanding: true,
-        showInNews: true
+        showInNews: false
     },
     adminDemo: {
         title: "Welcome to the SafeConnect admin panel",
@@ -140,6 +140,27 @@ function validate(input = {}) {
     };
 }
 
+// The News tab's video was hidden on 2026-10-27; its toggle is back, so turn
+// it off once on sites saved before then. An Admin can turn it on again.
+const NEWS_OFF_MARKER = "site_media_news_off_v1";
+async function hideNewsVideoOnce() {
+    const [[done]] = await db.query(`SELECT 1 AS ok FROM system_settings WHERE setting_key = ?`, [NEWS_OFF_MARKER]);
+    if (done) return;
+    const [[row]] = await db.query(`SELECT setting_value FROM system_settings WHERE setting_key = ?`, [SETTING_KEY]);
+    if (row?.setting_value) {
+        try {
+            const saved = JSON.parse(row.setting_value);
+            if (saved.systemDemo) {
+                saved.systemDemo.showInNews = false;
+                await saveMedia(saved);
+            }
+        } catch {
+            // unreadable JSON: getMedia() falls back to the defaults (News off)
+        }
+    }
+    await db.query(`INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES (?, '1')`, [NEWS_OFF_MARKER]);
+}
+
 async function saveMedia(media) {
     await db.query(
         `INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)
@@ -148,4 +169,4 @@ async function saveMedia(media) {
     );
 }
 
-module.exports = { DEFAULT_MEDIA, getMedia, validate, saveMedia, youtubeId };
+module.exports = { DEFAULT_MEDIA, getMedia, validate, saveMedia, youtubeId, hideNewsVideoOnce };

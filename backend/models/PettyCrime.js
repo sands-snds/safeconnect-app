@@ -146,17 +146,17 @@ class PettyCrime {
         return result.affectedRows;
     }
 
-    // rejectionReason: only for status "Rejected" (utils/statusWorkflow.js).
-    static async updateStatus(id, status, rejectionReason = null) {
+    // dismissalReason: only for status "Dismissed" (utils/statusWorkflow.js).
+    static async updateStatus(id, status, dismissalReason = null) {
         const [result] = await db.query(
             // resolved_at (the closing time) starts the auto-archive countdown
-            // for Resolved and Rejected reports (services/archiveService.js).
+            // for Resolved and Dismissed reports (services/archiveService.js).
             `UPDATE petty_crimes
              SET status = ?,
-                 resolved_at = IF(? IN ('Resolved', 'Rejected'), NOW(), resolved_at),
-                 rejection_reason = IF(? = 'Rejected', ?, rejection_reason)
+                 resolved_at = IF(? IN ('Resolved', 'Dismissed'), NOW(), resolved_at),
+                 dismissal_reason = IF(? = 'Dismissed', ?, dismissal_reason)
              WHERE id = ?`,
-            [status, status, status, rejectionReason, id]
+            [status, status, status, dismissalReason, id]
         );
         return result.affectedRows;
     }

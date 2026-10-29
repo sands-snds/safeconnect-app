@@ -17,17 +17,17 @@ const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYP
 
 const STATUS_LABEL_KEYS = {
   Received: 'received', Pending: 'pending', 'In Progress': 'inProgress',
-  Resolved: 'resolved', Completed: 'completed', Rejected: 'rejected', Cancelled: 'cancelled'
+  Resolved: 'resolved', Completed: 'completed', Dismissed: 'dismissed', Rejected: 'dismissed', Cancelled: 'cancelled'
 };
 const statusLabel = (status, t) => (STATUS_LABEL_KEYS[status] ? t(`myReports.status.${STATUS_LABEL_KEYS[status]}`) : status);
 
 const STAGE_KEYS = ['received', 'inProgress', 'resolved'];
 
 // Status filter choices (Pending counts as Received, Completed as Resolved,
-// Cancelled as Rejected).
-const STATUS_FILTERS = ['Received', 'In Progress', 'Resolved', 'Rejected'];
+// Cancelled as Dismissed).
+const STATUS_FILTERS = ['Received', 'In Progress', 'Resolved', 'Dismissed'];
 
-// The short message under each report's details, by status (Rejected also
+// The short message under each report's details, by status (Dismissed also
 // shows the reason the barangay gave).
 const STATUS_MESSAGES = {
   Received: { key: 'received', icon: 'bi-inbox-fill' },
@@ -35,7 +35,7 @@ const STATUS_MESSAGES = {
   'In Progress': { key: 'inProgress', icon: 'bi-truck' },
   Resolved: { key: 'resolved', icon: 'bi-patch-check-fill' },
   Completed: { key: 'resolved', icon: 'bi-patch-check-fill' },
-  Rejected: { key: 'rejected', icon: 'bi-x-circle-fill' }
+  Dismissed: { key: 'dismissed', icon: 'bi-x-circle-fill' }
 };
 
 const PAGE_SIZE = 5;
@@ -68,7 +68,7 @@ const STATUS_STYLE = {
   'In Progress': { bg: '#dbeafe', color: '#1e40af' },
   Resolved: { bg: '#dcfce7', color: '#166534' },
   Completed: { bg: '#dcfce7', color: '#166534' },
-  Rejected: { bg: '#fee2e2', color: '#991b1b' },
+  Dismissed: { bg: '#fee2e2', color: '#991b1b' },
   Cancelled: { bg: '#fee2e2', color: '#991b1b' }
 };
 const getStatusStyle = (status) => STATUS_STYLE[status] || { bg: '#f3f4f6', color: '#374151' };
@@ -83,7 +83,7 @@ const LEVEL_STYLE = {
 };
 const getLevelStyle = (level) => LEVEL_STYLE[level] || { bg: '#f3f4f6', color: '#374151' };
 
-// Reports move Received/Pending -> In Progress -> Resolved/Completed. Rejected
+// Reports move Received/Pending -> In Progress -> Resolved/Completed. Dismissed
 // and Cancelled are terminal off-ramps, not a stage on that line, so they get
 // their own badge instead of a half-filled progress stepper.
 const STAGES = ['Received', 'In Progress', 'Resolved'];
@@ -1096,9 +1096,9 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                         <i className={`bi ${STATUS_MESSAGES[r.status].icon}`} aria-hidden="true"></i>
                         <div>
                           <p>{t(`myReports.statusMessage.${STATUS_MESSAGES[r.status].key}`)}</p>
-                          {r.status === 'Rejected' && r.rejection_reason && (
+                          {r.status === 'Dismissed' && r.dismissal_reason && (
                             <p className="mr-status-reason">
-                              <strong>{t('myReports.statusMessage.reason')}</strong> {r.rejection_reason}
+                              <strong>{t('myReports.statusMessage.reason')}</strong> {r.dismissal_reason}
                             </p>
                           )}
                         </div>

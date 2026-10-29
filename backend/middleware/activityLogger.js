@@ -48,7 +48,7 @@ const describeStatusChange = (table, label) => async (req) => {
     } catch {
         // fall back to the numeric id
     }
-    const reason = req.body.status === "Rejected" && typeof req.body.reason === "string" ? req.body.reason.trim() : "";
+    const reason = req.body.status === "Dismissed" && typeof req.body.reason === "string" ? req.body.reason.trim() : "";
     return `${label} ${ref} → ${req.body.status}${reason ? ` (reason: ${reason.slice(0, 200)})` : ""}`;
 };
 

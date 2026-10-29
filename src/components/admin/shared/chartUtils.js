@@ -7,7 +7,7 @@ export const STATUS_COLORS = {
   "In Progress": "#3b82f6",
   Resolved: "#10b981",
   Approved: "#10b981",
-  Rejected: "#ef4444"
+  Dismissed: "#ef4444"
 };
 
 export const SEVERITY_COLORS = {

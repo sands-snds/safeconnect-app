@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 // Shared confirmation dialog for report status changes (emergency,
 // assistance, petty crime). Also shows the canned reply that will be sent
 // to the reporter, if any, so the admin knows what the resident will see.
-// Rejecting asks for a reason, which is sent to the reporter
-// (backend/utils/statusWorkflow.js: validateRejectionReason, rejectionMessage).
+// Dismissing asks for a reason, which is sent to the reporter
+// (backend/utils/statusWorkflow.js: validateDismissalReason, dismissalMessage).
 const STATUS_REPLY_PREVIEW = {
     "In Progress": "Help is on the way. Our responders have received your report and are on their way.",
     "Resolved": "Your report has been marked as resolved. Thank you for helping keep our community safe."
@@ -13,14 +13,14 @@ const STATUS_REPLY_PREVIEW = {
 const REASON_MIN = 5;
 const REASON_MAX = 500;
 
-const rejectionPreview = (reason) =>
-    `Your report was not accepted by the barangay. Reason: ${reason || "…"} If you think this is a mistake, please contact the barangay.`;
+const dismissalPreview = (reason) =>
+    `Your report was dismissed by the barangay. Reason: ${reason || "…"} If you think this is a mistake, please contact the barangay.`;
 
 const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, isSubmitting }) => {
     const [reason, setReason] = useState("");
-    const isReject = toStatus === "Rejected";
+    const isDismiss = toStatus === "Dismissed";
 
-    // Start each rejection with an empty reason.
+    // Start each dismissal with an empty reason.
     useEffect(() => {
         if (show) setReason("");
     }, [show, toStatus]);
@@ -28,8 +28,8 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
     if (!show) return null;
 
     const trimmed = reason.trim();
-    const replyPreview = isReject ? rejectionPreview(trimmed) : STATUS_REPLY_PREVIEW[toStatus];
-    const canConfirm = !isSubmitting && (!isReject || trimmed.length >= REASON_MIN);
+    const replyPreview = isDismiss ? dismissalPreview(trimmed) : STATUS_REPLY_PREVIEW[toStatus];
+    const canConfirm = !isSubmitting && (!isDismiss || trimmed.length >= REASON_MIN);
 
     return (
         <div
@@ -50,29 +50,29 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                     background: "#fff",
                     borderRadius: 12,
                     padding: "24px",
-                    width: isReject ? 440 : 380,
+                    width: isDismiss ? 440 : 380,
                     maxWidth: "90vw"
                 }}
             >
                 <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>
-                    {isReject ? "Reject this report?" : `Change status to "${toStatus}"?`}
+                    {isDismiss ? "Dismiss this report?" : `Change status to "${toStatus}"?`}
                 </h3>
 
                 <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "#4b5563" }}>
-                    {isReject ? (
-                        <>Use this for repeat reports, pranks or false accusations, instead of suspending the account. The report is closed as <strong>Rejected</strong>. This can't be undone.</>
+                    {isDismiss ? (
+                        <>Use this for repeat reports, pranks or false accusations, instead of suspending the account. The report is closed as <strong>Dismissed</strong>. This can't be undone.</>
                     ) : (
                         <>This will move the report from <strong>{fromStatus}</strong> to <strong>{toStatus}</strong>. This can't be undone.</>
                     )}
                 </p>
 
-                {isReject && (
+                {isDismiss && (
                     <div style={{ marginBottom: 14 }}>
-                        <label htmlFor="reject-reason" style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                        <label htmlFor="dismiss-reason" style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
                             Reason (sent to the reporter)
                         </label>
                         <textarea
-                            id="reject-reason"
+                            id="dismiss-reason"
                             value={reason}
                             onChange={(e) => setReason(e.target.value.slice(0, REASON_MAX))}
                             rows={3}
@@ -117,12 +117,12 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                     </button>
                     <button
                         type="button"
-                        onClick={() => onConfirm(isReject ? trimmed : undefined)}
+                        onClick={() => onConfirm(isDismiss ? trimmed : undefined)}
                         disabled={!canConfirm}
                         className="button button-primary"
                         style={{ opacity: canConfirm ? 1 : 0.6 }}
                     >
-                        {isSubmitting ? "Updating…" : isReject ? "Reject Report" : "Confirm"}
+                        {isSubmitting ? "Updating…" : isDismiss ? "Dismiss Report" : "Confirm"}
                     </button>
                 </div>
             </div>

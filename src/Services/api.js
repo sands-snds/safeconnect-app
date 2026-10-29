@@ -371,7 +371,7 @@ export const fetchEmergencyReports = async () => {
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
         archivedAt: r.archived_at || null,
-        rejectionReason: r.rejection_reason || ''
+        dismissalReason: r.dismissal_reason || ''
     }));
 };
 
@@ -444,7 +444,7 @@ export const fetchAssistanceRequests = async () => {
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
         archivedAt: r.archived_at || null,
-        rejectionReason: r.rejection_reason || ''
+        dismissalReason: r.dismissal_reason || ''
     }));
 };
 
@@ -514,7 +514,7 @@ export const fetchPettyCrimes = async () => {
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
         archivedAt: r.archived_at || null,
-        rejectionReason: r.rejection_reason || ''
+        dismissalReason: r.dismissal_reason || ''
     }));
 };
 
@@ -1011,7 +1011,7 @@ export const exportReport = async (type, format, filters = {}) => {
 
 // ── Status update (generic) ───────────────────────────────────────────────────
 // type: "emergency" | "assistance" | "pettyCrime" | "users"
-// reason: required when status is "Rejected" (sent to the reporter).
+// reason: required when status is "Dismissed" (sent to the reporter).
 export const updateStatus = async (type, id, status, reason) => {
     // Method differs per resource: emergency/assistance accept PUT or PATCH,
     // but petty crime and users are PATCH-only (see backend/routes/*).

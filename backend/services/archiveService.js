@@ -1,7 +1,7 @@
 const db = require("../config/db");
 const { CLOSED_STATUSES } = require("../utils/statusWorkflow");
 
-// Report archiving. A Resolved or Rejected report can be archived by hand from
+// Report archiving. A Resolved or Dismissed report can be archived by hand from
 // its card, and the scheduled job below archives them automatically once
 // they have been closed for longer than the configured period
 // (Off / 6 months / 1 year, stored in system_settings). Archived reports stay
@@ -26,8 +26,8 @@ const JOB_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const ARCHIVE_COLUMNS = {
     resolved_at: "TIMESTAMP NULL DEFAULT NULL",
     archived_at: "TIMESTAMP NULL DEFAULT NULL",
-    // Why an Official/Admin rejected the report (status "Rejected").
-    rejection_reason: "VARCHAR(500) DEFAULT NULL"
+    // Why an Official/Admin dismissed the report (status "Dismissed").
+    dismissal_reason: "VARCHAR(500) DEFAULT NULL"
 };
 
 // "Reporting for someone else" fields the report forms send. The models
@@ -66,6 +66,12 @@ async function ensureSchema() {
             [table]
         );
         const have = new Set(existing.map((c) => c.name));
+        // "Dismiss" was first called "Reject": rename its column and status.
+        if (have.has("rejection_reason") && !have.has("dismissal_reason")) {
+            await db.query(`ALTER TABLE ${table} RENAME COLUMN rejection_reason TO dismissal_reason`);
+            have.add("dismissal_reason");
+        }
+        await db.query(`UPDATE ${table} SET status = 'Dismissed' WHERE status = 'Rejected'`);
         const columns = {
             ...REPORT_FOR_COLUMNS,
             ...ARCHIVE_COLUMNS,
@@ -114,7 +120,7 @@ async function setAutoArchiveMonths(months) {
     );
 }
 
-// Archives Resolved/Rejected reports closed more than `months` ago. Reports
+// Archives Resolved/Dismissed reports closed more than `months` ago. Reports
 // closed before resolved_at existed fall back to when they were submitted.
 async function runAutoArchive() {
     const months = await getAutoArchiveMonths();
@@ -125,7 +131,7 @@ async function runAutoArchive() {
         const [result] = await db.query(
             `UPDATE ${table}
              SET archived_at = NOW()
-             WHERE status IN ('Resolved', 'Rejected')
+             WHERE status IN ('Resolved', 'Dismissed')
                AND archived_at IS NULL
                AND COALESCE(resolved_at, ${createdCol}) < NOW() - INTERVAL ? MONTH`,
             [months]
@@ -136,7 +142,7 @@ async function runAutoArchive() {
     return total;
 }
 
-// archived: true to archive, false to restore. Only Resolved and Rejected
+// archived: true to archive, false to restore. Only Resolved and Dismissed
 // reports can be archived. Returns { success, status?, message? }.
 async function setArchived(type, id, archived) {
     const config = REPORT_TABLES[type];
@@ -149,7 +155,7 @@ async function setArchived(type, id, archived) {
     if (!report) return { success: false, status: 404, message: "Report not found." };
 
     if (archived && !CLOSED_STATUSES.includes(report.status)) {
-        return { success: false, status: 400, message: "Only resolved or rejected reports can be archived." };
+        return { success: false, status: 400, message: "Only resolved or dismissed reports can be archived." };
     }
 
     await db.query(
