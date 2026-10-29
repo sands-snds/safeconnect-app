@@ -110,6 +110,11 @@ export default function AnnouncementCard({
     const [commentCount, setCommentCount] = useState(announcement.commentCount || 0);
     const [commentDraft, setCommentDraft] = useState("");
     const [postingComment, setPostingComment] = useState(false);
+    // Reply box: the thread (top-level comment) being replied to, and the
+    // person the reply is for (a reply to a reply still joins that thread).
+    const [replyTo, setReplyTo] = useState(null); // { threadId, name }
+    const [replyDraft, setReplyDraft] = useState("");
+    const [postingReply, setPostingReply] = useState(false);
 
     const [shareFeedback, setShareFeedback] = useState(false);
 
@@ -169,6 +174,30 @@ export default function AnnouncementCard({
         }
     };
 
+    const startReply = (threadId, name) => {
+        setReplyTo({ threadId, name });
+        setReplyDraft("");
+        setCollapsedReplies((prev) => ({ ...prev, [threadId]: false }));
+    };
+
+    const handlePostReply = async (e) => {
+        e.preventDefault();
+        const text = replyDraft.trim();
+        if (!text || postingReply || !replyTo) return;
+        setPostingReply(true);
+        try {
+            const result = await postAnnouncementComment(announcement.id, text, replyTo.threadId);
+            if (result?.success) {
+                setComments((prev) => [...(prev || []), result.comment]);
+                setCommentCount((c) => c + 1);
+                setReplyTo(null);
+                setReplyDraft("");
+            }
+        } finally {
+            setPostingReply(false);
+        }
+    };
+
     // Deleting a comment also removes its replies (the backend does the same).
     const handleDeleteComment = async (commentId) => {
         const prevComments = comments;
@@ -199,7 +228,8 @@ export default function AnnouncementCard({
     const [collapsedReplies, setCollapsedReplies] = useState({});
 
     // replyingTo: the commenter a reply answers, shown as an @mention.
-    const renderComment = (c, replyingTo) => (
+    // threadId: the top-level comment a Reply joins.
+    const renderComment = (c, replyingTo, threadId = c.id) => (
         <div className={`news-comment ${replyingTo ? 'news-comment-reply' : ''}`} key={c.id}>
             <div
                 className={`news-comment-avatar ${c.isAdmin ? 'news-comment-avatar-admin' : ''}`}
@@ -217,6 +247,11 @@ export default function AnnouncementCard({
                     {replyingTo && <span className="news-reply-mention">@{replyingTo}</span>}
                     {c.text}
                 </p>
+                {currentUserId != null && (
+                    <button type="button" className="news-comment-reply-btn" onClick={() => startReply(threadId, c.author)}>
+                        <i className="bi bi-reply" aria-hidden="true" /> {t('news.reply')}
+                    </button>
+                )}
             </div>
             {currentUserId != null && String(c.userId) === String(currentUserId) && (
                 <button
@@ -372,9 +407,9 @@ export default function AnnouncementCard({
                                 <div className="news-thread" key={thread.id}>
                                     {renderComment(thread, null)}
 
-                                    {count > 0 && (
+                                    {(count > 0 || replyTo?.threadId === thread.id) && (
                                         <div className="news-replies">
-                                            <button
+                                            {count > 0 && <button
                                                 type="button"
                                                 className="news-replies-toggle"
                                                 onClick={() => setCollapsedReplies((prev) => ({ ...prev, [thread.id]: showReplies }))}
@@ -384,8 +419,28 @@ export default function AnnouncementCard({
                                                 {showReplies
                                                     ? t('news.hideReplies')
                                                     : count === 1 ? t('news.viewOneReply') : t('news.viewReplies', { count })}
-                                            </button>
-                                            {showReplies && thread.replies.map((r) => renderComment(r, thread.author))}
+                                            </button>}
+                                            {showReplies && thread.replies.map((r) => renderComment(r, thread.author, thread.id))}
+                                            {replyTo?.threadId === thread.id && (
+                                                <form className="news-comment-form news-reply-form" onSubmit={handlePostReply}>
+                                                    <input
+                                                        type="text"
+                                                        value={replyDraft}
+                                                        onChange={(e) => setReplyDraft(e.target.value)}
+                                                        placeholder={t('news.replyPlaceholder', { name: replyTo.name })}
+                                                        aria-label={t('news.replyPlaceholder', { name: replyTo.name })}
+                                                        maxLength={1000}
+                                                        disabled={postingReply}
+                                                        autoFocus
+                                                    />
+                                                    <button type="button" className="news-reply-cancel" onClick={() => setReplyTo(null)} aria-label={t('news.cancelReply')}>
+                                                        <i className="bi bi-x-lg" />
+                                                    </button>
+                                                    <button type="submit" disabled={!replyDraft.trim() || postingReply} aria-label={t('news.sendReply')}>
+                                                        <i className="bi bi-send-fill" />
+                                                    </button>
+                                                </form>
+                                            )}
                                         </div>
                                     )}
                                 </div>

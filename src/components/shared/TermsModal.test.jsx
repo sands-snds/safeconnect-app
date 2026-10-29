@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import TermsModal from './TermsModal';
 import { LanguageProvider } from '../../i18n/LanguageContext';
+import { TERMS_VERSION } from './termsConsent';
 
 const goTo = (hash) => act(() => {
   window.history.replaceState(null, '', `/${hash}`);
@@ -36,7 +37,7 @@ test('opens straight away when the page loads with #terms (shared link)', () => 
 test('a plain document: title, date, introduction and 13 sections of numbered clauses', () => {
   window.history.replaceState(null, '', '/#terms');
   const { container } = renderTerms();
-  expect(screen.getByText('Last updated: October 16, 2026')).toBeInTheDocument();
+  expect(screen.getByText('Last updated: October 29, 2026')).toBeInTheDocument();
   expect(screen.getByText(/^Please read these Terms and Conditions carefully/)).toBeInTheDocument();
   expect(container.querySelectorAll('.tc-section')).toHaveLength(13);
   // Clauses are numbered 1.1, 1.2 ... 13.1
@@ -80,7 +81,7 @@ test('opening the Terms records that they were viewed (for the Sign In checkbox)
   renderTerms();
   expect(localStorage.getItem('sf_terms_viewed')).toBeNull();
   goTo('#terms');
-  expect(localStorage.getItem('sf_terms_viewed')).toBe('2026-10-16');
+  expect(localStorage.getItem('sf_terms_viewed')).toBe(TERMS_VERSION);
   expect(onViewed).toHaveBeenCalled();
   window.removeEventListener('safeconnect:terms-viewed', onViewed);
 });

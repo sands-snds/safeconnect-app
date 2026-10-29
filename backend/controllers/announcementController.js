@@ -113,12 +113,12 @@ exports.createComment = async (req, res) => {
         const authorName = author?.full_name || author?.username || "Resident";
         const isAdmin = isAdminRole(author?.role);
 
-        // Let the resident know when the barangay replies to their comment.
-        if (parent && isAdmin && String(parent.user_id) !== String(req.user.id)) {
+        // Let the commenter know when someone replies to their comment.
+        if (parent && String(parent.user_id) !== String(req.user.id)) {
             const announcement = await Announcement.findById(req.params.id);
             Notification.create({
                 userId: parent.user_id,
-                title: "Barangay replied to your comment",
+                title: isAdmin ? "Barangay replied to your comment" : `${authorName} replied to your comment`,
                 message: announcement?.title ? `On "${announcement.title}": ${text}` : text,
                 notificationType: "comment_reply",
                 referenceId: Number(req.params.id)

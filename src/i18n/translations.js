@@ -298,7 +298,7 @@ export const translations = {
     },
     terms: {
       title: 'Terms and Conditions',
-      lastUpdated: 'Last updated: October 16, 2026',
+      lastUpdated: 'Last updated: October 29, 2026',
       intro: 'Please read these Terms and Conditions carefully before creating an account or using Safe Connect. They set out your rights and responsibilities as a user of the Platform.',
       close: 'Close',
       understand: 'I Understand',
@@ -310,7 +310,8 @@ export const translations = {
             'These Terms and Conditions ("Terms") govern your access to and use of Safe Connect (the "Platform"), operated by Barangay Sta. Fe, Dasmariñas, Cavite (the "Barangay," "we," or "us").',
             'By creating an account, signing in, or otherwise using the Platform, you confirm that you have read, understood, and agree to be bound by these Terms.',
             'If you do not agree with these Terms, you must not use the Platform.',
-            'Users under 18 years of age may use the Platform only with the consent and supervision of a parent or legal guardian.'
+            'You must be at least 15 years old to create an account and use the Platform.',
+            'Only registered users with a Safe Connect account can submit reports, request assistance, and use the Platform\'s services.'
           ]
         },
         {
@@ -430,7 +431,11 @@ export const translations = {
       notifications: 'Notifications',
       myReports: 'My Reports',
       settings: 'Settings',
-      logout: 'Logout'
+      logout: 'Logout',
+      logoutConfirmTitle: 'Log out?',
+      logoutConfirmBody: "You'll need to sign in again to send reports and see your notifications.",
+      logoutConfirmYes: 'Log out',
+      logoutConfirmNo: 'Cancel'
     },
     notificationPanel: {
       tabNew: 'New notification',
@@ -465,6 +470,8 @@ export const translations = {
       high: 'High',
       low: 'Low',
       rainChance: 'Chance of rain',
+      weekTitle: '7-day forecast',
+      todayShort: 'Today',
       tipRain: 'Bring an umbrella and stay away from flood-prone areas.',
       tipHot: 'It will be hot. Drink plenty of water and limit time under the sun.',
       tipFair: 'Good weather for outdoor activities. Stay safe!'
@@ -499,7 +506,11 @@ export const translations = {
       officialBadge: 'Barangay Official',
       viewOneReply: '1 reply',
       viewReplies: '{{count}} replies',
-      hideReplies: 'Hide replies'
+      hideReplies: 'Hide replies',
+      reply: 'Reply',
+      replyPlaceholder: 'Reply to {{name}}...',
+      sendReply: 'Send reply',
+      cancelReply: 'Cancel reply'
     },
     residentHero: {
       eyebrow: 'Barangay Sta. Fe Safe Connect',
@@ -1170,7 +1181,7 @@ export const translations = {
     },
     terms: {
       title: 'Mga Tuntunin at Kundisyon',
-      lastUpdated: 'Huling na-update: Oktubre 16, 2026',
+      lastUpdated: 'Huling na-update: Oktubre 29, 2026',
       intro: 'Pakibasa nang mabuti ang mga Tuntunin at Kundisyong ito bago gumawa ng account o gumamit ng Safe Connect. Nakasaad dito ang iyong mga karapatan at responsibilidad bilang user ng Plataporma.',
       close: 'Isara',
       understand: 'Naiintindihan Ko',
@@ -1182,7 +1193,8 @@ export const translations = {
             'Ang mga Tuntunin at Kundisyong ito ("Mga Tuntunin") ang namamahala sa iyong pag-access at paggamit ng Safe Connect (ang "Plataporma"), na pinapatakbo ng Barangay Sta. Fe, Dasmariñas, Cavite (ang "Barangay," "kami," o "namin").',
             'Sa paggawa ng account, pag-sign in, o anumang paggamit ng Plataporma, kinukumpirma mong nabasa, naintindihan, at sumasang-ayon kang sumunod sa mga Tuntuning ito.',
             'Kung hindi ka sumasang-ayon sa mga Tuntuning ito, hindi mo dapat gamitin ang Plataporma.',
-            'Ang mga user na wala pang 18 taong gulang ay maaari lamang gumamit ng Plataporma nang may pahintulot at gabay ng magulang o legal na tagapag-alaga.'
+            'Kailangang hindi bababa sa 15 taong gulang ka upang gumawa ng account at gumamit ng Plataporma.',
+            'Ang mga rehistradong user lamang na may Safe Connect account ang maaaring magsumite ng ulat, humingi ng tulong, at gumamit ng mga serbisyo ng Plataporma.'
           ]
         },
         {
@@ -1302,7 +1314,11 @@ export const translations = {
       notifications: 'Abiso',
       myReports: 'Aking Mga Ulat',
       settings: 'Mga Setting',
-      logout: 'Mag-logout'
+      logout: 'Mag-logout',
+      logoutConfirmTitle: 'Mag-log out?',
+      logoutConfirmBody: 'Kailangan mong mag-sign in ulit para makapag-report at makita ang iyong mga notification.',
+      logoutConfirmYes: 'Mag-log out',
+      logoutConfirmNo: 'Kanselahin'
     },
     notificationPanel: {
       tabNew: 'Bagong notification',
@@ -1337,6 +1353,8 @@ export const translations = {
       high: 'Pinakamataas',
       low: 'Pinakamababa',
       rainChance: 'Tsansa ng ulan',
+      weekTitle: 'Taya ng panahon sa 7 araw',
+      todayShort: 'Ngayon',
       tipRain: 'Magdala ng payong at umiwas sa mga lugar na madalas bahain.',
       tipHot: 'Mainit ngayon. Uminom ng maraming tubig at umiwas sa matagal na pagbibilad sa araw.',
       tipFair: 'Magandang panahon para sa mga gawain sa labas. Mag-ingat!'
@@ -1371,7 +1389,11 @@ export const translations = {
       officialBadge: 'Barangay Official',
       viewOneReply: '1 sagot',
       viewReplies: '{{count}} na sagot',
-      hideReplies: 'Itago ang mga sagot'
+      hideReplies: 'Itago ang mga sagot',
+      reply: 'Sumagot',
+      replyPlaceholder: 'Sagutin si {{name}}...',
+      sendReply: 'Ipadala ang sagot',
+      cancelReply: 'Kanselahin ang sagot'
     },
     residentHero: {
       eyebrow: 'Barangay Sta. Fe Safe Connect',

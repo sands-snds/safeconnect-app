@@ -1883,7 +1883,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 /* Desktop: the weather fills the right column (taller, roomier). */
 @media (min-width: 1100px) {
-    .news-weather { padding: 26px; gap: 22px; min-height: 480px; }
+    .news-weather { padding: 26px; gap: 20px; }
     .news-weather-tip { margin-top: auto; }
 }
 
@@ -1905,4 +1905,79 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     .news-weather { padding: 18px; gap: 14px; border-radius: 20px; }
     .news-weather-icon { font-size: 3.4rem; }
     .news-weather-temp { font-size: 2.6rem; }
+}
+
+/* Comment replies */
+.news-comment-reply-btn {
+    margin-top: 4px;
+    padding: 2px 0;
+    border: none;
+    background: none;
+    color: #6B2C3E;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.news-comment-reply-btn:hover { text-decoration: underline; }
+.news-comment-reply-btn:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; border-radius: 4px; }
+
+.news-reply-form { margin-top: 8px; gap: 6px; }
+
+.news-comment-form .news-reply-cancel {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.news-comment-form .news-reply-cancel:hover:not(:disabled) { background: #e5e7eb; }
+
+/* 7-day forecast: one compact column per day. */
+.news-weather-week {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 12px 10px;
+}
+
+.news-weather-week-title {
+    margin: 0 0 8px 4px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.news-weather-days {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 2px;
+}
+
+.news-weather-days li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 0;
+}
+
+.news-weather-days li:first-child { background: rgba(255, 255, 255, 0.16); }
+.news-weather-day { font-size: 0.74rem; font-weight: 700; }
+.news-weather-days li > .bi { font-size: 1.25rem; color: #fde68a; line-height: 1.2; }
+.news-weather-day-rain { font-size: 0.66rem; opacity: 0.9; display: inline-flex; align-items: center; gap: 1px; }
+.news-weather-day-rain i { font-size: 0.6rem; }
+.news-weather-day-max { font-size: 0.86rem; font-weight: 800; }
+.news-weather-day-min { font-size: 0.74rem; opacity: 0.8; }
+
+@media (max-width: 360px) {
+    .news-weather-days li > .bi { font-size: 1.05rem; }
+    .news-weather-day-rain { display: none; }
 }

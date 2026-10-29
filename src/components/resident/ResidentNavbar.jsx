@@ -11,6 +11,7 @@ import useWeather from "./navbar/hooks/useWeather";
 import useResidentProfile from "./navbar/hooks/useResidentProfile";
 import useClickOutside from "./navbar/hooks/useClickOutside";
 import { clearAuthToken, logoutUser } from "../../Services/api";
+import { confirmPopup } from "../shared/popup";
 import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
 import useLiveUpdates from "../shared/useLiveUpdates";
 import useTabNotifications, { markNotificationsViewed } from "../shared/useTabNotifications";
@@ -368,6 +369,16 @@ function ResidentNavbar() {
       sessionStorage.setItem('previousPage', '/resident');
     }
     if (path === '/') {
+      setShowDropdown(false);
+      setShowMobileMenu(false);
+      const confirmed = await confirmPopup({
+        type: 'warning',
+        title: t('residentNav.logoutConfirmTitle'),
+        message: t('residentNav.logoutConfirmBody'),
+        confirmLabel: t('residentNav.logoutConfirmYes'),
+        cancelLabel: t('residentNav.logoutConfirmNo')
+      });
+      if (!confirmed) return;
       // Revokes a saved login on the server first (needs the token).
       await logoutUser();
       localStorage.removeItem('residentName');

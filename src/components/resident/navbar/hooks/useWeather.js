@@ -58,9 +58,11 @@ const loadWeatherDismissed = () => {
             ? JSON.parse(cachedRaw)
             : null;
 
+        // Older copies don't have the 7-day forecast: fetch again for those.
         if (
             cached &&
-            cached.date === today
+            cached.date === today &&
+            Array.isArray(cached.data && cached.data.days)
         ) {
             setWeather(cached.data);
             return;
@@ -68,7 +70,7 @@ const loadWeatherDismissed = () => {
 
         const response = await fetch(
 
-            `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&daily=precipitation_probability_max,weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FManila`
+            `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&daily=precipitation_probability_max,weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FManila&forecast_days=7`
 
         );
 
@@ -91,7 +93,16 @@ const loadWeatherDismissed = () => {
             ),
             tMin: Math.round(
             json.daily.temperature_2m_min[0]
-            )
+            ),
+
+            // Today and the next 6 days.
+            days: json.daily.time.map((day, i) => ({
+                date: day,
+                code: json.daily.weathercode[i],
+                rainChance: json.daily.precipitation_probability_max[i],
+                tMax: Math.round(json.daily.temperature_2m_max[i]),
+                tMin: Math.round(json.daily.temperature_2m_min[i])
+            }))
 
         };
 

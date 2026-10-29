@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { confirmPopup } from "../../shared/popup";
 import {
     clearAuthToken,
     logoutUser,
@@ -129,6 +130,14 @@ export default function useAdminAuth() {
     }, []);
 
     const handleLogout = async () => {
+        const confirmed = await confirmPopup({
+            type: "warning",
+            title: "Log out?",
+            message: "You'll need to sign in again to use the admin panel.",
+            confirmLabel: "Log out",
+            cancelLabel: "Cancel"
+        });
+        if (!confirmed) return;
 
         // Need the token, so they run before clearAuthToken(). logoutUser
         // revokes a saved login ("Save Login Info") on the server.

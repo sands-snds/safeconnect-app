@@ -4,7 +4,7 @@
 // Stored per TERMS_VERSION: bump it whenever the Terms change, and everyone
 // has to open the new version before creating an account.
 
-export const TERMS_VERSION = '2026-10-16';
+export const TERMS_VERSION = '2026-10-29';
 export const TERMS_HASH = '#terms';
 export const TERMS_VIEWED_EVENT = 'safeconnect:terms-viewed';
 

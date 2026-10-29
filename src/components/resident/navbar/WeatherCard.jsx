@@ -12,7 +12,7 @@ export default function WeatherCard({
     RAIN_ALERT_THRESHOLD
 }) {
 
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     if (!weather) {
         return null;
@@ -69,6 +69,32 @@ export default function WeatherCard({
                         : t('weather.rainUnlikely', { chance })}
                 </p>
             </div>
+
+            {Array.isArray(weather.days) && weather.days.length > 1 && (
+                <div className="news-weather-week">
+                    <p className="news-weather-week-title">{t('weather.weekTitle')}</p>
+                    <ol className="news-weather-days">
+                        {weather.days.map((d, i) => {
+                            const info = describeWeatherCode(d.code);
+                            // "2026-10-29" read as a local date (not UTC midnight).
+                            const date = new Date(`${d.date}T00:00:00`);
+                            const label = i === 0
+                                ? t('weather.todayShort')
+                                : date.toLocaleDateString(language === 'tl' ? 'fil-PH' : 'en-US', { weekday: 'short' });
+                            return (
+                                <li key={d.date} title={`${t(`weather.codes.${info.key}`)} · ${t('weather.rainChance')} ${d.rainChance}%`}>
+                                    <span className="news-weather-day">{label}</span>
+                                    <i className={`bi ${info.icon}`} aria-hidden="true" />
+                                    <span className="news-weather-day-rain"><i className="bi bi-droplet-fill" aria-hidden="true" />{d.rainChance}%</span>
+                                    <span className="news-weather-day-max">{d.tMax}°</span>
+                                    <span className="news-weather-day-min">{d.tMin}°</span>
+                                    <span className="visually-hidden">{t(`weather.codes.${info.key}`)}</span>
+                                </li>
+                            );
+                        })}
+                    </ol>
+                </div>
+            )}
 
             <p className="news-weather-tip">
                 <i className={`bi ${tip.icon}`} aria-hidden="true" />

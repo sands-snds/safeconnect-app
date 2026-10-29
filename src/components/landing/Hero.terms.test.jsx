@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import Hero from './Hero';
 import TermsModal from '../shared/TermsModal';
+import { TERMS_VERSION } from '../shared/termsConsent';
 import { LanguageProvider } from '../../i18n/LanguageContext';
 import { signinUser, fetchSiteContent, setAuthToken, rememberLogin } from '../../Services/api';
 
@@ -103,7 +104,7 @@ describe('Sign Up', () => {
   });
 
   test('Terms viewed on an earlier visit (same version): box can be ticked straight away', async () => {
-    localStorage.setItem('sf_terms_viewed', '2026-10-16');
+    localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
     const { checkbox, submit } = openSignUp();
     fireEvent.click(checkbox);
     expect(checkbox).toBeChecked();
@@ -122,7 +123,7 @@ describe('Sign Up', () => {
   });
 
   test('the box starts unticked again each time Sign Up is reopened', () => {
-    localStorage.setItem('sf_terms_viewed', '2026-10-16');
+    localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
     const { checkbox } = openSignUp();
     fireEvent.click(checkbox);
     expect(checkbox).toBeChecked();
