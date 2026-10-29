@@ -10,8 +10,9 @@ import React from "react";
 const ReportCard = ({
   accentColor = "#d1d5db",
   title,
+  // The status pill ({ text, bg, color }), shown last after the title's pills.
   badge,
-  // Optional extra element next to the badge (e.g. the "For <name>" pill).
+  // Optional pills between the title and the status (e.g. "For <name>").
   tag,
   subtitle,
   statusControl,
@@ -54,6 +55,8 @@ const ReportCard = ({
             <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>
               {title}
             </span>
+            {tag}
+            {/* The status, last in the row (after "N people", "For <name>"). */}
             {badge && (
               <span
                 style={{
@@ -69,7 +72,6 @@ const ReportCard = ({
                 {badge.text}
               </span>
             )}
-            {tag}
           </div>
           <div className="report-card-subtitle" style={{ fontSize: 12.5, color: "#6b7280", marginTop: 2 }}>
             {subtitle}
