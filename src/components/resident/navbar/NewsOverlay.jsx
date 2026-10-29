@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import AnnouncementCard from "./AnnouncementCard";
 import WeatherCard from "./WeatherCard";
@@ -64,6 +64,29 @@ const NewsOverlay = ({
     const hasSide = Boolean(weather) || showVideo;
     const hasContent = announcements.length > 0 || hasSide;
 
+    // Desktop keeps the weather column in view while the articles scroll. If
+    // the column is taller than the window, it scrolls along until its bottom
+    // shows and then holds there, so the whole forecast can always be seen.
+    const bodyRef = useRef(null);
+    const slotRef = useRef(null);
+    useEffect(() => {
+        const body = bodyRef.current;
+        const slot = slotRef.current;
+        if (!isOpen || !body || !slot || typeof ResizeObserver === "undefined") return undefined;
+        const GAP = 20;
+        const update = () => {
+            // Sticky "top" counts from inside the body's top padding.
+            const padTop = parseFloat(getComputedStyle(body).paddingTop) || 0;
+            const room = body.clientHeight - padTop - slot.offsetHeight - GAP;
+            slot.style.setProperty("--weather-sticky-top", `${Math.min(GAP, room)}px`);
+        };
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(body);
+        ro.observe(slot);
+        return () => ro.disconnect();
+    }, [isOpen, hasSide, hasContent]);
+
     return (
         <div
             className={`news-fullscreen ${isOpen ? "show" : ""}`}
@@ -90,7 +113,7 @@ const NewsOverlay = ({
                 </div>
             </div>
 
-            <div className="news-fullscreen-body">
+            <div className="news-fullscreen-body" ref={bodyRef}>
 
                 {announcementsLoading && !hasContent && (
                     <div className="news-state-message">
@@ -156,7 +179,7 @@ const NewsOverlay = ({
                         )}
 
                         {hasSide && (
-                            <div className="news-weather-slot">
+                            <div className="news-weather-slot" ref={slotRef}>
                                 {weather && (
                                     <WeatherCard
                                         weather={weather}

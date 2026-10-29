@@ -89,19 +89,6 @@ export default function MobileMenu({
                 </button>
 
                 <button
-                    className={`mobile-nav-item ${activeView === 'news' ? 'active' : ''}`}
-                    onClick={openNewsPage}
-                >
-                    <i className="bi bi-newspaper"></i>
-
-                    <span>
-                        {t('residentNav.news')}
-                    </span>
-
-                </button>
-
-
-                <button
                     className={`mobile-nav-item ${activeView === 'reports' ? 'active' : ''}`}
                     onClick={openReportsPage}
                 >
@@ -109,6 +96,18 @@ export default function MobileMenu({
 
                     <span>
                         {t('residentNav.myReports')}
+                    </span>
+
+                </button>
+
+                <button
+                    className={`mobile-nav-item ${activeView === 'news' ? 'active' : ''}`}
+                    onClick={openNewsPage}
+                >
+                    <i className="bi bi-newspaper"></i>
+
+                    <span>
+                        {t('residentNav.news')}
                     </span>
 
                 </button>

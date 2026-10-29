@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 
 const HOT_DAY_C = 34;
@@ -13,6 +13,63 @@ export default function WeatherCard({
 }) {
 
     const { t, language } = useLanguage();
+    const days = weather && Array.isArray(weather.days) ? weather.days : [];
+
+    // The forecast row scrolls sideways. The arrows show which way there is
+    // more to see; a mouse can drag it like a finger swipe.
+    const daysRef = useRef(null);
+    const drag = useRef(null);
+    const [edges, setEdges] = useState({ prev: false, next: false });
+
+    const updateEdges = useCallback(() => {
+        const el = daysRef.current;
+        if (!el) return;
+        const max = el.scrollWidth - el.clientWidth;
+        setEdges({ prev: el.scrollLeft > 2, next: el.scrollLeft < max - 2 });
+    }, []);
+
+    useEffect(() => {
+        const el = daysRef.current;
+        if (!el) return undefined;
+        updateEdges();
+        el.addEventListener("scroll", updateEdges, { passive: true });
+        const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateEdges) : null;
+        if (ro) ro.observe(el);
+        return () => {
+            el.removeEventListener("scroll", updateEdges);
+            if (ro) ro.disconnect();
+        };
+    }, [days.length, updateEdges]);
+
+    const scrollDays = (dir) => {
+        const el = daysRef.current;
+        // One full view of cards (plus the gap) at a time.
+        if (el) el.scrollBy({ left: dir * (el.clientWidth + 8), behavior: "smooth" });
+    };
+
+    const onPointerDown = (e) => {
+        // Touch already swipes natively; only mice need help.
+        if (e.pointerType !== "mouse" || e.button !== 0) return;
+        drag.current = { x: e.clientX, left: daysRef.current.scrollLeft, moved: false };
+    };
+
+    const onPointerMove = (e) => {
+        const d = drag.current;
+        if (!d) return;
+        const dx = e.clientX - d.x;
+        if (!d.moved && Math.abs(dx) > 4) {
+            d.moved = true;
+            daysRef.current.classList.add("dragging");
+            daysRef.current.setPointerCapture?.(e.pointerId);
+        }
+        if (d.moved) daysRef.current.scrollLeft = d.left - dx;
+    };
+
+    const endDrag = () => {
+        if (!drag.current) return;
+        drag.current = null;
+        daysRef.current?.classList.remove("dragging");
+    };
 
     if (!weather) {
         return null;
@@ -70,11 +127,34 @@ export default function WeatherCard({
                 </p>
             </div>
 
-            {Array.isArray(weather.days) && weather.days.length > 1 && (
+            {days.length > 1 && (
                 <div className="news-weather-week">
-                    <p className="news-weather-week-title">{t('weather.weekTitle')}</p>
-                    <ol className="news-weather-days">
-                        {weather.days.map((d, i) => {
+                    <div className="news-weather-week-head">
+                        <p className="news-weather-week-title">{t('weather.weekTitle')}</p>
+                        {(edges.prev || edges.next) && (
+                            <div className="news-weather-scroll-btns">
+                                <button type="button" className="news-weather-scroll-btn prev" onClick={() => scrollDays(-1)} disabled={!edges.prev} aria-label={t('weather.prevDays')}>
+                                    <i className="bi bi-chevron-left" aria-hidden="true" />
+                                </button>
+                                <button type="button" className="news-weather-scroll-btn next" onClick={() => scrollDays(1)} disabled={!edges.next} aria-label={t('weather.nextDays')}>
+                                    <i className="bi bi-chevron-right" aria-hidden="true" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <ol
+                        className="news-weather-days"
+                        ref={daysRef}
+                        tabIndex={0}
+                        aria-label={t('weather.weekTitle')}
+                        onPointerDown={onPointerDown}
+                        onPointerMove={onPointerMove}
+                        onPointerUp={endDrag}
+                        onPointerCancel={endDrag}
+                        onLostPointerCapture={endDrag}
+                        onDragStart={(e) => e.preventDefault()}
+                    >
+                        {days.map((d, i) => {
                             const info = describeWeatherCode(d.code);
                             // "2026-10-29" read as a local date (not UTC midnight).
                             const date = new Date(`${d.date}T00:00:00`);

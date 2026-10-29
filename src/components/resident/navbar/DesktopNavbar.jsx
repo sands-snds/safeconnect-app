@@ -76,6 +76,14 @@ export default function DesktopNavbar({
             </button>
 
             <button
+                className={`resident-nav-item ${activeView === 'reports' ? 'active' : ''}`}
+                onClick={openReportsPage}
+            >
+                <i className="bi bi-file-earmark-text-fill"></i>
+                <span>{t('residentNav.myReports')}</span>
+            </button>
+
+            <button
                 className={`resident-nav-item ${activeView === 'news' ? 'active' : ''}`}
                 onClick={openNewsPage}
             >
@@ -135,7 +143,6 @@ export default function DesktopNavbar({
                 dropdownRef={dropdownRef}
                 showDropdown={showDropdown}
                 onToggleDropdown={toggleDropdown}
-                onOpenReports={openReportsPage}
                 onOpenSettings={openSettingsPage}
                 onLogout={() => handleNavigation("/")}
             />

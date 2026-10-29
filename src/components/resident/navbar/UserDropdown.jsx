@@ -8,7 +8,6 @@ export default function UserDropdown({
   showDropdown,
   dropdownRef,
   onToggleDropdown,
-  onOpenReports,
   onOpenSettings,
   onLogout,
 }) {
@@ -58,11 +57,6 @@ export default function UserDropdown({
         </div>
 
         <div className="resident-dropdown-divider" />
-
-        <button className={`resident-dropdown-item ${activeView === 'reports' ? 'active' : ''}`} onClick={onOpenReports}>
-          <i className="bi bi-file-earmark-text-fill" />
-          <span>{t('residentNav.myReports')}</span>
-        </button>
 
         <button className={`resident-dropdown-item ${activeView === 'settings' ? 'active' : ''}`} onClick={onOpenSettings}>
           <i className="bi bi-gear-fill" />

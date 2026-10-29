@@ -1871,12 +1871,13 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .news-weather-tip i { font-size: 1.1rem; color: #2563eb; margin-top: 1px; }
 
-/* Desktop: the weather stays in view while the articles scroll (only when
-   the window is tall enough to show all of it). */
-@media (min-width: 1100px) and (min-height: 700px) {
+/* Desktop: the weather stays in view while the articles scroll. When the
+   column is taller than the window, NewsOverlay.jsx sets a negative top so it
+   scrolls until its bottom shows, then holds -- nothing is ever out of reach. */
+@media (min-width: 1100px) {
     .news-layout.with-weather .news-weather-slot {
         position: sticky;
-        top: 20px;
+        top: var(--weather-sticky-top, 20px);
         align-self: start;
     }
 }
@@ -1934,50 +1935,112 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .news-comment-form .news-reply-cancel:hover:not(:disabled) { background: #e5e7eb; }
 
-/* 7-day forecast: one compact column per day. */
+/* 7-day forecast: a row of day cards. Swipe it on phones; on computers drag
+   it, use the arrows, or scroll sideways with a trackpad. */
 .news-weather-week {
     background: rgba(255, 255, 255, 0.14);
     border-radius: 14px;
-    padding: 12px 10px;
+    padding: 12px;
+    min-width: 0;
+}
+
+.news-weather-week-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 .news-weather-week-title {
-    margin: 0 0 8px 4px;
+    margin: 0;
     font-size: 0.8rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
+.news-weather-scroll-btns { display: flex; gap: 6px; }
+
+.news-weather-scroll-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.news-weather-scroll-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.36); }
+.news-weather-scroll-btn:focus-visible { outline: 2px solid #fde68a; outline-offset: 2px; }
+.news-weather-scroll-btn:disabled { opacity: 0.35; cursor: default; }
+
 .news-weather-days {
     list-style: none;
     margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 2px;
+    padding: 0 0 6px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
+    cursor: grab;
 }
 
+.news-weather-days::-webkit-scrollbar { height: 6px; }
+.news-weather-days::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.45); border-radius: 999px; }
+.news-weather-days::-webkit-scrollbar-track { background: transparent; }
+.news-weather-days::-webkit-scrollbar-button { display: none; }
+.news-weather-days:focus-visible { outline: 2px solid #fde68a; outline-offset: 3px; border-radius: 10px; }
+
+/* While dragging with a mouse: follow the pointer exactly, snap on release. */
+.news-weather-days.dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    user-select: none;
+}
+
+/* Whole cards only: 4 per view (7 on tablets, where they all fit). */
 .news-weather-days li {
+    flex: 0 0 calc((100% - 3 * 8px) / 4);
+    min-width: 0;
+    scroll-snap-align: start;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
-    padding: 6px 0;
-    border-radius: 10px;
+    gap: 4px;
+    padding: 10px 6px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
     text-align: center;
-    min-width: 0;
 }
 
-.news-weather-days li:first-child { background: rgba(255, 255, 255, 0.16); }
-.news-weather-day { font-size: 0.74rem; font-weight: 700; }
-.news-weather-days li > .bi { font-size: 1.25rem; color: #fde68a; line-height: 1.2; }
-.news-weather-day-rain { font-size: 0.66rem; opacity: 0.9; display: inline-flex; align-items: center; gap: 1px; }
-.news-weather-day-rain i { font-size: 0.6rem; }
-.news-weather-day-max { font-size: 0.86rem; font-weight: 800; }
-.news-weather-day-min { font-size: 0.74rem; opacity: 0.8; }
+.news-weather-days li:first-child { background: rgba(255, 255, 255, 0.24); }
+.news-weather-day { font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
+.news-weather-days li > .bi { font-size: 1.5rem; color: #fde68a; line-height: 1.2; }
+.news-weather-day-rain { font-size: 0.72rem; opacity: 0.92; display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+.news-weather-day-rain i { font-size: 0.66rem; }
+.news-weather-day-max { font-size: 0.95rem; font-weight: 800; }
+.news-weather-day-min { font-size: 0.78rem; opacity: 0.8; }
 
-@media (max-width: 360px) {
-    .news-weather-days li > .bi { font-size: 1.05rem; }
-    .news-weather-day-rain { display: none; }
+@media (min-width: 601px) and (max-width: 1099px) {
+    .news-weather-days li { flex-basis: calc((100% - 6 * 8px) / 7); }
+}
+
+@media (max-width: 600px) {
+    .news-weather-days li { padding: 10px 4px; }
+    .news-weather-scroll-btn { width: 32px; height: 32px; }
 }

@@ -472,6 +472,8 @@ export const translations = {
       rainChance: 'Chance of rain',
       weekTitle: '7-day forecast',
       todayShort: 'Today',
+      prevDays: 'Earlier days',
+      nextDays: 'Later days',
       tipRain: 'Bring an umbrella and stay away from flood-prone areas.',
       tipHot: 'It will be hot. Drink plenty of water and limit time under the sun.',
       tipFair: 'Good weather for outdoor activities. Stay safe!'
@@ -1355,6 +1357,8 @@ export const translations = {
       rainChance: 'Tsansa ng ulan',
       weekTitle: 'Taya ng panahon sa 7 araw',
       todayShort: 'Ngayon',
+      prevDays: 'Mga naunang araw',
+      nextDays: 'Mga susunod na araw',
       tipRain: 'Magdala ng payong at umiwas sa mga lugar na madalas bahain.',
       tipHot: 'Mainit ngayon. Uminom ng maraming tubig at umiwas sa matagal na pagbibilad sa araw.',
       tipFair: 'Magandang panahon para sa mga gawain sa labas. Mag-ingat!'
