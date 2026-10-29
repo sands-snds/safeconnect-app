@@ -6,11 +6,11 @@ import { setSiteContent } from "../../shared/useSiteContent";
 // Content > Page Contacts (Admins only): edits what the public site shows,
 // in two groups:
 //   Call button
-//   - Emergency contacts: the floating call button (landing + resident
-//     pages). The footer's "Emergency Hotline" column lists the same numbers,
-//     without the people to choose from (they're in Barangay Officials).
+//   - Emergency contacts: the floating call button (landing + resident pages)
 //   Footer
 //   - Barangay officials: the footer's "Barangay Officials" column
+//   - Emergency hotline: the footer's "Emergency Hotline" column (its own
+//     list, without the barangay officials)
 //   - Socials: the footer's support email and Facebook page
 // Saved with PUT /api/site-content (backend/services/siteContentService.js).
 
@@ -108,6 +108,9 @@ const SiteContactsPage = () => {
 
   const setContacts = (fn) => setDraft((d) => ({ ...d, emergencyContacts: fn(d.emergencyContacts) }));
   const setOfficials = (fn) => setDraft((d) => ({ ...d, officials: fn(d.officials) }));
+  const setHotlines = (fn) => setDraft((d) => ({ ...d, footerHotlines: fn(d.footerHotlines || []) }));
+  const updateHotline = (index, patch) =>
+    setHotlines((list) => list.map((h, i) => (i === index ? { ...h, ...patch } : h)));
   const setSocial = (key, value) => setDraft((d) => ({ ...d, socials: { ...d.socials, [key]: value } }));
 
   const updateContact = (index, patch) =>
@@ -156,8 +159,8 @@ const SiteContactsPage = () => {
           Emergency Contacts
         </h3>
         <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6b7280" }}>
-          The numbers in the call button, in this order. The footer's Emergency Hotline column lists
-          the same numbers, without the people to choose from (they're already in Barangay Officials).
+          The numbers in the call button, in this order. The footer's hotlines are edited separately
+          under Footer below.
         </p>
 
         {draft.emergencyContacts.map((c, i) => (
@@ -266,8 +269,7 @@ const SiteContactsPage = () => {
       </div>
 
       <GroupHeading icon="bi-layout-text-window-reverse" title="Footer">
-        The bottom of the landing and resident pages: Barangay Officials, the Emergency Hotline
-        (from the call button above) and Socials.
+        The bottom of the landing and resident pages: Barangay Officials, Emergency Hotline and Socials.
       </GroupHeading>
 
       {/* ── Barangay officials ── */}
@@ -306,6 +308,46 @@ const SiteContactsPage = () => {
           onClick={() => setOfficials((l) => [...l, { name: "", number: "" }])}
         >
           <i className="bi bi-plus-lg" /> Add official
+        </button>
+      </div>
+
+      {/* ── Footer emergency hotline ── */}
+      <div style={sectionStyle}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>
+          <i className="bi bi-telephone-fill" style={{ color: "#dc2626", marginRight: 8 }} />
+          Emergency Hotline
+        </h3>
+        <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6b7280" }}>
+          Shown in the footer's Emergency Hotline column, in this order. Separate from the call button,
+          so leave out the barangay officials: they're already in the column beside it.
+        </p>
+
+        {(draft.footerHotlines || []).map((h, i) => (
+          <div key={i} style={rowStyle}>
+            <label style={fieldStyle("2 1 240px")}>
+              <span style={labelStyle}>Name</span>
+              <input className="form-input" value={h.label} maxLength={60} onChange={(e) => updateHotline(i, { label: e.target.value })} placeholder="e.g. Bureau of Fire Protection" />
+            </label>
+            <label style={fieldStyle("1 1 160px")}>
+              <span style={labelStyle}>Number</span>
+              <input className="form-input" value={h.number} maxLength={25} onChange={(e) => updateHotline(i, { number: e.target.value })} placeholder="e.g. +63464161234" inputMode="tel" />
+            </label>
+            <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
+              <button type="button" style={iconButton()} title="Move up" disabled={i === 0} onClick={() => setHotlines((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
+              <button type="button" style={iconButton()} title="Move down" disabled={i === draft.footerHotlines.length - 1} onClick={() => setHotlines((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
+              <button type="button" style={iconButton(true)} title="Remove" onClick={() => setHotlines((l) => l.filter((_, j) => j !== i))}><i className="bi bi-trash3" /></button>
+            </div>
+          </div>
+        ))}
+
+        <button
+          type="button"
+          className="button button-secondary"
+          style={{ marginTop: 8 }}
+          disabled={(draft.footerHotlines || []).length >= 12}
+          onClick={() => setHotlines((l) => [...l, { label: "", number: "" }])}
+        >
+          <i className="bi bi-plus-lg" /> Add hotline
         </button>
       </div>
 

@@ -2,10 +2,12 @@ const db = require("../config/db");
 
 // Contact details shown on the public site, editable by an Admin
 // (super_admin) under Content > Page Contacts:
-//   emergencyContacts - the floating call button's list, also the footer's
-//                       "Emergency Hotline" column. A contact may have
+//   emergencyContacts - the floating call button's list. A contact may have
 //                       "choices" ([{ name, number }], up to 4): the call
 //                       button then lets the caller pick who to call.
+//   footerHotlines    - the footer's "Emergency Hotline" column
+//                       ([{ label, number }]), edited separately so it
+//                       doesn't repeat the barangay officials
 //   officials         - the footer's "Barangay Officials" column
 //   socials           - the footer's support email and Facebook page
 // Stored as JSON in system_settings (key "site_contacts"). Until an Admin
@@ -30,6 +32,14 @@ const DEFAULT_CONTENT = {
             ]
         }
     ],
+    // The national and city lines only: the barangay's own numbers are in
+    // the officials column next to it.
+    footerHotlines: [
+        { label: "911 Emergency", number: "911" },
+        { label: "Dasmariñas Police", number: "+63462420002" },
+        { label: "CDRMC", number: "+63462300345" },
+        { label: "DSWD", number: "+63464165393" }
+    ],
     officials: [
         { name: "PB Emmanuel B. Noora", number: "09354984838" },
         { name: "Chief Tanod Gaudencio C. Dela Cruz", number: "0993611340" },
@@ -52,7 +62,7 @@ const CONTACT_ICONS = [
 ];
 const CONTACT_COLORS = ["#dc2626", "#1d4ed8", "#059669", "#ea580c", "#7c3aed", "#0891b2", "#db2777", "#6B2C3E"];
 
-const LIMITS = { emergencyContacts: 12, officials: 20, choices: 4 };
+const LIMITS = { emergencyContacts: 12, footerHotlines: 12, officials: 20, choices: 4 };
 
 // The single Barangay line used before callers could choose between the
 // Punong Barangay and the Secretary. Saved contacts still on it are moved
@@ -106,10 +116,12 @@ const text = (v, max) => String(v ?? "").trim().slice(0, max);
 function validate(input = {}) {
     const contactsIn = Array.isArray(input.emergencyContacts) ? input.emergencyContacts : [];
     const officialsIn = Array.isArray(input.officials) ? input.officials : [];
+    const hotlinesIn = Array.isArray(input.footerHotlines) ? input.footerHotlines : [];
 
     if (contactsIn.length === 0) return { error: "Add at least one emergency contact." };
     if (contactsIn.length > LIMITS.emergencyContacts) return { error: `You can list up to ${LIMITS.emergencyContacts} emergency contacts.` };
     if (officialsIn.length > LIMITS.officials) return { error: `You can list up to ${LIMITS.officials} barangay officials.` };
+    if (hotlinesIn.length > LIMITS.footerHotlines) return { error: `You can list up to ${LIMITS.footerHotlines} footer hotlines.` };
 
     const emergencyContacts = [];
     for (const [i, c] of contactsIn.entries()) {
@@ -150,6 +162,16 @@ function validate(input = {}) {
         emergencyContacts.push(entry);
     }
 
+    const footerHotlines = [];
+    for (const [i, h] of hotlinesIn.entries()) {
+        const label = text(h.label, 60);
+        const number = text(h.number, 25);
+        if (!label && !number) continue; // ignore empty rows
+        if (!label || !number) return { error: `Footer hotline #${i + 1} needs a name and a number.` };
+        if (!PHONE_REGEX.test(number)) return { error: `"${number}" doesn't look like a phone number (footer hotline "${label}").` };
+        footerHotlines.push({ label, number });
+    }
+
     const officials = [];
     for (const [i, o] of officialsIn.entries()) {
         const name = text(o.name, 80);
@@ -169,7 +191,7 @@ function validate(input = {}) {
         return { error: "The Facebook link must be a facebook.com address starting with https://." };
     }
 
-    return { content: { emergencyContacts, officials, socials: { email, facebookLabel, facebookUrl } } };
+    return { content: { emergencyContacts, footerHotlines, officials, socials: { email, facebookLabel, facebookUrl } } };
 }
 
 async function saveContent(content) {

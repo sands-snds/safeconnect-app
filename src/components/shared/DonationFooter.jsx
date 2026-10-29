@@ -1,6 +1,6 @@
 import React from "react";
 import { useLanguage } from "../../i18n/LanguageContext";
-import useSiteContent from "./useSiteContent";
+import useSiteContent, { DEFAULT_SITE_CONTENT } from "./useSiteContent";
 import { formatMobile } from "./EmergencyContactList";
 import { MAIN_LOGO, FOOTER_LOGO } from "./logos";
 
@@ -43,10 +43,12 @@ const FooterLogo = () => (
 );
 
 // Officials, hotlines and socials are edited by Admins under Content > Page
-// Contacts. The hotlines are the same list as the floating call button.
+// Contacts > Footer (the hotlines are separate from the call button's list).
 export default function DonationFooter() {
   const { t } = useLanguage();
-  const { emergencyContacts = [], officials = [], socials = {} } = useSiteContent();
+  // footerHotlines: its own list (not the call button's), so the barangay
+  // officials aren't repeated. Older cached copies don't have it yet.
+  const { footerHotlines = DEFAULT_SITE_CONTENT.footerHotlines, officials = [], socials = {} } = useSiteContent();
   return (
     <footer className="footer-section bg-dark text-white py-4">
       <div className="container">
@@ -87,20 +89,18 @@ export default function DonationFooter() {
             </div>
           </div>
 
-          {/* 3. Emergency hotlines (same numbers as the floating call button) and socials */}
+          {/* 3. Emergency hotlines (Page Contacts > Footer > Emergency Hotline) and socials */}
           <div className="col-12 col-md-5 col-lg-3 small text-white-50 footer-contact-list d-md-flex justify-content-center">
             <div className="footer-col">
-              {emergencyContacts.length > 0 && (
+              {footerHotlines.length > 0 && (
                 <div className="mb-3">
                   <p className="footer-subheading text-white fw-semibold mb-2">
                     <i className="bi bi-telephone-fill me-2 text-danger"></i>
                     {t("footer.emergencyHotline")}
                   </p>
-                  {/* Just the contact's own number: the people to choose from in
-                      the call button are already listed under Barangay Officials. */}
-                  {emergencyContacts.filter((c) => c.number).map((c) => (
-                    <div key={c.id}>
-                      {c.label}: <PhoneLink number={c.number}>{formatHotline(c.number)}</PhoneLink>
+                  {footerHotlines.map((h) => (
+                    <div key={`${h.label}-${h.number}`}>
+                      {h.label}: <PhoneLink number={h.number}>{formatHotline(h.number)}</PhoneLink>
                     </div>
                   ))}
                 </div>

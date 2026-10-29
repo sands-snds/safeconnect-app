@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchSiteContent, resolveAssetUrl } from '../../Services/api';
 
 // Contact details for the public site (floating call button, footer):
-// { emergencyContacts, officials, socials }. Admins edit them under
+// { emergencyContacts, footerHotlines, officials, socials }. Admins edit them under
 // Content > Page Contacts (backend/services/siteContentService.js).
 //
 // Shows the last copy this browser saw (or the defaults below) right away,
@@ -25,6 +25,12 @@ export const DEFAULT_SITE_CONTENT = {
         { name: 'Sec Hazel R. Adriano', number: '09456355303' }
       ]
     }
+  ],
+  footerHotlines: [
+    { label: '911 Emergency', number: '911' },
+    { label: 'Dasmariñas Police', number: '+63462420002' },
+    { label: 'CDRMC', number: '+63462300345' },
+    { label: 'DSWD', number: '+63464165393' }
   ],
   officials: [
     { name: 'PB Emmanuel B. Noora', number: '09354984838' },
