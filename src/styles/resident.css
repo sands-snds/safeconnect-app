@@ -2576,15 +2576,33 @@ body {
 }
 
 .footer-section .footer-logo {
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
     flex-shrink: 0;
 }
 
-/* The brand column is centered, so keep its description centered too. */
+.footer-section .footer-brand-name {
+    font-size: 1.6rem;
+    line-height: 1.2;
+}
+
+/* 992-1199px: the brand column is narrow, so shrink the logo and name to
+   keep them side by side. */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .footer-section .footer-logo {
+        width: 52px;
+        height: 52px;
+    }
+
+    .footer-section .footer-brand-name {
+        font-size: 1.3rem;
+    }
+}
+
+/* The brand is left-aligned beside its logo (phones too). */
 .footer-section .footer-brand .footer-about {
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 /* Resident hero: small yellow line above the heading, and the heading's

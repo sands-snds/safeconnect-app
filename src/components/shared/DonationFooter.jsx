@@ -28,7 +28,8 @@ const PhoneLink = ({ number, children }) => (
   </a>
 );
 
-// Sized by .footer-logo in styles/resident.css (72px).
+// Sized by .footer-logo in styles/resident.css (64px, smaller in the narrow
+// three-column layout so the name fits beside it).
 // The logo is white: no circle behind it on the dark footer.
 const FooterLogo = () => (
   <div className="footer-logo">
@@ -54,14 +55,15 @@ export default function DonationFooter() {
       <div className="container">
         {/* Three columns from 992px: brand | Contact Us + officials (the widest,
             for long names) | hotlines + socials. Each column's content is
-            centered in its column, and the columns are centered vertically.
+            centered in its column (except the brand, which stays left-aligned),
+            and the columns are centered vertically.
             Tablets: brand on top, the other two side by side. Phones: stacked. */}
         <div className="row gy-4 align-items-center">
-          {/* 1. Brand: logo above the name and description */}
-          <div className="col-12 col-lg-3 footer-brand d-flex flex-column align-items-center gap-3 text-center">
+          {/* 1. Brand: logo beside the name and description, left-aligned */}
+          <div className="col-12 col-lg-3 footer-brand d-flex align-items-center gap-3">
             <FooterLogo />
-            <div>
-              <div className="footer-logo-text text-white fs-2 lh-sm">Safe Connect</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="footer-logo-text footer-brand-name text-white">Safe Connect</div>
               <p className="footer-about small text-white-50 mt-2 mb-0">
                 {t("footer.description")}
               </p>

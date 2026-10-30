@@ -23,6 +23,9 @@ const FORMAT_CHOICES = [
 ];
 
 // Local YYYY-MM-DD (not toISOString(), which is UTC and can be a day off).
+// The first day SafeConnect has records for: the custom date pickers start here.
+const EARLIEST_DATE = '2026-09-01';
+
 const dayKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
@@ -104,10 +107,22 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
     }
   };
 
+  // Dates from when SafeConnect started (EARLIEST_DATE) up to today; no future dates.
+  const today = dayKey(new Date());
+
   const handleGenerate = async (e) => {
     e.preventDefault();
     if (from && to && from > to) {
       setError('The "From" date must be on or before the "To" date.');
+      return;
+    }
+    // Dates typed by hand can get past the pickers' min / max.
+    if ((from && from > today) || (to && to > today)) {
+      setError("Dates can't be in the future. Pick today or an earlier date.");
+      return;
+    }
+    if ((from && from < EARLIEST_DATE) || (to && to < EARLIEST_DATE)) {
+      setError('Dates start from September 1, 2026, when SafeConnect began.');
       return;
     }
 
@@ -192,11 +207,11 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <label style={{ flex: '1 1 150px', fontSize: 13, color: '#374151' }}>
                   From
-                  <input type="date" className="form-input" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} style={{ marginTop: 4, width: '100%' }} />
+                  <input type="date" className="form-input" value={from} min={EARLIEST_DATE} max={to || today} onChange={(e) => setFrom(e.target.value)} style={{ marginTop: 4, width: '100%' }} />
                 </label>
                 <label style={{ flex: '1 1 150px', fontSize: 13, color: '#374151' }}>
                   To
-                  <input type="date" className="form-input" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} style={{ marginTop: 4, width: '100%' }} />
+                  <input type="date" className="form-input" value={to} min={from || EARLIEST_DATE} max={today} onChange={(e) => setTo(e.target.value)} style={{ marginTop: 4, width: '100%' }} />
                 </label>
               </div>
             </div>
@@ -246,7 +261,8 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
                   type="date"
                   className="form-input"
                   value={from}
-                  max={to || undefined}
+                  min={EARLIEST_DATE}
+                  max={to || today}
                   onChange={(e) => setFrom(e.target.value)}
                   style={{ marginTop: 4, width: '100%' }}
                 />
@@ -257,7 +273,8 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
                   type="date"
                   className="form-input"
                   value={to}
-                  min={from || undefined}
+                  min={from || EARLIEST_DATE}
+                  max={today}
                   onChange={(e) => setTo(e.target.value)}
                   style={{ marginTop: 4, width: '100%' }}
                 />

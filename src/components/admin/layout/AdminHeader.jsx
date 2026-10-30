@@ -119,7 +119,10 @@ const userMenuRef = useRef(null);
                 alignItems: "center",
                 position: "sticky",
                 top: 0,
-                zIndex: 50
+                zIndex: 50,
+                // Covers the page margin around the header, so content
+                // scrolling past it doesn't show in the gaps.
+                boxShadow: isMobile ? "0 1px 0 #e5e7eb" : "0 0 0 20px #f9fafb"
             }}
         >
             <style>{`

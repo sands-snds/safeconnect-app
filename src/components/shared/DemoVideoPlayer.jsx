@@ -33,9 +33,14 @@ export default function DemoVideoPlayer({ demo, showText = true, placeholder = n
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
           />
         ) : (
+          // No download: hides the player's Download item and the
+          // right-click "Save video as..." menu. (YouTube embeds have no download.)
           <video
             src={mediaSrc(url)}
             controls
+            controlsList="nodownload"
+            disablePictureInPicture
+            onContextMenu={(e) => e.preventDefault()}
             playsInline
             preload="metadata"
             autoPlay={autoPlay}
