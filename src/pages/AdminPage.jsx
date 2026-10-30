@@ -59,6 +59,7 @@ const AdminPage = () => {
     handleRefresh,
     updateStatus,
     updateUserRole,
+    setUserArchived,
     setReportArchived,
     handleFormSubmit
   } = useAdminData({ isSuperAdmin });
@@ -316,6 +317,7 @@ useEffect(() => {
       case "announcement-page":
           return (
               <AnnouncementsPage
+                  isSuperAdmin={isSuperAdmin}
                   editingAnnouncement={
                       editingAnnouncement
                   }
@@ -345,6 +347,7 @@ useEffect(() => {
                 setFilters={setFilters}
                 onUpdateStatus={updateStatus}
                 onUpdateRole={updateUserRole}
+                onArchiveUser={setUserArchived}
                 currentAdminId={adminUser?.id}
             />
         );

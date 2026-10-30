@@ -3,6 +3,7 @@ import ListView, { allOption } from '../shared/ListView';
 import UserStatusSelect, { USER_STATUSES } from './UserStatusSelect';
 import UserRoleSelect from './UserRoleSelect';
 import UserChangeConfirmModal from './UserChangeConfirmModal';
+import { confirmPopup } from '../../shared/popup';
 
 const badgeStyle = (bg, color) => ({
   marginLeft: 6,
@@ -23,6 +24,7 @@ const RegisteredUsersTable = ({
   setFilters,
   onUpdateStatus,
   onUpdateRole,
+  onArchiveUser,
   currentAdminId
 }) => {
   // { user, field: 'role' | 'status', value } while the confirm dialog is open.
@@ -56,6 +58,21 @@ const RegisteredUsersTable = ({
     closeModal();
   };
 
+  // Closed accounts: Archive (to the Archived tab) or Restore.
+  const handleArchive = async (user) => {
+    const archiving = !user.archivedAt;
+    if (archiving) {
+      const confirmed = await confirmPopup({
+        type: 'warning',
+        title: 'Archive this account?',
+        message: `${user.fullName || user.email} moves to the Archived tab. The account stays closed; you can restore it any time.`,
+        confirmLabel: 'Archive'
+      });
+      if (!confirmed) return;
+    }
+    await onArchiveUser(user.id, archiving);
+  };
+
   const renderRow = (user) => {
     const isSelf = String(user.id) === String(currentAdminId);
     const locked = isSelf || user.isMainAccount;
@@ -86,11 +103,19 @@ const RegisteredUsersTable = ({
         </td>
         <td className="table-cell text-sm">{user.dateRegistered}</td>
         <td className="table-cell" title={lockTitle}>
-          <UserStatusSelect
-            value={user.status}
-            disabled={locked}
-            onChange={(e) => setPendingChange({ user, field: 'status', value: e.target.value })}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <UserStatusSelect
+              value={user.status}
+              disabled={locked}
+              onChange={(e) => setPendingChange({ user, field: 'status', value: e.target.value })}
+            />
+            {onArchiveUser && !locked && (user.archivedAt || user.status === 'Closed') && (
+              <button type="button" className="button button-soft" style={{ fontSize: 12, padding: '4px 10px', whiteSpace: 'nowrap' }} onClick={() => handleArchive(user)}>
+                <i className={`bi ${user.archivedAt ? 'bi-box-arrow-up' : 'bi-archive'}`} style={{ marginRight: 4 }} />
+                {user.archivedAt ? 'Restore' : 'Archive'}
+              </button>
+            )}
+          </div>
         </td>
       </tr>
     );

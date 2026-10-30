@@ -21,12 +21,19 @@ const describeUserChange = (field) => async (req) => {
     return `${who} → ${value}`;
 };
 const logUserStatus = logActivity("Changed user status", describeUserChange("status"));
+const describeUserTarget = async (req) => {
+    const user = await User.findById(req.params.id);
+    return user ? (user.email_address || user.username) : `User #${req.params.id}`;
+};
 
 // Super admin only (System > Users): full user list / status + role management
 router.get("/", verifyToken, verifyAdmin, verifySuperAdmin, userController.getUsers);
 router.put("/:id", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
 router.patch("/:id/status", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
 router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Changed user role", describeUserChange("role")), userController.updateUserRole);
+// Closed accounts: Archived tab.
+router.patch("/:id/archive", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Archived account", describeUserTarget), userController.archiveUser);
+router.patch("/:id/restore", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Restored archived account", describeUserTarget), userController.restoreUser);
 
 // Self-or-admin: a resident's own profile (SettingsPage.jsx, MyReportsPage.jsx)
 router.get("/:id", verifyToken, verifySelfOrAdmin, userController.getUserById);

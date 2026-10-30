@@ -124,6 +124,10 @@ AnnouncementComment.ensureTable().catch((err) =>
 // reports now and every 6 hours.
 require("./services/archiveService").startScheduler();
 
+// Adds announcements.archived_at and auto-archives old announcements (if an
+// Admin turned it on) now and every 6 hours.
+require("./services/announcementArchiveService").startScheduler();
+
 // Archives sign-in / admin activity log entries older than each log's
 // period (default 90 days) now and every 6 hours.
 require("./services/logArchiveService").startScheduler();
@@ -137,6 +141,11 @@ require("./services/siteContentService").ensureSchema()
 // Per-account read state and language, synced across devices.
 require("./services/userStateService").ensureSchema().catch((err) =>
   console.error("Could not prepare synced account settings storage:", err.message)
+);
+
+// System > Users: archived_at for Closed accounts moved to the Archived tab.
+require("./models/User").ensureArchiveColumn().catch((err) =>
+  console.error("Could not add registered_users.archived_at:", err.message)
 );
 
 // The barangay's main Admin account always exists and stays an Active Admin.

@@ -308,8 +308,24 @@ export const fetchRegisteredUsers = async () => {
         status: u.status || 'Active',
         // The barangay's main Admin account (role/status can't be changed).
         isMainAccount: Boolean(u.is_main_account),
-        dateRegistered: u.created_at ? new Date(u.created_at).toLocaleDateString() : ''
+        dateRegistered: u.created_at ? new Date(u.created_at).toLocaleDateString() : '',
+        // Closed accounts moved to the Archived tab.
+        archivedAt: u.archived_at || null
     }));
+};
+
+// Archive a Closed account (archived = true) or restore it.
+export const setUserArchived = async (userId, archived) => {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/${archived ? "archive" : "restore"}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+    });
+    const result = await res.json().catch(() => ({ success: false }));
+    if (!res.ok || !result.success) {
+        showPopup({ type: "error", title: `Couldn't ${archived ? "Archive" : "Restore"} Account`, message: result.message || "Please try again." });
+        return false;
+    }
+    return true;
 };
 
 // Real route is PATCH-only (see backend/routes/userRoutes.js) -- PUT 404s.
@@ -586,8 +602,10 @@ export const updateArchiveSettings = async (months) => {
 };
 
 // ── Announcements ─────────────────────────────────────────────────────────────
-export const fetchAnnouncements = async () => {
-    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}`, {
+// includeArchived: the admin list (Active + Archived tabs). Residents and the
+// landing page never get archived announcements.
+export const fetchAnnouncements = async ({ includeArchived = false } = {}) => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}${includeArchived ? "?includeArchived=1" : ""}`, {
         headers: authHeaders(),
     });
     const data = await res.json();
@@ -615,8 +633,34 @@ export const fetchAnnouncements = async () => {
         sourceSite: a.source_site || null,
         likeCount: a.likeCount || 0,
         commentCount: a.commentCount || 0,
-        likedByMe: !!a.likedByMe
+        likedByMe: !!a.likedByMe,
+        archivedAt: a.archived_at || null
     }));
+};
+
+// Announcement archive: archive / restore one, and the auto-archive period
+// in months after posting (0 = off, 3, 6, 12).
+export const archiveAnnouncement = async (id, archived = true) => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}/${archived ? "archive" : "restore"}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+    });
+    return res.json().catch(() => ({ success: false }));
+};
+
+export const fetchAnnouncementArchiveSettings = async () => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/archive-settings`, { headers: authHeaders() });
+    const data = await res.json().catch(() => null);
+    return data?.success ? data.months : null;
+};
+
+export const updateAnnouncementArchiveSettings = async (months) => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/archive-settings`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ months }),
+    });
+    return res.json().catch(() => ({ success: false }));
 };
 
 // Toggles the signed-in resident's like on an announcement.

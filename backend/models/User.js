@@ -153,7 +153,8 @@ class User {
                 email_address,
                 role,
                 status,
-                created_at
+                created_at,
+                archived_at
             FROM registered_users
             ORDER BY id DESC
             `
@@ -165,14 +166,41 @@ class User {
                     Update User Status
 ============================================================*/
 
+    // Reopening a Closed account also takes it out of the archive.
     static async updateStatus(id, status) {
         const [result] = await db.query(
             `
             UPDATE registered_users
-            SET status = ?
+            SET status = ?, archived_at = IF(? = 'Closed', archived_at, NULL)
             WHERE id = ?
             `,
-            [status, id]
+            [status, status, id]
+        );
+        return result.affectedRows;
+    }
+
+/* =========================================================
+                    Archive (Closed accounts)
+============================================================*/
+
+    // System > Users: Closed accounts can be moved to an Archived tab.
+    static async ensureArchiveColumn() {
+        const [cols] = await db.query(
+            `SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'registered_users' AND COLUMN_NAME = 'archived_at'`
+        );
+        if (cols.length) return;
+        try {
+            await db.query(`ALTER TABLE registered_users ADD COLUMN archived_at TIMESTAMP NULL DEFAULT NULL`);
+        } catch (err) {
+            if (err.code !== "ER_DUP_FIELDNAME") throw err;
+        }
+    }
+
+    static async setArchived(id, archived) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET archived_at = ${archived ? "NOW()" : "NULL"} WHERE id = ?`,
+            [id]
         );
         return result.affectedRows;
     }

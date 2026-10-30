@@ -1,4 +1,6 @@
+import React, { useState } from "react";
 import RegisteredUsersTable from "./RegisteredUsersTable";
+import ArchiveToolbar from "../reports/shared/ArchiveToolbar";
 import { roleLabel } from "../../shared/roles";
 
 // Search / status filtering, shared by both tables (Residents, and Admins &
@@ -27,11 +29,25 @@ export default function UsersPage({
     setFilters,
     onUpdateStatus,
     onUpdateRole,
+    onArchiveUser,
     currentAdminId
 }) {
-    const filtered = filterUsers(registeredUsers, filters.users);
+    // Active / Archived tab: archived = Closed accounts moved out of the way.
+    const [showArchived, setShowArchived] = useState(false);
+    const inTab = registeredUsers.filter(u => Boolean(u.archivedAt) === showArchived);
+    const archivedCount = registeredUsers.filter(u => u.archivedAt).length;
+    const filtered = filterUsers(inTab, filters.users);
 
     return (
+        <>
+        <ArchiveToolbar
+            showArchived={showArchived}
+            setShowArchived={setShowArchived}
+            activeCount={registeredUsers.length - archivedCount}
+            archivedCount={archivedCount}
+            // No automatic archiving for accounts: Closed ones are archived by hand.
+            loadSetting={() => Promise.resolve(null)}
+        />
         <RegisteredUsersTable
             residents={filtered.filter(u => u.role === "resident")}
             staff={filtered.filter(u => u.role !== "resident")}
@@ -39,7 +55,9 @@ export default function UsersPage({
             setFilters={setFilters}
             onUpdateStatus={onUpdateStatus}
             onUpdateRole={onUpdateRole}
+            onArchiveUser={onArchiveUser}
             currentAdminId={currentAdminId}
         />
+        </>
     );
 }

@@ -294,3 +294,25 @@ exports.changePassword = async (req, res) => {
         return res.status(500).json({ success: false, message: "Failed to change password." });
     }
 };
+
+
+// System > Users: move a Closed account to the Archived tab, or back.
+const setUserArchived = (archived) => async (req, res) => {
+    try {
+        const target = await User.findById(req.params.id);
+        if (!target) return res.status(404).json({ success: false, message: "User not found." });
+        if (isMainAccount(target.email_address)) {
+            return res.status(403).json({ success: false, message: MAIN_ACCOUNT_LOCKED });
+        }
+        if (archived && target.status !== "Closed") {
+            return res.status(400).json({ success: false, message: "Only closed accounts can be archived." });
+        }
+        await User.setArchived(req.params.id, archived);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: `Failed to ${archived ? "archive" : "restore"} the account.` });
+    }
+};
+exports.archiveUser = setUserArchived(true);
+exports.restoreUser = setUserArchived(false);

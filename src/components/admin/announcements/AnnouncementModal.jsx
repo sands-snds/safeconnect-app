@@ -6,7 +6,7 @@ import CreateAnnouncementView from "./CreateAnnouncementView";
 // consistency with the other admin modals, but with its own wider content
 // box -- the generic .modal-content caps at 600px, which is cramped once
 // the image preview / link preview blocks are showing.
-const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved }) => {
+const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved, onArchiveToggle }) => {
     const isEditMode = !!editingAnnouncement;
 
     // Esc closes the modal, matching the click-outside-to-close affordance below.
@@ -89,6 +89,7 @@ const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved }) => {
                     editingAnnouncement={editingAnnouncement}
                     onCreated={onSaved}
                     onCancel={onClose}
+                    onArchiveToggle={onArchiveToggle}
                 />
             </div>
         </div>

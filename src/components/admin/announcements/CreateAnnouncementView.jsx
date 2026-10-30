@@ -11,7 +11,8 @@ const toInputDate = (value) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) => {
+// onArchiveToggle: edit mode only; archives (or restores) the announcement.
+const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onArchiveToggle }) => {
   const isEditMode = !!editingAnnouncement;
 
   const [title, setTitle] = useState("");
@@ -432,7 +433,19 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel }) =>
             </div>
           )}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "25px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "25px", flexWrap: "wrap" }}>
+            {isEditMode && onArchiveToggle && (
+              <button
+                type="button"
+                className="button button-soft"
+                style={{ marginRight: "auto" }}
+                onClick={() => onArchiveToggle(editingAnnouncement)}
+                disabled={submitting}
+              >
+                <i className={`bi ${editingAnnouncement.archivedAt ? "bi-box-arrow-up" : "bi-archive"}`} style={{ marginRight: 6 }} />
+                {editingAnnouncement.archivedAt ? "Restore" : "Archive"}
+              </button>
+            )}
             {onCancel && (
               <button type="button" className="button button-secondary" onClick={onCancel} disabled={submitting}>
                 Cancel

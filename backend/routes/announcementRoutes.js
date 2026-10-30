@@ -8,7 +8,8 @@ const upload = require("../middleware/uploadMiddleware");
 const {
     verifyToken,
     attachUserIfPresent,
-    verifyAdmin
+    verifyAdmin,
+    verifySuperAdmin
 } = require("../middleware/authMiddleware");
 const { logActivity } = require("../middleware/activityLogger");
 const Announcement = require("../models/Announcement");
@@ -30,6 +31,17 @@ router.get("/", attachUserIfPresent, controller.getAnnouncements);
 
 // Admin-only: creating/editing announcements, including the "paste a link" preview.
 router.get("/link-preview", verifyToken, verifyAdmin, controller.getLinkPreview);
+
+// Archive: the auto-archive period (Admins change it) and archive / restore one.
+const describeArchiveSetting = (req) => {
+    const months = Number(req.body?.months);
+    return months ? `Announcements: auto-archive after ${months === 12 ? "1 year" : `${months} months`}` : "Announcements: auto-archive turned off";
+};
+router.get("/archive-settings", verifyToken, verifyAdmin, controller.getArchiveSettings);
+router.put("/archive-settings", verifyToken, verifyAdmin, verifySuperAdmin, announcementsChanged,
+    logActivity("Changed archive settings", describeArchiveSetting), controller.updateArchiveSettings);
+router.patch("/:id/archive", verifyToken, verifyAdmin, announcementsChanged, logActivity("Archived announcement", announcementTitle), controller.archiveAnnouncement);
+router.patch("/:id/restore", verifyToken, verifyAdmin, announcementsChanged, logActivity("Restored announcement", announcementTitle), controller.restoreAnnouncement);
 router.post("/", verifyToken, verifyAdmin, announcementsChanged, upload.single("image"), logActivity("Created announcement", announcementTitle), controller.createAnnouncement);
 router.put("/:id", verifyToken, verifyAdmin, announcementsChanged, upload.single("image"), logActivity("Edited announcement", announcementTitle), controller.updateAnnouncement);
 router.delete("/:id", verifyToken, verifyAdmin, announcementsChanged, logActivity("Deleted announcement", announcementTitle), controller.deleteAnnouncement);

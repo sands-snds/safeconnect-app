@@ -5,6 +5,7 @@ const AnnouncementComment = require("../models/AnnouncementComment");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const { isAdminRole } = require("../utils/roles");
+const AnnouncementArchive = require("../services/announcementArchiveService");
 
 exports.createAnnouncement = async (req, res) => {
     try {
@@ -30,7 +31,9 @@ exports.createAnnouncement = async (req, res) => {
 // News page doesn't need a request per card just to show those numbers.
 exports.getAnnouncements = async (req, res) => {
     try {
-        const announcements = await Announcement.findAll();
+        // Archived ones only for Admins/Officials who ask (?includeArchived=1).
+        const includeArchived = req.query.includeArchived === "1" && isAdminRole(req.user?.role);
+        const announcements = await Announcement.findAll({ includeArchived });
         const [likeCounts, commentCounts, likedIds] = await Promise.all([
             AnnouncementLike.countsForAll(),
             AnnouncementComment.countsForAll(),
@@ -214,3 +217,44 @@ exports.getLinkPreview = async (req, res) => {
         res.status(422).json({ success: false, message: err.message || "Could not read that link." });
     }
 };
+
+
+// ── Archive (Content > Announcements) ───────────────────────────────────────
+
+exports.getArchiveSettings = async (req, res) => {
+    try {
+        res.json({ success: true, months: await AnnouncementArchive.getAutoArchiveMonths() });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Failed to load the archive setting." });
+    }
+};
+
+// Body: { months: 0 | 3 | 6 | 12 } (0 = auto-archive off).
+exports.updateArchiveSettings = async (req, res) => {
+    const months = Number(req.body?.months);
+    if (!AnnouncementArchive.ALLOWED_MONTHS.includes(months)) {
+        return res.status(400).json({ success: false, message: "Choose Off, 3 months, 6 months or 1 year." });
+    }
+    try {
+        await AnnouncementArchive.setAutoArchiveMonths(months);
+        const archived = await AnnouncementArchive.runAutoArchive();
+        res.json({ success: true, months, archived });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Failed to update the archive setting." });
+    }
+};
+
+const setArchived = (archived) => async (req, res) => {
+    try {
+        const affected = await AnnouncementArchive.setArchived(req.params.id, archived);
+        if (!affected) return res.status(404).json({ success: false, message: "Announcement not found." });
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: `Failed to ${archived ? "archive" : "restore"} the announcement.` });
+    }
+};
+exports.archiveAnnouncement = setArchived(true);
+exports.restoreAnnouncement = setArchived(false);

@@ -9,7 +9,8 @@ const AnnouncementsPage = ({
     setFilters,
     loadAnnouncements,
     pendingCreateAnnouncement,
-    onConsumePendingCreateAnnouncement
+    onConsumePendingCreateAnnouncement,
+    isSuperAdmin
 }) => {
     return (
         <AnnouncementsTable
@@ -20,6 +21,7 @@ const AnnouncementsPage = ({
             refreshDashboardData={loadAnnouncements}
             pendingCreateAnnouncement={pendingCreateAnnouncement}
             onConsumePendingCreateAnnouncement={onConsumePendingCreateAnnouncement}
+            isSuperAdmin={isSuperAdmin}
         />
     );
 };

@@ -1,13 +1,28 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ListView, { allOption } from "../shared/ListView";
+import ArchiveToolbar from "../reports/shared/ArchiveToolbar";
 import AnnouncementModal from "./AnnouncementModal";
 import ResultPopup from "../../shared/ResultPopup";
 import { confirmPopup } from "../../shared/popup";
 import AnnouncementComments from "./AnnouncementComments";
 import AnnouncementShareButton from "./AnnouncementShareButton";
-import { fetchAnnouncements, deleteAnnouncement } from "../../../Services/api";
+import {
+  fetchAnnouncements,
+  deleteAnnouncement,
+  archiveAnnouncement,
+  fetchAnnouncementArchiveSettings,
+  updateAnnouncementArchiveSettings
+} from "../../../Services/api";
 
 const DEFAULT_PAGE_SIZE = 10;
+
+// Months after posting before an announcement is archived automatically.
+const ANNOUNCEMENT_ARCHIVE_OPTIONS = [
+  { value: 0, label: "Off" },
+  { value: 3, label: "After 3 months" },
+  { value: 6, label: "After 6 months" },
+  { value: 12, label: "After 1 year" }
+];
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest - Oldest" },
@@ -50,7 +65,9 @@ const AnnouncementsTable = ({
   // Optional: useAdminData's own announcements loader, kept separate from
   // this table's local `data` state (see loadAnnouncements below) so the
   // dashboard's stat counts stay in sync too after a create/edit/delete.
-  refreshDashboardData
+  refreshDashboardData,
+  // Admins can change the auto-archive period; Officials only see it.
+  isSuperAdmin = false
 }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +78,8 @@ const AnnouncementsTable = ({
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  // Active / Archived tab (ArchiveToolbar).
+  const [showArchived, setShowArchived] = useState(false);
   // { type, title, message } for the success/error popup, or null.
   const [popup, setPopup] = useState(null);
 
@@ -72,7 +91,7 @@ const AnnouncementsTable = ({
     setError("");
 
     try {
-      const items = await fetchAnnouncements();
+      const items = await fetchAnnouncements({ includeArchived: true });
       setData(items);
     } catch (err) {
       setError(err.message);
@@ -103,6 +122,29 @@ const AnnouncementsTable = ({
     if (setEditingAnnouncement) setEditingAnnouncement(null);
   };
 
+  // From the Edit form: archive an announcement (or restore an archived one).
+  const handleArchiveToggle = async (announcement) => {
+    const archiving = !announcement.archivedAt;
+    if (archiving) {
+      const confirmed = await confirmPopup({
+        type: "warning",
+        title: "Archive Announcement?",
+        message: "Residents won't see it anymore. You can restore it from the Archived tab.",
+        confirmLabel: "Archive"
+      });
+      if (!confirmed) return;
+    }
+    const result = await archiveAnnouncement(announcement.id, archiving);
+    if (!result?.success) {
+      setPopup({ type: "error", title: `Couldn't ${archiving ? "Archive" : "Restore"} Announcement`, message: result?.message || "Please try again." });
+      return;
+    }
+    closeModal();
+    setPopup({ type: "success", title: archiving ? "Announcement Archived" : "Announcement Restored", message: archiving ? "It's now under the Archived tab." : "Residents can see it again on the News page." });
+    loadAnnouncements();
+    if (refreshDashboardData) refreshDashboardData();
+  };
+
   const handleSaved = ({ edited } = {}) => {
     closeModal();
     setPopup(edited
@@ -114,8 +156,9 @@ const AnnouncementsTable = ({
 
   // The search box and sort dropdown live in ListView, but this table owns
   // the raw data, so filtering/sorting/pagination all happen here.
+  const activeCount = data.filter((a) => !a.archivedAt).length;
   const processedData = useMemo(() => {
-    let result = [...data];
+    let result = data.filter((a) => Boolean(a.archivedAt) === showArchived);
 
     const searchTerm = (currentFilters.search || "").trim().toLowerCase();
 
@@ -158,7 +201,7 @@ const AnnouncementsTable = ({
     });
 
     return result;
-  }, [data, currentFilters.search, currentFilters.status, sortOrder]);
+  }, [data, showArchived, currentFilters.search, currentFilters.status, sortOrder]);
 
   const totalPages = Math.max(1, Math.ceil(processedData.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
@@ -172,7 +215,7 @@ const AnnouncementsTable = ({
   // so the user isn't stranded on an empty page.
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentFilters.search, currentFilters.status, sortOrder]);
+  }, [currentFilters.search, currentFilters.status, sortOrder, showArchived]);
 
   // Which cards have their comments panel open ({ [id]: true }).
   const [openComments, setOpenComments] = useState({});
@@ -442,6 +485,21 @@ const AnnouncementsTable = ({
         </div>
       )}
 
+      <div style={{ width: "70%", margin: "0 auto" }} className="announcement-archive-bar">
+        <ArchiveToolbar
+          showArchived={showArchived}
+          setShowArchived={setShowArchived}
+          activeCount={loading ? null : activeCount}
+          archivedCount={loading ? null : data.length - activeCount}
+          isSuperAdmin={isSuperAdmin}
+          onSettingsChanged={loadAnnouncements}
+          loadSetting={fetchAnnouncementArchiveSettings}
+          saveSetting={updateAnnouncementArchiveSettings}
+          periodOptions={ANNOUNCEMENT_ARCHIVE_OPTIONS}
+          settingLabel="Auto-archive announcements:"
+        />
+      </div>
+
       {loading ? (
         <div>Loading announcements...</div>
       ) : (
@@ -486,6 +544,7 @@ const AnnouncementsTable = ({
         editingAnnouncement={editingAnnouncement}
         onClose={closeModal}
         onSaved={handleSaved}
+        onArchiveToggle={handleArchiveToggle}
       />
 
       {popup && (

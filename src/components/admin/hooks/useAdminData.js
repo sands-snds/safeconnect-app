@@ -15,6 +15,7 @@ import {
     fetchNotifications,
     markNotificationRead,
     updateUserRole as updateUserRoleApi,
+    setUserArchived as setUserArchivedApi,
     markAllNotificationsRead,
     archiveReport,
     restoreReport
@@ -229,6 +230,16 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
 
     // Returns { success, message } so the Users table can show the reason
     // when the backend refuses (e.g. changing your own role).
+    // System > Users: archive a Closed account (or restore it).
+    const setUserArchived = async (id, archived) => {
+        const ok = await setUserArchivedApi(id, archived);
+        if (ok) {
+            const archivedAt = archived ? new Date().toISOString() : null;
+            setRegisteredUsers(prev => prev.map(u => (u.id === id ? { ...u, archivedAt } : u)));
+        }
+        return ok;
+    };
+
     const updateUserRole = async (id, role) => {
         const result = await updateUserRoleApi(id, role);
         if (!result?.success) return result;
@@ -298,6 +309,7 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         handleRefresh,
         updateStatus,
         updateUserRole,
+        setUserArchived,
         setReportArchived,
         handleFormSubmit
     };

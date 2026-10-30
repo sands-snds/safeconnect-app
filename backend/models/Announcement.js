@@ -40,10 +40,13 @@ class Announcement {
         return result.insertId;
     }
 
-    static async findAll() {
+    // includeArchived: the admin panel's list (Active and Archived tabs);
+    // everyone else only sees announcements that aren't archived.
+    static async findAll({ includeArchived = false } = {}) {
         const [rows] = await db.query(`
             SELECT *
             FROM announcements
+            ${includeArchived ? "" : "WHERE archived_at IS NULL"}
             ORDER BY created_at DESC
         `);
         return rows;
