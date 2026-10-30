@@ -53,7 +53,7 @@ const AdminStats = ({
     // System tab stats: Admins only, like the tabs they open.
     ...(isSuperAdmin ? [
       { label: 'Registered Users', value: registeredUsers.length, icon: 'bi-people-fill', view: 'registered-users' },
-      { label: 'Total Sign-ins', value: signInLogs.length, icon: 'bi-box-arrow-in-right', view: 'sign-in-logs' },
+      { label: 'Resident Sign-ins', value: signInLogs.length, icon: 'bi-box-arrow-in-right', view: 'sign-in-logs' },
       { label: 'Admins & Officials', value: adminLogs.admins?.length || 0, icon: 'bi-person-badge-fill', view: 'admin-logs' }
     ] : [])
   ];

@@ -6,10 +6,41 @@ const LogArchive = require("../services/logArchiveService");
 // ?archived=1 lists the archived entries instead of the current ones.
 const wantsArchived = (req) => req.query.archived === "1" || req.query.archived === "true";
 
+// Residents only. Each successful sign-in carries `activity`: what that
+// resident did until their next successful sign-in (signing out,
+// submitting / editing / deleting reports), oldest first.
+const ResidentActivity = require("../models/ResidentActivity");
+
+// Splits each resident's activity between their successful sign-ins.
+const withActivity = async (logs) => {
+    const successes = logs.filter((l) => l.status === "Success");
+    if (!successes.length) return logs.map((l) => ({ ...l, activity: [] }));
+
+    const emails = [...new Set(successes.map((l) => l.email_address))];
+    const since = successes.reduce((min, l) => (new Date(l.timestamp) < min ? new Date(l.timestamp) : min), new Date());
+    const events = await ResidentActivity.forEmailsSince(emails, since);
+
+    // Sign-in times per email, oldest first, to find where each session ends.
+    const starts = {};
+    for (const l of successes) (starts[l.email_address] ||= []).push(new Date(l.timestamp).getTime());
+    for (const list of Object.values(starts)) list.sort((a, b) => a - b);
+
+    return logs.map((l) => {
+        if (l.status !== "Success") return { ...l, activity: [] };
+        const start = new Date(l.timestamp).getTime();
+        const end = starts[l.email_address].find((t) => t > start) ?? Infinity;
+        const activity = events
+            .filter((e) => e.email_address === l.email_address)
+            .filter((e) => { const t = new Date(e.created_at).getTime(); return t >= start && t < end; })
+            .map(({ action, details, created_at }) => ({ action, details, created_at }));
+        return { ...l, activity };
+    });
+};
+
 exports.getSigninLogs = async (req, res) => {
     try {
-        const logs = await Log.getSigninLogs({ archived: wantsArchived(req) });
-        return res.json(logs);
+        const logs = await Log.getSigninLogs({ archived: wantsArchived(req), residentsOnly: true });
+        return res.json(await withActivity(logs));
     } catch (err) {
         console.error(err);
         return res.status(500).json({

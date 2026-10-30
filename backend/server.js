@@ -143,6 +143,11 @@ require("./services/userStateService").ensureSchema().catch((err) =>
   console.error("Could not prepare synced account settings storage:", err.message)
 );
 
+// Resident Sign-in Logs: what residents did after signing in.
+require("./models/ResidentActivity").ensureTable().catch((err) =>
+  console.error("Could not create resident_activity_logs:", err.message)
+);
+
 // System > Users: archived_at for Closed accounts moved to the Archived tab.
 require("./models/User").ensureArchiveColumn().catch((err) =>
   console.error("Could not add registered_users.archived_at:", err.message)

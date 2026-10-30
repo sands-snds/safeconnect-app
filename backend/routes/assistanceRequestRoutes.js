@@ -7,6 +7,7 @@ const fs       = require("fs");
 const controller = require("../controllers/assistanceRequestController");
 const { verifyToken, verifyAdmin, verifyReportAccess, reportAsSignedInUser } = require("../middleware/authMiddleware");
 const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
+const { logResidentActivity, reportReference } = require("../middleware/residentActivity");
 
 const logStatus = logActivity("Updated request status", describeStatusChange("assistance_requests", "Assistance request"));
 
@@ -30,13 +31,13 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-router.post("/",             verifyToken,             upload.array("media", 10), reportAsSignedInUser, controller.createRequest);
+router.post("/",             verifyToken,             upload.array("media", 10), reportAsSignedInUser, logResidentActivity("Submitted assistance request"), controller.createRequest);
 router.get("/",              verifyToken, verifyAdmin, controller.getRequests);
 router.get("/statistics",    verifyToken, verifyAdmin, controller.getStatistics);
 router.get("/:id",           verifyToken, verifyReportAccess("assistance_requests", "admin"), controller.getRequest);
-router.put("/:id",           verifyToken, verifyReportAccess("assistance_requests", "super"), controller.updateRequest);
+router.put("/:id",           verifyToken, verifyReportAccess("assistance_requests", "super"), logResidentActivity("Edited assistance request", reportReference("assistance_requests")), controller.updateRequest);
 router.put("/:id/status",    verifyToken, verifyAdmin, logStatus, controller.updateStatus);
 router.patch("/:id/status",  verifyToken, verifyAdmin, logStatus, controller.updateStatus);
-router.delete("/:id",        verifyToken, verifyReportAccess("assistance_requests", "super"), controller.deleteRequest);
+router.delete("/:id",        verifyToken, verifyReportAccess("assistance_requests", "super"), logResidentActivity("Deleted assistance request", reportReference("assistance_requests")), controller.deleteRequest);
 
 module.exports = router;

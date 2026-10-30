@@ -53,8 +53,10 @@ class Log {
     // System > Sign-in Logs. Old entries are archived by
     // services/logArchiveService.js; archived: true lists those instead.
     // Optional filters (Generate Report): role ("unknown" = no account),
-    // status, from / to (Date bounds, `to` exclusive).
-    static async getSigninLogs({ archived = false, role, status, from, to } = {}) {
+    // status, from / to (Date bounds, `to` exclusive). residentsOnly: leave
+    // out Officials and Admins (System > Resident Sign-in Logs); attempts
+    // with an email that has no account stay in.
+    static async getSigninLogs({ archived = false, role, status, from, to, residentsOnly = false } = {}) {
         // role: the account's current role, looked up by email (NULL for
         // failed attempts with an email that has no account).
         let sql = `
@@ -64,6 +66,7 @@ class Log {
             WHERE s.archived_at IS ${archived ? "NOT NULL" : "NULL"}
         `;
         const values = [];
+        if (residentsOnly) sql += " AND (u.role = 'resident' OR u.role IS NULL)";
         if (role === "unknown") sql += " AND u.role IS NULL";
         else if (role) { sql += " AND u.role = ?"; values.push(role); }
         if (status) { sql += " AND s.status = ?"; values.push(status); }

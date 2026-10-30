@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import ListView, { allOption } from '../shared/ListView';
 import StatusBadge from '../shared/StatusBadge';
 import ArchiveToolbar from '../reports/shared/ArchiveToolbar';
-import { roleLabel } from '../../shared/roles';
 import { fetchSignInLogs, fetchLogArchiveSettings, updateLogArchiveSettings } from '../../../Services/api';
 import { LOG_PERIOD_OPTIONS } from './logArchive';
 
@@ -14,15 +13,44 @@ const filterLogs = (logs, filter = {}) => {
   if (filter.search) {
     const q = filter.search.toLowerCase();
     result = result.filter((l) =>
-      [l.fullName, l.email, l.loginTime, roleLabel(l.role), l.ipAddress, l.location, l.device, l.status]
+      [l.fullName, l.email, l.loginTime, l.ipAddress, l.location, l.device, l.status,
+        ...l.activity.map((a) => `${a.action} ${a.details}`)]
         .some((v) => String(v || '').toLowerCase().includes(q))
     );
   }
   return result;
 };
 
-// System > Sign-in Logs. Entries older than the auto-archive period (default
+// System > Resident Sign-in Logs (residents only; Officials and Admins are in
+// Admin Logs). Each sign-in lists what the resident did afterwards, until
+// their next sign-in. Entries older than the auto-archive period (default
 // 90 days) move to the Archived tab; they aren't deleted.
+
+const ACTIVITY_SHOWN = 3;
+
+// The ACTIVITY cell: the first few actions, the rest behind "Show N more".
+const ActivityCell = ({ activity }) => {
+  const [open, setOpen] = useState(false);
+  if (!activity.length) return <span className="text-gray-500 text-xs">—</span>;
+  const shown = open ? activity : activity.slice(0, ACTIVITY_SHOWN);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {shown.map((a, i) => (
+        <div key={i} className="text-sm" title={a.time}>
+          <span style={{ fontWeight: 600, color: a.action === 'Signed out' ? '#6b7280' : '#111827' }}>{a.action}</span>
+          {a.details && <span style={{ color: '#6B2C3E' }}> · {a.details}</span>}
+          <div className="text-gray-500 text-xs">{a.time}</div>
+        </div>
+      ))}
+      {activity.length > ACTIVITY_SHOWN && (
+        <button type="button" onClick={() => setOpen((v) => !v)}
+          style={{ alignSelf: 'flex-start', border: 'none', background: 'none', padding: 0, color: '#6B2C3E', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          {open ? 'Show less' : `Show ${activity.length - ACTIVITY_SHOWN} more`}
+        </button>
+      )}
+    </div>
+  );
+};
 const SignInLogsTable = ({ data, filters, setFilters, isSuperAdmin, onRefresh }) => {
   const [showArchived, setShowArchived] = useState(false);
   const [archived, setArchived] = useState(null); // null = not loaded yet
@@ -40,7 +68,7 @@ const SignInLogsTable = ({ data, filters, setFilters, isSuperAdmin, onRefresh })
         <div className="text-gray-500 text-xs">{log.email}</div>
       </td>
       <td className="table-cell text-sm">{log.loginTime}</td>
-      <td className="table-cell text-sm">{roleLabel(log.role)}</td>
+      <td className="table-cell"><ActivityCell activity={log.activity} /></td>
       <td className="table-cell">
         <div className="text-sm">{log.device}</div>
         <div className="text-sm" style={{ color: '#4b5563' }}>{log.ipAddress}</div>
@@ -77,12 +105,12 @@ const SignInLogsTable = ({ data, filters, setFilters, isSuperAdmin, onRefresh })
           filterType="signins"
           filters={filters}
           setFilters={setFilters}
-          headers={['USER', 'LOGIN TIME', 'ROLE', 'DEVICE & IP ADDRESS', 'STATUS']}
+          headers={['USER', 'LOGIN TIME', 'ACTIVITY', 'DEVICE & IP ADDRESS', 'STATUS']}
           renderRow={renderRow}
           statusOptions={[allOption('All Statuses'), 'Success', 'Failed']}
           exportType="signinLogs"
           exportWithOptions
-          exportTitle={showArchived ? 'Archived Sign-in Logs' : 'Sign-in Logs'}
+          exportTitle={showArchived ? 'Archived Resident Sign-in Logs' : 'Resident Sign-in Logs'}
           exportFilters={showArchived ? { archived: '1' } : {}}
           itemLabel="sign-ins"
         />

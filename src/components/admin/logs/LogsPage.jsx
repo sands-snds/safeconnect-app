@@ -3,7 +3,7 @@ import React from "react";
 import SignInLogsTable from "./SignInLogsTable";
 import AdminLogsTable from "./AdminLogsTable";
 
-// System > Sign-in Logs / Admin Logs. Each table filters its own list and
+// System > Resident Sign-in Logs / Admin Logs. Each table filters its own list and
 // loads its own Archived tab.
 const LogsPage = ({
     activeView,

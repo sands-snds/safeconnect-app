@@ -72,7 +72,8 @@ const SYSTEM_REPORTS = {
     dateLabel: 'Date registered'
   },
   signinLogs: {
-    roles: [ALL_ROLES, { value: 'resident', label: 'Residents' }, { value: 'admin', label: 'Officials' }, { value: 'super_admin', label: 'Admins' }, { value: 'unknown', label: 'No account' }],
+    // Residents only (Officials and Admins are in Admin Logs).
+    roles: [ALL_ROLES, { value: 'resident', label: 'Residents' }, { value: 'unknown', label: 'No account' }],
     statuses: [{ value: '', label: 'All attempts' }, { value: 'Success', label: 'Successful' }, { value: 'Failed', label: 'Failed' }],
     dateLabel: 'Sign-in date'
   },

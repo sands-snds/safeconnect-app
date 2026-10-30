@@ -751,7 +751,13 @@ export const fetchSignInLogs = async ({ archived = false } = {}) => {
         ipAddress: log.ip_address || 'IP not tracked',
         location: log.location || '',
         device: log.device || 'Device not tracked',
-        status: log.status || ''
+        status: log.status || '',
+        // What the resident did until their next sign-in (successful sign-ins only).
+        activity: (log.activity || []).map((a) => ({
+            action: a.action,
+            details: a.details || '',
+            time: a.created_at ? new Date(a.created_at).toLocaleString() : ''
+        }))
     }));
 };
 
