@@ -15,7 +15,7 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 3. [How It Fits Together](#3-how-it-fits-together)
 4. [Getting Started (Local Setup)](#4-getting-started-local-setup)
 5. [Environment Variables](#5-environment-variables)
-6. [Deployment (Azure)](#6-deployment-azure)
+6. [Deployment (Azure + Vercel)](#6-deployment-azure--vercel)
 7. [Folder Structure](#7-folder-structure)
 8. [User Roles](#8-user-roles)
 9. [Data Retention](#9-data-retention)
@@ -31,36 +31,38 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | **Sign up with email verification** | A 6-digit code is emailed to the resident. The account is created only after the code is entered. |
 | **Sign in / forgot password** | Signing in sends an email alert. Forgotten passwords are reset with an emailed code. |
 | **Emergency report** | Report a fire, flood, medical emergency or similar, with a required photo or video and a map pin. Can be filed for yourself or for someone else. |
-| **Assistance request** | Ask for food, water, medical supplies, shelter and so on, with an urgency level. |
+| **Assistance request** | Ask for food, water, medical supplies, shelter and so on. |
 | **Petty crime report** | Report theft, vandalism and similar incidents, with optional suspect details. |
 | **Location pin** | A map of Barangay Santa Fe. Residents tap the map or use their GPS location. Pins outside the barangay are rejected, and the address fills in automatically. |
-| **My Reports** | See every report you have submitted and its status (Received → In Progress → Resolved), and edit or delete your reports. |
+| **My Reports** | See every report you have submitted and its status (Received → In Progress → Resolved, or Dismissed), with a short message for each status (for example "Help is on the way…" while In Progress, or the reason a report was dismissed). Edit or delete reports that are still Received. |
 | **Notifications** | A bell showing new announcements, plus personal updates when an admin changes the status of one of your reports or replies to your comment. |
 | **News / announcements** | The barangay's announcements, including previews of linked news articles. Residents can like, comment on and share each one. The barangay's replies appear under the comment they answer, YouTube-style, tagged "Barangay Admin". |
 | **Weather** | A forecast card for Santa Fe, from Open-Meteo. |
-| **Profile settings** | Change your photo, username, contact number, email or password. |
+| **Profile settings** | Change your photo, full name, username, contact number, email or password. |
+| **Install the app** | Settings → Install the app adds Safe Connect to the phone's home screen (one tap on Android; Share → Add to Home Screen on iPhone). |
 | **English / Tagalog** | Visitors pick a language on their first visit and can switch at any time. |
 | **Spam protection** | Each report type has a 1-hour cooldown per account. |
 
 ### For admins (barangay staff)
 | Feature | What it does |
 |---|---|
-| **Dashboard** | Totals, a "reports over time" chart, status pie charts and the latest reports. |
-| **Report management** | Emergency, Assistance and Petty Crime tabs with search, filters and pagination. Each card shows the full details, the photo and the map pin. |
-| **Status workflow** | A report can only move forward (Received → In Progress → Resolved). The resident gets an automatic update at each step. |
+| **Dashboard** | Counters for each report type (in the resident page's report colors) and the other totals, Create Announcement and Total Reports, then a "reports over time" chart, status pie charts and the latest reports. On phones only Create Announcement and Total Reports are shown, then Recent Reports / Analytics tabs. |
+| **Report management** | Emergency, Assistance and Petty Crime tabs with search, filters and pagination. Each card shows the status next to the title; View details shows the full details, the photo and the map pin. |
+| **Status workflow** | A report can only move forward (Received → In Progress → Resolved), with a blue "Move to In Progress" and a green "Move to Resolved" button. The resident gets an automatic update at each step. |
 | **Dismiss a report** | An open report that is a repeat, a prank or a known false accusation can be **Dismissed** with a reason, instead of suspending the account. The reason is sent to the resident and shown in My Reports. Dismissed reports can be archived like resolved ones. |
-| **Archiving** | Resolved reports can be archived by hand, or automatically after 6 months or 1 year. Archived reports can be restored. |
-| **Announcements** | Create, edit and delete announcements, with an image or a pasted news link (a preview is generated). Every active resident is emailed. |
-| **Announcement comments** | Read residents' comments on each announcement, comment as the barangay, **reply** to a resident (shown as a thread under their comment; the resident is notified), and delete comments for moderation. |
+| **Archiving** | Resolved and Dismissed reports can be archived by hand, or automatically after 6 months or 1 year. Archived reports can be restored. |
+| **Announcements** | Create, edit and delete announcements, with an image or a pasted news link (a preview is generated). Every active resident is emailed. Archive one from its Edit form, or automatically 3 months, 6 months or 1 year after posting (Off by default); residents never see archived ones, and they can be restored from the Archived tab. |
+| **Announcement comments** | Read residents' comments on each announcement, comment as the barangay, **reply** to a resident (shown as a thread under their comment; the resident is notified), and delete comments for moderation. New resident comments also arrive as notifications and can be answered from the Notifications page. |
 | **Share** | Share an announcement on Facebook, through the device's share menu, or by copying its text. |
-| **Generate Report** | Download PDF or Excel reports. Report tabs filter by status and period; System tabs filter by role, status and a From/To date range. |
-| **Notifications** | A bell that alerts Admins and Officials to new reports and announcements. |
-| **Users** *(Admin)* | Residents and Admins & Officials in two tables under one search and status filter. Change an account's role or status. The barangay's main account is locked. |
-| **Sign-in Logs** *(Admin)* | Every sign-in attempt, with device, IP address and approximate location in one column. Entries older than 90 days (adjustable) move to an **Archived** tab. |
+| **Generate Report** | Download PDF or Excel reports. Report tabs filter by status and period; System tabs filter by role, status and a From/To date range. Custom dates run from September 1, 2026 to today (no future dates). |
+| **Notifications** | The bell (same look as the residents' bell) shows only recent notifications, with **Unread / Read** tabs and Mark all as read. "See report" opens that report with its details showing. **General → Notifications** lists them all like a mailbox: Inbox / Archived, All / Unread / Read, a checkbox per notification (and select all) to **Archive** or **Mark as read**, and replies to residents' comments. Archiving is shared by all Admins and Officials, like the read state. |
+| **Users** *(Admin)* | Residents and Admins & Officials in two tables under one search and status filter. Change an account's role or status. Closed accounts can be **archived** to an Archived tab (reopening one takes it out). The barangay's main account is locked. |
+| **Resident Sign-in Logs** *(Admin)* | Every residents' sign-in attempt (Officials and Admins are in Admin Logs), with device, IP address and approximate location, and an **Activity** column: what the resident did until their next sign-in (submitted, edited or deleted reports, signing out). Entries older than 90 days (adjustable) move to an **Archived** tab. |
 | **Admin Logs** *(Admin)* | Which Admins and Officials are online, and a record of every action (logins, status changes, exports and more). Activity older than 90 days (adjustable) moves to an **Archived** tab. |
-| **Page Contacts** *(Admin)* | Edit the floating call button's emergency numbers and the footer's barangay officials, hotlines and socials. |
-| **Page Contents** *(Admin)* | Change the landing page and resident page carousel photos, and set the two demo videos (upload an MP4/WebM up to 100 MB, or paste a YouTube link) with a title and caption. The **system demo** shows on the landing page (below the carousel) and in the resident News page (below the weather card); each place can be hidden. The **admin demo** pops up after signing in to the admin panel. |
-| **Account Settings** | From the account menu (top right), Admins and Officials can change their photo, username, contact number, email and password, and re-watch the admin demo video. |
+| **Page Contacts** *(Admin)* | Two groups. **Call Button**: the floating call button's emergency contacts (and the people a caller can choose between). **Footer**: Barangay Officials (position, first, middle and last name), the Emergency Hotline column (its own list, without the officials) and Socials. Numbers are **Mobile** (+63 and 10 digits) or **Landline** (+63 and 9 digits), digits only; 911 stays 911. Text boxes take up to 40 characters, removing anything asks first, and **Preview** shows the call button and footer before saving. |
+| **Page Contents** *(Admin)* | Change the landing page and resident page carousel photos, and set two videos (upload an MP4/WebM up to 100 MB, or paste a YouTube link) with a title and caption. The **Video for Residents** can show on the landing page (below the carousel) and in the resident News tab (below the weather); each place has its own switch (News starts off). The **admin demo** pops up after signing in to the admin panel. The videos can't be downloaded. Titles take up to 40 characters, removing a photo or video asks first, and **Preview** shows the photos and videos before saving. |
+| **Account Settings** | From the account menu (the profile picture, top right; on phones too), Admins and Officials can change their photo, username, contact number, email and password, and re-watch the admin demo video. |
+| **Layout** | The header stays at the top while scrolling. A browser reload (F5) keeps the open tab. On phones a ☰ button before the page title opens the menu drawer. |
 | **Account status popups** | Signing in to a Suspended or Closed account closes the sign-in box and explains, in English or Tagalog, what happened and who to contact. |
 
 ---
@@ -78,7 +80,7 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | Exports | `pdfkit` (PDF), `exceljs` (Excel) |
 | Security | `helmet` (HTTP headers), `cors` (allowed origins) |
 | External services | OpenStreetMap tiles + Nominatim (maps, addresses), Esri World Imagery (satellite view), Open-Meteo (weather), ipapi.co (sign-in location) |
-| Hosting | Azure Static Web Apps (frontend), Azure App Service (backend), Azure Database for MySQL |
+| Hosting | Vercel and Azure Static Web Apps (frontend, the same build), Azure App Service (backend), Azure Database for MySQL |
 
 ---
 
@@ -200,9 +202,9 @@ These values are **baked in at build time**, so set them before running `npm run
 
 ---
 
-## 6. Deployment (Azure)
+## 6. Deployment (Azure + Vercel)
 
-| Part | Azure service | URL |
+| Part | Service | URL |
 |---|---|---|
 | Frontend | Static Web App | https://polite-plant-04bf1e000.3.azurestaticapps.net (same build; the official address is the Vercel one below) |
 | Frontend | Vercel project `safeconnect-santafe` | https://safeconnect-santafe.vercel.app (official address; deploys from `pwa-setup`) |
@@ -211,8 +213,8 @@ These values are **baked in at build time**, so set them before running `npm run
 
 - **Frontend:** deployed automatically by [.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml) on every push to the `pwa-setup` branch. It needs the repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. [public/staticwebapp.config.json](public/staticwebapp.config.json) sends every route to `index.html` so React Router works on refresh.
 - **Frontend on Vercel:** the `safeconnect-santafe` project (Create React App preset, root `./`) builds `pwa-setup` on every push. Its environment variables are `REACT_APP_API_BASE` and `REACT_APP_ASSET_BASE`, the same values as the GitHub workflow. [vercel.json](vercel.json) sends every route to `index.html` and keeps `/admin` and `/resident` out of search results. Vercel treats build warnings as errors, so check with `CI=true npm run build` before pushing. The backend's `ALLOWED_ORIGINS` lists both frontend URLs.
-- **Backend:** deployed by hand, as a zip of the `backend/` folder without `node_modules` or `.env` files, using `az webapp deploy`. Azure runs `npm install` during deployment. Its environment variables are set in the App Service configuration, not in a `.env` file.
-- **Search engines:** [public/index.html](public/index.html) has the title, description, link-preview (Open Graph) tags and site name (JSON-LD) that search results show. [public/robots.txt](public/robots.txt) and [public/sitemap.xml](public/sitemap.xml) point crawlers at the landing page, and `staticwebapp.config.json` sends `X-Robots-Tag: noindex` on `/admin` and `/resident` so the sign-in pages stay out of results. The `<32 hex characters>.txt` file in `public/` is the [IndexNow](https://www.indexnow.org/) key that lets us notify Bing of updates; it is meant to be public. All of these contain the site address, so update them if it changes.
+- **Backend:** deployed by hand, as a zip of the `backend/` folder without `node_modules`, `uploads` or `.env` files, using `az webapp deploy`. Make the zip with `tar.exe -a -c -f backend.zip -C <folder> *` (PowerShell 5.1's `Compress-Archive` writes backslashes in the paths, and Azure rejects the zip). Azure runs `npm install` during deployment. Its environment variables are set in the App Service configuration, not in a `.env` file. On start the backend adds any missing tables and columns (see ARCHITECTURE.md).
+- **Search engines:** [public/index.html](public/index.html) has the title, description, link-preview (Open Graph) tags and site name (JSON-LD) that search results show. [public/robots.txt](public/robots.txt) and [public/sitemap.xml](public/sitemap.xml) point crawlers at the landing page, and `staticwebapp.config.json` / `vercel.json` send `X-Robots-Tag: noindex` on `/admin` and `/resident` so the sign-in pages stay out of results. The official (canonical) address is the Vercel one. The `<32 hex characters>.txt` file in `public/` is the [IndexNow](https://www.indexnow.org/) key that lets us notify Bing of updates; it is meant to be public. All of these contain the site address, so update them if it changes.
 - **Uploads:** uploaded images live in `backend/uploads/` on the App Service. A zip deploy only replaces files that came from earlier deploys, so uploaded files survive. Back them up before any big change anyway.
 
 ---
@@ -229,14 +231,15 @@ safeconnect-app/
 │   ├── server.js              # entry point: middleware, routes, startup jobs
 │   ├── config/                # db.js (MySQL pool), reportStyle.js (PDF/Excel look)
 │   ├── routes/                # URL → middleware → controller wiring
-│   ├── middleware/            # auth/role checks, activity logging, uploads
+│   ├── middleware/            # auth/role checks, admin + resident activity logging, uploads
 │   ├── controllers/           # read the request, call services/models, send the response
 │   ├── services/              # business logic: emails, exports, archiving, notifications
 │   ├── models/                # SQL queries, one class per table
 │   ├── utils/                 # JWT, roles, status workflow, reference numbers, sign-in context
 │   ├── assets/                # logos embedded in PDF/Excel exports
 │   └── uploads/               # uploaded images (not committed)
-├── public/                    # index.html, manifest.json, icons, images
+├── public/                    # index.html, manifest.json, icons, images, robots.txt, sitemap.xml
+├── vercel.json                # Vercel: page links + noindex headers
 └── src/                       # React app
     ├── App.js                 # routes: / , /resident , /admin
     ├── Services/api.js        # the ONLY file that calls the backend
@@ -249,14 +252,16 @@ safeconnect-app/
     │   ├── admin/
     │   │   ├── dashboard/     # summary, charts, recent reports
     │   │   ├── reports/       # emergency / assistance / pettyCrime tabs + shared pieces
-    │   │   ├── announcements/ # list + create/edit modal
+    │   │   ├── announcements/ # list + create/edit modal (with Archive)
+    │   │   ├── notifications/ # bell panel + Notifications page
+    │   │   ├── settings/      # Page Contacts, Page Contents, Account Settings
     │   │   ├── users/         # Users tab
-    │   │   ├── logs/          # Sign-in Logs + Admin Logs tabs
-    │   │   ├── layout/        # sidebar, header (notifications), stat cards
+    │   │   ├── logs/          # Resident Sign-in Logs + Admin Logs tabs
+    │   │   ├── layout/        # sidebar, header, dashboard counters (AdminStats)
     │   │   ├── hooks/         # useAdminData, useAdminAuth, useAdminNavigation, useIsMobile
     │   │   ├── shared/        # ListView, ReportCard, StatusSelect, Pagination, export UI…
     │   │   └── AdminModals/   # SignInModal, FormModal
-    │   └── shared/            # footer, language picker, location map (used by several pages)
+    │   └── shared/            # footer, call button list, language picker, location map, video player
     └── styles/                # CSS files
 ```
 
@@ -268,7 +273,7 @@ safeconnect-app/
 |---|---|---|---|
 | **Resident** | `resident` | `/resident` | Submit reports, and view, edit or delete their own reports; manage their profile |
 | **Official** | `admin` | `/admin` | Everything in the admin panel **except** the System tabs: reports, statuses, archiving, announcements, exports |
-| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Sign-in Logs and Admin Logs**, **Content → Page Contacts**, and changing auto-archive periods |
+| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Resident Sign-in Logs and Admin Logs**, **Content → Page Contacts and Page Contents**, and changing auto-archive periods |
 
 Only the names shown on screen, in exports and in messages changed. The values stored in the database are the same as before, so existing accounts and sign-ins keep working. In code, always show `ROLE_LABELS[role]` (`backend/utils/roles.js`, `src/components/shared/roles.js`), never the stored value.
 
@@ -282,8 +287,11 @@ The backend checks the role **against the database on every admin request**, not
 
 | Data | Rule |
 |---|---|
-| Resolved reports | Archived automatically once they have been resolved for **1 year** (default). An Admin can change this to 6 months or Off. Archived reports stay in the database, still count on the dashboard and in exports, and can be restored. |
-| Sign-in logs | Entries older than **90 days** (default; an Admin can choose 30 days, 90 days, 6 months, 1 year or Off) move to the **Archived** tab. Nothing is deleted. |
+| Resolved and Dismissed reports | Archived automatically once they have been closed for **1 year** (default). An Admin can change this to 6 months or Off. Archived reports stay in the database, still count on the dashboard and in exports, and can be restored. |
+| Announcements | Archived automatically after **3 months, 6 months or 1 year** if an Admin turns it on (**Off** by default), or by hand. Nothing is deleted; they can be restored. |
+| Admin notifications | Archived only by hand (Notifications page). Nothing is deleted. |
+| Closed accounts | Archived only by hand (Users tab). The account stays Closed. |
+| Sign-in logs | Entries older than **90 days** (default; an Admin can choose 30 days, 90 days, 6 months, 1 year or Off) move to the **Archived** tab. Nothing is deleted. Resident activity (the Activity column) is kept with no limit and recorded from 2026-10-30 on. |
 | Admin activity logs | Same as sign-in logs, with its own setting (default **90 days**). The Recent tab shows the latest 500 actions; the Archived tab up to 2,000. |
 | Sign-up / reset codes | Held in server memory for 10 minutes. A server restart clears them. |
 
@@ -292,7 +300,7 @@ The backend checks the role **against the database on every admin request**, not
 ## 10. Known Issues
 
 - **`database/safeconnect_db.sql` is missing some columns the code uses:** `report_for`, `victim_name`, `victim_contact`, `victim_relationship` and `victim_details` on the three report tables. A database created only from this file will fail when a report is submitted. `victim_details` is also missing from the current local database.
-- **The seed admin account cannot sign in** (its password is not hashed). See [Step 6](#step-6-create-the-first-super-admin).
+- **The seed admin account cannot sign in** (its password is not hashed). See [Step 6](#step-6-sign-in-as-the-barangays-main-admin).
 - **`backend/.env.example` doesn't list the `SMTP_*` variables.**
 - **`backend/.env` is committed to git** even though `.gitignore` lists it. It holds real passwords, and each teammate's local database password overwrites the others' when they pull. Stop tracking it with `git rm --cached backend/.env`, and change the passwords that are already in the history.
 - **Report photos and videos are stored as base64 text** in the report tables (`photo_url`, `LONGTEXT`). This works, but makes those rows large, and the admin report lists download every report's media on each refresh.
