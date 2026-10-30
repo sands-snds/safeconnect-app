@@ -128,6 +128,19 @@ exports.createComment = async (req, res) => {
             }).catch((err) => console.error("Comment reply notification failed:", err));
         }
 
+        // Admin panel: residents' comments and replies, so Officials and
+        // Admins can answer them from the Notifications page.
+        if (!isAdmin) {
+            const announcement = await Announcement.findById(req.params.id);
+            Notification.create({
+                title: parent ? `${authorName} replied on "${announcement?.title || "an announcement"}"` : `${authorName} commented on "${announcement?.title || "an announcement"}"`,
+                message: text,
+                notificationType: "announcement_comment",
+                referenceId: Number(req.params.id),
+                commentId: id
+            }).catch((err) => console.error("Comment notification failed:", err));
+        }
+
         res.status(201).json({
             success: true,
             comment: {

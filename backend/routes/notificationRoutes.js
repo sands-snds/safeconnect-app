@@ -13,6 +13,8 @@ router.put("/mine/:id/read", verifyToken, controller.markMineAsRead);
 // Admin-only: feeds the admin header notification bell.
 router.get("/", verifyToken, verifyAdmin, controller.getNotifications);
 router.put("/read-all", verifyToken, verifyAdmin, controller.markAllAsRead);
+router.put("/read", verifyToken, verifyAdmin, controller.markManyAsRead);
+router.put("/archive", verifyToken, verifyAdmin, controller.archiveNotifications);
 router.put("/:id/read", verifyToken, verifyAdmin, controller.markAsRead);
 
 module.exports = router;

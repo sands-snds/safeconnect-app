@@ -886,8 +886,9 @@ export const fetchAllData = async () => {
 // ── Notifications ─────────────────────────────────────────────────────────────
 // Admin bell: useAdminData.js destructures { notifications, unread } from
 // this, so the raw { success, data, unread } backend shape needs mapping.
-export const fetchNotifications = async () => {
-    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}`, { headers: authHeaders() });
+// archived: the Notifications page's Archived tab.
+export const fetchNotifications = async ({ archived = false } = {}) => {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}${archived ? "?archived=1" : ""}`, { headers: authHeaders() });
     const result = await res.json();
     if (!result.success) return { notifications: [], unread: 0 };
 
@@ -898,6 +899,8 @@ export const fetchNotifications = async () => {
             message: item.message,
             type: item.notification_type,
             referenceId: item.reference_id,
+            // announcement_comment: the comment to reply to.
+            commentId: item.comment_id || null,
             isRead: Boolean(item.is_read),
             createdAt: item.created_at
         })),
@@ -973,6 +976,27 @@ export const markNotificationRead = async (id) => {
         headers: authHeaders(),
     });
     const result = await res.json();
+    return Boolean(result.success);
+};
+
+// Notifications page: mark several read, or archive / restore several.
+export const markNotificationsRead = async (ids) => {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/read`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids }),
+    });
+    const result = await res.json().catch(() => ({}));
+    return Boolean(result.success);
+};
+
+export const archiveNotifications = async (ids, archived = true) => {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/archive`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids, archived }),
+    });
+    const result = await res.json().catch(() => ({}));
     return Boolean(result.success);
 };
 

@@ -1,8 +1,9 @@
 const Notification = require("../models/Notification");
 
+// ?archived=1: the Notifications page's Archived tab.
 exports.getNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.findAll();
+        const notifications = await Notification.findAll({ archived: req.query.archived === "1" });
         const unread = await Notification.unreadCount();
 
         res.json({
@@ -35,6 +36,30 @@ exports.markAllAsRead = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false });
+    }
+};
+
+// Notifications page: archive / restore, or mark read, several at once.
+// Body: { ids: [1, 2, 3] } (and archived: true | false for /archive).
+const idsFrom = (req) => (Array.isArray(req.body?.ids) ? req.body.ids.map(Number).filter(Number.isInteger).slice(0, 500) : []);
+
+exports.archiveNotifications = async (req, res) => {
+    try {
+        const affected = await Notification.setArchived(idsFrom(req), req.body?.archived !== false);
+        res.json({ success: true, affected });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Couldn't update the notifications." });
+    }
+};
+
+exports.markManyAsRead = async (req, res) => {
+    try {
+        const affected = await Notification.markManyAsRead(idsFrom(req));
+        res.json({ success: true, affected });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Couldn't update the notifications." });
     }
 };
 

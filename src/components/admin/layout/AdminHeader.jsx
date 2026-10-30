@@ -3,17 +3,8 @@ import { markNotificationsViewed } from "../../shared/useTabNotifications";
 import { timeAgo } from "../shared/timeUtils";
 import useIsMobile from "../hooks/useIsMobile";
 import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
-
-// notification_type (set by the backend services) -> admin tab + link label.
-const NOTIFICATION_TARGETS = {
-    emergency:          { view: "emergency-reports",   label: "See report" },
-    emergency_status:   { view: "emergency-reports",   label: "See report" },
-    assistance:         { view: "assistance-requests", label: "See request" },
-    assistance_status:  { view: "assistance-requests", label: "See request" },
-    petty_crime:        { view: "petty-crime-reports", label: "See report" },
-    petty_crime_status: { view: "petty-crime-reports", label: "See report" },
-    announcement:       { view: "announcement-page",   label: "See announcement" }
-};
+import AdminNotificationPanel from "../notifications/AdminNotificationPanel";
+import { notificationTarget } from "../notifications/notificationTypes";
 
 const getInitials = (name) =>
     (name || "A")
@@ -81,8 +72,8 @@ const notificationsRef = useRef(null);
 const userMenuRef = useRef(null);
 
     const adminName = adminUser?.fullName || adminUser?.username || "Administrator";
-    // On phones the sidebar is hidden, so the profile button opens it (as a
-    // drawer) instead of the small account dropdown.
+    // On phones the sidebar is hidden: the menu button before the title opens
+    // it as a drawer (the profile button opens the account menu everywhere).
     const isMobile = useIsMobile();
 
     // Close whichever dropdown is open when clicking anywhere outside it.
@@ -102,10 +93,13 @@ const userMenuRef = useRef(null);
         return () => document.removeEventListener("mousedown", handleClick);
     }, [showNotifications, showUserMenu]);
 
-    const handleSeeReport = (item, target) => {
+    // Opens what the notification is about: the report itself (details
+    // open), or the Notifications page for a comment to reply to.
+    const openNotification = (item) => {
         onMarkOneRead?.(item.id);
         setShowNotifications(false);
-        onNavigate?.(target.view);
+        const target = notificationTarget(item);
+        if (target) onNavigate?.(target.view, target.focusId ? { focusId: target.focusId } : {});
     };
 
     return (
@@ -152,6 +146,21 @@ const userMenuRef = useRef(null);
                 .admin-header-icon-btn:disabled { background: #FDECEC; opacity: .7; }
                 /* White ring so the red unread count stands out against the red border. */
                 .admin-header-icon-btn .admin-header-badge { box-shadow: 0 0 0 2px #fff; }
+                .admin-header-menu-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 40px;
+                    height: 40px;
+                    flex-shrink: 0;
+                    padding: 0;
+                    border: none;
+                    border-radius: 10px;
+                    background: #6B2C3E;
+                    color: #fff;
+                    font-size: 22px;
+                    cursor: pointer;
+                }
                 .admin-header-refresh-icon { display: inline-block; }
                 .admin-header-refresh-icon.spinning {
                     animation: adminHeaderSpin 0.8s linear infinite;
@@ -164,23 +173,40 @@ const userMenuRef = useRef(null);
                 }
             `}</style>
 
-            {/* Left */}
-            <div>
-                <h1 className="admin-header-title" style={{
-                        margin: 0,
-                        fontWeight: 700,
-                        color: "#111827"
-                    }} >
-                    {title}
-                </h1>
+            {/* Left: on phones, the menu (drawer) button before the title */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                {isMobile && onToggleMobileMenu && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setShowNotifications(false);
+                            setShowUserMenu(false);
+                            onToggleMobileMenu();
+                        }}
+                        aria-label="Open menu"
+                        title="Menu"
+                        className="admin-header-menu-btn"
+                    >
+                        <i className="bi bi-list" />
+                    </button>
+                )}
+                <div style={{ minWidth: 0 }}>
+                    <h1 className="admin-header-title" style={{
+                            margin: 0,
+                            fontWeight: 700,
+                            color: "#111827"
+                        }} >
+                        {title}
+                    </h1>
 
-                <p style={{
-                        margin: "4px 0 0",
-                        color: "#6b7280",
-                        fontSize: "14px"
-                    }} >
-                    SafeConnect Administration
-                </p>
+                    <p style={{
+                            margin: "4px 0 0",
+                            color: "#6b7280",
+                            fontSize: "14px"
+                        }} >
+                        SafeConnect Administration
+                    </p>
+                </div>
             </div>
 
             {/* Right */}
@@ -213,7 +239,7 @@ const userMenuRef = useRef(null);
                 </button>
 
                 {/* Notifications */}
-                <div ref={notificationsRef} style={{ position: "relative" }}>
+                <div ref={notificationsRef} className="admin-notif-wrap" style={{ position: "relative" }}>
                     <button
                         onClick={() => {
                             if (!showNotifications) markNotificationsViewed(); // stops the tab blinking
@@ -249,132 +275,17 @@ const userMenuRef = useRef(null);
                     </button>
 
                     {showNotifications && (
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: 52,
-                                right: 0,
-                                width: 340,
-                                maxWidth: "calc(100vw - 32px)",
-                                maxHeight: 420,
-                                display: "flex",
-                                flexDirection: "column",
-                                background: "#fff",
-                                border: "1px solid #e5e7eb",
-                                borderRadius: 12,
-                                boxShadow:
-                                    "0 15px 30px rgba(0,0,0,.08)",
-                                overflow: "hidden"
+                        <AdminNotificationPanel
+                            notifications={notifications}
+                            unreadCount={unreadCount}
+                            onMarkAllRead={onMarkAllRead}
+                            onOpen={openNotification}
+                            onSeeAll={() => {
+                                setShowNotifications(false);
+                                onNavigate?.("notifications");
                             }}
-                        >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    padding: "14px 16px",
-                                    borderBottom: "1px solid #f3f4f6"
-                                }}
-                            >
-                                <h3 style={{ margin: 0, fontSize: 15 }}>
-                                    Notifications
-                                </h3>
-
-                                {unreadCount > 0 && (
-                                    <button
-                                        onClick={onMarkAllRead}
-                                        style={{
-                                            border: "none",
-                                            background: "none",
-                                            color: "#6B2C3E",
-                                            fontSize: 12,
-                                            fontWeight: 600,
-                                            cursor: "pointer",
-                                            padding: 0
-                                        }}
-                                    >
-                                        Mark all as read
-                                    </button>
-                                )}
-                            </div>
-
-                            <div style={{ overflowY: "auto" }}>
-                                {notifications.length === 0 ? (
-                                    <p style={{ padding: 16, margin: 0, color: "#6b7280", fontSize: 13 }}>
-                                        Nothing yet.
-                                    </p>
-                                ) : (
-                                    notifications.map((item) => {
-                                        const target = NOTIFICATION_TARGETS[item.type];
-
-                                        return (
-                                            <div
-                                                key={item.id}
-                                                onClick={() => onMarkOneRead?.(item.id)}
-                                                style={{
-                                                    padding: "12px 16px",
-                                                    borderBottom: "1px solid #f3f4f6",
-                                                    background: item.isRead ? "#fff" : "#fdf4f5",
-                                                    display: "flex",
-                                                    gap: 10,
-                                                    alignItems: "flex-start",
-                                                    cursor: item.isRead ? "default" : "pointer"
-                                                }}
-                                            >
-                                                {!item.isRead && (
-                                                    <span style={{
-                                                        marginTop: 5,
-                                                        width: 7,
-                                                        height: 7,
-                                                        borderRadius: "50%",
-                                                        background: "#dc2626",
-                                                        flexShrink: 0
-                                                    }} />
-                                                )}
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontSize: 13, fontWeight: item.isRead ? 400 : 600, color: "#111827" }}>
-                                                        {item.title}
-                                                    </div>
-                                                    <div style={{ fontSize: 12.5, color: "#4b5563", marginTop: 2 }}>
-                                                        {item.message}
-                                                    </div>
-                                                    <div style={{
-                                                        display: "flex",
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center",
-                                                        marginTop: 4
-                                                    }}>
-                                                        <span style={{ fontSize: 11, color: "#9ca3af" }}>
-                                                            {timeAgo(item.createdAt)}
-                                                        </span>
-                                                        {target && (
-                                                            <button
-                                                                className="admin-notif-link"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleSeeReport(item, target);
-                                                                }}
-                                                                style={{
-                                                                    border: "none",
-                                                                    background: "none",
-                                                                    color: "#6B2C3E",
-                                                                    fontSize: 12,
-                                                                    fontWeight: 600,
-                                                                    cursor: "pointer",
-                                                                    padding: 0
-                                                                }}
-                                                            >
-                                                                {target.label} →
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
+                            onClose={() => setShowNotifications(false)}
+                        />
                     )}
                 </div>
 
@@ -383,15 +294,10 @@ const userMenuRef = useRef(null);
                     <button
                         onClick={() => {
                             setShowNotifications(false);
-                            if (isMobile && onToggleMobileMenu) {
-                                setShowUserMenu(false);
-                                onToggleMobileMenu();
-                                return;
-                            }
                             setShowUserMenu(!showUserMenu);
                         }}
-                        title={isMobile ? "Menu" : adminName}
-                        aria-label={isMobile ? "Open menu" : "Account menu"}
+                        title={adminName}
+                        aria-label="Account menu"
                         style={{
                             display: "flex",
                             alignItems: "center",

@@ -11,6 +11,7 @@ import AccountSettingsPage from "../components/admin/settings/AccountSettingsPag
 import AdminDemoPopup from "../components/admin/AdminModals/AdminDemoPopup";
 import ReportsPage from "../components/admin/reports/ReportsPage";
 import AnnouncementsPage from "../components/admin/announcements/AnnouncementsPage";
+import NotificationsPage from "../components/admin/notifications/NotificationsPage";
 import useAdminData from "../components/admin/hooks/useAdminData";
 import useAdminAuth from "../components/admin/hooks/useAdminAuth";
 import useAdminNavigation from "../components/admin/hooks/useAdminNavigation";
@@ -51,6 +52,8 @@ const AdminPage = () => {
     unreadCount,
     markAllRead,
     markOneRead,
+    markManyRead,
+    archiveNotifications,
 
     loadAllData,
     refreshAllData,   
@@ -74,7 +77,9 @@ const AdminPage = () => {
     toggleMobileMenu,
     closeMobileMenu,
     handleNavigation,
-    handleStatCardClick
+    handleStatCardClick,
+    focus,
+    clearFocus
   } = useAdminNavigation();
 
   // Dashboard's "Create Announcement" shortcut needs to both navigate to the
@@ -103,6 +108,7 @@ const AdminPage = () => {
 
   const PAGE_TITLES = {
   dashboard: "Dashboard",
+  notifications: "Notifications",
   "emergency-reports": "Emergency Reports",
   "assistance-requests": "Assistance Requests",
   "petty-crime-reports": "Petty Crime Reports",
@@ -291,6 +297,18 @@ useEffect(() => {
             isSuperAdmin={isSuperAdmin}
           />
         );
+      case "notifications":
+          return (
+              <NotificationsPage
+                  notifications={notifications}
+                  onMarkOneRead={markOneRead}
+                  onMarkManyRead={markManyRead}
+                  onMarkAllRead={markAllRead}
+                  onArchive={archiveNotifications}
+                  onNavigate={handleNavigation}
+                  focus={focus && focus.view === "notifications" ? focus : null}
+              />
+          );
       case "emergency-reports":
       case "assistance-requests":
       case "petty-crime-reports":
@@ -309,6 +327,8 @@ useEffect(() => {
                   onArchive={setReportArchived}
                   onRefresh={() => handleRefresh(activeView)}
                   isSuperAdmin={isSuperAdmin}
+                  focusId={focus && focus.view === activeView ? focus.id : null}
+                  onClearFocus={clearFocus}
 
                     />
           );

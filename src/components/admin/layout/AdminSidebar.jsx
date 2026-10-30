@@ -22,6 +22,10 @@ const AdminSidebar = ({
         {
           id: "dashboard",
           label: "Dashboard"
+        },
+        {
+          id: "notifications",
+          label: "Notifications"
         }
       ]
     },
@@ -81,8 +85,8 @@ const AdminSidebar = ({
     }
   ];
 
-  // showProfile: the phone drawer, opened from the header's profile
-  // button, starts with who is signed in (the desktop header shows that).
+  // showProfile: the phone drawer, opened from the header's menu button (before
+  // the page title), starts with who is signed in (the desktop header shows that).
   const SidebarContent = ({ showProfile = false }) => (
     <>
       {/* Logo */}

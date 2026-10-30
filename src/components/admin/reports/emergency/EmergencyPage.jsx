@@ -7,7 +7,8 @@ const EmergencyPage = ({
     filters,
     setFilters,
     onUpdateStatus,
-    onArchive
+    onArchive,
+    focusId
 }) => {
     return (
         <EmergencyReportsTable
@@ -16,6 +17,7 @@ const EmergencyPage = ({
             setFilters={setFilters}
             onUpdateStatus={onUpdateStatus}
             onArchive={onArchive}
+            focusId={focusId}
         />
     );
 };

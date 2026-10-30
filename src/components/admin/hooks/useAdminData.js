@@ -17,6 +17,8 @@ import {
     updateUserRole as updateUserRoleApi,
     setUserArchived as setUserArchivedApi,
     markAllNotificationsRead,
+    markNotificationsRead,
+    archiveNotifications as archiveNotificationsApi,
     archiveReport,
     restoreReport
 } from "../../../Services/api";
@@ -94,6 +96,19 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
         setUnreadCount(prev => Math.max(prev - 1, 0));
         await markNotificationRead(id).catch(() => false);
+    };
+
+    // Notifications page: several at once (selected with the checkboxes).
+    const markManyRead = async (ids) => {
+        const ok = await markNotificationsRead(ids);
+        if (ok) await loadNotifications();
+        return ok;
+    };
+
+    const archiveNotifications = async (ids, archived = true) => {
+        const ok = await archiveNotificationsApi(ids, archived);
+        if (ok) await loadNotifications();
+        return ok;
     };
 
     const systemLoaders = isSuperAdmin
@@ -302,6 +317,8 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         unreadCount,
         markAllRead,
         markOneRead,
+        markManyRead,
+        archiveNotifications,
         loadAllData,
         refreshAllData,
         loadAnnouncements,

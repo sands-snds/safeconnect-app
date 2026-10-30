@@ -143,6 +143,11 @@ require("./services/userStateService").ensureSchema().catch((err) =>
   console.error("Could not prepare synced account settings storage:", err.message)
 );
 
+// Notifications page: archived_at and comment_id on notifications.
+require("./models/Notification").ensureColumns().catch((err) =>
+  console.error("Could not add notification columns:", err.message)
+);
+
 // Resident Sign-in Logs: what residents did after signing in.
 require("./models/ResidentActivity").ensureTable().catch((err) =>
   console.error("Could not create resident_activity_logs:", err.message)

@@ -953,3 +953,42 @@
     width: 100% !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Admin bell panel (AdminNotificationPanel.jsx): the residents' panel  */
+/* style. The close button is only needed on phones.                    */
+/* ------------------------------------------------------------------ */
+.admin-notif-wrap .panel-dropdown {
+  top: calc(100% + 10px);
+}
+
+.admin-notif-wrap .panel-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.admin-notif-wrap .panel-close-btn {
+  display: none;
+}
+
+/* Phones: a card under the sticky header, spanning the screen with a small
+   margin, like the residents' bell on phones. */
+@media (max-width: 768px) {
+  .admin-notif-wrap .panel-dropdown {
+    position: fixed;
+    top: 72px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(100vh - 88px);
+    max-height: calc(100dvh - 88px);
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+    z-index: 2000;
+  }
+
+  .admin-notif-wrap .panel-close-btn {
+    display: flex;
+  }
+}

@@ -32,6 +32,10 @@ export default function useAdminNavigation() {
 
     const [editingAnnouncement, setEditingAnnouncement] = useState(null);
 
+    // What to open on arrival, e.g. { view: "emergency-reports", id: 12 }
+    // from a notification's "See report"; cleared by any other navigation.
+    const [focus, setFocus] = useState(null);
+
     const toggleMobileMenu = () => {
         setShowMobileMenu(prev => !prev);
     };
@@ -45,9 +49,12 @@ export default function useAdminNavigation() {
         closeMobileMenu();
     };
 
-    const handleNavigation = (view) => {
+    // options.focusId: open that report / notification on the new tab.
+    const handleNavigation = (view, options = {}) => {
 
         setEditingAnnouncement(null);
+
+        setFocus(options.focusId ? { view, id: options.focusId, at: Date.now() } : null);
 
         setActiveView(view);
 
@@ -72,7 +79,10 @@ export default function useAdminNavigation() {
         closeMobileMenu,
 
         handleNavigation,
-        handleStatCardClick
+        handleStatCardClick,
+
+        focus,
+        clearFocus: () => setFocus(null)
 
     };
 

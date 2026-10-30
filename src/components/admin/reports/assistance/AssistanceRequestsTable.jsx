@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import ListView, { allOption } from "../../shared/ListView";
 import ReportCard from "../../shared/ReportCard";
@@ -21,9 +21,15 @@ const AssistanceRequestsTable = ({
   filters,
   setFilters,
   onUpdateStatus,
-  onArchive
+  onArchive,
+  // Opened from a notification: start with that report's details open.
+  focusId
 }) => {
-  const [expandedRowId, setExpandedRowId] = useState(null);
+  const [expandedRowId, setExpandedRowId] = useState(focusId ?? null);
+
+  useEffect(() => {
+    if (focusId != null) setExpandedRowId(focusId);
+  }, [focusId]);
 
   const toggleDetails = (id) => {
     setExpandedRowId((prev) =>
