@@ -485,20 +485,19 @@ const AnnouncementsTable = ({
         </div>
       )}
 
-      <div style={{ width: "70%", margin: "0 auto" }} className="announcement-archive-bar">
-        <ArchiveToolbar
-          showArchived={showArchived}
-          setShowArchived={setShowArchived}
-          activeCount={loading ? null : activeCount}
-          archivedCount={loading ? null : data.length - activeCount}
-          isSuperAdmin={isSuperAdmin}
-          onSettingsChanged={loadAnnouncements}
-          loadSetting={fetchAnnouncementArchiveSettings}
-          saveSetting={updateAnnouncementArchiveSettings}
-          periodOptions={ANNOUNCEMENT_ARCHIVE_OPTIONS}
-          settingLabel="Auto-archive announcements:"
-        />
-      </div>
+      {/* Full width, lined up with the search row below (like the report tabs). */}
+      <ArchiveToolbar
+        showArchived={showArchived}
+        setShowArchived={setShowArchived}
+        activeCount={loading ? null : activeCount}
+        archivedCount={loading ? null : data.length - activeCount}
+        isSuperAdmin={isSuperAdmin}
+        onSettingsChanged={loadAnnouncements}
+        loadSetting={fetchAnnouncementArchiveSettings}
+        saveSetting={updateAnnouncementArchiveSettings}
+        periodOptions={ANNOUNCEMENT_ARCHIVE_OPTIONS}
+        settingLabel="Auto-archive announcements:"
+      />
 
       {loading ? (
         <div>Loading announcements...</div>

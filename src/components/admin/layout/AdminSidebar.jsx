@@ -1,6 +1,5 @@
 import React from "react";
 import { MAIN_LOGO } from "../../shared/logos";
-import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 
 const AdminSidebar = ({
   activeView,
@@ -8,13 +7,8 @@ const AdminSidebar = ({
   onNavigate,
   onLogout,
   showMobileMenu,
-  onCloseMobileMenu,
-  adminUser,
-  onWatchDemo
+  onCloseMobileMenu
 }) => {
-  const { adminDemo } = useSiteMedia();
-  const adminName = adminUser?.fullName || adminUser?.username || "Administrator";
-
   const menuSections = [
     {
       title: "GENERAL",
@@ -86,7 +80,8 @@ const AdminSidebar = ({
   ];
 
   // showProfile: the phone drawer, opened from the header's menu button (before
-  // the page title), starts with who is signed in (the desktop header shows that).
+  // the page title). The account (Account Settings, demo video, Logout) is in
+  // the header's profile menu, on phones too; the drawer keeps a Logout.
   const SidebarContent = ({ showProfile = false }) => (
     <>
       {/* Logo */}
@@ -136,82 +131,6 @@ const AdminSidebar = ({
           </p>
         </div>
       </div>
-
-      {showProfile && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            padding: "16px 20px",
-            borderBottom: "1px solid rgba(255,255,255,.12)"
-          }}
-        >
-          {adminUser?.photoUrl ? (
-            <img
-              src={adminUser.photoUrl}
-              alt="Profile"
-              style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                background: "rgba(255,255,255,.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 700,
-                flexShrink: 0
-              }}
-            >
-              {adminName.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
-            </div>
-          )}
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {adminName}
-            </div>
-            {adminUser?.email && (
-              <div style={{ fontSize: 12, opacity: 0.75, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {adminUser.email}
-              </div>
-            )}
-            <span
-              style={{
-                display: "inline-block",
-                marginTop: 4,
-                background: "rgba(255,255,255,.18)",
-                padding: "1px 8px",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 600
-              }}
-            >
-              {isSuperAdmin ? "Admin" : "Official"}
-            </span>
-            <button
-              type="button"
-              onClick={() => { onNavigate("account-settings"); onCloseMobileMenu(); }}
-              style={{ display: "block", marginTop: 8, padding: 0, border: "none", background: "none", color: "#fff", fontSize: 12.5, fontWeight: 600, textDecoration: "underline", cursor: "pointer" }}
-            >
-              <i className="bi bi-person-gear" style={{ marginRight: 4 }} />Account Settings
-            </button>
-            {/* Same as the account menu's "Watch demo video" on computers. */}
-            {hasVideo(adminDemo) && onWatchDemo && (
-              <button
-                type="button"
-                onClick={() => { onCloseMobileMenu(); onWatchDemo(); }}
-                style={{ display: "block", marginTop: 6, padding: 0, border: "none", background: "none", color: "#fff", fontSize: 12.5, fontWeight: 600, textDecoration: "underline", cursor: "pointer" }}
-              >
-                <i className="bi bi-play-circle" style={{ marginRight: 4 }} />Watch demo video
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Menu */}
       <div

@@ -875,6 +875,32 @@
     justify-content: center;
   }
 
+  /* Archive bar (ArchiveToolbar.jsx): Active / Archived as two equal halves
+     across the width, the auto-archive setting on its own line below. */
+  .archive-toolbar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .archive-toolbar-tabs {
+    display: flex !important;
+  }
+
+  .archive-toolbar-tabs > button {
+    flex: 1;
+  }
+
+  .archive-toolbar-setting {
+    justify-content: space-between;
+  }
+
+  .archive-toolbar-setting .form-select {
+    flex: 1;
+    min-width: 0 !important;
+    max-width: 200px;
+  }
+
   /* Card lists: Announcements narrows them to 70% on desktop. */
   .lv-cards {
     width: 100% !important;

@@ -78,7 +78,10 @@ const ArchiveToolbar = ({
   const count = (n) => (n === null || n === undefined ? "" : ` (${n})`);
 
   return (
+    // archive-toolbar*: phone layout in styles/admin.css (tabs full width,
+    // the auto-archive setting on its own line).
     <div
+      className="archive-toolbar"
       style={{
         display: "flex",
         flexWrap: "wrap",
@@ -88,7 +91,7 @@ const ArchiveToolbar = ({
         marginBottom: 16
       }}
     >
-      <div style={{ display: "inline-flex", gap: 4, padding: 4, background: "#f3f4f6", borderRadius: 8 }}>
+      <div className="archive-toolbar-tabs" style={{ display: "inline-flex", gap: 4, padding: 4, background: "#f3f4f6", borderRadius: 8 }}>
         <button type="button" style={tabStyle(!showArchived)} onClick={() => setShowArchived(false)}>
           {activeLabel}{count(activeCount)}
         </button>
@@ -98,15 +101,15 @@ const ArchiveToolbar = ({
       </div>
 
       {period !== null && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#374151" }}>
-          <span>{settingLabel}</span>
+        <div className="archive-toolbar-setting" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#374151" }}>
+          <span style={{ whiteSpace: "nowrap" }}>{settingLabel}</span>
           {isSuperAdmin ? (
             <select
               className="form-select"
               value={period}
               onChange={handlePeriodChange}
               disabled={isSaving}
-              style={{ width: "auto" }}
+              style={{ width: "auto", minWidth: 150 }}
             >
               {periodOptions.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
