@@ -15,14 +15,14 @@ const CACHE_KEY = 'sf_siteContent';
 export const DEFAULT_SITE_CONTENT = {
   emergencyContacts: [
     { id: 'police', label: '911 Emergency', description: 'National Emergency Hotline', sublabelKey: 'police', number: '911', icon: 'bi-shield-fill-exclamation', color: '#dc2626' },
-    { id: 'dasma', label: 'Dasmariñas Police', description: 'Dasmariñas City PNP', sublabelKey: 'dasma', number: '+63462420002', icon: 'bi-shield-fill', color: '#1d4ed8' },
-    { id: 'cdrmc', label: 'CDRMC', description: 'Cavite Disaster Risk Management', sublabelKey: 'cdrmc', number: '+63462300345', icon: 'bi-heart-pulse-fill', color: '#059669' },
-    { id: 'dswd', label: 'DSWD', description: 'Social Welfare & Development', sublabelKey: 'dswd', number: '+63464165393', icon: 'bi-people-fill', color: '#ea580c' },
+    { id: 'dasma', label: 'Dasmariñas Police', description: 'Dasmariñas City PNP', sublabelKey: 'dasma', number: '+63462420002', numberType: 'landline', icon: 'bi-shield-fill', color: '#1d4ed8' },
+    { id: 'cdrmc', label: 'CDRMC', description: 'Cavite Disaster Risk Management', sublabelKey: 'cdrmc', number: '+63462300345', numberType: 'landline', icon: 'bi-heart-pulse-fill', color: '#059669' },
+    { id: 'dswd', label: 'DSWD', description: 'Social Welfare & Development', sublabelKey: 'dswd', number: '+63464165393', numberType: 'landline', icon: 'bi-people-fill', color: '#ea580c' },
     {
-      id: 'barangay', label: 'Barangay Sta. Fe', description: 'Barangay Emergency Line', sublabelKey: 'barangay', number: '09354984838', icon: 'bi-house-fill', color: '#7c3aed',
+      id: 'barangay', label: 'Barangay Sta. Fe', description: 'Barangay Emergency Line', sublabelKey: 'barangay', number: '+639354984838', numberType: 'mobile', icon: 'bi-house-fill', color: '#7c3aed',
       choices: [
-        { name: 'PB Emmanuel B. Noora', number: '09354984838' },
-        { name: 'Sec Hazel R. Adriano', number: '09456355303' }
+        { name: 'PB Emmanuel B. Noora', number: '+639354984838', numberType: 'mobile' },
+        { name: 'Sec Hazel R. Adriano', number: '+639456355303', numberType: 'mobile' }
       ]
     }
   ],
@@ -33,12 +33,12 @@ export const DEFAULT_SITE_CONTENT = {
     { label: 'DSWD', number: '+63464165393' }
   ],
   officials: [
-    { name: 'PB Emmanuel B. Noora', number: '09354984838' },
-    { name: 'Chief Tanod Gaudencio C. Dela Cruz', number: '0993611340' },
-    { name: 'Sec Hazel R. Adriano', number: '09456355303' },
-    { name: 'BHW Cecilia T. De Quiros', number: '09381259351' },
-    { name: 'Kagawad Rolando Noora', number: '09683200779' },
-    { name: 'BNS Myrna T. Dellomas', number: '09069709313' }
+    { name: 'PB Emmanuel B. Noora', position: 'PB', firstName: 'Emmanuel', middleName: 'B.', lastName: 'Noora', number: '+639354984838', numberType: 'mobile' },
+    { name: 'Chief Tanod Gaudencio C. Dela Cruz', position: 'Chief Tanod', firstName: 'Gaudencio', middleName: 'C.', lastName: 'Dela Cruz', number: '+63993611340', numberType: 'landline' },
+    { name: 'Sec Hazel R. Adriano', position: 'Sec', firstName: 'Hazel', middleName: 'R.', lastName: 'Adriano', number: '+639456355303', numberType: 'mobile' },
+    { name: 'BHW Cecilia T. De Quiros', position: 'BHW', firstName: 'Cecilia', middleName: 'T.', lastName: 'De Quiros', number: '+639381259351', numberType: 'mobile' },
+    { name: 'Kagawad Rolando Noora', position: 'Kagawad', firstName: 'Rolando', middleName: '', lastName: 'Noora', number: '+639683200779', numberType: 'mobile' },
+    { name: 'BNS Myrna T. Dellomas', position: 'BNS', firstName: 'Myrna', middleName: 'T.', lastName: 'Dellomas', number: '+639069709313', numberType: 'mobile' }
   ],
   socials: {
     email: 'safeconnect.brgy.santafe@gmail.com',
@@ -160,5 +160,10 @@ export default function useSiteContent() {
 
 // Description for an emergency contact: the translated default while it's
 // unchanged (sublabelKey), otherwise the text an Admin typed.
+// An official's display name: "PB Emmanuel B. Noora" (position, first,
+// middle, last), or the saved one-line name from before the split.
+export const officialName = (o) =>
+  [o.position, o.firstName, o.middleName, o.lastName].filter(Boolean).join(' ') || o.name || '';
+
 export const contactDescription = (contact, t) =>
   contact.sublabelKey ? t(`emergencyContacts.sublabels.${contact.sublabelKey}`) : contact.description;

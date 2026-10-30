@@ -1,6 +1,6 @@
 import React from "react";
 import { useLanguage } from "../../i18n/LanguageContext";
-import useSiteContent, { DEFAULT_SITE_CONTENT } from "./useSiteContent";
+import useSiteContent, { DEFAULT_SITE_CONTENT, officialName } from "./useSiteContent";
 import { formatMobile } from "./EmergencyContactList";
 import { MAIN_LOGO, FOOTER_LOGO } from "./logos";
 
@@ -45,11 +45,13 @@ const FooterLogo = () => (
 
 // Officials, hotlines and socials are edited by Admins under Content > Page
 // Contacts > Footer (the hotlines are separate from the call button's list).
-export default function DonationFooter() {
+// content: optional unsaved contacts (Page Contacts > Preview); otherwise the live ones.
+export default function DonationFooter({ content }) {
   const { t } = useLanguage();
+  const live = useSiteContent();
   // footerHotlines: its own list (not the call button's), so the barangay
   // officials aren't repeated. Older cached copies don't have it yet.
-  const { footerHotlines = DEFAULT_SITE_CONTENT.footerHotlines, officials = [], socials = {} } = useSiteContent();
+  const { footerHotlines = DEFAULT_SITE_CONTENT.footerHotlines, officials = [], socials = {} } = content || live;
   return (
     <footer className="footer-section bg-dark text-white py-4">
       <div className="container">
@@ -81,9 +83,9 @@ export default function DonationFooter() {
                 </p>
                 <div className="footer-officials">
                   {officials.map((o) => (
-                    <div key={o.name}>
-                      <div className="text-white-50">{o.name}</div>
-                      <PhoneLink number={o.number} />
+                    <div key={`${officialName(o)}-${o.number}`}>
+                      <div className="text-white-50">{officialName(o)}</div>
+                      <PhoneLink number={o.number}>{formatHotline(o.number)}</PhoneLink>
                     </div>
                   ))}
                 </div>

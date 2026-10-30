@@ -46,6 +46,8 @@ const DEFAULT_MEDIA = {
 };
 
 const MAX_SLIDES = 10;
+// Titles and photo descriptions; captions can be longer (300).
+const TEXT_MAX = 40;
 const text = (v, max) => String(v ?? "").trim().slice(0, max);
 
 // Accepts a full YouTube link (watch, youtu.be, shorts, embed) or a bare id.
@@ -100,7 +102,7 @@ function validateSlides(slidesIn, name) {
     const slides = [];
     for (const [i, s] of slidesIn.entries()) {
         if (!isUploadPath(s.src) && !isFrontendImage(s.src)) return { error: `${name[0].toUpperCase()}${name.slice(1)} carousel photo #${i + 1} is missing its image.` };
-        slides.push({ src: s.src, alt: text(s.alt, 120) || "Barangay Sta. Fe" });
+        slides.push({ src: s.src, alt: text(s.alt, TEXT_MAX) || "Barangay Sta. Fe" });
     }
     return { slides };
 }
@@ -124,14 +126,14 @@ function validate(input = {}) {
             carousel: landing.slides,
             residentCarousel: resident.slides,
             systemDemo: {
-                title: text(sys.title, 100),
+                title: text(sys.title, TEXT_MAX),
                 caption: text(sys.caption, 300),
                 video: sysVideo.video,
                 showOnLanding: Boolean(sys.showOnLanding),
                 showInNews: Boolean(sys.showInNews)
             },
             adminDemo: {
-                title: text(adm.title, 100),
+                title: text(adm.title, TEXT_MAX),
                 caption: text(adm.caption, 300),
                 video: admVideo.video,
                 showOnSignIn: Boolean(adm.showOnSignIn)

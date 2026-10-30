@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { fetchSiteContent, updateSiteContent } from "../../../Services/api";
-import { showPopup } from "../../shared/popup";
-import { setSiteContent } from "../../shared/useSiteContent";
+import { showPopup, confirmPopup } from "../../shared/popup";
+import { setSiteContent, officialName } from "../../shared/useSiteContent";
+import EmergencyContactList from "../../shared/EmergencyContactList";
+import DonationFooter from "../../shared/DonationFooter";
+import PhoneNumberInput from "./PhoneNumberInput";
 
 // Content > Page Contacts (Admins only): edits what the public site shows,
 // in two groups:
@@ -73,6 +76,20 @@ const GroupHeading = ({ icon, title, children }) => (
   </div>
 );
 
+// Every text box is up to 40 characters (the Facebook link is longer).
+const TEXT_MAX = 40;
+
+// Asks before removing anything; resolves true to go ahead.
+const confirmRemove = (what) =>
+  confirmPopup({
+    type: "danger",
+    title: `Remove ${what}?`,
+    message: "It's removed from this list now and from the site when you save changes.",
+    confirmLabel: "Remove"
+  });
+
+const EMPTY_OFFICIAL = { position: "", firstName: "", middleName: "", lastName: "", number: "", numberType: "mobile" };
+
 const move = (list, index, delta) => {
   const next = [...list];
   const target = index + delta;
@@ -87,6 +104,7 @@ const SiteContactsPage = () => {
   const [options, setOptions] = useState({ icons: Object.keys(ICON_NAMES), colors: ["#dc2626", "#1d4ed8", "#059669", "#ea580c", "#7c3aed", "#0891b2", "#db2777", "#6B2C3E"] });
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
   useEffect(() => {
     fetchSiteContent()
@@ -128,6 +146,11 @@ const SiteContactsPage = () => {
 
   const updateOfficial = (index, patch) =>
     setOfficials((list) => list.map((o, i) => (i === index ? { ...o, ...patch } : o)));
+
+  // Removes list[index] (via setList) after the Admin confirms.
+  const removeAt = async (setList, index, what) => {
+    if (await confirmRemove(what)) setList((l) => l.filter((_, j) => j !== index));
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -173,16 +196,24 @@ const SiteContactsPage = () => {
             </div>
             <label style={fieldStyle("1 1 160px")}>
               <span style={labelStyle}>Name</span>
-              <input className="form-input" value={c.label} maxLength={60} onChange={(e) => updateContact(i, { label: e.target.value })} placeholder="e.g. Barangay Sta. Fe" />
+              <input className="form-input" value={c.label} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { label: e.target.value })} placeholder="e.g. Barangay Sta. Fe" />
             </label>
             <label style={fieldStyle("1 1 200px")}>
               <span style={labelStyle}>Description</span>
-              <input className="form-input" value={c.description || ""} maxLength={80} onChange={(e) => updateContact(i, { description: e.target.value })} placeholder="e.g. Barangay Emergency Line" />
+              <input className="form-input" value={c.description || ""} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { description: e.target.value })} placeholder="e.g. Barangay Emergency Line" />
             </label>
-            <label style={fieldStyle("1 1 150px")}>
+            <div style={fieldStyle("1 1 250px")}>
               <span style={labelStyle}>Number</span>
-              <input className="form-input" value={c.number} maxLength={25} onChange={(e) => updateContact(i, { number: e.target.value })} placeholder="e.g. +639171234567" inputMode="tel" />
-            </label>
+              {c.number === "911" ? (
+                // The national emergency number stays 911.
+                <div className="form-input" title="911 can't be changed" style={{ display: "flex", alignItems: "center", gap: 6, background: "#f3f4f6", color: "#374151", fontWeight: 600 }}>
+                  <i className="bi bi-lock-fill" aria-hidden="true" style={{ color: "#6b7280" }} /> 911
+                </div>
+              ) : (
+                <PhoneNumberInput number={c.number} numberType={c.numberType} label={`${c.label || "Contact"} number`}
+                  onChange={(next) => updateContact(i, next)} />
+              )}
+            </div>
             <label style={fieldStyle("0 1 150px")}>
               <span style={labelStyle}>Icon</span>
               <select className="form-select" value={c.icon} onChange={(e) => updateContact(i, { icon: e.target.value })}>
@@ -228,7 +259,7 @@ const SiteContactsPage = () => {
             <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
               <button type="button" style={iconButton()} title="Move up" disabled={i === 0} onClick={() => setContacts((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
               <button type="button" style={iconButton()} title="Move down" disabled={i === draft.emergencyContacts.length - 1} onClick={() => setContacts((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
-              <button type="button" style={iconButton(true)} title="Remove" disabled={draft.emergencyContacts.length === 1} onClick={() => setContacts((l) => l.filter((_, j) => j !== i))}><i className="bi bi-trash3" /></button>
+              <button type="button" style={iconButton(true)} title="Remove" disabled={draft.emergencyContacts.length === 1} onClick={() => removeAt(setContacts, i, `"${c.label || "this contact"}" from the call button`)}><i className="bi bi-trash3" /></button>
             </div>
 
             {/* Optional: let the caller choose who to call */}
@@ -241,16 +272,19 @@ const SiteContactsPage = () => {
               </p>
               {(c.choices || []).map((p, j) => (
                 <div key={j} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
-                  <input className="form-input" style={{ flex: "1 1 200px", minWidth: 0 }} value={p.name} maxLength={80} placeholder="e.g. PB Juan Dela Cruz" aria-label={`Person ${j + 1} name`}
+                  <input className="form-input" style={{ flex: "1 1 200px", minWidth: 0 }} value={p.name} maxLength={TEXT_MAX} placeholder="e.g. PB Juan Dela Cruz" aria-label={`Person ${j + 1} name`}
                     onChange={(e) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, name: e.target.value } : x)))} />
-                  <input className="form-input" style={{ flex: "1 1 150px", minWidth: 0 }} value={p.number} maxLength={25} placeholder="e.g. 09171234567" inputMode="tel" aria-label={`Person ${j + 1} number`}
-                    onChange={(e) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, number: e.target.value } : x)))} />
-                  <button type="button" style={iconButton(true)} title="Remove person" onClick={() => setChoices(i, (l) => l.filter((_, k) => k !== j))}><i className="bi bi-x-lg" /></button>
+                  <div style={{ flex: "1 1 250px", minWidth: 0 }}>
+                    <PhoneNumberInput number={p.number} numberType={p.numberType} label={`Person ${j + 1} number`}
+                      onChange={(next) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, ...next } : x)))} />
+                  </div>
+                  <button type="button" style={iconButton(true)} title="Remove person"
+                    onClick={async () => { if (await confirmRemove(`"${p.name || `person ${j + 1}`}"`)) setChoices(i, (l) => l.filter((_, k) => k !== j)); }}><i className="bi bi-x-lg" /></button>
                 </div>
               ))}
               <button type="button" className="button button-secondary" style={{ fontSize: 13, padding: "6px 12px" }}
                 disabled={(c.choices || []).length >= 4}
-                onClick={() => setChoices(i, (l) => [...l, { name: "", number: "" }])}>
+                onClick={() => setChoices(i, (l) => [...l, { name: "", number: "", numberType: "mobile" }])}>
                 <i className="bi bi-person-plus" /> Add person
               </button>
             </div>
@@ -262,7 +296,7 @@ const SiteContactsPage = () => {
           className="button button-secondary"
           style={{ marginTop: 8 }}
           disabled={draft.emergencyContacts.length >= 12}
-          onClick={() => setContacts((l) => [...l, { id: `contact-${Date.now()}`, label: "", description: "", number: "", icon: options.icons[0], color: options.colors[0] }])}
+          onClick={() => setContacts((l) => [...l, { id: `contact-${Date.now()}`, label: "", description: "", number: "", numberType: "mobile", icon: options.icons[0], color: options.colors[0] }])}
         >
           <i className="bi bi-plus-lg" /> Add emergency contact
         </button>
@@ -279,23 +313,36 @@ const SiteContactsPage = () => {
           Barangay Officials
         </h3>
         <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6b7280" }}>
-          Shown in the footer's Barangay Officials column, in this order. Numbers are shown exactly as typed.
+          Shown in the footer's Barangay Officials column, in this order, as position and name (e.g. "Kagawad Juan D. Dela Cruz").
         </p>
 
         {draft.officials.map((o, i) => (
           <div key={i} style={rowStyle}>
-            <label style={fieldStyle("2 1 240px")}>
-              <span style={labelStyle}>Position and name</span>
-              <input className="form-input" value={o.name} maxLength={80} onChange={(e) => updateOfficial(i, { name: e.target.value })} placeholder="e.g. PB Juan Dela Cruz" />
+            <label style={fieldStyle("1 1 130px")}>
+              <span style={labelStyle}>Position</span>
+              <input className="form-input" value={o.position || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { position: e.target.value })} placeholder="e.g. Kagawad" />
             </label>
-            <label style={fieldStyle("1 1 160px")}>
+            <label style={fieldStyle("1 1 140px")}>
+              <span style={labelStyle}>First name</span>
+              <input className="form-input" value={o.firstName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { firstName: e.target.value })} placeholder="e.g. Juan" autoComplete="off" />
+            </label>
+            <label style={fieldStyle("1 1 120px")}>
+              <span style={labelStyle}>Middle name (optional)</span>
+              <input className="form-input" value={o.middleName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { middleName: e.target.value })} placeholder="e.g. D." autoComplete="off" />
+            </label>
+            <label style={fieldStyle("1 1 140px")}>
+              <span style={labelStyle}>Last name</span>
+              <input className="form-input" value={o.lastName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { lastName: e.target.value })} placeholder="e.g. Dela Cruz" autoComplete="off" />
+            </label>
+            <div style={fieldStyle("1 1 250px")}>
               <span style={labelStyle}>Number</span>
-              <input className="form-input" value={o.number} maxLength={25} onChange={(e) => updateOfficial(i, { number: e.target.value })} placeholder="e.g. 09171234567" inputMode="tel" />
-            </label>
+              <PhoneNumberInput number={o.number} numberType={o.numberType} label={`${officialName(o) || "Official"} number`}
+                onChange={(next) => updateOfficial(i, next)} />
+            </div>
             <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
               <button type="button" style={iconButton()} title="Move up" disabled={i === 0} onClick={() => setOfficials((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
               <button type="button" style={iconButton()} title="Move down" disabled={i === draft.officials.length - 1} onClick={() => setOfficials((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
-              <button type="button" style={iconButton(true)} title="Remove" onClick={() => setOfficials((l) => l.filter((_, j) => j !== i))}><i className="bi bi-trash3" /></button>
+              <button type="button" style={iconButton(true)} title="Remove" onClick={() => removeAt(setOfficials, i, `"${officialName(o) || "this official"}" from the footer`)}><i className="bi bi-trash3" /></button>
             </div>
           </div>
         ))}
@@ -305,7 +352,7 @@ const SiteContactsPage = () => {
           className="button button-secondary"
           style={{ marginTop: 8 }}
           disabled={draft.officials.length >= 20}
-          onClick={() => setOfficials((l) => [...l, { name: "", number: "" }])}
+          onClick={() => setOfficials((l) => [...l, { ...EMPTY_OFFICIAL }])}
         >
           <i className="bi bi-plus-lg" /> Add official
         </button>
@@ -326,7 +373,7 @@ const SiteContactsPage = () => {
           <div key={i} style={rowStyle}>
             <label style={fieldStyle("2 1 240px")}>
               <span style={labelStyle}>Name</span>
-              <input className="form-input" value={h.label} maxLength={60} onChange={(e) => updateHotline(i, { label: e.target.value })} placeholder="e.g. Bureau of Fire Protection" />
+              <input className="form-input" value={h.label} maxLength={TEXT_MAX} onChange={(e) => updateHotline(i, { label: e.target.value })} placeholder="e.g. Bureau of Fire Protection" />
             </label>
             <label style={fieldStyle("1 1 160px")}>
               <span style={labelStyle}>Number</span>
@@ -335,7 +382,7 @@ const SiteContactsPage = () => {
             <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
               <button type="button" style={iconButton()} title="Move up" disabled={i === 0} onClick={() => setHotlines((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
               <button type="button" style={iconButton()} title="Move down" disabled={i === draft.footerHotlines.length - 1} onClick={() => setHotlines((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
-              <button type="button" style={iconButton(true)} title="Remove" onClick={() => setHotlines((l) => l.filter((_, j) => j !== i))}><i className="bi bi-trash3" /></button>
+              <button type="button" style={iconButton(true)} title="Remove" onClick={() => removeAt(setHotlines, i, `"${h.label || "this hotline"}" from the footer`)}><i className="bi bi-trash3" /></button>
             </div>
           </div>
         ))}
@@ -363,11 +410,11 @@ const SiteContactsPage = () => {
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <label style={fieldStyle("1 1 260px")}>
             <span style={labelStyle}>Support email</span>
-            <input className="form-input" type="email" value={draft.socials.email || ""} maxLength={120} onChange={(e) => setSocial("email", e.target.value)} placeholder="name@example.com" />
+            <input className="form-input" type="email" value={draft.socials.email || ""} maxLength={TEXT_MAX} onChange={(e) => setSocial("email", e.target.value)} placeholder="name@example.com" />
           </label>
           <label style={fieldStyle("1 1 200px")}>
             <span style={labelStyle}>Facebook page name</span>
-            <input className="form-input" value={draft.socials.facebookLabel || ""} maxLength={80} onChange={(e) => setSocial("facebookLabel", e.target.value)} placeholder="e.g. Barangay Sta. Fe" />
+            <input className="form-input" value={draft.socials.facebookLabel || ""} maxLength={TEXT_MAX} onChange={(e) => setSocial("facebookLabel", e.target.value)} placeholder="e.g. Barangay Sta. Fe" />
           </label>
           <label style={fieldStyle("2 1 320px")}>
             <span style={labelStyle}>Facebook page link</span>
@@ -398,13 +445,48 @@ const SiteContactsPage = () => {
         <button type="button" className="button button-secondary" disabled={!dirty || saving} onClick={() => setDraft(saved)}>
           Discard changes
         </button>
+        <button type="button" className="button button-soft" onClick={() => setPreviewing(true)}>
+          <i className="bi bi-eye" style={{ marginRight: 6 }} />
+          Preview
+        </button>
         <button type="button" className="button button-primary" disabled={!dirty || saving} onClick={handleSave}>
           <i className={`bi ${saving ? "bi-hourglass-split" : "bi-check-lg"}`} style={{ marginRight: 6 }} />
           {saving ? "Saving…" : "Save changes"}
         </button>
       </div>
+
+      {previewing && <ContactsPreview draft={draft} onClose={() => setPreviewing(false)} />}
     </div>
   );
 };
+
+// How the call button's list and the footer will look with these (unsaved) changes.
+const ContactsPreview = ({ draft, onClose }) => (
+  <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+    <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Preview" style={{ background: "#fff", borderRadius: 14, width: "min(1100px, 100%)", maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 17 }}>Preview</h3>
+          <p style={{ margin: 0, fontSize: 12.5, color: "#6b7280" }}>Not saved yet. This is how the site will look after you save.</p>
+        </div>
+        <button type="button" className="button button-secondary" onClick={onClose}>Close</button>
+      </div>
+      <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 18 }}>
+        <div>
+          <div style={{ ...labelStyle, marginBottom: 8 }}>Call button (opened)</div>
+          <div style={{ maxWidth: 320, border: "1px solid #e5e7eb", borderRadius: 14, padding: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}>
+            <EmergencyContactList contacts={draft.emergencyContacts} onCall={() => {}} />
+          </div>
+        </div>
+        <div>
+          <div style={{ ...labelStyle, marginBottom: 8 }}>Footer</div>
+          <div style={{ borderRadius: 12, overflow: "hidden" }}>
+            <DonationFooter content={draft} />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default SiteContactsPage;

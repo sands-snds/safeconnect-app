@@ -7,12 +7,15 @@ import { contactDescription } from './useSiteContent';
 // Barangay Sta. Fe: the Punong Barangay or the Secretary) opens a short
 // list first, so the caller picks who to call.
 
-// "09354984838" -> "0935 498 4838", "+639354984838" -> "+63 935 498 4838".
+// "09354984838" -> "0935 498 4838", "+639354984838" -> "+63 935 498 4838",
+// landline "+63462420002" -> "+63 46 242 0002".
 export const formatMobile = (number) => {
   const n = String(number).replace(/\s/g, '');
   let m = n.match(/^(09\d{2})(\d{3})(\d{4})$/);
   if (m) return `${m[1]} ${m[2]} ${m[3]}`;
   m = n.match(/^\+63(9\d{2})(\d{3})(\d{4})$/);
+  if (m) return `+63 ${m[1]} ${m[2]} ${m[3]}`;
+  m = n.match(/^\+63(\d{2})(\d{3})(\d{4})$/);
   if (m) return `+63 ${m[1]} ${m[2]} ${m[3]}`;
   return number;
 };

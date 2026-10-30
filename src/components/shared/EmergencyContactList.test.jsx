@@ -19,8 +19,8 @@ test('Barangay Sta. Fe asks who to call instead of calling right away', () => {
   expect(onCall).not.toHaveBeenCalled();
   expect(screen.getByText('PB Emmanuel B. Noora')).toBeInTheDocument();
   expect(screen.getByText('Sec Hazel R. Adriano')).toBeInTheDocument();
-  expect(screen.getByText('0935 498 4838')).toBeInTheDocument();
-  expect(screen.getByText('0945 635 5303')).toBeInTheDocument();
+  expect(screen.getByText('+63 935 498 4838')).toBeInTheDocument();
+  expect(screen.getByText('+63 945 635 5303')).toBeInTheDocument();
 });
 
 test('each person calls their own number', () => {
@@ -28,9 +28,9 @@ test('each person calls their own number', () => {
   renderList(onCall);
   fireEvent.click(screen.getByRole('button', { name: /Barangay Sta\. Fe/ }));
   fireEvent.click(screen.getByRole('button', { name: /Sec Hazel R\. Adriano/ }));
-  expect(onCall).toHaveBeenLastCalledWith('09456355303');
+  expect(onCall).toHaveBeenLastCalledWith('+639456355303');
   fireEvent.click(screen.getByRole('button', { name: /PB Emmanuel B\. Noora/ }));
-  expect(onCall).toHaveBeenLastCalledWith('09354984838');
+  expect(onCall).toHaveBeenLastCalledWith('+639354984838');
 });
 
 test('the old barangay line is gone; other contacts still call right away', () => {
@@ -45,4 +45,5 @@ test('formats mobile numbers', () => {
   expect(formatMobile('09354984838')).toBe('0935 498 4838');
   expect(formatMobile('+639456355303')).toBe('+63 945 635 5303');
   expect(formatMobile('911')).toBe('911');
+  expect(formatMobile('+63462420002')).toBe('+63 46 242 0002');
 });

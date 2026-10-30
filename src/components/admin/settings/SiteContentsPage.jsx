@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { fetchSiteContent, updateSiteMedia, uploadSiteMedia } from "../../../Services/api";
-import { showPopup } from "../../shared/popup";
+import { showPopup, confirmPopup } from "../../shared/popup";
 import { setSiteMedia, mediaSrc, hasVideo } from "../../shared/useSiteContent";
 import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
+
+// Text boxes are up to 40 characters, except the captions (and pasted links).
+const TEXT_MAX = 40;
 
 // Content > Page Contents (Admins only): the landing page carousel photos,
 // the video for residents (systemDemo: landing page and/or News tab)
@@ -101,7 +104,11 @@ function VideoEditor({ demo, onChange, children }) {
             <button type="button" style={chipStyle(source === "youtube")} onClick={() => setVideo({ source: "youtube", url: demo.video.source === "youtube" ? demo.video.url : "" })}>
               <i className="bi bi-youtube" /> YouTube link
             </button>
-            <button type="button" style={chipStyle(source === "none")} onClick={() => setVideo({ source: "none", url: "" })}>
+            <button type="button" style={chipStyle(source === "none")} onClick={async () => {
+              // Taking a video off asks first.
+              if (source !== "none" && !(await confirmPopup({ type: "danger", title: "Remove this video?", message: "The video is taken off the site when you save changes.", confirmLabel: "Remove" }))) return;
+              setVideo({ source: "none", url: "" });
+            }}>
               No video
             </button>
             <input ref={fileRef} type="file" accept="video/mp4,video/webm" hidden onChange={pickFile} />
@@ -135,7 +142,7 @@ function VideoEditor({ demo, onChange, children }) {
 
         <label style={stackedField}>
           <span style={label}>Title</span>
-          <input className="form-input" value={demo.title} maxLength={100} onChange={(e) => onChange({ ...demo, title: e.target.value })} />
+          <input className="form-input" value={demo.title} maxLength={TEXT_MAX} onChange={(e) => onChange({ ...demo, title: e.target.value })} />
         </label>
         <label style={stackedField}>
           <span style={label}>Caption (one or two sentences)</span>
@@ -201,7 +208,7 @@ function CarouselEditor({ icon, title, hint: hintText, slides, onChange }) {
               <input
                 className="form-input"
                 value={s.alt}
-                maxLength={120}
+                maxLength={TEXT_MAX}
                 placeholder="Short description (for screen readers)"
                 onChange={(e) => onChange((list) => list.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)))}
                 style={{ fontSize: 13 }}
@@ -209,7 +216,9 @@ function CarouselEditor({ icon, title, hint: hintText, slides, onChange }) {
               <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                 <button type="button" style={smallButton()} title="Move earlier" disabled={i === 0} onClick={() => onChange((l) => move(l, i, -1))}><i className="bi bi-arrow-left" /></button>
                 <button type="button" style={smallButton()} title="Move later" disabled={i === slides.length - 1} onClick={() => onChange((l) => move(l, i, 1))}><i className="bi bi-arrow-right" /></button>
-                <button type="button" style={smallButton(true)} title="Remove" disabled={slides.length === 1} onClick={() => onChange((l) => l.filter((_, j) => j !== i))}><i className="bi bi-trash3" /></button>
+                <button type="button" style={smallButton(true)} title="Remove" disabled={slides.length === 1} onClick={async () => {
+                  if (await confirmPopup({ type: "danger", title: "Remove this photo?", message: "It's taken out of the carousel when you save changes.", confirmLabel: "Remove" })) onChange((l) => l.filter((_, j) => j !== i));
+                }}><i className="bi bi-trash3" /></button>
               </div>
             </div>
           </div>
@@ -237,6 +246,7 @@ export default function SiteContentsPage() {
   const [draft, setDraft] = useState(null);
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
   useEffect(() => {
     fetchSiteContent()
@@ -338,10 +348,59 @@ export default function SiteContentsPage() {
         <button type="button" className="button button-secondary" disabled={!dirty || saving} onClick={() => setDraft(saved)}>
           Discard changes
         </button>
+        <button type="button" className="button button-soft" onClick={() => setPreviewing(true)}>
+          <i className="bi bi-eye" style={{ marginRight: 6 }} />
+          Preview
+        </button>
         <button type="button" className="button button-primary" disabled={!dirty || saving} onClick={handleSave}>
           <i className={`bi ${saving ? "bi-hourglass-split" : "bi-check-lg"}`} style={{ marginRight: 6 }} />
           {saving ? "Saving…" : "Save changes"}
         </button>
+      </div>
+
+      {previewing && <MediaPreview draft={draft} onClose={() => setPreviewing(false)} />}
+    </div>
+  );
+}
+
+// The photos and videos as they'll appear (unsaved changes included).
+function MediaPreview({ draft, onClose }) {
+  const strip = (title, slides) => (
+    <div>
+      <div style={{ ...label, marginBottom: 8 }}>{title}</div>
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+        {slides.map((s, i) => (
+          <img key={`${s.src}-${i}`} src={mediaSrc(s.src)} alt={s.alt} style={{ width: 200, aspectRatio: "16 / 9", objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
+        ))}
+      </div>
+    </div>
+  );
+  const where = (demo, places) => places.filter(([on]) => on).map(([, name]) => name).join(" and ") || "Hidden";
+  const video = (title, demo, places) => (
+    <div>
+      <div style={{ ...label, marginBottom: 8 }}>{title} <span style={{ fontWeight: 400 }}>({where(demo, places)})</span></div>
+      <div style={{ maxWidth: 560 }}>
+        <DemoVideoPlayer demo={demo} placeholder={<div style={{ padding: 20, background: "#f3f4f6", borderRadius: 8, color: "#6b7280", fontSize: 13 }}>No video.</div>} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Preview" style={{ background: "#fff", borderRadius: 14, width: "min(900px, 100%)", maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 17 }}>Preview</h3>
+            <p style={{ margin: 0, fontSize: 12.5, color: "#6b7280" }}>Not saved yet. This is how the site will look after you save.</p>
+          </div>
+          <button type="button" className="button button-secondary" onClick={onClose}>Close</button>
+        </div>
+        <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 20 }}>
+          {strip("Landing page carousel", draft.carousel)}
+          {strip("Resident page carousel", draft.residentCarousel)}
+          {video("Video for Residents", draft.systemDemo, [[draft.systemDemo.showOnLanding, "Landing page"], [draft.systemDemo.showInNews, "News tab"]])}
+          {video("Admin demo video", draft.adminDemo, [[draft.adminDemo.showOnSignIn, "After signing in"]])}
+        </div>
       </div>
     </div>
   );
