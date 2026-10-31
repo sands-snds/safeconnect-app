@@ -9,6 +9,10 @@ const WEATHER_DISMISSED_KEY = "sf_weatherNoticeDismissed";
 
 const RAIN_ALERT_THRESHOLD = 40;
 
+// The hour-by-hour forecast changes during the day, so a saved copy is
+// fetched again once it is an hour old.
+const WEATHER_MAX_AGE_MS = 60 * 60 * 1000;
+
 const getTodayKey = () =>
     new Date().toISOString().split("T")[0];
 
@@ -58,11 +62,12 @@ const loadWeatherDismissed = () => {
             ? JSON.parse(cachedRaw)
             : null;
 
-        // Older copies don't have the 7-day forecast: fetch again for those.
+        // Older copies don't have the hourly forecast: fetch again for those.
         if (
             cached &&
             cached.date === today &&
-            Array.isArray(cached.data && cached.data.days)
+            Date.now() - (cached.fetchedAt || 0) < WEATHER_MAX_AGE_MS &&
+            Array.isArray(cached.data && cached.data.hours)
         ) {
             setWeather(cached.data);
             return;
@@ -70,7 +75,7 @@ const loadWeatherDismissed = () => {
 
         const response = await fetch(
 
-            `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&daily=precipitation_probability_max,weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FManila&forecast_days=7`
+            `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&daily=precipitation_probability_max,weathercode,temperature_2m_max,temperature_2m_min&hourly=temperature_2m,weathercode,precipitation_probability,is_day&timezone=Asia%2FManila&forecast_days=7`
 
         );
 
@@ -102,6 +107,15 @@ const loadWeatherDismissed = () => {
                 rainChance: json.daily.precipitation_probability_max[i],
                 tMax: Math.round(json.daily.temperature_2m_max[i]),
                 tMin: Math.round(json.daily.temperature_2m_min[i])
+            })),
+
+            // Every hour of those 7 days, in Manila time ("2026-10-31T13:00").
+            hours: json.hourly.time.map((time, i) => ({
+                time,
+                temp: Math.round(json.hourly.temperature_2m[i]),
+                code: json.hourly.weathercode[i],
+                rainChance: json.hourly.precipitation_probability[i],
+                isDay: json.hourly.is_day[i] === 1
             }))
 
         };
@@ -110,6 +124,7 @@ const loadWeatherDismissed = () => {
             WEATHER_CACHE_KEY,
             JSON.stringify({
             date: today,
+            fetchedAt: Date.now(),
             data
             })
         );

@@ -71,6 +71,11 @@ export const translations = {
       hidePassword: 'Hide password',
       close: 'Close',
       fillRequired: 'Please fill in all required fields',
+      or: 'or',
+      googleUnavailable: "Google sign-in couldn't load. Please check your connection or use your email and password.",
+      googleFailed: "We couldn't sign you in with Google. Please try again.",
+      googleAdmin: 'Admin accounts sign in with their email and password.',
+      googleExpired: 'Your Google sign-up timed out. Please continue with Google again.',
       bothEmailPassword: 'Please enter both email and password',
       invalidCredentials: 'Invalid email or password.',
       accountClosedTitle: 'Account Closed',
@@ -164,6 +169,12 @@ export const translations = {
       resendIn: 'Resend code in {{s}}s',
       resend: 'Resend code',
       backToRegistration: '← Back to registration',
+      googleTitle: 'Finish Creating Your Account',
+      googleSubtitle: 'Your Google email is verified. Add a few details so the barangay can reach you.',
+      googleVerified: 'Verified by Google',
+      googlePasswordNote: 'You will sign in with Google. To also sign in with a password later, use "Forgot password?" on the Sign In screen.',
+      googleCreate: 'Create Account',
+      googleCreating: 'Creating account...',
       accountCreated: 'Account created successfully! Please sign in.',
       agreePrefix: 'I have read and agree to the',
       agreeLink: 'Terms and Conditions',
@@ -424,6 +435,147 @@ export const translations = {
         }
       ]
     },
+    privacy: {
+      title: "Privacy Policy",
+      lastUpdated: "Last updated: October 31, 2026",
+      close: "Close Privacy Policy",
+      understand: "I Understand",
+      contactEmail: "Email",
+      contactFacebook: "Facebook",
+      contactOfficials: "Barangay officials",
+      intro: "Barangay Santa Fe, Dasmariñas City, Cavite (\"the Barangay\", \"we\", \"us\") operates Barangay Santa Fe Safe Connect (\"Safe Connect\" or \"the Platform\"), a website and installable app (PWA) for reporting emergencies, requesting assistance, reporting petty crimes, and receiving barangay announcements. We respect your privacy and protect your personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173), its Implementing Rules and Regulations, and the issuances of the National Privacy Commission (NPC). This Privacy Policy explains what information we collect, why we collect it, how we use, share, store, and protect it, how long we keep it, and the rights you have over it.",
+      sections: [
+        {
+          id: "controller",
+          title: "Who We Are",
+          points: [
+            "Barangay Santa Fe is the personal information controller of the information processed through Safe Connect. This means the Barangay decides why and how your information is used and is responsible for protecting it.",
+            "The Barangay has a Data Protection Officer (DPO) who oversees compliance with the Data Privacy Act and handles privacy questions, requests, and complaints. See Section 13 for how to reach the DPO."
+          ]
+        },
+        {
+          id: "collect",
+          title: "Information We Collect",
+          points: [
+            "Account information: your first, middle (optional), and last name; username; email address; mobile number; password; and, if you add one, your profile photo. Your password is never stored as readable text; it is stored only in a securely hashed (one-way encrypted) form.",
+            "Sign-in with Google: if you choose \"Continue with Google\", Google shares your name, email address, and confirmation that your email address is verified. We never receive your Google password.",
+            "Birthdate: Safe Connect does not currently ask for your birthdate. If the Barangay later asks for it, for example to confirm the minimum age of 15 years stated in the Terms and Conditions, it will be used only to confirm eligibility and will be protected in the same way as the rest of your information.",
+            "Emergency reports: the type and severity of the emergency, its details, the number of people affected, the location (address and map pin, including GPS coordinates when you use \"Use my current location\"), and the photos or videos you attach.",
+            "Assistance requests: the type of help needed, a description of the situation, the number of people who need help, any special needs, the location, and attached photos or videos. Special needs and situation details may include health information, which the law treats as sensitive personal information.",
+            "Petty crime reports: the type of incident, its description, information about the suspect (if any), the location, and attached photos or videos. If you report anonymously, your name and contact number are hidden from barangay personnel, although the report stays linked to your account so you can follow it.",
+            "Information about other people: when you report on behalf of someone else, the details you provide about them, such as their name, contact number, your relationship to them, and their situation.",
+            "Community activity: the comments, replies, and likes you post on barangay announcements. Your name is shown with your comments to other signed-in residents.",
+            "Notifications and preferences: the notifications sent to you about your reports and replies, which ones you have read, archived, or deleted, and your language setting.",
+            "Security and technical information: records of sign-in attempts (date and time, whether it succeeded, IP address, device and browser type, and an approximate location derived from the IP address), records of saved logins (the device they belong to), and logs of actions taken by barangay personnel in the admin panel.",
+            "Information stored on your device: to keep you signed in and remember your settings, the Platform stores a sign-in token, your language, and today's weather forecast in your browser. The Platform does not use advertising cookies or third-party trackers."
+          ]
+        },
+        {
+          id: "how",
+          title: "How We Collect Your Information",
+          points: [
+            "Directly from you, when you create an account, fill in a report or request, upload photos or videos, post comments, or update your profile.",
+            "Automatically, when you sign in and use the Platform (for example, sign-in records and your device location if you allow it).",
+            "From Google, only if you choose to continue with Google.",
+            "From authorized barangay personnel, when they update the status of your report or reply to you."
+          ]
+        },
+        {
+          id: "purpose",
+          title: "Why We Collect It and Our Legal Basis",
+          points: [
+            "To receive, verify, prioritize, and respond to emergency reports, assistance requests, and petty crime reports, and to locate and reach the people involved.",
+            "To create and manage your account, confirm your identity, and keep your account secure, including sending email verification codes, password reset codes, and sign-in alerts.",
+            "To send you status updates, replies, and barangay announcements, and to operate the community comments.",
+            "To keep records of incidents and of the Barangay's response, prepare reports and statistics for barangay planning and disaster risk reduction, and meet legal and audit requirements.",
+            "To protect the Platform and its users, prevent false reports and misuse, and investigate security incidents.",
+            "Legal basis: we process your personal information under Section 12 of the Data Privacy Act because it is necessary for the Barangay to perform its functions as a local government unit and public authority, to respond to emergencies and protect life and health, to comply with legal obligations, and, where applicable, because you gave your consent. Sensitive personal information, such as health details, is processed under Section 13 only when necessary to protect life and health or as otherwise allowed by law.",
+            "We will not use your information for purposes unrelated to those above, and we do not use it for advertising or sell it."
+          ]
+        },
+        {
+          id: "sharing",
+          title: "Who Can See Your Information",
+          points: [
+            "Authorized barangay personnel: only barangay officials and staff who have been given an admin account (such as the Punong Barangay, Barangay Secretary, Kagawads, and designated responders) can view reports and requests, and only to the extent needed to perform their duties. They are bound to keep your information confidential.",
+            "Government agencies and responders: when needed to respond to an emergency or to protect life, health, or property, the Barangay may share relevant report details with responders such as the Philippine National Police, the Bureau of Fire Protection, the City Disaster Risk Reduction and Management Office, or health workers. We also disclose information when required by law, court order, or a lawful request from a government authority.",
+            "Service providers: we use trusted providers to run the Platform, including cloud hosting and database services (Microsoft Azure and Vercel), an email delivery service, Google (for \"Continue with Google\"), ipapi.co (to estimate a sign-in's approximate location from its IP address), and OpenStreetMap and Esri map tiles (shown when you open the location map). They process information only on our instructions and only for these services.",
+            "Other residents: only your name, profile photo, and the comments you choose to post on announcements are visible to other signed-in residents. Your reports and contact details are never shown to other residents.",
+            "We do not sell, rent, or trade your personal information."
+          ]
+        },
+        {
+          id: "security",
+          title: "How We Store and Protect Your Information",
+          points: [
+            "All information sent between your device and the Platform is encrypted in transit (HTTPS).",
+            "Passwords are stored only in hashed form. Verification and password reset codes expire after 10 minutes.",
+            "Access to reports is limited by role, and actions taken in the admin panel are logged. You receive an email when your account is signed in to.",
+            "Sign-ins end when you close the browser unless you choose to save your login. A saved login lasts up to 30 days and ends immediately when you log out.",
+            "Your information is stored on secure cloud servers that may be located outside the Philippines. We require our providers to protect it to the standard required by the Data Privacy Act.",
+            "If a personal data breach occurs that puts your rights at risk, we will notify the National Privacy Commission and the affected users within the period required by NPC rules (72 hours from knowledge of the breach).",
+            "No system is completely secure. Please keep your password private, log out on shared devices, and tell the Barangay right away if you suspect someone else is using your account."
+          ]
+        },
+        {
+          id: "retention",
+          title: "How Long We Keep Your Information",
+          points: [
+            "Account information is kept while your account is active. If your account is closed, it is kept only as long as needed for the purposes in this Policy, barangay record-keeping, and legal obligations, and is then deleted or anonymized.",
+            "Reports and requests form part of the Barangay's official records of incidents and response. Resolved or dismissed reports may be archived and are kept for as long as required by applicable records-retention rules for local government units, after which they are securely disposed of.",
+            "Sign-in records are kept for security and audit purposes and are archived after a set period (90 days by default).",
+            "Notifications you delete are permanently removed. Email verification and password reset codes are deleted once used or expired.",
+            "Information stored in your browser stays on your device until you log out or clear your browser data."
+          ]
+        },
+        {
+          id: "rights",
+          title: "Your Rights",
+          points: [
+            "Under the Data Privacy Act, you have the right to be informed about how your personal information is processed; to access it; to object to its processing; to have it corrected; to have it erased or blocked when it is incomplete, outdated, false, unlawfully obtained, or no longer necessary; to data portability (to receive a copy in a commonly used electronic format); to be indemnified for damages caused by inaccurate or unauthorized use; and to file a complaint with the National Privacy Commission.",
+            "You can update your name, username, mobile number, profile photo, and password at any time in Settings, and archive or delete your notifications on the Notifications page.",
+            "To use your other rights, contact the Data Protection Officer (Section 13). We may ask you to verify your identity first, and we will respond within the period required by law.",
+            "Some requests may be limited where the law allows, for example when a report must be kept for an ongoing emergency response, an investigation, or a legal obligation. If we cannot fully grant a request, we will explain why."
+          ]
+        },
+        {
+          id: "age",
+          title: "Age Requirement",
+          points: [
+            "Safe Connect is for users who are at least 15 years old, as stated in the Terms and Conditions. Users below 18 are encouraged to use the Platform with the knowledge of a parent or guardian.",
+            "If we learn that an account belongs to someone below 15, we may close the account and delete its information, except for reports that must be kept to protect someone's safety or comply with the law."
+          ]
+        },
+        {
+          id: "links",
+          title: "Third-Party Services and Links",
+          points: [
+            "The Platform may link to or use services run by others, such as Google sign-in, Google Maps directions, map tiles, and the Barangay's Facebook page. Their handling of your information is governed by their own privacy policies."
+          ]
+        },
+        {
+          id: "changes",
+          title: "Changes to This Policy",
+          points: [
+            "We may update this Privacy Policy to reflect changes to the Platform or to the law. The \"Last updated\" date above shows the latest version. We will announce significant changes on the Platform."
+          ]
+        },
+        {
+          id: "complaints",
+          title: "National Privacy Commission",
+          points: [
+            "If you believe your personal information has been mishandled, please contact our Data Protection Officer first so we can address it. You may also file a complaint with the National Privacy Commission through its website, www.privacy.gov.ph."
+          ]
+        },
+        {
+          id: "contact",
+          title: "Contact Us About Your Privacy",
+          points: [
+            "For privacy questions, requests, or complaints, contact the Data Protection Officer of Barangay Santa Fe at the Barangay Hall, Barangay Santa Fe, Dasmariñas City, Cavite, or through the barangay contact details below."
+          ]
+        }
+      ]
+    },
     residentNav: {
       home: 'Home',
       emergency: 'Emergency',
@@ -513,6 +665,10 @@ export const translations = {
       todayShort: 'Today',
       prevDays: 'Earlier days',
       nextDays: 'Later days',
+      hourlyTitle: 'Hourly forecast',
+      now: 'Now',
+      prevHours: 'Earlier hours',
+      nextHours: 'Later hours',
       tipRain: 'Bring an umbrella and stay away from flood-prone areas.',
       tipHot: 'It will be hot. Drink plenty of water and limit time under the sun.',
       tipFair: 'Good weather for outdoor activities. Stay safe!'
@@ -995,6 +1151,11 @@ export const translations = {
       hidePassword: 'Itago ang password',
       close: 'Isara',
       fillRequired: 'Pakisagutan lahat ng kinakailangang field',
+      or: 'o',
+      googleUnavailable: 'Hindi ma-load ang Google sign-in. Pakisuri ang iyong koneksyon o gamitin ang iyong email at password.',
+      googleFailed: 'Hindi ka namin ma-sign in gamit ang Google. Pakisubukang muli.',
+      googleAdmin: 'Ang mga admin account ay nagsa-sign in gamit ang kanilang email at password.',
+      googleExpired: 'Nag-expire ang iyong Google sign-up. Pakipindot muli ang Google.',
       bothEmailPassword: 'Pakilagay ang email at password',
       invalidCredentials: 'Maling email o password.',
       accountClosedTitle: 'Sarado na ang Account',
@@ -1088,6 +1249,12 @@ export const translations = {
       resendIn: 'Ipadala ulit ang code sa loob ng {{s}}s',
       resend: 'Ipadala ulit ang code',
       backToRegistration: '← Bumalik sa pagpaparehistro',
+      googleTitle: 'Tapusin ang Paggawa ng Account',
+      googleSubtitle: 'Verified na ang iyong Google email. Magdagdag ng ilang detalye para makontak ka ng barangay.',
+      googleVerified: 'Verified ng Google',
+      googlePasswordNote: 'Magsa-sign in ka gamit ang Google. Para makapag-sign in din gamit ang password, gamitin ang "Nakalimutan ang password?" sa Sign In.',
+      googleCreate: 'Gumawa ng Account',
+      googleCreating: 'Ginagawa ang account...',
       accountCreated: 'Matagumpay na nagawa ang account! Mangyaring mag-sign in.',
       agreePrefix: 'Nabasa ko at sumasang-ayon ako sa',
       agreeLink: 'Mga Tuntunin at Kundisyon',
@@ -1348,6 +1515,147 @@ export const translations = {
         }
       ]
     },
+    privacy: {
+      title: "Patakaran sa Privacy",
+      lastUpdated: "Huling na-update: Oktubre 31, 2026",
+      close: "Isara ang Patakaran sa Privacy",
+      understand: "Naiintindihan Ko",
+      contactEmail: "Email",
+      contactFacebook: "Facebook",
+      contactOfficials: "Mga opisyal ng barangay",
+      intro: "Ang Barangay Santa Fe, Lungsod ng Dasmariñas, Cavite (\"ang Barangay\", \"kami\") ang nagpapatakbo ng Barangay Santa Fe Safe Connect (\"Safe Connect\" o \"ang Platform\"), isang website at app na maaaring i-install (PWA) para sa pag-uulat ng emergency, paghingi ng tulong, pag-uulat ng maliit na krimen, at pagtanggap ng mga anunsyo ng barangay. Iginagalang namin ang iyong privacy at pinoprotektahan ang iyong personal na impormasyon alinsunod sa Data Privacy Act of 2012 (Republic Act No. 10173), sa Implementing Rules and Regulations nito, at sa mga patakaran ng National Privacy Commission (NPC). Ipinapaliwanag ng Patakarang ito kung anong impormasyon ang kinokolekta namin, bakit, paano namin ito ginagamit, ibinabahagi, iniimbak, at pinoprotektahan, gaano katagal namin ito itinatago, at ang iyong mga karapatan.",
+      sections: [
+        {
+          id: "controller",
+          title: "Sino Kami",
+          points: [
+            "Ang Barangay Santa Fe ang personal information controller ng impormasyong pinoproseso sa Safe Connect. Ibig sabihin, ang Barangay ang nagpapasya kung bakit at paano ginagamit ang iyong impormasyon at may pananagutang protektahan ito.",
+            "May Data Protection Officer (DPO) ang Barangay na nangangasiwa sa pagsunod sa Data Privacy Act at tumatanggap ng mga tanong, kahilingan, at reklamo tungkol sa privacy. Tingnan ang Seksyon 13 para makontak ang DPO."
+          ]
+        },
+        {
+          id: "collect",
+          title: "Impormasyong Kinokolekta Namin",
+          points: [
+            "Impormasyon ng account: ang iyong unang pangalan, gitnang pangalan (opsyonal), at apelyido; username; email address; numero ng mobile; password; at, kung maglalagay ka, ang iyong profile photo. Hindi kailanman iniimbak ang password bilang nababasang teksto; naka-hash (one-way encrypted) lamang ito.",
+            "Pag-sign in gamit ang Google: kung pipiliin mo ang \"Continue with Google\", ibabahagi ng Google ang iyong pangalan, email address, at kumpirmasyon na verified ang iyong email. Hindi namin natatanggap ang iyong Google password.",
+            "Petsa ng kapanganakan: Sa ngayon, hindi hinihingi ng Safe Connect ang iyong petsa ng kapanganakan. Kung hihingin ito ng Barangay sa hinaharap, halimbawa para kumpirmahin ang pinakamababang edad na 15 taon na nakasaad sa Mga Tuntunin at Kundisyon, gagamitin lamang ito para doon at poprotektahan tulad ng iba mong impormasyon.",
+            "Mga ulat ng emergency: ang uri at tindi ng emergency, mga detalye nito, bilang ng mga apektado, lokasyon (address at pin sa mapa, kasama ang GPS coordinates kapag ginamit mo ang \"Gamitin ang kasalukuyang lokasyon\"), at ang mga larawan o video na ilalakip mo.",
+            "Mga kahilingan ng tulong: ang uri ng tulong na kailangan, paglalarawan ng sitwasyon, bilang ng mga nangangailangan, anumang espesyal na pangangailangan, lokasyon, at mga larawan o video. Ang espesyal na pangangailangan at detalye ng sitwasyon ay maaaring may kinalaman sa kalusugan, na itinuturing ng batas na sensitibong personal na impormasyon.",
+            "Mga ulat ng maliit na krimen: ang uri ng insidente, paglalarawan nito, impormasyon tungkol sa suspek (kung mayroon), lokasyon, at mga larawan o video. Kung mag-uulat ka nang anonymous, nakatago sa mga tauhan ng barangay ang iyong pangalan at numero, pero nananatiling naka-link sa iyong account ang ulat para masubaybayan mo ito.",
+            "Impormasyon tungkol sa ibang tao: kapag nag-uulat ka para sa iba, ang mga detalyeng ibinibigay mo tungkol sa kanila, gaya ng pangalan, numero, relasyon mo sa kanila, at kanilang sitwasyon.",
+            "Aktibidad sa komunidad: ang mga komento, sagot, at like mo sa mga anunsyo ng barangay. Nakikita ng ibang naka-sign in na residente ang iyong pangalan kasama ng iyong mga komento.",
+            "Mga abiso at setting: ang mga abisong ipinapadala sa iyo tungkol sa iyong mga ulat at sagot, kung alin ang nabasa, na-archive, o binura mo, at ang iyong napiling wika.",
+            "Impormasyong pangseguridad at teknikal: talaan ng mga pagtatangkang mag-sign in (petsa at oras, kung nagtagumpay, IP address, uri ng device at browser, at tinatayang lokasyon batay sa IP address), talaan ng mga naka-save na login (kung aling device), at talaan ng mga aksyon ng mga tauhan ng barangay sa admin panel.",
+            "Impormasyong nakaimbak sa iyong device: para manatili kang naka-sign in at matandaan ang iyong mga setting, nag-iimbak ang Platform sa iyong browser ng sign-in token, ng iyong wika, at ng taya ng panahon ngayong araw. Hindi gumagamit ang Platform ng advertising cookies o third-party trackers."
+          ]
+        },
+        {
+          id: "how",
+          title: "Paano Namin Kinokolekta ang Iyong Impormasyon",
+          points: [
+            "Direkta mula sa iyo, kapag gumawa ka ng account, nagsumite ng ulat o kahilingan, nag-upload ng larawan o video, nagkomento, o nag-update ng iyong profile.",
+            "Awtomatiko, kapag nag-sign in ka at ginamit ang Platform (halimbawa, talaan ng pag-sign in at lokasyon ng iyong device kung papayagan mo).",
+            "Mula sa Google, kung pipiliin mo lamang na magpatuloy gamit ang Google.",
+            "Mula sa mga awtorisadong tauhan ng barangay, kapag ina-update nila ang status ng iyong ulat o sumasagot sa iyo."
+          ]
+        },
+        {
+          id: "purpose",
+          title: "Bakit Namin Ito Kinokolekta at ang Aming Batayang Legal",
+          points: [
+            "Para matanggap, ma-verify, maunahan ayon sa pangangailangan, at matugunan ang mga ulat ng emergency, kahilingan ng tulong, at ulat ng maliit na krimen, at para mahanap at makontak ang mga taong sangkot.",
+            "Para gumawa at pamahalaan ang iyong account, kumpirmahin ang iyong pagkakakilanlan, at panatilihing ligtas ang iyong account, kasama ang pagpapadala ng verification code, password reset code, at abiso sa pag-sign in.",
+            "Para magpadala sa iyo ng mga update sa status, sagot, at anunsyo ng barangay, at para mapatakbo ang mga komento ng komunidad.",
+            "Para magtala ng mga insidente at ng tugon ng Barangay, gumawa ng mga ulat at estadistika para sa pagpaplano ng barangay at disaster risk reduction, at sumunod sa mga kinakailangan ng batas at audit.",
+            "Para protektahan ang Platform at ang mga gumagamit nito, pigilan ang mga maling ulat at pang-aabuso, at imbestigahan ang mga insidenteng pangseguridad.",
+            "Batayang legal: pinoproseso namin ang iyong personal na impormasyon sa ilalim ng Seksyon 12 ng Data Privacy Act dahil kailangan ito ng Barangay upang gampanan ang mga tungkulin nito bilang yunit ng lokal na pamahalaan at awtoridad publiko, tumugon sa mga emergency at protektahan ang buhay at kalusugan, sumunod sa mga obligasyong legal, at, kung naaangkop, dahil nagbigay ka ng pahintulot. Ang sensitibong personal na impormasyon, gaya ng detalye ng kalusugan, ay pinoproseso sa ilalim ng Seksyon 13 kapag kailangan lamang upang protektahan ang buhay at kalusugan o kung pinapayagan ng batas.",
+            "Hindi namin gagamitin ang iyong impormasyon para sa mga layuning walang kaugnayan sa mga nabanggit, at hindi namin ito ginagamit sa advertising o ibinebenta."
+          ]
+        },
+        {
+          id: "sharing",
+          title: "Sino ang Makakakita ng Iyong Impormasyon",
+          points: [
+            "Mga awtorisadong tauhan ng barangay: tanging mga opisyal at kawani ng barangay na binigyan ng admin account (gaya ng Punong Barangay, Kalihim ng Barangay, mga Kagawad, at mga itinalagang responder) ang makakakita ng mga ulat at kahilingan, at sa lawak lamang na kailangan sa kanilang tungkulin. Obligado silang panatilihing kumpidensyal ang iyong impormasyon.",
+            "Mga ahensya ng pamahalaan at responder: kapag kailangan para tumugon sa emergency o protektahan ang buhay, kalusugan, o ari-arian, maaaring ibahagi ng Barangay ang mahahalagang detalye ng ulat sa mga responder gaya ng Philippine National Police, Bureau of Fire Protection, City Disaster Risk Reduction and Management Office, o mga health worker. Ibinabahagi rin namin ang impormasyon kapag iniutos ng batas, ng korte, o ng lehitimong kahilingan ng awtoridad ng pamahalaan.",
+            "Mga service provider: gumagamit kami ng mga mapagkakatiwalaang provider para mapatakbo ang Platform, kabilang ang cloud hosting at database (Microsoft Azure at Vercel), serbisyo sa pagpapadala ng email, Google (para sa \"Continue with Google\"), ipapi.co (para tantiyahin ang lokasyon ng pag-sign in mula sa IP address), at map tiles ng OpenStreetMap at Esri (kapag binuksan mo ang mapa ng lokasyon). Pinoproseso lamang nila ang impormasyon ayon sa aming tagubilin at para sa mga serbisyong ito.",
+            "Ibang residente: tanging ang iyong pangalan, profile photo, at mga komentong pinili mong i-post sa mga anunsyo ang nakikita ng ibang naka-sign in na residente. Hindi kailanman ipinapakita sa ibang residente ang iyong mga ulat at contact details.",
+            "Hindi namin ibinebenta, pinauupahan, o ipinagpapalit ang iyong personal na impormasyon."
+          ]
+        },
+        {
+          id: "security",
+          title: "Paano Namin Iniimbak at Pinoprotektahan ang Iyong Impormasyon",
+          points: [
+            "Naka-encrypt (HTTPS) ang lahat ng impormasyong ipinapadala sa pagitan ng iyong device at ng Platform.",
+            "Naka-hash lamang ang mga password. Nag-e-expire ang mga verification at password reset code pagkalipas ng 10 minuto.",
+            "Limitado ayon sa tungkulin ang access sa mga ulat, at itinatala ang mga aksyon sa admin panel. Makakatanggap ka ng email kapag may nag-sign in sa iyong account.",
+            "Natatapos ang pag-sign in kapag isinara mo ang browser maliban kung pinili mong i-save ang iyong login. Tumatagal nang hanggang 30 araw ang naka-save na login at agad itong natatapos kapag nag-log out ka.",
+            "Nakaimbak ang iyong impormasyon sa mga ligtas na cloud server na maaaring nasa labas ng Pilipinas. Inaatasan namin ang aming mga provider na protektahan ito ayon sa pamantayan ng Data Privacy Act.",
+            "Kung magkaroon ng personal data breach na naglalagay sa panganib ng iyong mga karapatan, aabisuhan namin ang National Privacy Commission at ang mga apektadong gumagamit sa loob ng panahong itinakda ng NPC (72 oras mula nang malaman ang breach).",
+            "Walang sistemang ganap na ligtas. Panatilihing pribado ang iyong password, mag-log out sa mga shared na device, at agad na ipaalam sa Barangay kung may hinala kang may ibang gumagamit ng iyong account."
+          ]
+        },
+        {
+          id: "retention",
+          title: "Gaano Katagal Namin Itinatago ang Iyong Impormasyon",
+          points: [
+            "Itinatago ang impormasyon ng account habang aktibo ang iyong account. Kapag isinara ang iyong account, itatago lamang ito hangga't kailangan para sa mga layunin ng Patakarang ito, sa pagtatala ng barangay, at sa mga obligasyong legal, at pagkatapos ay buburahin o gagawing anonymous.",
+            "Bahagi ng opisyal na talaan ng Barangay ang mga ulat at kahilingan. Maaaring i-archive ang mga ulat na nalutas o na-dismiss at itinatago ang mga ito hangga't iniaatas ng mga patakaran sa pagtatago ng talaan para sa mga yunit ng lokal na pamahalaan, at pagkatapos ay ligtas na itatapon.",
+            "Itinatago ang talaan ng pag-sign in para sa seguridad at audit at ina-archive ito pagkalipas ng takdang panahon (90 araw bilang default).",
+            "Permanenteng natatanggal ang mga abisong binura mo. Binubura ang mga verification at password reset code kapag nagamit na o nag-expire.",
+            "Ang impormasyong nakaimbak sa iyong browser ay nananatili sa iyong device hanggang mag-log out ka o burahin ang data ng iyong browser."
+          ]
+        },
+        {
+          id: "rights",
+          title: "Ang Iyong mga Karapatan",
+          points: [
+            "Sa ilalim ng Data Privacy Act, may karapatan kang malaman kung paano pinoproseso ang iyong personal na impormasyon; makita ito; tumutol sa pagproseso nito; ipaitama ito; ipabura o ipa-block ito kapag hindi kumpleto, luma na, mali, iligal na nakuha, o hindi na kailangan; sa data portability (makatanggap ng kopya sa karaniwang electronic format); mabayaran sa pinsalang dulot ng mali o hindi awtorisadong paggamit; at magsampa ng reklamo sa National Privacy Commission.",
+            "Maaari mong i-update anumang oras ang iyong pangalan, username, numero ng mobile, profile photo, at password sa Mga Setting, at i-archive o burahin ang iyong mga abiso sa pahina ng Mga Abiso.",
+            "Para magamit ang iba mo pang karapatan, makipag-ugnayan sa Data Protection Officer (Seksyon 13). Maaari ka naming hilinging patunayan muna ang iyong pagkakakilanlan, at sasagot kami sa loob ng panahong itinakda ng batas.",
+            "Maaaring limitahan ang ilang kahilingan kung pinapayagan ng batas, halimbawa kapag kailangang itago ang ulat para sa kasalukuyang pagtugon sa emergency, imbestigasyon, o obligasyong legal. Kung hindi namin lubos na maibibigay ang kahilingan, ipapaliwanag namin kung bakit."
+          ]
+        },
+        {
+          id: "age",
+          title: "Kinakailangang Edad",
+          points: [
+            "Ang Safe Connect ay para sa mga gumagamit na hindi bababa sa 15 taong gulang, ayon sa Mga Tuntunin at Kundisyon. Hinihikayat ang mga wala pang 18 taong gulang na gamitin ang Platform nang may kaalaman ng magulang o tagapag-alaga.",
+            "Kung malaman naming pag-aari ng taong wala pang 15 taong gulang ang isang account, maaari naming isara ang account at burahin ang impormasyon nito, maliban sa mga ulat na kailangang itago para sa kaligtasan ng isang tao o para sumunod sa batas."
+          ]
+        },
+        {
+          id: "links",
+          title: "Mga Serbisyo at Link ng Ibang Partido",
+          points: [
+            "Maaaring mag-link o gumamit ang Platform ng mga serbisyong pinapatakbo ng iba, gaya ng Google sign-in, direksyon ng Google Maps, map tiles, at Facebook page ng Barangay. Ang paghawak nila sa iyong impormasyon ay sakop ng sarili nilang patakaran sa privacy."
+          ]
+        },
+        {
+          id: "changes",
+          title: "Mga Pagbabago sa Patakarang Ito",
+          points: [
+            "Maaari naming i-update ang Patakaran sa Privacy na ito upang ipakita ang mga pagbabago sa Platform o sa batas. Ipinapakita ng petsang \"Huling na-update\" sa itaas ang pinakabagong bersyon. Ipapaalam namin sa Platform ang mahahalagang pagbabago."
+          ]
+        },
+        {
+          id: "complaints",
+          title: "National Privacy Commission",
+          points: [
+            "Kung naniniwala kang hindi wastong nahawakan ang iyong personal na impormasyon, makipag-ugnayan muna sa aming Data Protection Officer para matugunan namin ito. Maaari ka ring magsampa ng reklamo sa National Privacy Commission sa kanilang website, www.privacy.gov.ph."
+          ]
+        },
+        {
+          id: "contact",
+          title: "Makipag-ugnayan Tungkol sa Iyong Privacy",
+          points: [
+            "Para sa mga tanong, kahilingan, o reklamo tungkol sa privacy, makipag-ugnayan sa Data Protection Officer ng Barangay Santa Fe sa Barangay Hall, Barangay Santa Fe, Lungsod ng Dasmariñas, Cavite, o sa mga contact details ng barangay sa ibaba."
+          ]
+        }
+      ]
+    },
     residentNav: {
       home: 'Home',
       emergency: 'Emergency',
@@ -1437,6 +1745,10 @@ export const translations = {
       todayShort: 'Ngayon',
       prevDays: 'Mga naunang araw',
       nextDays: 'Mga susunod na araw',
+      hourlyTitle: 'Taya kada oras',
+      now: 'Ngayon',
+      prevHours: 'Mga naunang oras',
+      nextHours: 'Mga susunod na oras',
       tipRain: 'Magdala ng payong at umiwas sa mga lugar na madalas bahain.',
       tipHot: 'Mainit ngayon. Uminom ng maraming tubig at umiwas sa matagal na pagbibilad sa araw.',
       tipFair: 'Magandang panahon para sa mga gawain sa labas. Mag-ingat!'

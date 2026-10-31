@@ -8,6 +8,10 @@ const { verifyToken } = require("../middleware/authMiddleware");
 router.post("/signup",      authController.signup);
 router.post("/signin",      authController.signin);
 
+// Continue with Google (residents): sign in, or finish a new account
+router.post("/google",          authController.googleSignin);
+router.post("/google/complete", authController.googleComplete);
+
 // The signed-in account (verifies the token against the database)
 router.get("/me",          verifyToken, authController.me);
 

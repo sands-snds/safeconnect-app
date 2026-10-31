@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { signinUser, setAuthToken, rememberLogin } from '../../Services/api';
 import AuthModal, { AuthAlert, AuthField } from './AuthModal';
+import GoogleAuthButton from './GoogleAuthButton';
 import { useLanguage } from '../../i18n/LanguageContext';
 import useSiteContent, { useSiteMedia, mediaSrc } from '../shared/useSiteContent';
 import EmergencyContactList from '../shared/EmergencyContactList';
@@ -158,6 +159,9 @@ function Hero() {
     const [resendCooldown,setResendCooldown]= useState(0);
     const otpRefs = useRef([]);
 
+    // Continue with Google, new account: { token, email } until it's created.
+    const [googleSignup,  setGoogleSignup]  = useState(null);
+
     const [isSubmitting,  setIsSubmitting]  = useState(false);
     const [error,         setError]         = useState('');
     const [successMsg,    setSuccessMsg]    = useState('');
@@ -216,7 +220,7 @@ function Hero() {
     const closeAll = () => {
         setShowSignIn(false); setShowSignUp(false); setShowForgot(false);
         setSignInStep('form'); setPendingSignIn(null);
-        setSignUpStep('form'); setForgotStep('email');
+        setSignUpStep('form'); setForgotStep('email'); setGoogleSignup(null);
         setSiEmail(''); setSiPassword(''); setShowSiPw(false);
         setSuFirst(''); setSuMiddle(''); setSuLast('');
         setSuUsername(''); setSuContact(''); setSuEmail('');
@@ -251,6 +255,64 @@ function Hero() {
             // Residents: ask whether to save the login before going on.
             setPendingSignIn(result);
             setSignInStep('remember');
+        } catch { setError(t('auth.serverError')); }
+        finally { setIsSubmitting(false); }
+    };
+
+    // ── Continue with Google ──────────────────────────────────────────────────
+    // A signed-in resident goes on to "Save Login Info" like a normal sign-in;
+    // someone new fills in the rest of Sign Up (no password or email code --
+    // Google confirmed the email) before the account is created.
+    const afterGoogleResult = (result) => {
+        if (result.success) {
+            setShowSignUp(false); setSignUpStep('form'); setGoogleSignup(null);
+            setShowSignIn(true);
+            setPendingSignIn(result);
+            setSignInStep('remember');
+            return;
+        }
+        if (result.code === 'GOOGLE_SIGNUP_REQUIRED') {
+            const p = result.profile || {};
+            setGoogleSignup({ token: result.signupToken, email: p.email });
+            setSuFirst((p.firstName || '').replace(NAME_ALLOWED_REGEX, ''));
+            setSuLast((p.lastName || '').replace(NAME_ALLOWED_REGEX, ''));
+            setSuMiddle(''); setSuUsername(''); setSuContact(''); setSuAgree(false);
+            setShowSignIn(false); setShowSignUp(true); setSignUpStep('google');
+            return;
+        }
+        if (result.code && result.code.startsWith('ACCOUNT_')) {
+            closeAll();
+            if (showAccountStatusPopup(result.code, t, siteContent.socials?.email)) return;
+        }
+        if (result.code === 'GOOGLE_SIGNUP_EXPIRED') { setSignUpStep('form'); setGoogleSignup(null); }
+        const known = { GOOGLE_ADMIN: 'auth.googleAdmin', GOOGLE_SIGNUP_EXPIRED: 'auth.googleExpired' };
+        setError(known[result.code] ? t(known[result.code]) : (result.message || t('auth.googleFailed')));
+    };
+
+    const handleGoogleCredential = async (credential) => {
+        if (!credential || isSubmitting) return;
+        clearErr(); setIsSubmitting(true);
+        try {
+            afterGoogleResult(await apiPost('google', { credential }));
+        } catch { setError(t('auth.serverError')); }
+        finally { setIsSubmitting(false); }
+    };
+
+    const handleGoogleCompleteSubmit = async (e) => {
+        e.preventDefault(); clearErr();
+        if (!suFirst || !suLast || !suUsername.trim() || !suContact) { setError(t('auth.fillRequired')); return; }
+        if (suContact.length !== 10) { setError(t('auth.contactDigits')); return; }
+        if (!termsViewed) { setError(t('signUp.viewTermsFirst')); return; }
+        if (!suAgree) { setError(t('signUp.mustAgree')); return; }
+        setIsSubmitting(true);
+        try {
+            afterGoogleResult(await apiPost('google/complete', {
+                signupToken: googleSignup?.token,
+                fullName: [suFirst, suMiddle, suLast].filter(Boolean).join(' '),
+                username: suUsername.trim(),
+                contact: `+63${suContact}`,
+                termsAccepted: true
+            }));
         } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
@@ -484,6 +546,7 @@ function Hero() {
                         <button type="submit" className="auth-btn" disabled={isSubmitting}>
                             {isSubmitting ? t('signIn.submitting') : t('signIn.submit')}
                         </button>
+                        <GoogleAuthButton text="continue_with" onCredential={handleGoogleCredential} />
                         <p className="auth-switch">
                             {t('signIn.noAccount')}{' '}
                             <button type="button" className="auth-link" onClick={() => { setShowSignIn(false); setShowSignUp(true); clearErr(); }}>
@@ -587,10 +650,72 @@ function Hero() {
                         <button type="submit" className="auth-btn" disabled={isSubmitting}>
                             {isSubmitting ? t('signUp.submitting') : t('signUp.submit')}
                         </button>
+                        <GoogleAuthButton text="signup_with" onCredential={handleGoogleCredential} />
                         <p className="auth-switch">
                             {t('signUp.haveAccount')}{' '}
                             <button type="button" className="auth-link" onClick={() => { setShowSignUp(false); setShowSignIn(true); clearErr(); setSignUpStep('form'); }}>
                                 {t('signUp.signInLink')}
+                            </button>
+                        </p>
+                    </form>
+                </AuthModal>
+            )}
+
+            {/* ── Continue with Google: the rest of Sign Up for a new account ── */}
+            {showSignUp && signUpStep === 'google' && googleSignup && (
+                <AuthModal wide title={t('signUp.googleTitle')} subtitle={t('signUp.googleSubtitle')} onClose={closeAll} closeLabel={t('auth.close')}>
+                    <AuthAlert type="error">{error}</AuthAlert>
+
+                    <form onSubmit={handleGoogleCompleteSubmit} noValidate>
+                        <h3 className="auth-section">{t('signUp.sectionPersonal')}</h3>
+                        <div className="auth-grid cols-3">
+                            <AuthField id="gFirst" label={t('signUp.firstName')} icon="bi-person">
+                                <input type="text" className="auth-input" id="gFirst" autoComplete="given-name" placeholder={t('signUp.firstNamePlaceholder')} value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                            </AuthField>
+                            <AuthField id="gMiddle" label={t('signUp.middleName')} optional={t('signUp.optional')} icon="bi-person">
+                                <input type="text" className="auth-input" id="gMiddle" autoComplete="additional-name" placeholder={t('signUp.middlePlaceholder')} value={suMiddle} onChange={e => setSuMiddle(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                            </AuthField>
+                            <AuthField id="gLast" label={t('signUp.lastName')} icon="bi-person">
+                                <input type="text" className="auth-input" id="gLast" autoComplete="family-name" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                            </AuthField>
+                        </div>
+
+                        <h3 className="auth-section">{t('signUp.sectionContact')}</h3>
+                        <div className="auth-grid cols-2">
+                            <AuthField id="gContact" label={t('signUp.contactNumber')} icon="bi-phone" prefix="+63">
+                                <input type="tel" className="auth-input has-prefix" id="gContact" autoComplete="tel-national" placeholder="9XXXXXXXXX" value={suContact} onChange={e => setSuContact(e.target.value.replace(DIGITS_ONLY_REGEX,'').slice(0,10))} maxLength={10} inputMode="numeric" />
+                            </AuthField>
+                            <div className="auth-field">
+                                <span className="auth-label">{t('signUp.email')}</span>
+                                <div className="auth-readonly" title={t('signUp.googleVerified')}>
+                                    <i className="bi bi-google" aria-hidden="true"></i>
+                                    <span>{googleSignup.email}</span>
+                                    <i className="bi bi-patch-check-fill" role="img" aria-label={t('signUp.googleVerified')}></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 className="auth-section">{t('signUp.sectionSecurity')}</h3>
+                        <AuthField id="gUsername" label={t('signUp.username')} icon="bi-at">
+                            <input type="text" className="auth-input" id="gUsername" autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} maxLength={50} />
+                        </AuthField>
+                        <p className="auth-fineprint" style={{ textAlign:'left', margin:'-4px 0 14px' }}>{t('signUp.googlePasswordNote')}</p>
+
+                        <label className="auth-check" htmlFor="gAgree">
+                            <input type="checkbox" id="gAgree" checked={suAgree} onChange={handleAgreeChange} />
+                            <span>
+                                {t('signUp.agreePrefix')}{' '}
+                                <a href="#terms">{t('signUp.agreeLink')}</a>.
+                            </span>
+                        </label>
+                        {!termsViewed && <p className="auth-check-hint">{t('signUp.viewTermsHint')}</p>}
+
+                        <button type="submit" className="auth-btn" disabled={isSubmitting}>
+                            {isSubmitting ? t('signUp.googleCreating') : t('signUp.googleCreate')}
+                        </button>
+                        <p className="auth-switch">
+                            <button type="button" className="auth-link muted" onClick={() => { setSignUpStep('form'); setGoogleSignup(null); clearErr(); }}>
+                                {t('signUp.backToRegistration')}
                             </button>
                         </p>
                     </form>

@@ -8,6 +8,7 @@ import { LanguageProvider } from './i18n/LanguageContext';
 import LanguageGate from './components/shared/LanguageGate';
 import { PopupHost } from './components/shared/popup';
 import TermsModal from './components/shared/TermsModal';
+import PrivacyPolicyModal from './components/shared/PrivacyPolicyModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './App.css';
@@ -18,6 +19,7 @@ function App() {
       <LanguageGate />
       <PopupHost />
       <TermsModal />
+      <PrivacyPolicyModal />
       <Router>
         <div className="App">
           <Routes>
