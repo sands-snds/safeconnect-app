@@ -672,9 +672,14 @@ export const toggleAnnouncementLike = async (id) => {
     return res.json();
 };
 
+// Each comment's photoUrl (the commenter's profile photo) is resolved to a
+// full URL, like the navbar avatar.
+const withCommentPhoto = (c) => (c && typeof c === "object" ? { ...c, photoUrl: resolveAssetUrl(c.photoUrl) } : c);
+
 export const fetchAnnouncementComments = async (id) => {
     const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/${id}/comments`);
-    return res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data.map(withCommentPhoto) : data;
 };
 
 // parentId: reply to that comment (omit for a top-level comment).
@@ -684,7 +689,9 @@ export const postAnnouncementComment = async (id, text, parentId = null) => {
         headers: authHeaders(),
         body: JSON.stringify(parentId ? { text, parentId } : { text }),
     });
-    return res.json();
+    const data = await res.json();
+    if (data?.comment) data.comment = withCommentPhoto(data.comment);
+    return data;
 };
 
 export const deleteAnnouncementComment = async (commentId) => {

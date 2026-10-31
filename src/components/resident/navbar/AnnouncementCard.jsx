@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import { flashHighlight } from "../../shared/highlight";
+import CommentAvatar from "../../shared/CommentAvatar";
 import {
     toggleAnnouncementLike,
     fetchAnnouncementComments,
@@ -277,12 +278,13 @@ export default function AnnouncementCard({
     // threadId: the top-level comment a Reply joins.
     const renderComment = (c, replyingTo, threadId = c.id) => (
         <div className={`news-comment ${replyingTo ? 'news-comment-reply' : ''}`} key={c.id} id={`news-comment-${c.id}`}>
-            <div
+            <CommentAvatar
+                photoUrl={c.photoUrl}
                 className={`news-comment-avatar ${c.isAdmin ? 'news-comment-avatar-admin' : ''}`}
                 style={c.isAdmin ? undefined : { background: colorForName(c.author) }}
             >
                 {c.isAdmin ? <i className="bi bi-shield-check" /> : initialsOf(c.author)}
-            </div>
+            </CommentAvatar>
             <div className="news-comment-body">
                 <div className="news-comment-head">
                     <span className="news-comment-author">{c.author}</span>

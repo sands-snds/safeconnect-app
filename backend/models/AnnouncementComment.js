@@ -47,13 +47,13 @@ class AnnouncementComment {
         return result.insertId;
     }
 
-    // Joins the author's name and role so the News page and the admin panel
+    // Joins the author's name, role and profile photo so the News page and the admin panel
     // don't need a second round trip per comment to show who posted it.
     static async findByAnnouncement(announcementId) {
         const [rows] = await db.query(
             `
             SELECT c.id, c.announcement_id, c.user_id, c.parent_id, c.comment_text, c.created_at,
-                   u.full_name, u.username, u.role
+                   u.full_name, u.username, u.role, u.photo_url
             FROM announcement_comments c
             JOIN registered_users u ON u.id = c.user_id
             WHERE c.announcement_id = ?

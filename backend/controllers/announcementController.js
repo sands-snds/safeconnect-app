@@ -81,6 +81,8 @@ exports.getComments = async (req, res) => {
             userId: c.user_id,
             isAdmin: isAdminRole(c.role),
             role: isAdminRole(c.role) ? c.role : "resident",
+            // The commenter's current profile photo (an /uploads path), or null.
+            photoUrl: c.photo_url || null,
             date: c.created_at
         }));
         res.json(comments);
@@ -152,6 +154,7 @@ exports.createComment = async (req, res) => {
                 userId: req.user.id,
                 isAdmin,
                 role: author?.role || "resident",
+                photoUrl: author?.photo_url || null,
                 date: new Date().toISOString()
             }
         });

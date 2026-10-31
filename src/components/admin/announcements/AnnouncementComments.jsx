@@ -7,6 +7,7 @@ import {
 import { timeAgo } from "../shared/timeUtils";
 import { roleLabel } from "../../shared/roles";
 import { confirmPopup } from "../../shared/popup";
+import CommentAvatar from "../../shared/CommentAvatar";
 
 // Comments panel under an admin announcement card: residents' comments with
 // their replies, a box to comment as the barangay, a Reply box per comment,
@@ -110,9 +111,9 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
   };
 
   const avatar = (c, small) => (
-    <div className={`ac-avatar ${small ? "ac-avatar-sm" : ""} ${c.isAdmin ? "ac-avatar-admin" : ""}`}>
+    <CommentAvatar photoUrl={c.photoUrl} className={`ac-avatar ${small ? "ac-avatar-sm" : ""} ${c.isAdmin ? "ac-avatar-admin" : ""}`}>
       {c.isAdmin ? <i className="bi bi-shield-check"></i> : initialsOf(c.author)}
-    </div>
+    </CommentAvatar>
   );
 
   // replyingTo: the top-level comment's author, shown as an @mention on replies.
