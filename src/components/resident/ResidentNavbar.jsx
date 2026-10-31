@@ -128,6 +128,10 @@ function ResidentNavbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showNewsPage, setShowNewsPage] = useState(false);
   const [showReportsPage, setShowReportsPage] = useState(false);
+  // Goes up when the barangay changes one of this resident's report
+  // statuses; an open My Reports page then reloads in place.
+  const [reportsVersion, setReportsVersion] = useState(0);
+  const refreshReports = () => setReportsVersion((v) => v + 1);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
   const [showNotificationsPage, setShowNotificationsPage] = useState(false);
   // The report a notification points to: My Reports shows and highlights it.
@@ -224,6 +228,7 @@ function ResidentNavbar() {
       reloadPersonalNotifications();
       refreshSyncedState();
       refreshProfile();
+      refreshReports();
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -236,6 +241,7 @@ function ResidentNavbar() {
     reloadAnnouncements();
     reloadPersonalNotifications();
     refreshProfile();
+    refreshReports();
   };
   useSyncOnFocus(Boolean(currentUser?.id), () => focusRefresh.current());
 
@@ -245,6 +251,7 @@ function ResidentNavbar() {
     notifications: reloadPersonalNotifications,
     announcements: reloadAnnouncements,
     profile: refreshProfile,
+    reports: refreshReports,
     reconnected: () => {
       refreshSyncedState();
       focusRefresh.current();
@@ -595,6 +602,7 @@ function ResidentNavbar() {
         onClose={closeReportsPage}
         userId={currentUser?.id}
         focusReport={reportFocus}
+        liveVersion={reportsVersion}
       />
 
       <NotificationsPage

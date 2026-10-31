@@ -1,6 +1,7 @@
 const Report = require("../models/Report");
 const ReportService = require("../services/reportService");
 const Notification = require("../models/Notification");
+const live = require("../services/liveUpdates");
 const { validateStatusTransition, validateDismissalReason, dismissalMessage, DISMISSED } = require("../utils/statusWorkflow");
 
 /* =========================================================
@@ -131,6 +132,8 @@ exports.updateStatus = async (req, res) => {
             req.body.status,
             dismissalReason
         );
+        // The reporter's My Reports page (if open) shows the new status right away.
+        if (report.reporter_id) live.notifyUser(report.reporter_id, "reports");
 
         if (report.reporter_id && replyMessage) {
             await Notification.create({

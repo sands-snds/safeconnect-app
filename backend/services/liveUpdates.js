@@ -10,6 +10,7 @@
 //   admin-notifications the admin bell
 //   announcements       the news / announcement list
 //   profile             the account's profile details
+//   reports             the resident's own reports (the barangay changed a status)
 //
 // Connections live in this process's memory. If the API ever runs on more
 // than one instance, pages still catch up through their regular polling.

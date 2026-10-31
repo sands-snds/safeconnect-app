@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { API_ENDPOINTS, getAuthToken } from '../../Services/api';
 
 // Live updates from GET /api/me/events (backend/services/liveUpdates.js):
-// the server names what changed ("state", "notifications", "announcements",
+// the server names what changed ("state", "notifications", "announcements", "reports",
 // "profile", "admin-notifications") and the matching handler reloads it, so
 // changes made on another device show up within a second or two.
 //

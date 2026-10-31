@@ -1,6 +1,7 @@
 const PettyCrime = require("../models/PettyCrime");
 const PettyCrimeService = require("../services/pettyCrimeService");
 const Notification = require("../models/Notification");
+const live = require("../services/liveUpdates");
 const { validateStatusTransition, validateDismissalReason, dismissalMessage, DISMISSED } = require("../utils/statusWorkflow");
 
 // Anonymous reports: admins get no way to link the report to an account.
@@ -77,6 +78,8 @@ exports.updateStatus = async (req, res) => {
         }
 
         const affected = await PettyCrime.updateStatus(req.params.id, req.body.status, dismissalReason);
+        // The reporter's My Reports page (if open) shows the new status right away.
+        if (report.reporter_id && affected > 0) live.notifyUser(report.reporter_id, "reports");
 
         if (report.reporter_id && replyMessage) {
             await Notification.create({

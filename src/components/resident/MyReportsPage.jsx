@@ -126,7 +126,9 @@ const FILTER_LABEL_KEYS = { All: 'all', Emergency: 'emergency', Assistance: 'ass
 
 // focusReport: { type, id, nonce } from a notification -- that report is
 // shown (filters cleared, right page, details open) and highlighted.
-function MyReportsPage({ isOpen, onClose, userId, focusReport }) {
+// liveVersion: goes up when the barangay changes one of this resident's
+// report statuses (live update), so an open page reloads in place.
+function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }) {
   const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,24 +184,41 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport }) {
   const skipPageReset = useRef(false);
   const [highlightKey, setHighlightKey] = useState(null);
 
-  const loadReports = async () => {
+  const loadSeq = useRef(0);
+
+  // quiet: a live update -- swap in the new list without the loading
+  // spinner (keeping the tab, filters, page and open cards), and keep the
+  // current list if it fails. Only the latest load's answer is used.
+  const loadReports = async ({ quiet = false } = {}) => {
     if (!userId) {
       setError(t('myReports.noAccount'));
       setLoading(false);
       return;
     }
-    setLoading(true);
-    setError('');
+    const seq = ++loadSeq.current;
+    if (!quiet) {
+      setLoading(true);
+      setError('');
+    }
     try {
       const data = await fetchMyReports(userId);
+      if (seq !== loadSeq.current) return;
       setReports(Array.isArray(data) ? data : []);
+      if (quiet) setError('');
     } catch (err) {
-      setError(t('myReports.loadError'));
+      if (seq === loadSeq.current && !quiet) setError(t('myReports.loadError'));
     } finally {
-      lastLoadedAt.current = Date.now();
-      setLoading(false);
+      if (seq === loadSeq.current) {
+        lastLoadedAt.current = Date.now();
+        setLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    if (isOpen && liveVersion) loadReports({ quiet: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveVersion]);
 
   const counts = useMemo(() => {
     const c = { All: reports.length, Emergency: 0, Assistance: 0, 'Petty Crime': 0 };
@@ -998,7 +1017,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport }) {
                   <option value="newest">{t('myReports.newestFirst')}</option>
                   <option value="oldest">{t('myReports.oldestFirst')}</option>
                 </select>
-                <button className="mr-refresh-btn" onClick={loadReports} disabled={loading} aria-label="Refresh reports" title="Refresh">
+                <button className="mr-refresh-btn" onClick={() => loadReports()} disabled={loading} aria-label="Refresh reports" title="Refresh">
                   <i className={`bi bi-arrow-clockwise ${loading ? 'spin' : ''}`}></i>
                 </button>
               </div>
@@ -1033,7 +1052,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport }) {
             <div className="myreports-empty">
               <div className="myreports-empty-icon error"><i className="bi bi-exclamation-circle"></i></div>
               <p className="myreports-empty-title">{error}</p>
-              <button className="myreports-retry-btn" onClick={loadReports}>{t('myReports.tryAgain')}</button>
+              <button className="myreports-retry-btn" onClick={() => loadReports()}>{t('myReports.tryAgain')}</button>
             </div>
           )}
 
@@ -1306,7 +1325,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport }) {
             setShowEmergencyModal(false);
             setEditingReport(null);
           }}
-          onUpdated={loadReports}
+          onUpdated={() => loadReports()}
         />
 
         <ResidentAssistanceModal
@@ -1316,7 +1335,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport }) {
             setShowAssistanceModal(false);
             setEditingReport(null);
           }}
-          onUpdated={loadReports}
+          onUpdated={() => loadReports()}
         />
 
         <ResidentPettyCrimeModal
@@ -1326,7 +1345,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport }) {
             setShowCrimeModal(false);
             setEditingReport(null);
           }}
-          onUpdated={loadReports}
+          onUpdated={() => loadReports()}
         />
         </>,
         document.body
