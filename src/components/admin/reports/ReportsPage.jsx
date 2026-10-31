@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { EmergencyPage } from "./emergency";
 import { AssistancePage } from "./assistance";
 import { PettyCrimePage } from "./pettyCrime";
@@ -24,6 +24,11 @@ const ReportsPage = ({
     onClearFocus
 }) => {
     const [showArchived, setShowArchived] = useState(false);
+
+    // Each report tab opens on Active, not on the last tab's Archived list.
+    useEffect(() => {
+        setShowArchived(false);
+    }, [activeView]);
 
     const filterData = (data, filterType, statusKey = "status") => {
         const focused = focusId != null && data.find(item => String(item.id) === String(focusId));

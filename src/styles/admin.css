@@ -88,6 +88,13 @@
   font-weight: 600;
 }
 
+/* resident.css gives the landing page's .section-header a 3rem margin and
+   centered text; not in the admin panel's section cards. */
+.section .section-header {
+  margin-bottom: 0;
+  text-align: left;
+}
+
 .table-container {
   overflow-x: auto;
 }
@@ -168,6 +175,12 @@
   border-radius: 6px;
   font-size: 14px;
   font-family: inherit;
+}
+
+/* Text boxes and dropdowns the same height side by side. */
+.form-input, .form-select {
+  min-height: 38px;
+  line-height: 1.4;
 }
 
 .form-textarea {
@@ -880,52 +893,14 @@
     max-width: none;
   }
 
-  .admin-table thead {
-    display: none;
-  }
-
-  .admin-table,
-  .admin-table tbody,
-  .admin-table tr,
-  .admin-table td {
-    display: block;
-    width: 100%;
-  }
-
-  .admin-table tr {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-  }
-
-  .admin-table td {
-    padding: 6px 0 !important;
-    border: none !important;
-    overflow-wrap: anywhere;
-  }
-
-  .admin-table td[data-label]:not(:first-child)::before {
-    content: attr(data-label);
-    display: block;
-    margin-bottom: 3px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: .03em;
-  }
-
-  .admin-table td:first-child {
-    padding-bottom: 8px !important;
-    border-bottom: 1px solid #f3f4f6 !important;
+  /* Tables keep their columns and scroll sideways */
+  .admin-table {
+    min-width: 640px;
   }
 
   .admin-table td select,
   .admin-table td .form-select {
-    width: 100% !important;
-    min-width: 0 !important;
+    min-width: 130px;
   }
 
   .lv-cards {

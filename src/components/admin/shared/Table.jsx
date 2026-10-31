@@ -1,19 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { tx } from '../../../i18n/adminText';
 
 const Table = ({ headers = [], children }) => {
-  const tableRef = useRef(null);
-  useEffect(() => {
-    tableRef.current?.querySelectorAll('tbody tr').forEach((row) => {
-      Array.from(row.children).forEach((cell, i) => {
-        if (headers[i] && cell.colSpan <= 1) cell.setAttribute('data-label', tx(headers[i]));
-      });
-    });
-  });
-
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table ref={tableRef} className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
             {headers.map((h) => (
