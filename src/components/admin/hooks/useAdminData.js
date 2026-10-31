@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { showPopup } from "../../shared/popup";
 
 import {
     fetchEmergencyReports,
@@ -9,8 +8,6 @@ import {
     fetchAdminLogs,
     fetchAnnouncements,
     fetchPettyCrimes,
-    createEmergencyReport,
-    createAssistanceRequest,
     updateStatus as updateSheetStatus,
     fetchNotifications,
     markNotificationRead,
@@ -22,11 +19,6 @@ import {
     archiveReport,
     restoreReport
 } from "../../../Services/api";
-
-import {
-    buildEmergencyReportFromForm,
-    buildAssistanceRequestFromForm
-} from "../shared/formUtils";
 
 export default function useAdminData({ isSuperAdmin = false } = {}) {
     const [isLoading, setIsLoading] = useState(true);
@@ -249,38 +241,6 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         return result;
     };
 
-    const handleFormSubmit = async (e, type) => {
-        e.preventDefault();
-
-        const formData = new FormData(e.target);
-
-        if (type === "emergency") {
-            const newReport = buildEmergencyReportFromForm(formData);
-
-            const result = await createEmergencyReport(newReport);
-
-            if (result.success === false) {
-                showPopup({ type: "error", title: "Couldn't Submit Report", message: result.message || "Failed to submit emergency report." });
-                return;
-            }
-
-            await loadEmergencyReports();
-        }
-
-        if (type === "assistance") {
-            const newRequest = buildAssistanceRequestFromForm(formData);
-
-            const result = await createAssistanceRequest(newRequest);
-
-            if (result.success === false) {
-                showPopup({ type: "error", title: "Couldn't Submit Request", message: result.message || "Failed to submit assistance request." });
-                return;
-            }
-
-            await loadAssistanceRequests();
-        }
-    };
-
     return {
         isLoading,
         isRefreshing,
@@ -306,7 +266,6 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         updateStatus,
         updateUserRole,
         setUserArchived,
-        setReportArchived,
-        handleFormSubmit
+        setReportArchived
     };
 }

@@ -22,7 +22,6 @@ export default function useAdminNavigation() {
         }
     }, [activeView]);
 
-    const [showModal, setShowModal] = useState(null);
 
     const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -57,8 +56,6 @@ export default function useAdminNavigation() {
         activeView,
         setActiveView,
 
-        showModal,
-        setShowModal,
 
         showMobileMenu,
         setShowMobileMenu,

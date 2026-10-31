@@ -15,7 +15,6 @@ import NotificationsPage from "../components/admin/notifications/NotificationsPa
 import useAdminData from "../components/admin/hooks/useAdminData";
 import useAdminAuth from "../components/admin/hooks/useAdminAuth";
 import useAdminNavigation from "../components/admin/hooks/useAdminNavigation";
-import FormModal from '../components/admin/AdminModals/FormModal';
 import SignInModal from '../components/admin/AdminModals/SignInModal';
 import { refreshSyncedState, useSyncOnFocus } from '../components/shared/useSyncedState';
 import useLiveUpdates from '../components/shared/useLiveUpdates';
@@ -68,14 +67,11 @@ const AdminPage = () => {
     updateStatus,
     updateUserRole,
     setUserArchived,
-    setReportArchived,
-    handleFormSubmit
+    setReportArchived
   } = useAdminData({ isSuperAdmin });
 
   const {
     activeView,
-    showModal,
-    setShowModal,
     showMobileMenu,
     editingAnnouncement,
     setEditingAnnouncement,
@@ -454,21 +450,6 @@ useEffect(() => {
               />
           )}
 
-          {showModal && (
-              <FormModal
-                  title={`Add New ${
-                      showModal === "emergency"
-                          ? "Emergency Report"
-                          : "Assistance Request"
-                  }`}
-                  onClose={() => setShowModal(null)}
-                  onSubmit={async (e) => {
-                      await handleFormSubmit(e, showModal);
-                      setShowModal(null);
-                  }}
-                  type={showModal}
-              />
-          )}
 
       </>
   );
