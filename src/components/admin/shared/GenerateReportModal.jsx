@@ -6,6 +6,9 @@ import { exportReport } from '../../../Services/api';
 //   (presets or custom dates) and PDF or Excel.
 //   System tabs (users, sign-in logs, admin logs; see SYSTEM_REPORTS): role,
 //   status and a manual From / To date range instead of presets.
+//   Dashboard ("analytics"): the same period choices, what to include (the
+//   bar graph and / or the pie chart), and the reports to include for the
+//   pie chart (the bar graph always counts every report).
 // baseFilters (System tabs) are sent along unchanged, e.g. the tab's search
 // or archived: '1' when generated from an Archived tab.
 
@@ -95,6 +98,10 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [format, setFormat] = useState('pdf');
+  // Dashboard analytical report: which charts (with their tables) to include.
+  const analytics = type === 'analytics';
+  const [includeBar, setIncludeBar] = useState(true);
+  const [includePie, setIncludePie] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -126,6 +133,10 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
       setError('Dates start from September 1, 2026, when SafeConnect began.');
       return;
     }
+    if (analytics && !includeBar && !includePie) {
+      setError('Choose the bar graph, the pie chart, or both.');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -133,7 +144,8 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
       await exportReport(type, format, {
         ...(system ? baseFilters : {}),
         ...(system ? { role } : {}),
-        status,
+        ...(analytics ? { bar: includeBar ? '1' : '0', pie: includePie ? '1' : '0' } : {}),
+        status: analytics && !includePie ? '' : status,
         from,
         to,
         tzOffset: new Date().getTimezoneOffset()
@@ -219,10 +231,26 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
           </>
         )}
 
+        {analytics && (
+          <div style={{ marginBottom: 18 }}>
+            <span style={sectionLabel}>Include in the report</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {[['bar', 'Bar graph (reports over time)', includeBar, setIncludeBar, 'bi-bar-chart-fill'], ['pie', 'Pie chart (reports by status)', includePie, setIncludePie, 'bi-pie-chart-fill']].map(([key, label, on, set, icon]) => (
+                <button key={key} type="button" onClick={() => set(!on)} style={chipStyle(on)} aria-pressed={on}>
+                  <i className={`bi ${on ? 'bi-check-square-fill' : 'bi-square'}`} style={{ marginRight: 6 }} />
+                  <i className={`bi ${icon}`} style={{ marginRight: 4 }} />{label}
+                </button>
+              ))}
+            </div>
+            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#6b7280' }}>Each comes with its table and a Total row. Charts are drawn in the PDF; Excel has the tables.</p>
+          </div>
+        )}
+
         {!system && (
         <>
+        {(!analytics || includePie) && (
         <div style={{ marginBottom: 18 }}>
-          <span style={sectionLabel}>Reports to include</span>
+          <span style={sectionLabel}>{analytics ? 'Reports to include (pie chart)' : 'Reports to include'}</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {STATUS_CHOICES.map((s) => (
               <button
@@ -237,6 +265,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
             ))}
           </div>
         </div>
+        )}
 
         <div style={{ marginBottom: 18 }}>
           <span style={sectionLabel}>Period</span>

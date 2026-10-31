@@ -21,6 +21,11 @@ const REPORT_TABLES = [
 
 const RANGE_DAYS = [7, 15, 30, 90];
 
+// Analytical report chart colors: the report types' colors (resident page)
+// and the status colors (admin status badges).
+const ANALYTICS_COLORS = { emergency: "#dc2626", assistance: "#ea580c", pettyCrime: "#7c3aed" };
+const STATUS_PIE_COLORS = { Received: "#f59e0b", "In Progress": "#3b82f6", Resolved: "#16a34a", Dismissed: "#9ca3af" };
+
 // YYYY-MM-DD of `date` in the admin's timezone. tzOffset is the browser's
 // getTimezoneOffset() (minutes, e.g. -480 for the Philippines); the server
 // runs in UTC, so without it evening reports land on the next day.
@@ -129,6 +134,7 @@ const EXPORTERS = {
     reportsOverTime: {
         reportTitle: "Reports Over Time",
         filenamePrefix: "Reports_Over_Time",
+        fileTitle: "SafeConnect-SantaFe Analytical Report",
         async build(filters = {}) {
             const days = RANGE_DAYS.includes(Number(filters.days)) ? Number(filters.days) : 30;
             const tzOffset = Number.isFinite(Number(filters.tzOffset)) ? Number(filters.tzOffset) : 0;
@@ -192,6 +198,7 @@ const EXPORTERS = {
     statusSummary: {
         reportTitle: "Reports by Status",
         filenamePrefix: "Reports_By_Status",
+        fileTitle: "SafeConnect-SantaFe Analytical Report",
         async build() {
             const rows = [];
             const statusTotals = {};
@@ -225,9 +232,133 @@ const EXPORTERS = {
         }
     },
 
+    // Dashboard Generate Report: the bar graph (reports per day, or per
+    // month for long periods) and / or the pie chart (reports by status),
+    // each with its table and a Total row. filters: from / to (empty = all
+    // time), tzOffset, bar / pie ("0" leaves that part out), status (pie only).
+    analytics: {
+        reportTitle: "Analytical Report",
+        filenamePrefix: "Analytical_Report",
+        fileTitle: "SafeConnect-SantaFe Analytical Report",
+        async build(filters = {}) {
+            const tzOffset = Number.isFinite(Number(filters.tzOffset)) ? Number(filters.tzOffset) : -480;
+            const includeBar = filters.bar !== "0";
+            const includePie = filters.pie !== "0";
+            const status = REPORT_STATUSES.includes(filters.status) ? filters.status : null;
+            const { from, to, period } = dateRange(filters);
+
+            // Every report's category, status and local day in the period.
+            const reports = [];
+            for (const { key, table, dateColumn } of REPORT_TABLES) {
+                let sql = `SELECT ${dateColumn} AS reported_at, status FROM ${table} WHERE 1=1`;
+                const values = [];
+                if (from) { sql += ` AND ${dateColumn} >= ?`; values.push(from); }
+                if (to) { sql += ` AND ${dateColumn} < ?`; values.push(to); }
+                const [rows] = await db.query(sql, values);
+                rows.forEach((r) => r.reported_at && reports.push({
+                    key, status: r.status, day: localDayKey(new Date(r.reported_at), tzOffset)
+                }));
+            }
+
+            const sections = [];
+            const summary = [{ label: "Period", value: period === "All dates" ? "All time" : period }];
+
+            if (includeBar) {
+                // Days from the start of the period (or the first report) to its end (or today).
+                const todayKey = localDayKey(new Date(), tzOffset);
+                const firstKey = isDayKey(filters.from) ? filters.from
+                    : (reports.map((r) => r.day).sort()[0] || todayKey);
+                const lastKey = isDayKey(filters.to) ? filters.to : todayKey;
+                const days = [];
+                for (let d = new Date(`${firstKey}T00:00:00Z`); d.toISOString().slice(0, 10) <= lastKey; d.setUTCDate(d.getUTCDate() + 1)) {
+                    days.push(d.toISOString().slice(0, 10));
+                }
+                // More than ~3 months of days would be unreadable: group by month.
+                const byMonth = days.length > 92;
+                const bucketOf = (day) => (byMonth ? day.slice(0, 7) : day);
+                const bucketKeys = [...new Set(days.map(bucketOf))];
+                const buckets = Object.fromEntries(bucketKeys.map((k) => [k, { emergency: 0, assistance: 0, pettyCrime: 0 }]));
+                reports.forEach((r) => { const b = buckets[bucketOf(r.day)]; if (b) b[r.key]++; });
+                const label = (k) => (byMonth
+                    ? new Date(`${k}-01T00:00:00Z`).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", year: "numeric" })
+                    : dayKeyLabel(k));
+
+                const totals = { emergency: 0, assistance: 0, pettyCrime: 0 };
+                const rows = bucketKeys.map((k) => {
+                    const b = buckets[k];
+                    REPORT_TABLES.forEach(({ key }) => { totals[key] += b[key]; });
+                    return [label(k), b.emergency, b.assistance, b.pettyCrime, b.emergency + b.assistance + b.pettyCrime];
+                });
+                const grand = totals.emergency + totals.assistance + totals.pettyCrime;
+                rows.push(["Total", totals.emergency, totals.assistance, totals.pettyCrime, grand]);
+                summary.push({ label: "Total Reports", value: grand });
+
+                sections.push({
+                    title: `Reports Over Time (${byMonth ? "per month" : "per day"})`,
+                    chart: {
+                        type: "bar",
+                        labels: bucketKeys.map(label),
+                        series: REPORT_TABLES.map(({ key, label: name }) => ({
+                            label: name, color: ANALYTICS_COLORS[key], values: bucketKeys.map((k) => buckets[k][key])
+                        }))
+                    },
+                    columns: [
+                        { label: byMonth ? "Month" : "Date", key: "date" },
+                        ...REPORT_TABLES.map(({ key, label: name }) => ({ label: name, key })),
+                        { label: "Total", key: "total" }
+                    ],
+                    rows,
+                    totalRow: true
+                });
+            }
+
+            if (includePie) {
+                const statuses = status ? [status] : REPORT_STATUSES;
+                const counted = status ? reports.filter((r) => r.status === status) : reports;
+                const statusTotals = Object.fromEntries(statuses.map((s) => [s, 0]));
+                const rows = REPORT_TABLES.map(({ key, label: name }) => {
+                    const mine = counted.filter((r) => r.key === key);
+                    const byStatus = statuses.map((s) => mine.filter((r) => r.status === s).length);
+                    statuses.forEach((s, i) => { statusTotals[s] += byStatus[i]; });
+                    return [name, ...byStatus, byStatus.reduce((a, b) => a + b, 0)];
+                });
+                const grand = Object.values(statusTotals).reduce((a, b) => a + b, 0);
+                rows.push(["Total", ...statuses.map((s) => statusTotals[s]), grand]);
+                if (!includeBar) summary.push({ label: "Total Reports", value: grand });
+                if (status) summary.push({ label: "Reports included (pie chart)", value: status });
+
+                sections.push({
+                    title: status ? `${status} Reports by Category` : "Reports by Status",
+                    // All statuses: the share of each status. One status: the share of each category.
+                    chart: {
+                        type: "pie",
+                        slices: status
+                            ? REPORT_TABLES.map(({ key, label: name }, i) => ({ label: name, value: rows[i][rows[i].length - 1], color: ANALYTICS_COLORS[key] }))
+                            : REPORT_STATUSES.map((s) => ({ label: s, value: statusTotals[s], color: STATUS_PIE_COLORS[s] }))
+                    },
+                    columns: [
+                        { label: "Category", key: "category" },
+                        ...statuses.map((s) => ({ label: s, key: s })),
+                        { label: "Total", key: "total" }
+                    ],
+                    rows,
+                    totalRow: true
+                });
+            }
+
+            return {
+                subtitle: `Period: ${period === "All dates" ? "All time" : period}`,
+                period,
+                summary,
+                sections
+            };
+        }
+    },
+
     emergency: {
         reportTitle: "Emergency Incident Report",
         filenamePrefix: "Emergency_Reports",
+        fileTitle: "SafeConnect-SantaFe Emergency Reports",
         async build(filters) {
             const { modelFilters, subtitle } = reportOptions(filters);
             const reports = await Report.findAll(modelFilters);
@@ -260,6 +391,7 @@ const EXPORTERS = {
     assistance: {
         reportTitle: "Assistance Requests Report",
         filenamePrefix: "Assistance_Requests",
+        fileTitle: "SafeConnect-SantaFe Assistance Requests",
         async build(filters) {
             const { modelFilters, subtitle } = reportOptions(filters);
             const requests = await AssistanceRequest.findAll(modelFilters);
@@ -294,6 +426,7 @@ const EXPORTERS = {
     pettyCrime: {
         reportTitle: "Petty Crime Reports Report",
         filenamePrefix: "Petty_Crime_Reports",
+        fileTitle: "SafeConnect-SantaFe Petty Crime Reports",
         async build(filters) {
             const { modelFilters, subtitle } = reportOptions(filters);
             const reports = await PettyCrime.findAll(modelFilters);
@@ -325,6 +458,7 @@ const EXPORTERS = {
     users: {
         reportTitle: "Registered Users Report",
         filenamePrefix: "Registered_Users",
+        fileTitle: "SafeConnect-SantaFe Registered Users",
         async build(filters = {}) {
             const { role, status, from, to, subtitle } = systemOptions(filters, USER_STATUSES);
             let users = await User.getAll();
@@ -373,6 +507,7 @@ const EXPORTERS = {
     signinLogs: {
         reportTitle: "Resident Logs Report",
         filenamePrefix: "SignIn_Logs",
+        fileTitle: "SafeConnect-SantaFe Resident Logs",
         async build(filters = {}) {
             const { role, status, from, to, archived, subtitle } = systemOptions(filters, SIGNIN_STATUSES, { allowUnknownRole: true });
             const logs = await Log.getSigninLogs({ archived, role, status, from, to, residentsOnly: true });
@@ -412,6 +547,7 @@ const EXPORTERS = {
     adminLogs: {
         reportTitle: "Admin Activity Report",
         filenamePrefix: "Admin_Activity",
+        fileTitle: "SafeConnect-SantaFe Admin Logs",
         async build(filters = {}) {
             const { role, from, to, archived, subtitle } = systemOptions(filters, []);
             let logs = await AdminActivity.getRecent(5000, { archived, role, from, to });
@@ -456,6 +592,19 @@ const EXPORTERS = {
     }
 };
 
+// "SafeConnect-SantaFe Emergency Reports_Oct 1, 2026 - Oct 31, 2026", or
+// "..._All time". reportsOverTime counts back `days` from today.
+const fileName = (exporter, filters = {}, built = {}) => {
+    let period = built.period || dateRange(filters).period;
+    if (exporter === EXPORTERS.reportsOverTime) {
+        const days = RANGE_DAYS.includes(Number(filters.days)) ? Number(filters.days) : 30;
+        period = `Last ${days} days`;
+    }
+    if (period === "All dates") period = "All time";
+    // Characters Windows doesn't allow in file names.
+    return `${exporter.fileTitle || exporter.reportTitle}_${period}`.replace(/[\\/:*?"<>|]/g, "-");
+};
+
 class ExportService {
 
     static get validTypes() {
@@ -466,16 +615,18 @@ class ExportService {
         const exporter = EXPORTERS[type];
         if (!exporter) throw new Error(`Unknown export type: ${type}`);
 
-        const { subtitle, summary, columns, rows } = await exporter.build(filters);
+        const built = await exporter.build(filters);
+        const { subtitle, summary, columns, rows, sections } = built;
 
         await PDFService.generateTableReport(
             {
                 reportTitle: exporter.reportTitle,
-                filenamePrefix: exporter.filenamePrefix,
+                filename: fileName(exporter, filters, built),
                 subtitle,
                 summary,
                 columns,
-                rows
+                rows,
+                sections
             },
             res
         );
@@ -485,16 +636,18 @@ class ExportService {
         const exporter = EXPORTERS[type];
         if (!exporter) throw new Error(`Unknown export type: ${type}`);
 
-        const { subtitle, summary, columns, rows } = await exporter.build(filters);
+        const built = await exporter.build(filters);
+        const { subtitle, summary, columns, rows, sections } = built;
 
         await ExcelService.generateTableReport(
             {
                 reportTitle: exporter.reportTitle,
-                filenamePrefix: exporter.filenamePrefix,
+                filename: fileName(exporter, filters, built),
                 subtitle,
                 summary,
                 columns,
-                rows
+                rows,
+                sections
             },
             res
         );

@@ -4,6 +4,10 @@ const STYLE = require("../config/reportStyle");
 
 const CELL_PAD = 4;
 
+// attachment; filename="..." (plus filename* for any non-ASCII letters).
+const attachment = (name) =>
+    `attachment; filename="${name.replace(/[^\x20-\x7e]/g, "_").replace(/"/g, "'")}"; filename*=UTF-8''${encodeURIComponent(name)}`;
+
 // Generic, branded table-report PDF generator used by every export type
 // (reports, users, sign-in logs, admin logs). Category-specific field
 // mapping lives in exportService.js; colors, header text and logos live in
@@ -13,12 +17,18 @@ class PDFService {
 
     // options:
     //   reportTitle    - e.g. "Emergency Incident Report"
-    //   filenamePrefix - e.g. "Emergency_Report"
+    //   filename       - the download's name without ".pdf"
+    //                    (exportService.fileName); filenamePrefix is the old form
     //   subtitle       - optional line under the title (e.g. applied filters)
     //   summary        - optional array of { label, value }
     //   columns        - array of { label, weight? } -- weight is the column's
     //                    relative width (default 1), e.g. 2.5 for Location
     //   rows           - array of arrays of cell values, same order as columns
+    //   sections       - instead of columns / rows: several tables, each
+    //                    { title, chart?, columns, rows, totalRow? }. chart is
+    //                    { type: "bar", labels, series: [{ label, color, values }] }
+    //                    or { type: "pie", slices: [{ label, value, color }] };
+    //                    totalRow makes the last row bold (a Total row).
     //
     // Builds the whole PDF into memory first and only writes to `res` once
     // it's fully assembled. pdfkit would otherwise stream bytes (and flush
@@ -29,17 +39,21 @@ class PDFService {
             try {
                 const {
                     reportTitle,
+                    filename,
                     filenamePrefix,
                     subtitle,
                     summary = [],
                     columns,
-                    rows
+                    rows,
+                    sections
                 } = options;
+                const parts = sections || [{ columns, rows }];
+                const widest = Math.max(...parts.map((p) => p.columns.length));
 
                 const doc = new PDFDocument({
                     size: "A4",
                     margin: 40,
-                    layout: columns.length > 5 ? "landscape" : "portrait",
+                    layout: widest > 5 ? "landscape" : "portrait",
                     // Keep every page so footers ("Page 2 of 5") can be
                     // added once the total is known.
                     bufferPages: true
@@ -53,7 +67,7 @@ class PDFService {
                         res.setHeader("Content-Type", "application/pdf");
                         res.setHeader(
                             "Content-Disposition",
-                            `attachment; filename=${filenamePrefix}_${Date.now()}.pdf`
+                            attachment(`${filename || `${filenamePrefix}_${Date.now()}`}.pdf`)
                         );
                         res.end(Buffer.concat(chunks));
                         resolve();
@@ -64,7 +78,11 @@ class PDFService {
 
                 this.drawHeader(doc, reportTitle, subtitle);
                 if (summary.length) this.drawSummary(doc, summary);
-                this.drawTable(doc, columns, rows);
+                parts.forEach((part, i) => {
+                    if (part.title) this.drawSectionTitle(doc, part.title, i > 0);
+                    if (part.chart) this.drawChart(doc, part.chart);
+                    this.drawTable(doc, part.columns, part.rows, { totalRow: part.totalRow });
+                });
                 this.drawFooters(doc);
 
                 doc.end();
@@ -157,7 +175,119 @@ class PDFService {
         doc.moveDown(1);
     }
 
-    static drawTable(doc, columns, rows) {
+    // A section heading; starts a new page when little room is left.
+    static drawSectionTitle(doc, title, notFirst) {
+        const left = doc.page.margins.left;
+        const bottomLimit = doc.page.height - doc.page.margins.bottom - 20;
+        if (notFirst && doc.y > bottomLimit - 260) doc.addPage();
+        doc.moveDown(0.5);
+        doc.font(STYLE.fonts.bold)
+            .fontSize(STYLE.fonts.size.body + 2)
+            .fillColor(STYLE.colors.brand)
+            .text(title, left, doc.y);
+        doc.moveDown(0.4);
+    }
+
+    // Simple vector charts (no images): a stacked bar chart or a pie chart
+    // with a legend. Moves doc.y below the chart.
+    static drawChart(doc, chart) {
+        const left = doc.page.margins.left;
+        const width = doc.page.width - left - doc.page.margins.right;
+        const height = 190;
+        const bottomLimit = doc.page.height - doc.page.margins.bottom - 20;
+        if (doc.y + height + 30 > bottomLimit) doc.addPage();
+        const top = doc.y;
+        const fontSize = STYLE.fonts.size.table;
+
+        if (chart.type === "bar") {
+            const totals = chart.labels.map((_, i) => chart.series.reduce((sum, s) => sum + (s.values[i] || 0), 0));
+            const max = Math.max(1, ...totals);
+            const axisX = left + 28;
+            const plotW = width - 28;
+            const plotH = height - 40;
+            const baseY = top + plotH;
+
+            // Y axis: 0, half and max, with light grid lines.
+            doc.font(STYLE.fonts.regular).fontSize(fontSize).fillColor(STYLE.colors.mutedText);
+            [0, 0.5, 1].forEach((f) => {
+                const y = baseY - plotH * f;
+                doc.moveTo(axisX, y).lineTo(axisX + plotW, y).lineWidth(0.4).strokeColor(STYLE.colors.gridLine).stroke();
+                doc.text(String(Math.round(max * f)), left, y - 4, { width: 24, align: "right" });
+            });
+
+            const slot = plotW / Math.max(chart.labels.length, 1);
+            const barW = Math.max(1.5, Math.min(26, slot * 0.7));
+            const every = Math.ceil(chart.labels.length / 12); // about 12 labels at most
+            chart.labels.forEach((label, i) => {
+                const x = axisX + slot * i + (slot - barW) / 2;
+                let y = baseY;
+                chart.series.forEach((s) => {
+                    const h = (plotH * (s.values[i] || 0)) / max;
+                    if (h > 0) doc.rect(x, y - h, barW, h).fill(s.color);
+                    y -= h;
+                });
+                if (i % every === 0) {
+                    doc.fillColor(STYLE.colors.mutedText).font(STYLE.fonts.regular).fontSize(fontSize - 1)
+                        .text(label.replace(/, \d{4}$/, ""), axisX + slot * i - 20 + slot / 2, baseY + 4, { width: 40, align: "center", lineBreak: false });
+                }
+            });
+
+            // Legend
+            let lx = axisX;
+            const ly = baseY + 20;
+            chart.series.forEach((s) => {
+                doc.rect(lx, ly, 9, 9).fill(s.color);
+                doc.fillColor(STYLE.colors.text).fontSize(fontSize).text(s.label, lx + 13, ly, { lineBreak: false });
+                lx += 13 + doc.widthOfString(s.label) + 18;
+            });
+            doc.x = left;
+            doc.y = top + height + 4;
+            return;
+        }
+
+        // Pie
+        const total = chart.slices.reduce((sum, s) => sum + (s.value || 0), 0);
+        const r = 75;
+        const cx = left + r + 10;
+        const cy = top + r + 5;
+        if (!total) {
+            doc.circle(cx, cy, r).lineWidth(1).strokeColor(STYLE.colors.gridLine).stroke();
+            doc.font(STYLE.fonts.regular).fontSize(fontSize).fillColor(STYLE.colors.mutedText)
+                .text("No reports", cx - r, cy - 4, { width: r * 2, align: "center" });
+        } else {
+            let angle = -Math.PI / 2;
+            chart.slices.forEach((s) => {
+                if (!s.value) return;
+                const sweep = (Math.PI * 2 * s.value) / total;
+                // Polygon approximation of the arc (pdfkit has no arc-to).
+                doc.moveTo(cx, cy);
+                const steps = Math.max(2, Math.ceil(sweep / 0.05));
+                for (let k = 0; k <= steps; k++) {
+                    const a = angle + (sweep * k) / steps;
+                    doc.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+                }
+                doc.closePath().fill(s.color);
+                angle += sweep;
+            });
+        }
+
+        // Legend with counts and shares.
+        let ly = top + 20;
+        const lx = cx + r + 30;
+        chart.slices.forEach((s) => {
+            const pct = total ? Math.round((s.value / total) * 100) : 0;
+            doc.rect(lx, ly, 10, 10).fill(s.color);
+            doc.font(STYLE.fonts.regular).fontSize(fontSize + 1).fillColor(STYLE.colors.text)
+                .text(`${s.label}: ${s.value} (${pct}%)`, lx + 16, ly, { lineBreak: false });
+            ly += 18;
+        });
+        doc.font(STYLE.fonts.bold).fontSize(fontSize + 1).fillColor(STYLE.colors.text)
+            .text(`Total: ${total}`, lx + 16, ly + 4, { lineBreak: false });
+        doc.x = left;
+        doc.y = top + r * 2 + 20;
+    }
+
+    static drawTable(doc, columns, rows, { totalRow = false } = {}) {
         const left = doc.page.margins.left;
         const tableWidth = doc.page.width - left - doc.page.margins.right;
         const bottomLimit = doc.page.height - doc.page.margins.bottom - 20; // room for footer
@@ -233,9 +363,10 @@ class PDFService {
                 y = drawHeaderRow(doc.page.margins.top);
             }
 
+            const isTotal = totalRow && rowIndex === rows.length - 1;
             drawRow(cells, y, h, {
-                font: STYLE.fonts.regular,
-                fill: rowIndex % 2 === 1 ? STYLE.colors.rowStripe : null,
+                font: isTotal ? STYLE.fonts.bold : STYLE.fonts.regular,
+                fill: isTotal ? STYLE.colors.rowStripe : rowIndex % 2 === 1 ? STYLE.colors.rowStripe : null,
                 color: STYLE.colors.text
             });
             y += h;

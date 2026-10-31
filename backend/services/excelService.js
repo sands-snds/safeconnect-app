@@ -6,20 +6,28 @@ const STYLE = require("../config/reportStyle");
 // Generic, branded table-report Excel generator -- the Excel counterpart to
 // pdfService.js. See that file's comment for the shared design: category
 // specific field mapping stays in exportService.js.
+// attachment; filename="..." (plus filename* for any non-ASCII letters).
+const attachment = (name) =>
+    `attachment; filename="${name.replace(/[^\x20-\x7e]/g, "_").replace(/"/g, "'")}"; filename*=UTF-8''${encodeURIComponent(name)}`;
+
 class ExcelService {
 
     // options: same shape as PDFService.generateTableReport
-    //   reportTitle, filenamePrefix, summary: [{label, value}],
-    //   columns: [{label, width}], rows: [[...cells]]
+    //   reportTitle, filename (or the older filenamePrefix), summary: [{label, value}],
+    //   columns: [{label, width}], rows: [[...cells]], or sections (see
+    //   pdfService.js; charts aren't drawn in Excel, only their tables)
     static async generateTableReport(options, res) {
         const {
             reportTitle,
+            filename,
             filenamePrefix,
             subtitle,
             summary = [],
-            columns,
-            rows
+            sections
         } = options;
+        const parts = sections || [{ columns: options.columns, rows: options.rows }];
+        // The widest table sets the merged title rows and column widths.
+        const columns = parts.reduce((a, p) => (p.columns.length > a.length ? p.columns : a), parts[0].columns);
 
         const workbook = new ExcelJS.Workbook();
         workbook.creator = "SafeConnect";
@@ -80,40 +88,46 @@ class ExcelService {
             nextRow++;
         }
 
-        const headerRow = nextRow;
-
         // Widths only: giving exceljs a `header` here writes the column labels
-        // into row 1, over the SAFECONNECT title. The header row is written below.
+        // into row 1, over the SAFECONNECT title. Header rows are written below.
         columns.forEach((col, i) => {
             worksheet.getColumn(i + 1).width = col.excelWidth || 22;
         });
 
-        const headerRowRef = worksheet.getRow(headerRow);
-        headerRowRef.values = columns.map((c) => c.label);
-        headerRowRef.font = { bold: true };
-        headerRowRef.eachCell((cell) => {
-            cell.alignment = { horizontal: "center" };
-            cell.border = {
-                top: { style: "thin" }, left: { style: "thin" },
-                bottom: { style: "thin" }, right: { style: "thin" }
-            };
-        });
+        const border = {
+            top: { style: "thin" }, left: { style: "thin" },
+            bottom: { style: "thin" }, right: { style: "thin" }
+        };
+        let currentRow = nextRow;
 
-        let currentRow = headerRow + 1;
-
-        rows.forEach((row) => {
-            row.forEach((cellValue, i) => {
-                worksheet.getCell(currentRow, i + 1).value = cellValue ?? "";
-            });
-
-            for (let i = 1; i <= columns.length; i++) {
-                worksheet.getRow(currentRow).getCell(i).border = {
-                    top: { style: "thin" }, left: { style: "thin" },
-                    bottom: { style: "thin" }, right: { style: "thin" }
-                };
+        parts.forEach((part, partIndex) => {
+            if (part.title) {
+                if (partIndex > 0) currentRow++;
+                worksheet.getCell(`A${currentRow}`).value = part.title;
+                worksheet.getCell(`A${currentRow}`).font = { bold: true, size: 12 };
+                currentRow++;
             }
 
+            const headerRowRef = worksheet.getRow(currentRow);
+            headerRowRef.values = part.columns.map((c) => c.label);
+            headerRowRef.font = { bold: true };
+            headerRowRef.eachCell((cell) => {
+                cell.alignment = { horizontal: "center" };
+                cell.border = border;
+            });
             currentRow++;
+
+            part.rows.forEach((row, rowIndex) => {
+                row.forEach((cellValue, i) => {
+                    worksheet.getCell(currentRow, i + 1).value = cellValue ?? "";
+                });
+                for (let i = 1; i <= part.columns.length; i++) {
+                    worksheet.getRow(currentRow).getCell(i).border = border;
+                }
+                // A Total row (sections with totalRow) is bold.
+                if (part.totalRow && rowIndex === part.rows.length - 1) worksheet.getRow(currentRow).font = { bold: true };
+                currentRow++;
+            });
         });
 
         currentRow += 2;
@@ -131,7 +145,7 @@ class ExcelService {
         );
         res.setHeader(
             "Content-Disposition",
-            `attachment; filename=${filenamePrefix}_${Date.now()}.xlsx`
+            attachment(`${filename || `${filenamePrefix}_${Date.now()}`}.xlsx`)
         );
 
         res.end(buffer);

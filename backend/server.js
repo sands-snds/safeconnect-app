@@ -39,6 +39,8 @@ const allowedOrigins = [
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
+  // Lets the frontend read the file name of a generated report.
+  exposedHeaders: ["Content-Disposition"],
 }));
 
 // Reports carry their photo/video as base64, which is ~4/3 the file size:

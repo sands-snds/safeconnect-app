@@ -138,13 +138,12 @@ export default function ReportsOverTimeChart({
                     ))}
 
                     {/* Exports the same range as the chart, one row per day. */}
+                    {/* The Analytical Report: bar graph and / or pie chart, any period. */}
                     <GenerateReportButton
-                        type="reportsOverTime"
+                        type="analytics"
                         inline
-                        filters={{
-                            days: range.days,
-                            tzOffset: new Date().getTimezoneOffset()
-                        }}
+                        withOptions
+                        optionsTitle="SafeConnect-SantaFe Analytical Report"
                     />
                 </div>
             </div>

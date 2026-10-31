@@ -23,7 +23,7 @@ export default function DashboardCharts({
             <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#111827", margin: 0 }}>
                 Reports by Status
             </h3>
-            <GenerateReportButton type="statusSummary" inline />
+            <GenerateReportButton type="analytics" inline withOptions optionsTitle="SafeConnect-SantaFe Analytical Report" />
         </div>
 
         <div
