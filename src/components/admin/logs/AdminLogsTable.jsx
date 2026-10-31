@@ -7,6 +7,7 @@ import { fetchAdminLogs, fetchLogArchiveSettings, updateLogArchiveSettings } fro
 import { LOG_PERIOD_OPTIONS } from './logArchive';
 import { timeAgo, formatDateTime } from '../shared/timeUtils';
 import Pagination from '../shared/Pagination';
+import { tx } from "../../../i18n/adminText";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -61,7 +62,7 @@ const PresenceLabel = ({ admin }) => {
     return (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#065f46', fontWeight: 600, fontSize: 13 }}>
         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
-        Online now
+        {tx("Online now")}
       </span>
     );
   }
@@ -155,11 +156,11 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
           <table className="data-table">
             <thead className="table-header">
               <tr>
-                <th className="table-header-cell">Account</th>
-                <th className="table-header-cell">Details</th>
-                <th className="table-header-cell">Status</th>
-                <th className="table-header-cell">Last Login</th>
-                <th className="table-header-cell">Latest Activity</th>
+                <th className="table-header-cell">{tx("Account")}</th>
+                <th className="table-header-cell">{tx("Details")}</th>
+                <th className="table-header-cell">{tx("Status")}</th>
+                <th className="table-header-cell">{tx("Last Login")}</th>
+                <th className="table-header-cell">{tx("Latest Activity")}</th>
               </tr>
             </thead>
             <tbody>
@@ -192,7 +193,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
                           <i className="bi bi-telephone-fill" style={{ marginRight: 4 }} />{formatMobile(admin.contact)}
                         </a>
                       ) : (
-                        <span style={{ color: '#9ca3af' }}>No number</span>
+                        <span style={{ color: '#9ca3af' }}>{tx("No number")}</span>
                       )}
                     </td>
                     <td className="table-cell">
@@ -205,7 +206,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
                           <div style={{ fontSize: 12, color: '#9ca3af' }}>{timeAgo(admin.lastLogin)}</div>
                         </>
                       ) : (
-                        <span style={{ color: '#9ca3af' }}>No login recorded yet</span>
+                        <span style={{ color: '#9ca3af' }}>{tx("No login recorded yet")}</span>
                       )}
                     </td>
                     <td className="table-cell">
@@ -218,7 +219,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
                           <span style={{ fontSize: 11.5, color: '#9ca3af' }}>{timeAgo(admin.latestAt)}</span>
                         </div>
                       ) : (
-                        <span style={{ color: '#9ca3af', fontSize: 13 }}>No activity yet</span>
+                        <span style={{ color: '#9ca3af', fontSize: 13 }}>{tx("No activity yet")}</span>
                       )}
                     </td>
                   </tr>
@@ -240,7 +241,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
         loadSetting={() => fetchLogArchiveSettings('admin')}
         saveSetting={(days) => updateLogArchiveSettings('admin', days)}
         periodOptions={LOG_PERIOD_OPTIONS}
-        settingLabel="Auto-archive activity:"
+        settingLabel={tx("Auto-archive activity:")}
         activeLabel="Recent activity"
         archivedLabel="Archived activity"
       />
@@ -272,7 +273,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
             value={adminFilter}
             onChange={(e) => setAdminLogsFilter({ admin: e.target.value })}
           >
-            <option value="">All accounts</option>
+            <option value="">{tx("All accounts")}</option>
             {adminOptions.map(email => (
               <option key={email} value={email}>{email}</option>
             ))}
@@ -291,10 +292,10 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
           <table className="data-table">
             <thead className="table-header">
               <tr>
-                <th className="table-header-cell">Time</th>
-                <th className="table-header-cell">Account</th>
-                <th className="table-header-cell">Action</th>
-                <th className="table-header-cell">Details</th>
+                <th className="table-header-cell">{tx("Time")}</th>
+                <th className="table-header-cell">{tx("Account")}</th>
+                <th className="table-header-cell">{tx("Action")}</th>
+                <th className="table-header-cell">{tx("Details")}</th>
               </tr>
             </thead>
             <tbody>
@@ -350,7 +351,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
             setPageSize(size);
             setPage(1);
           }}
-          itemLabel="entries"
+          itemLabel={tx("entries")}
           style={{ margin: 0, padding: '12px 16px', background: '#f9fafb', borderTop: '1px solid #e5e7eb' }}
         />
       </div>

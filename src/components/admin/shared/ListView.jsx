@@ -3,6 +3,7 @@ import Section from './Section';
 import Table from './Table';
 import GenerateReportButton from './GenerateReportButton';
 import Pagination from './Pagination';
+import { tx } from "../../../i18n/adminText";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -116,10 +117,10 @@ const ListView = ({
       {showFilters && (
       <div className="lv-filters" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '16px', marginBottom: '20px' }}>
         <div className="lv-search" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1 1 240px', minWidth: '200px' }}>
-          <label className="font-medium text-sm">Search</label>
+          <label className="font-medium text-sm">{tx("Search")}</label>
           <input
             type="text"
-            placeholder="Search..."
+            placeholder={tx("Search...")}
             value={filters[filterType].search}
             onChange={(e) => setFilters(prev => ({
               ...prev,
@@ -130,7 +131,7 @@ const ListView = ({
         </div>
 
         <div className="lv-filter" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label className="font-medium text-sm">Filter by status</label>
+          <label className="font-medium text-sm">{tx("Filter by status")}</label>
           <select
             value={filters[filterType].status}
             onChange={(e) => setFilters(prev => ({
@@ -145,7 +146,7 @@ const ListView = ({
             {statusOptions.map(opt => {
               const value = typeof opt === 'object' ? opt.value : opt;
               const label = typeof opt === 'object' ? opt.label : opt;
-              return <option key={value} value={value}>{label}</option>;
+              return <option key={value} value={value}>{tx(label)}</option>;
             })}
           </select>
         </div>
@@ -154,14 +155,14 @@ const ListView = ({
 
         {sortOptions && (
           <div className="lv-filter" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label className="font-medium text-sm">Sort by</label>
+            <label className="font-medium text-sm">{tx("Sort by")}</label>
             <select
               value={sortValue}
               onChange={(e) => onSortChange && onSortChange(e.target.value)}
               className="form-select"
             >
               {sortOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>{tx(opt.label)}</option>
               ))}
             </select>
           </div>
@@ -204,7 +205,7 @@ const ListView = ({
 
           {data.length === 0 && (
             <div style={{ padding: '32px', textAlign: 'center', color: '#6b7280', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px' }}>
-              No results found.
+              {tx("No results found.")}
             </div>
           )}
         </div>
@@ -216,7 +217,7 @@ const ListView = ({
 
           {data.length === 0 && (
             <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
-              No results found.
+              {tx("No results found.")}
             </div>
           )}
         </Section>

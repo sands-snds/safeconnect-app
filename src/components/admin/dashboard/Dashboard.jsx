@@ -5,6 +5,7 @@ import DashboardCharts from "./DashboardCharts";
 import ReportsOverTimeChart from "./ReportsOverTimeChart";
 import DashboardRecentReports from "./DashboardRecentReports";
 import useIsMobile from "../hooks/useIsMobile";
+import { tx } from "../../../i18n/adminText";
 
 // Phones: the summary card (Create Announcement and Total Reports only, no
 // counters), then a toggle between Recent Reports (the default) and Analytics
@@ -104,7 +105,7 @@ export default function Dashboard({
                             onClick={() => setMobileTab(tab.key)}
                             style={tabStyle(mobileTab === tab.key)}
                         >
-                            {tab.label}
+                            {tx(tab.label)}
                         </button>
                     ))}
                 </div>

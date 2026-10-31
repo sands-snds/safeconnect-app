@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { showPopup } from "../../../shared/popup";
 
 import { fetchArchiveSettings, updateArchiveSettings } from "../../../../Services/api";
+import { tx } from "../../../../i18n/adminText";
 
 // Report tabs: months after a report is resolved.
 const REPORT_PERIOD_OPTIONS = [
@@ -93,16 +94,16 @@ const ArchiveToolbar = ({
     >
       <div className="archive-toolbar-tabs" style={{ display: "inline-flex", gap: 4, padding: 4, background: "#f3f4f6", borderRadius: 8 }}>
         <button type="button" style={tabStyle(!showArchived)} onClick={() => setShowArchived(false)}>
-          {activeLabel}{count(activeCount)}
+          {tx(activeLabel)}{count(activeCount)}
         </button>
         <button type="button" style={tabStyle(showArchived)} onClick={() => setShowArchived(true)}>
-          {archivedLabel}{count(archivedCount)}
+          {tx(archivedLabel)}{count(archivedCount)}
         </button>
       </div>
 
       {period !== null && (
         <div className="archive-toolbar-setting" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#374151" }}>
-          <span style={{ whiteSpace: "nowrap" }}>{settingLabel}</span>
+          <span style={{ whiteSpace: "nowrap" }}>{tx(settingLabel)}</span>
           {isSuperAdmin ? (
             <select
               className="form-select"
@@ -112,11 +113,11 @@ const ArchiveToolbar = ({
               style={{ width: "auto", minWidth: 150 }}
             >
               {periodOptions.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>{tx(o.label)}</option>
               ))}
             </select>
           ) : (
-            <strong>{periodLabel(period)}</strong>
+            <strong>{tx(periodLabel(period))}</strong>
           )}
         </div>
       )}

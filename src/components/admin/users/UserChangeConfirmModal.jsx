@@ -1,5 +1,6 @@
 import React from "react";
 import { ROLE_LABELS } from "../../shared/roles";
+import { tx } from "../../../i18n/adminText";
 
 // Confirmation dialog for Users tab changes (role promotion/demotion and
 // account status). Same look as shared/StatusConfirmModal.jsx.
@@ -79,7 +80,7 @@ const UserChangeConfirmModal = ({ change, onConfirm, onCancel, isSubmitting, err
                         disabled={isSubmitting}
                         className="button button-secondary"
                     >
-                        Cancel
+                        {tx("Cancel")}
                     </button>
                     <button
                         type="button"

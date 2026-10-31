@@ -1,4 +1,5 @@
 import React from 'react';
+import { tx } from "../../../i18n/adminText";
 
 // Dashboard counters (dash-stat* classes in styles/admin.css). Report counts
 // are filled pink cards on top, the other totals outlined cards below, and
@@ -14,7 +15,7 @@ const StatCard = ({ label, value, icon, variant, theme, onClick }) => (
     onClick={onClick}
     style={theme ? { '--stat-color': theme.color, '--stat-rgb': theme.rgb } : undefined}
   >
-    <span className="dash-stat-label">{label}</span>
+    <span className="dash-stat-label">{tx(label)}</span>
     <span className="dash-stat-bottom">
       <span className="dash-stat-value">{value}</span>
       <span className="dash-stat-icon" aria-hidden="true"><i className={`bi ${icon}`} /></span>
@@ -72,13 +73,13 @@ const AdminStats = ({
       <div className="dash-stats-side">
         {onCreateAnnouncement && (
           <button type="button" className="button dash-stats-create" onClick={onCreateAnnouncement}>
-            <i className="bi bi-plus-lg" aria-hidden="true" /> Create Announcement
+            <i className="bi bi-plus-lg" aria-hidden="true" /> {tx("Create Announcement")}
           </button>
         )}
         <div className="dash-stats-total">
           <span className="dash-stats-total-head">
             <i className="bi bi-clipboard-data-fill dash-stats-total-icon" aria-hidden="true" />
-            <span className="dash-stats-total-label">Total Reports</span>
+            <span className="dash-stats-total-label">{tx("Total Reports")}</span>
           </span>
           <span className="dash-stats-total-value">{totalReports}</span>
         </div>

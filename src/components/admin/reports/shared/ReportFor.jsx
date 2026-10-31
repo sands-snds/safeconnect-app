@@ -1,6 +1,7 @@
 import React from "react";
 
 import DetailField from "../../shared/DetailField";
+import { tx } from "../../../../i18n/adminText";
 
 // Residents can file a report / request help on behalf of someone else
 // (report_for = "others" + victim_name/contact/relationship). These pieces
@@ -17,7 +18,7 @@ export const ReportForTag = ({ report }) => {
 
     return (
         <span
-            title="Filed on behalf of someone else"
+            title={tx("Filed on behalf of someone else")}
             style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -64,13 +65,13 @@ export const ReportForDetails = ({ report, personLabel = "Person Affected" }) =>
                 }}
             >
                 <i className="bi bi-people-fill" />
-                Filed on behalf of someone else
+                {tx("Filed on behalf of someone else")}
             </div>
 
             <DetailField label={personLabel} value={report.victimName} />
-            <DetailField label="Their Contact" value={report.victimContact || "Not provided"} />
-            <DetailField label="Relationship" value={report.victimRelationship} />
-            {report.victimDetails && <DetailField label="Additional Details" value={report.victimDetails} />}
+            <DetailField label={tx("Their Contact")} value={report.victimContact || "Not provided"} />
+            <DetailField label={tx("Relationship")} value={report.victimRelationship} />
+            {report.victimDetails && <DetailField label={tx("Additional Details")} value={report.victimDetails} />}
         </div>
     );
 };
@@ -84,7 +85,7 @@ export const REPORT_FOR_OPTIONS = [
 // "Filed for" filter, passed to ListView as extraFilters.
 export const ReportForFilter = ({ filterType, filters, setFilters }) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <label className="font-medium text-sm">Filed for</label>
+        <label className="font-medium text-sm">{tx("Filed for")}</label>
         <select
             value={filters[filterType]?.reportFor || "all"}
             onChange={(e) => setFilters(prev => ({

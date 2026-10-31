@@ -1,5 +1,6 @@
 import React from "react";
 import { MAIN_LOGO } from "../../shared/logos";
+import { tx } from "../../../i18n/adminText";
 
 const AdminSidebar = ({
   activeView,
@@ -127,7 +128,7 @@ const AdminSidebar = ({
               opacity: 0.75
             }}
           >
-            Administration
+            {tx("Administration")}
           </p>
         </div>
       </div>
@@ -155,7 +156,7 @@ const AdminSidebar = ({
                 padding: "0 10px"
               }}
             >
-              {section.title}
+              {tx(section.title)}
             </div>
 
             {section.items
@@ -187,7 +188,7 @@ const AdminSidebar = ({
                 }}
               >
                 <span>{item.icon}</span>
-                <span>{item.label}</span>
+                <span>{tx(item.label)}</span>
               </div>
             ))}
           </div>
@@ -219,7 +220,7 @@ const AdminSidebar = ({
                 transition: ".2s"
               }}
             >
-              <span>Logout</span>
+              <span>{tx("Logout")}</span>
             </div>
           </>
         )}

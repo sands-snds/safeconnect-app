@@ -1,6 +1,7 @@
 import React from "react";
 import LocationPickerMap from "../../../shared/location/LocationPickerMap";
 import { isWithinSantaFe } from "../../../shared/location/santaFeArea";
+import { tx } from "../../../../i18n/adminText";
 
 // Where the resident pinned the report, for the report details view.
 // Renders nothing for reports without a pin (older reports, or typed
@@ -27,7 +28,7 @@ const ReportLocationMap = ({ latitude, longitude }) => {
         }}
       >
         <span style={{ fontSize: "12px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase" }}>
-          Pinned Location
+          {tx("Pinned Location")}
         </span>
         <a
           href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
@@ -35,7 +36,7 @@ const ReportLocationMap = ({ latitude, longitude }) => {
           rel="noopener noreferrer"
           style={{ fontSize: "13px", fontWeight: 600, color: "#6B2C3E", textDecoration: "none" }}
         >
-          <i className="bi bi-sign-turn-right-fill"></i> Directions in Google Maps
+          <i className="bi bi-sign-turn-right-fill"></i> {tx("Directions in Google Maps")}
         </a>
       </div>
 

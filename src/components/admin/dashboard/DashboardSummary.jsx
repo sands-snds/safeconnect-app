@@ -1,4 +1,5 @@
 import AdminStats from "../layout/AdminStats";
+import { tx } from "../../../i18n/adminText";
 
 // Dashboard top card: welcome line, then the counters (AdminStats), which
 // also hold Create Announcement and Total Reports. dash-summary-* classes:
@@ -31,7 +32,7 @@ export default function DashboardSummary({
                         marginBottom: "12px"
                     }}
                 >
-                    SafeConnect Admin
+                    {tx("SafeConnect Admin")}
                 </span>
 
                 <h1
@@ -41,7 +42,7 @@ export default function DashboardSummary({
                         fontWeight: 700
                     }}
                 >
-                    Welcome back, {adminName} 👋
+                    {tx("Welcome back, {{name}} 👋", { name: adminName })}
                 </h1>
 
                 <p
@@ -54,9 +55,7 @@ export default function DashboardSummary({
                         margin: "6px 0 0"
                     }}
                 >
-                    Monitor emergency incidents, assistance requests,
-                    petty crime reports, and community announcements
-                    from one centralized dashboard.
+                    {tx("Monitor emergency incidents, assistance requests, petty crime reports, and community announcements from one centralized dashboard.")}
                 </p>
             </div>
 

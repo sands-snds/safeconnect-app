@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { fetchLinkPreview, createAnnouncement, updateAnnouncement, isSessionError } from "../../../Services/api";
 import { ANNOUNCEMENT_CATEGORIES } from "./constants";
 import ResultPopup from "../../shared/ResultPopup";
+import { tx } from "../../../i18n/adminText";
 
 // Local-time YYYY-MM-DD for <input type="date">.
 const toInputDate = (value) => {
@@ -448,7 +449,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
             )}
             {onCancel && (
               <button type="button" className="button button-secondary" onClick={onCancel} disabled={submitting}>
-                Cancel
+                {tx("Cancel")}
               </button>
             )}
             <button type="submit" className="button button-primary" disabled={submitting}>

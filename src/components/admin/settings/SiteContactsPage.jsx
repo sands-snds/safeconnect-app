@@ -5,6 +5,7 @@ import { setSiteContent, officialName } from "../../shared/useSiteContent";
 import EmergencyContactList from "../../shared/EmergencyContactList";
 import DonationFooter from "../../shared/DonationFooter";
 import PhoneNumberInput from "./PhoneNumberInput";
+import { tx } from "../../../i18n/adminText";
 
 // Content > Page Contacts (Admins only): edits what the public site shows,
 // in two groups:
@@ -199,7 +200,7 @@ const SiteContactsPage = () => {
               <input className="form-input" value={c.label} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { label: e.target.value })} placeholder="e.g. Barangay Sta. Fe" />
             </label>
             <label style={fieldStyle("1 1 200px")}>
-              <span style={labelStyle}>Description</span>
+              <span style={labelStyle}>{tx("Description")}</span>
               <input className="form-input" value={c.description || ""} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { description: e.target.value })} placeholder="e.g. Barangay Emergency Line" />
             </label>
             <div style={fieldStyle("1 1 250px")}>

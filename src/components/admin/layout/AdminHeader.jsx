@@ -5,6 +5,8 @@ import useIsMobile from "../hooks/useIsMobile";
 import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 import AdminNotificationPanel from "../notifications/AdminNotificationPanel";
 import { notificationTarget } from "../notifications/notificationTypes";
+import { tx } from "../../../i18n/adminText";
+import LanguageToggle from "../../shared/LanguageToggle";
 
 const getInitials = (name) =>
     (name || "A")
@@ -183,8 +185,8 @@ const userMenuRef = useRef(null);
                             setShowUserMenu(false);
                             onToggleMobileMenu();
                         }}
-                        aria-label="Open menu"
-                        title="Menu"
+                        aria-label={tx("Open menu")}
+                        title={tx("Menu")}
                         className="admin-header-menu-btn"
                     >
                         <i className="bi bi-list" />
@@ -196,7 +198,7 @@ const userMenuRef = useRef(null);
                             fontWeight: 700,
                             color: "#111827"
                         }} >
-                        {title}
+                        {tx(title)}
                     </h1>
 
                     <p style={{
@@ -204,7 +206,7 @@ const userMenuRef = useRef(null);
                             color: "#6b7280",
                             fontSize: "14px"
                         }} >
-                        SafeConnect Administration
+                        {tx("SafeConnect Administration")}
                     </p>
                 </div>
             </div>
@@ -217,21 +219,23 @@ const userMenuRef = useRef(null);
                     gap: "12px"
                 }}
             >
+                {/* English / Tagalog (same switch as the resident pages) */}
+                <LanguageToggle variant="dark" className="admin-header-lang" />
 
                 {lastUpdate && (
                     <span
                         className="admin-header-updated"
                         style={{ fontSize: 12, color: "#9ca3af", whiteSpace: "nowrap" }}
                     >
-                        {isRefreshing ? "Refreshing…" : `Updated ${timeAgo(lastUpdate)}`}
+                        {isRefreshing ? tx("Refreshing…") : tx("Updated {{time}}", { time: timeAgo(lastUpdate) })}
                     </span>
                 )}
 
                 <button
                     onClick={onRefresh}
                     disabled={isRefreshing}
-                    title="Refresh data"
-                    aria-label="Refresh data"
+                    title={tx("Refresh data")}
+                    aria-label={tx("Refresh data")}
                     className="admin-header-icon-btn"
                     style={{ cursor: isRefreshing ? "wait" : "pointer" }}
                 >
@@ -246,8 +250,8 @@ const userMenuRef = useRef(null);
                             setShowNotifications(!showNotifications);
                             setShowUserMenu(false);
                         }}
-                        title="Notifications"
-                        aria-label="Notifications"
+                        title={tx("Notifications")}
+                        aria-label={tx("Notifications")}
                         className="admin-header-icon-btn"
                     >
                         <i className="bi bi-bell" />
@@ -297,7 +301,7 @@ const userMenuRef = useRef(null);
                             setShowUserMenu(!showUserMenu);
                         }}
                         title={adminName}
-                        aria-label="Account menu"
+                        aria-label={tx("Account menu")}
                         style={{
                             display: "flex",
                             alignItems: "center",
@@ -409,7 +413,7 @@ const userMenuRef = useRef(null);
                                 }}
                             >
                                 <i className="bi bi-person-gear" />
-                                <span>Account Settings</span>
+                                <span>{tx("Account Settings")}</span>
                             </button>
 
                             {hasVideo(adminDemo) && (
@@ -434,7 +438,7 @@ const userMenuRef = useRef(null);
                                     }}
                                 >
                                     <i className="bi bi-play-circle" />
-                                    <span>Watch demo video</span>
+                                    <span>{tx("Watch demo video")}</span>
                                 </button>
                                 )}
 
@@ -461,7 +465,7 @@ const userMenuRef = useRef(null);
                                     }}
                                 >
                                     <i className="bi bi-shield-lock-fill" />
-                                    <span>Admin Logs</span>
+                                    <span>{tx("Admin Logs")}</span>
                                 </button>
                             )}
 
@@ -486,7 +490,7 @@ const userMenuRef = useRef(null);
                                 }}
                             >
                                 <i className="bi bi-box-arrow-right" />
-                                <span>Logout</span>
+                                <span>{tx("Logout")}</span>
                             </button>
                         </div>
                     )}

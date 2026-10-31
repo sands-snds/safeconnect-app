@@ -13,6 +13,7 @@ import {
   fetchAnnouncementArchiveSettings,
   updateAnnouncementArchiveSettings
 } from "../../../Services/api";
+import { tx } from "../../../i18n/adminText";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -286,7 +287,7 @@ const AnnouncementsTable = ({
                 color: categoryStyle.color
               }}
             >
-              {announcement.category}
+              {tx(announcement.category)}
             </span>
             <span className="announcement-admin-card-date">
               {announcement.date}
@@ -337,7 +338,7 @@ const AnnouncementsTable = ({
               style={{ fontSize: 12.5, padding: '8px 18px' }}
               onClick={() => setEditingAnnouncement && setEditingAnnouncement(announcement)}
             >
-              <i className="bi bi-pencil-square"></i> Edit
+              <i className="bi bi-pencil-square"></i> {tx("Edit")}
             </button>
 
             <button
@@ -346,7 +347,7 @@ const AnnouncementsTable = ({
               style={{ fontSize: 12.5, padding: '8px 18px' }}
               onClick={() => handleDelete(announcement.id)}
             >
-              <i className="bi bi-trash"></i> Delete
+              <i className="bi bi-trash"></i> {tx("Delete")}
             </button>
           </div>
 
@@ -496,11 +497,11 @@ const AnnouncementsTable = ({
         loadSetting={fetchAnnouncementArchiveSettings}
         saveSetting={updateAnnouncementArchiveSettings}
         periodOptions={ANNOUNCEMENT_ARCHIVE_OPTIONS}
-        settingLabel="Auto-archive announcements:"
+        settingLabel={tx("Auto-archive announcements:")}
       />
 
       {loading ? (
-        <div>Loading announcements...</div>
+        <div>{tx("Loading announcements...")}</div>
       ) : (
         <ListView
           data={pagedData}
@@ -524,7 +525,7 @@ const AnnouncementsTable = ({
           sortValue={sortOrder}
           onSortChange={setSortOrder}
           onAdd={() => setShowCreateModal(true)}
-          addLabel="+ New Announcement"
+          addLabel={tx("+ New Announcement")}
           page={safePage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
@@ -534,7 +535,7 @@ const AnnouncementsTable = ({
             setPageSize(size);
             setCurrentPage(1);
           }}
-          itemLabel="announcements"
+          itemLabel={tx("announcements")}
         />
       )}
 

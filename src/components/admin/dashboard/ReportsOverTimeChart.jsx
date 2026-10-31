@@ -12,6 +12,7 @@ import {
 
 import Section from "../shared/Section";
 import GenerateReportButton from "../shared/GenerateReportButton";
+import { tx } from "../../../i18n/adminText";
 
 const RANGE_OPTIONS = [
     { key: "7d", label: "Last 7 Days", days: 7 },
@@ -110,7 +111,7 @@ export default function ReportsOverTimeChart({
     const tickInterval = range.days > 30 ? Math.ceil(range.days / 15) : range.days > 14 ? 1 : 0;
 
     return (
-        <Section title="Reports Over Time">
+        <Section title={tx("Reports Over Time")}>
             <div
                 style={{
                     display: "flex",
@@ -122,7 +123,7 @@ export default function ReportsOverTimeChart({
                 }}
             >
                 <span style={{ fontSize: "13px", color: "#6b7280" }}>
-                    {totalInRange} report{totalInRange === 1 ? "" : "s"} in this period
+                    {tx("{{n}} reports in this period", { n: totalInRange })}
                 </span>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
@@ -133,7 +134,7 @@ export default function ReportsOverTimeChart({
                             onClick={() => setRangeKey(opt.key)}
                             style={toggleButtonStyle(rangeKey === opt.key)}
                         >
-                            {opt.label}
+                            {tx(opt.label)}
                         </button>
                     ))}
 
@@ -150,7 +151,7 @@ export default function ReportsOverTimeChart({
 
             {totalInRange === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px", color: "#6b7280" }}>
-                    No reports in this period yet
+                    {tx("No reports in this period yet")}
                 </div>
             ) : (
 
@@ -170,12 +171,12 @@ export default function ReportsOverTimeChart({
                             <Tooltip
                                 formatter={(value, name) => [
                                     value,
-                                    REPORT_SERIES.find((s) => s.key === name)?.label || name
+                                    tx(REPORT_SERIES.find((s) => s.key === name)?.label || name)
                                 ]}
                             />
                             <Legend
                                 formatter={(value) =>
-                                    REPORT_SERIES.find((s) => s.key === value)?.label || value
+                                    tx(REPORT_SERIES.find((s) => s.key === value)?.label || value)
                                 }
                             />
                             {REPORT_SERIES.map((series) => (
@@ -207,7 +208,7 @@ export default function ReportsOverTimeChart({
                         style={toggleButtonStyle(viewMode === opt.key)}
                         aria-pressed={viewMode === opt.key}
                     >
-                        {opt.label}
+                        {tx(opt.label)}
                     </button>
                 ))}
             </div>

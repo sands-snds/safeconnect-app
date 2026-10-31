@@ -8,6 +8,7 @@ import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
 import DismissalNote from "../shared/DismissalNote";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
+import { tx } from "../../../../i18n/adminText";
 
 const STATUS_OPTIONS = [
   "Received",
@@ -89,7 +90,7 @@ const AssistanceRequestsTable = ({
       }
       exportType="assistance"
       exportWithOptions
-      exportTitle="Assistance Requests"
+      exportTitle={tx("Assistance Requests")}
       itemLabel="requests"
     />
   );

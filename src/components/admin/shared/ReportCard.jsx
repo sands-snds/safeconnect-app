@@ -1,4 +1,5 @@
 import React from "react";
+import { tx } from "../../../i18n/adminText";
 
 // Shared collapsed/expandable report card used by all three report tables
 // (emergency, assistance, petty crime). Collapsed: a short horizontal
@@ -69,7 +70,7 @@ const ReportCard = ({
                   whiteSpace: "nowrap"
                 }}
               >
-                {badge.text}
+                {tx(badge.text)}
               </span>
             )}
           </div>
@@ -94,7 +95,7 @@ const ReportCard = ({
             flexShrink: 0
           }}
         >
-          {expanded ? "Hide details" : "View details"}
+          {expanded ? tx("Hide details") : tx("View details")}
         </button>
       </div>
 

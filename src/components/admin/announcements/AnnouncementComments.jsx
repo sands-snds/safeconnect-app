@@ -8,6 +8,7 @@ import { timeAgo } from "../shared/timeUtils";
 import { roleLabel } from "../../shared/roles";
 import { confirmPopup } from "../../shared/popup";
 import CommentAvatar from "../../shared/CommentAvatar";
+import { tx } from "../../../i18n/adminText";
 
 // Comments panel under an admin announcement card: residents' comments with
 // their replies, a box to comment as the barangay, a Reply box per comment,
@@ -131,8 +132,8 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
           {c.text}
         </p>
         <div className="ac-actions">
-          <button type="button" onClick={() => openReply(thread)}>Reply</button>
-          <button type="button" className="ac-delete" onClick={() => handleDelete(c)}>Delete</button>
+          <button type="button" onClick={() => openReply(thread)}>{tx("Reply")}</button>
+          <button type="button" className="ac-delete" onClick={() => handleDelete(c)}>{tx("Delete")}</button>
         </div>
       </div>
     </div>
@@ -216,10 +217,10 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
                     />
                     <div className="ac-reply-buttons">
                       <button type="button" className="ac-reply-cancel" onClick={() => { setReplyTo(null); setReplyDraft(""); }}>
-                        Cancel
+                        {tx("Cancel")}
                       </button>
                       <button type="submit" className="ac-reply-submit" disabled={!replyDraft.trim() || busy}>
-                        Reply
+                        {tx("Reply")}
                       </button>
                     </div>
                   </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { tx } from "../../../../i18n/adminText";
 
 // Shown at the top of a dismissed report's details: why it was dismissed
 // (the same reason the reporter was sent).
@@ -22,7 +23,7 @@ const DismissalNote = ({ report }) => {
     >
       <i className="bi bi-x-circle-fill" aria-hidden="true" style={{ marginTop: 1 }} />
       <div>
-        <div style={{ fontWeight: 700 }}>This report was dismissed</div>
+        <div style={{ fontWeight: 700 }}>{tx("This report was dismissed")}</div>
         <div style={{ color: "#7f1d1d", marginTop: 2, whiteSpace: "pre-wrap" }}>
           {report.dismissalReason || "No reason was recorded."}
         </div>

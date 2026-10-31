@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { tx } from "../../../i18n/adminText";
 
 // Shared confirmation dialog for report status changes (emergency,
 // assistance, petty crime). Also shows the canned reply that will be sent
@@ -55,21 +56,21 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                 }}
             >
                 <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>
-                    {isDismiss ? "Dismiss this report?" : `Change status to "${toStatus}"?`}
+                    {isDismiss ? tx("Dismiss this report?") : tx('Change status to "{{status}}"?', { status: tx(toStatus) })}
                 </h3>
 
                 <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "#4b5563" }}>
                     {isDismiss ? (
-                        <>Use this for repeat reports, pranks or false accusations, instead of suspending the account. The report is closed as <strong>Dismissed</strong>. This can't be undone.</>
+                        tx("Use this for repeat reports, pranks or false accusations, instead of suspending the account. The report is closed as Dismissed. This can't be undone.")
                     ) : (
-                        <>This will move the report from <strong>{fromStatus}</strong> to <strong>{toStatus}</strong>. This can't be undone.</>
+                        tx("This will move the report from {{from}} to {{to}}. This can't be undone.", { from: tx(fromStatus), to: tx(toStatus) })
                     )}
                 </p>
 
                 {isDismiss && (
                     <div style={{ marginBottom: 14 }}>
                         <label htmlFor="dismiss-reason" style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
-                            Reason (sent to the reporter)
+                            {tx("Reason (sent to the reporter)")}
                         </label>
                         <textarea
                             id="dismiss-reason"
@@ -81,7 +82,7 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                             style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
                         />
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "#6b7280", marginTop: 4 }}>
-                            <span>{trimmed.length < REASON_MIN ? `At least ${REASON_MIN} characters.` : " "}</span>
+                            <span>{trimmed.length < REASON_MIN ? tx("At least {{n}} characters.", { n: REASON_MIN }) : " "}</span>
                             <span>{reason.length}/{REASON_MAX}</span>
                         </div>
                     </div>
@@ -100,7 +101,7 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                         }}
                     >
                         <div style={{ fontWeight: 600, marginBottom: 4, color: "#6b7280", fontSize: 11 }}>
-                            The reporter will automatically receive:
+                            {tx("The reporter will automatically receive:")}
                         </div>
                         "{replyPreview}"
                     </div>
@@ -113,7 +114,7 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                         disabled={isSubmitting}
                         className="button button-secondary"
                     >
-                        Cancel
+                        {tx("Cancel")}
                     </button>
                     <button
                         type="button"
@@ -122,7 +123,7 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                         className={`button ${isDismiss ? "button-danger" : "button-primary"}`}
                         style={{ opacity: canConfirm ? 1 : 0.6 }}
                     >
-                        {isSubmitting ? "Updating…" : isDismiss ? "Dismiss Report" : "Confirm"}
+                        {isSubmitting ? tx("Updating…") : isDismiss ? tx("Dismiss Report") : tx("Confirm")}
                     </button>
                 </div>
             </div>

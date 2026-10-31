@@ -3,6 +3,7 @@ import { EmergencyPage } from "./emergency";
 import { AssistancePage } from "./assistance";
 import { PettyCrimePage } from "./pettyCrime";
 import ArchiveToolbar from "./shared/ArchiveToolbar";
+import { tx } from "../../../i18n/adminText";
 
 const ReportsPage = ({
     activeView,
@@ -81,9 +82,9 @@ const ReportsPage = ({
         if (focusId != null && all.some(item => String(item.id) === String(focusId))) {
             return (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 16, padding: "10px 14px", background: "#FDECEC", borderRadius: 10, color: "#6B2C3E", fontSize: 13.5 }}>
-                    <span><i className="bi bi-bell-fill" style={{ marginRight: 6 }} />Showing the report from your notification.</span>
+                    <span><i className="bi bi-bell-fill" style={{ marginRight: 6 }} />{tx("Showing the report from your notification.")}</span>
                     <button type="button" className="button button-primary" style={{ fontSize: 12.5, padding: "6px 12px" }} onClick={onClearFocus}>
-                        Show all reports
+                        {tx("Show all reports")}
                     </button>
                 </div>
             );

@@ -4,6 +4,7 @@ import { useLanguage } from '../../../i18n/LanguageContext';
 import useSiteContent from '../../shared/useSiteContent';
 import { showAccountStatusPopup } from '../../shared/accountStatusPopup';
 import { markAdminJustSignedIn } from './AdminDemoPopup';
+import { tx } from "../../../i18n/adminText";
 
 // This modal never existed in the project — isAuthenticated had no way to
 // ever become true, which is why the dashboard/reports/etc never rendered
@@ -65,7 +66,7 @@ const SignInModal = ({ onSuccess, notice }) => {
 
         <form onSubmit={handleSubmit}>
           <div className="form-field">
-            <label className="form-label">Email</label>
+            <label className="form-label">{tx("Email")}</label>
             <input
               type="email"
               required

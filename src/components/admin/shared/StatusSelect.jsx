@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import StatusConfirmModal from "./StatusConfirmModal";
+import { tx } from "../../../i18n/adminText";
 
 const STATUS_ORDER = ["Received", "In Progress", "Resolved"];
 
@@ -74,7 +75,7 @@ const StatusSelect = ({
             whiteSpace: "nowrap"
           }}
         >
-          {value}
+          {tx(value)}
         </span>
       )}
 
@@ -89,7 +90,7 @@ const StatusSelect = ({
             whiteSpace: "nowrap"
           }}
         >
-          Move to {nextStatus} →
+          {tx("Move to {{status}} →", { status: tx(nextStatus) })}
         </button>
       )}
 
@@ -98,14 +99,14 @@ const StatusSelect = ({
           type="button"
           className="button button-danger-soft"
           onClick={() => setPendingNext("Dismissed")}
-          title="Dismiss a repeat, prank or false report"
+          title={tx("Dismiss a repeat, prank or false report")}
           style={{
             fontSize: 12,
             padding: "4px 10px",
             whiteSpace: "nowrap"
           }}
         >
-          <i className="bi bi-x-circle" aria-hidden="true" /> Dismiss
+          <i className="bi bi-x-circle" aria-hidden="true" /> {tx("Dismiss")}
         </button>
       )}
 

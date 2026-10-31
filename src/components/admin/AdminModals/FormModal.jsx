@@ -1,4 +1,5 @@
 import React from 'react';
+import { tx } from "../../../i18n/adminText";
 
 const FormField = ({ label, name, type = 'text', required = false, placeholder = '', options = [], min, max }) => (
   <div className="form-field">
@@ -30,7 +31,7 @@ const FormModal = ({ title, onClose, onSubmit, children, type }) => {
             <FormField label="Emergency Type *" name="emergency" type="select" required options={['', 'Fire', 'Flood', 'Medical Emergency', 'Earthquake', 'Accident', 'Crime', 'Other']} />
             <FormField label="Severity *" name="severity" type="select" required options={['', 'Low', 'Medium', 'High', 'Critical']} />
             <FormField label="Location *" name="location" required placeholder="Barangay, City" />
-            <FormField label="Description" name="description" type="textarea" placeholder="Describe the emergency situation..." />
+            <FormField label={tx("Description")} name="description" type="textarea" placeholder="Describe the emergency situation..." />
             <FormField label="Date *" name="date" type="date" required />
           </>
         );
@@ -74,7 +75,7 @@ const FormModal = ({ title, onClose, onSubmit, children, type }) => {
           {getFormFields()}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
             <button type="button" onClick={onClose} className="button button-secondary">
-              Cancel
+              {tx("Cancel")}
             </button>
             <button type="submit" className="button button-primary">
               Submit

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { timeAgo } from '../shared/timeUtils';
 import { notificationType } from './notificationTypes';
+import { tx } from "../../../i18n/adminText";
 
 // The admin bell's dropdown, in the same style as the residents' bell
 // (.panel-* / .notification-* classes in components/resident/navbar/NavbarStyle.css).
@@ -16,16 +17,16 @@ export default function AdminNotificationPanel({ notifications, unreadCount, onM
     <div className="panel-dropdown show admin-notif-panel">
       <div className="panel-header">
         <div className="panel-header-title">
-          <h4>Notifications</h4>
+          <h4>{tx("Notifications")}</h4>
           {unreadCount > 0 && <span className="panel-unread-badge">{unreadCount}</span>}
         </div>
         <div className="panel-header-actions">
           {unreadCount > 0 && (
             <button type="button" onClick={onMarkAllRead}>
-              <i className="bi bi-check2-all"></i> Mark all as read
+              <i className="bi bi-check2-all"></i> {tx("Mark all as read")}
             </button>
           )}
-          <button type="button" className="panel-close-btn" onClick={onClose} aria-label="Close notifications">
+          <button type="button" className="panel-close-btn" onClick={onClose} aria-label={tx("Close notifications")}>
             <i className="bi bi-x-lg"></i>
           </button>
         </div>
@@ -33,10 +34,10 @@ export default function AdminNotificationPanel({ notifications, unreadCount, onM
 
       <div className="panel-tabs">
         <button type="button" className={`panel-tab ${tab === 'unread' ? 'active' : ''}`} onClick={() => setTab('unread')}>
-          Unread{unreadCount > 0 ? ` (${unreadCount})` : ''}
+          {unreadCount > 0 ? tx('Unread ({{n}})', { n: unreadCount }) : tx('Unread')}
         </button>
         <button type="button" className={`panel-tab ${tab === 'read' ? 'active' : ''}`} onClick={() => setTab('read')}>
-          Read
+          {tx("Read")}
         </button>
       </div>
 
@@ -44,7 +45,7 @@ export default function AdminNotificationPanel({ notifications, unreadCount, onM
         {list.length === 0 && (
           <div className="notification-empty">
             <i className={`bi ${tab === 'unread' ? 'bi-check2-circle' : 'bi-bell-slash'}`}></i>
-            <p>{tab === 'unread' ? "You're all caught up." : 'No read notifications yet.'}</p>
+            <p>{tab === 'unread' ? tx("You're all caught up.") : tx('No read notifications yet.')}</p>
           </div>
         )}
 
@@ -67,7 +68,7 @@ export default function AdminNotificationPanel({ notifications, unreadCount, onM
       </div>
 
       <button type="button" className="panel-footer-link" onClick={onSeeAll}>
-        See all notifications <i className="bi bi-arrow-right"></i>
+        {tx("See all notifications")} <i className="bi bi-arrow-right"></i>
       </button>
     </div>
   );

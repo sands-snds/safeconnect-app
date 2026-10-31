@@ -10,6 +10,7 @@ import {
 import Section from "../shared/Section";
 
 import { FALLBACK_COLORS } from "../shared/chartUtils";
+import { tx } from "../../../i18n/adminText";
 
 export default function PieChartCard({
     title,
@@ -27,7 +28,7 @@ export default function PieChartCard({
                         color: "#6b7280"
                     }}
                 >
-                    No data available yet
+                    {tx("No data available yet")}
                 </div>
             ) : (
                 <ResponsiveContainer
@@ -37,7 +38,7 @@ export default function PieChartCard({
                     <PieChart>
 
                         <Pie
-                            data={data}
+                            data={data.map((d) => ({ ...d, name: tx(d.name) }))}
                             dataKey="value"
                             nameKey="name"
                             cx="50%"

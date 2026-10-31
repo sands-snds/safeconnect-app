@@ -4,6 +4,7 @@ import DetailField from "../../shared/DetailField";
 import ReportImage from "../shared/ReportImage";
 import ReportLocationMap from "../shared/ReportLocationMap";
 import { ReportForDetails, isForOthers } from "../shared/ReportFor";
+import { tx } from "../../../../i18n/adminText";
 
 const EmergencyReportDetails = ({ report }) => {
   const photo =
@@ -25,7 +26,7 @@ const EmergencyReportDetails = ({ report }) => {
           minWidth: "260px"
         }}
       >
-        <ReportForDetails report={report} personLabel="Person Affected" />
+        <ReportForDetails report={report} personLabel={tx("Person Affected")} />
 
         <DetailField
           label={isForOthers(report) ? "Reported By" : "Reporter Name"}
@@ -38,27 +39,27 @@ const EmergencyReportDetails = ({ report }) => {
         />
 
         <DetailField
-          label="Emergency Type"
+          label={tx("Emergency Type")}
           value={report.emergency}
         />
 
         <DetailField
-          label="Location"
+          label={tx("Location")}
           value={report.location}
         />
 
         <DetailField
-          label="Description"
+          label={tx("Description")}
           value={report.description}
         />
 
         <DetailField
-          label="Date"
+          label={tx("Date")}
           value={report.date}
         />
 
         <DetailField
-          label="Status"
+          label={tx("Status")}
           value={report.status}
         />
       </div>

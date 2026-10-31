@@ -8,6 +8,7 @@ import {
   uploadProfilePhoto
 } from "../../../Services/api";
 import { roleLabel, MAIN_ACCOUNT_EMAIL } from "../../shared/roles";
+import { tx } from "../../../i18n/adminText";
 
 // Account Settings for whoever is signed in to the admin panel (Admins and
 // Officials), opened from the account menu at the top right. Same options
@@ -247,7 +248,7 @@ export default function AccountSettingsPage({ adminUser, onProfileUpdate }) {
                 {savingPhoto ? "Saving…" : "Save photo"}
               </button>
               <button type="button" className="button button-secondary" disabled={savingPhoto} onClick={() => { setPendingFile(null); setPhotoPreview(null); setPhotoMsg(null); }}>
-                Cancel
+                {tx("Cancel")}
               </button>
             </div>
           )}
@@ -301,7 +302,7 @@ export default function AccountSettingsPage({ adminUser, onProfileUpdate }) {
         </p>
         <div style={row}>
           <label style={field()}>
-            <span style={label}>Email</span>
+            <span style={label}>{tx("Email")}</span>
             <input className="form-input" type="email" value={email} disabled={isMain} onChange={(e) => setEmail(e.target.value)} />
           </label>
           {!isMain && (

@@ -1,4 +1,5 @@
 import React from 'react';
+import { tx } from "../../../i18n/adminText";
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
@@ -71,13 +72,12 @@ const Pagination = ({
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13, color: '#6b7280' }}>
         <span>
-          Showing <strong style={{ color: '#374151' }}>{start}–{end}</strong> of{' '}
-          <strong style={{ color: '#374151' }}>{totalItems}</strong> {itemLabel}
+          {tx("Showing {{from}}–{{to}} of {{total}} {{items}}", { from: start, to: end, total: totalItems, items: tx(itemLabel) })}
         </span>
 
         {onPageSizeChange && (
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            Rows per page
+            {tx("Rows per page")}
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
@@ -110,9 +110,9 @@ const Pagination = ({
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
             style={navButtonStyle(page <= 1)}
-            aria-label="Previous page"
+            aria-label={tx("Previous page")}
           >
-            <i className="bi bi-chevron-left" /> Prev
+            <i className="bi bi-chevron-left" /> {tx("Prev")}
           </button>
 
           {getPageItems(page, totalPages).map(item =>
@@ -136,9 +136,9 @@ const Pagination = ({
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
             style={navButtonStyle(page >= totalPages)}
-            aria-label="Next page"
+            aria-label={tx("Next page")}
           >
-            Next <i className="bi bi-chevron-right" />
+            {tx("Next")} <i className="bi bi-chevron-right" />
           </button>
         </nav>
       )}

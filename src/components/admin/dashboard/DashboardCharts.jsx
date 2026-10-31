@@ -1,6 +1,7 @@
 import PieChartCard from "./PieChartCard";
 import GenerateReportButton from "../shared/GenerateReportButton";
 import { STATUS_COLORS, buildPieData } from "../shared/chartUtils";
+import { tx } from "../../../i18n/adminText";
 
 export default function DashboardCharts({
     emergencyReports = [],
@@ -21,7 +22,7 @@ export default function DashboardCharts({
             }}
         >
             <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#111827", margin: 0 }}>
-                Reports by Status
+                {tx("Reports by Status")}
             </h3>
             <GenerateReportButton type="analytics" inline withOptions optionsTitle="SafeConnect-SantaFe Analytical Report" />
         </div>
@@ -39,7 +40,7 @@ export default function DashboardCharts({
         >
 
             <PieChartCard
-                title="Petty Crimes by Status"
+                title={tx("Petty Crimes by Status")}
                 data={(() => {
                     const chartData = buildPieData(
                         pettyCrimeReports,
@@ -52,7 +53,7 @@ export default function DashboardCharts({
 
 
             <PieChartCard
-                title="Emergency Reports by Status"
+                title={tx("Emergency Reports by Status")}
                 data={buildPieData(
                     emergencyReports,
                     "status"
@@ -83,7 +84,7 @@ export default function DashboardCharts({
             }}>
 
             <PieChartCard
-                title="Assistance Requests by Status"
+                title={tx("Assistance Requests by Status")}
                 data={buildPieData(
                     assistanceRequests,
                     "status"

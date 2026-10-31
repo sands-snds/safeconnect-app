@@ -4,6 +4,7 @@ import StatusBadge from '../shared/StatusBadge';
 import ArchiveToolbar from '../reports/shared/ArchiveToolbar';
 import { fetchSignInLogs, fetchLogArchiveSettings, updateLogArchiveSettings } from '../../../Services/api';
 import { LOG_PERIOD_OPTIONS } from './logArchive';
+import { tx } from "../../../i18n/adminText";
 
 const filterLogs = (logs, filter = {}) => {
   let result = logs;
@@ -94,11 +95,11 @@ const SignInLogsTable = ({ data, filters, setFilters, isSuperAdmin, onRefresh })
         loadSetting={() => fetchLogArchiveSettings('signin')}
         saveSetting={(days) => updateLogArchiveSettings('signin', days)}
         periodOptions={LOG_PERIOD_OPTIONS}
-        settingLabel="Auto-archive sign-ins:"
+        settingLabel={tx("Auto-archive sign-ins:")}
       />
 
       {showArchived && archived === null ? (
-        <p className="text-gray-500 text-sm">Loading archived sign-ins...</p>
+        <p className="text-gray-500 text-sm">{tx("Loading archived sign-ins...")}</p>
       ) : (
         <ListView
           data={filterLogs(list, filters.signins)}
@@ -112,7 +113,7 @@ const SignInLogsTable = ({ data, filters, setFilters, isSuperAdmin, onRefresh })
           exportWithOptions
           exportTitle={showArchived ? 'Archived Resident Logs' : 'Resident Logs'}
           exportFilters={showArchived ? { archived: '1' } : {}}
-          itemLabel="sign-ins"
+          itemLabel={tx("sign-ins")}
         />
       )}
     </>

@@ -4,6 +4,7 @@ import DetailField from "../../shared/DetailField";
 import ReportImage from "../shared/ReportImage";
 import ReportLocationMap from "../shared/ReportLocationMap";
 import { ReportForDetails, isForOthers } from "../shared/ReportFor";
+import { tx } from "../../../../i18n/adminText";
 
 const PettyCrimeReportDetails = ({ report }) => {
   const photo =
@@ -33,7 +34,7 @@ const PettyCrimeReportDetails = ({ report }) => {
             value={
               <span>
                 <i className="bi bi-incognito" style={{ marginRight: "6px" }}></i>
-                Anonymous: the reporter chose to hide their name and contact number
+                {tx("Anonymous: the reporter chose to hide their name and contact number")}
               </span>
             }
           />
@@ -52,32 +53,32 @@ const PettyCrimeReportDetails = ({ report }) => {
         )}
 
         <DetailField
-          label="Crime Type"
+          label={tx("Crime Type")}
           value={report.crimeType}
         />
 
         <DetailField
-          label="Location"
+          label={tx("Location")}
           value={report.location}
         />
 
         <DetailField
-          label="Description"
+          label={tx("Description")}
           value={report.description}
         />
 
         <DetailField
-          label="Suspect Information"
+          label={tx("Suspect Information")}
           value={report.suspectInfo || "None"}
         />
 
         <DetailField
-          label="Report Date"
+          label={tx("Report Date")}
           value={report.date}
         />
 
         <DetailField
-          label="Status"
+          label={tx("Status")}
           value={report.status}
         />
       </div>

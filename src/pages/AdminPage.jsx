@@ -20,8 +20,15 @@ import SignInModal from '../components/admin/AdminModals/SignInModal';
 import { refreshSyncedState, useSyncOnFocus } from '../components/shared/useSyncedState';
 import useLiveUpdates from '../components/shared/useLiveUpdates';
 import useTabNotifications from '../components/shared/useTabNotifications';
+import { useLanguage } from '../i18n/LanguageContext';
+import { setAdminLanguage } from '../i18n/adminText';
 
 const AdminPage = () => {
+  // English / Tagalog for the whole panel (tx() in i18n/adminText.js). Set
+  // while rendering, before the children, so they all use the new language.
+  const { language } = useLanguage();
+  setAdminLanguage(language);
+
   const {
     isAuthenticated,
     setIsAuthenticated,

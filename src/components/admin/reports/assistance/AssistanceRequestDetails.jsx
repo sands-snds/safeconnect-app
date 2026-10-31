@@ -4,6 +4,7 @@ import DetailField from "../../shared/DetailField";
 import ReportImage from "../shared/ReportImage";
 import ReportLocationMap from "../shared/ReportLocationMap";
 import { ReportForDetails, isForOthers } from "../shared/ReportFor";
+import { tx } from "../../../../i18n/adminText";
 
 const AssistanceRequestDetails = ({ request }) => {
   const photo =
@@ -38,50 +39,50 @@ const AssistanceRequestDetails = ({ request }) => {
         />
 
         <DetailField
-          label="Email"
+          label={tx("Email")}
           value={request.email}
         />
 
         <DetailField
-          label="Assistance Type"
+          label={tx("Assistance Type")}
           value={request.assistanceType}
         />
 
         <DetailField
-          label="Victim of Emergency"
+          label={tx("Victim of Emergency")}
           value={request.victimOfEmergency}
         />
 
         {/* Only older requests have one: residents no longer choose an urgency. */}
         {request.urgency && (
           <DetailField
-            label="Urgency Level"
+            label={tx("Urgency Level")}
             value={request.urgency}
           />
         )}
 
         <DetailField
-          label="People Needing Help"
+          label={tx("People Needing Help")}
           value={request.peopleAffected}
         />
 
         <DetailField
-          label="Location"
+          label={tx("Location")}
           value={request.location}
         />
 
         <DetailField
-          label="Situation / Description"
+          label={tx("Situation / Description")}
           value={request.description}
         />
 
         <DetailField
-          label="Special Needs"
+          label={tx("Special Needs")}
           value={request.specialNeeds || "None"}
         />
 
         <DetailField
-          label="Date"
+          label={tx("Date")}
           value={request.date}
         />
       </div>

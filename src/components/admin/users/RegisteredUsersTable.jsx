@@ -4,6 +4,7 @@ import UserStatusSelect, { USER_STATUSES } from './UserStatusSelect';
 import UserRoleSelect from './UserRoleSelect';
 import UserChangeConfirmModal from './UserChangeConfirmModal';
 import { confirmPopup } from '../../shared/popup';
+import { tx } from "../../../i18n/adminText";
 
 const badgeStyle = (bg, color) => ({
   marginLeft: 6,
@@ -85,10 +86,10 @@ const RegisteredUsersTable = ({
         <td className="table-cell">
           <div className="font-medium text-sm">
             {user.fullName}
-            {isSelf && <span style={badgeStyle('#FDECEC', '#6B2C3E')}>You</span>}
+            {isSelf && <span style={badgeStyle('#FDECEC', '#6B2C3E')}>{tx("You")}</span>}
             {user.isMainAccount && (
               <span style={badgeStyle('#3b0d1b', '#fff')} title="The barangay's main Admin account">
-                <i className="bi bi-lock-fill" style={{ marginRight: 3 }} />Main account
+                <i className="bi bi-lock-fill" style={{ marginRight: 3 }} />{tx("Main account")}
               </span>
             )}
           </div>
@@ -136,8 +137,8 @@ const RegisteredUsersTable = ({
         statusOptions={[allOption('All Statuses'), ...USER_STATUSES]}
         exportType="users"
         exportWithOptions
-        exportTitle="Registered Users"
-        itemLabel="residents"
+        exportTitle={tx("Registered Users")}
+        itemLabel={tx("residents")}
       />
 
       <div style={{ marginTop: 28 }}>
@@ -151,7 +152,7 @@ const RegisteredUsersTable = ({
           sectionTitle={`Admins & Officials (${staff.length})`}
           statusOptions={[]}
           showFilters={false}
-          itemLabel="accounts"
+          itemLabel={tx("accounts")}
         />
       </div>
 

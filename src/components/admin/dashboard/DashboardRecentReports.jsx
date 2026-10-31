@@ -2,6 +2,7 @@ import React from "react";
 
 import StatusBadge from "../shared/StatusBadge";
 import { timeAgo } from "../shared/timeUtils";
+import { tx } from "../../../i18n/adminText";
 
 const LIMIT = 6;
 
@@ -71,7 +72,7 @@ export default function DashboardRecentReports({
             >
                 <div>
                     <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#111827" }}>
-                        Recent Reports
+                        {tx("Recent Reports")}
                     </h3>
                     <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#6b7280" }}>
                         Latest {LIMIT} submissions across all report types
@@ -82,7 +83,7 @@ export default function DashboardRecentReports({
             {reports.length === 0 ? (
                 <div style={{ padding: "36px 22px", textAlign: "center", color: "#6b7280", fontSize: 14 }}>
                     <i className="bi bi-inbox" style={{ fontSize: 36, display: "block", marginBottom: 8, opacity: 0.5 }} />
-                    No reports yet.
+                    {tx("No reports yet.")}
                 </div>
             ) : (
                 reports.map(item => {
@@ -129,10 +130,10 @@ export default function DashboardRecentReports({
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                                     <span style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>
-                                        {item.title || type.label}
+                                        {item.title || tx(type.label)}
                                     </span>
                                     <span style={{ fontSize: 11, fontWeight: 600, color: type.color }}>
-                                        {type.label}
+                                        {tx(type.label)}
                                     </span>
                                     {r.reference && (
                                         <span style={{ fontSize: 11, color: "#9ca3af" }}>{r.reference}</span>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { tx } from "../../../i18n/adminText";
 
 // Colored pill for any status value in the admin tables (sign-in logs,
 // users, reports, etc). Falls back to a neutral gray for anything not
@@ -34,7 +35,7 @@ const StatusBadge = ({ status }) => {
         color: style.color
       }}
     >
-      {status}
+      {tx(status)}
     </span>
   );
 };

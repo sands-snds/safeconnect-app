@@ -1,3 +1,4 @@
+import { tx } from "../../../i18n/adminText";
 export default function DashboardQuickActions({
     onNavigate
 }) {
@@ -16,7 +17,7 @@ export default function DashboardQuickActions({
                         onNavigate("emergency-reports")
                     }
                 >
-                    Emergency Reports
+                    {tx("Emergency Reports")}
                 </button>
 
                 <button
@@ -25,7 +26,7 @@ export default function DashboardQuickActions({
                         onNavigate("assistance-requests")
                     }
                 >
-                    Assistance Requests
+                    {tx("Assistance Requests")}
                 </button>
 
                 <button
@@ -34,7 +35,7 @@ export default function DashboardQuickActions({
                         onNavigate("petty-crime-reports")
                     }
                 >
-                    Petty Crime Reports
+                    {tx("Petty Crime Reports")}
                 </button>
 
                 <button
@@ -43,7 +44,7 @@ export default function DashboardQuickActions({
                         onNavigate("announcement-page")
                     }
                 >
-                    Announcements
+                    {tx("Announcements")}
                 </button>
 
             </div>

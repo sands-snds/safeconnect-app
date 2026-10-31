@@ -3,6 +3,7 @@ import { fetchNotifications, postAnnouncementComment } from '../../../Services/a
 import { showPopup } from '../../shared/popup';
 import { timeAgo } from '../shared/timeUtils';
 import { notificationType, notificationTarget } from './notificationTypes';
+import { tx } from "../../../i18n/adminText";
 
 // General > Notifications: every admin notification, like a mailbox. Tick
 // notifications (or "select all") and Archive them, or Mark them read.
@@ -54,7 +55,7 @@ const ReplyBox = ({ item, onReplied }) => {
     <div style={{ marginTop: 10 }}>
       {sent && (
         <div style={{ fontSize: 12.5, color: '#166534', marginBottom: 6 }}>
-          <i className="bi bi-check-circle-fill" /> Reply posted. The resident is notified and it shows under their comment.
+          <i className="bi bi-check-circle-fill" /> {tx("Reply posted. The resident is notified and it shows under their comment.")}
         </div>
       )}
       <textarea
@@ -63,13 +64,13 @@ const ReplyBox = ({ item, onReplied }) => {
         maxLength={1000}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Reply as the barangay..."
+        placeholder={tx("Reply as the barangay...")}
         style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', fontSize: 13 }}
       />
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
         <button type="button" className="button button-primary" disabled={sending || !text.trim()} onClick={send} style={{ fontSize: 13 }}>
           <i className="bi bi-reply-fill" style={{ marginRight: 6 }} />
-          {sending ? 'Sending…' : 'Reply'}
+          {sending ? tx('Sending…') : tx('Reply')}
         </button>
       </div>
     </div>
@@ -192,16 +193,16 @@ export default function NotificationsPage({
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
         <div style={{ display: 'inline-flex', gap: 4, padding: 4, background: '#f3f4f6', borderRadius: 8 }}>
           <button type="button" style={tabStyle(box === 'inbox')} onClick={() => setBox('inbox')}>
-            Inbox ({notifications.length})
+            {tx('Inbox')} ({notifications.length})
           </button>
           <button type="button" style={tabStyle(box === 'archived')} onClick={() => setBox('archived')}>
-            Archived{archived ? ` (${archived.length})` : ''}
+            {tx('Archived')}{archived ? ` (${archived.length})` : ''}
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {FILTERS.map((f) => (
             <button key={f.key} type="button" style={chipStyle(filter === f.key)} onClick={() => setFilter(f.key)}>
-              {f.label}{f.key === 'unread' && box === 'inbox' && unreadCount ? ` (${unreadCount})` : ''}
+              {tx(f.label)}{f.key === 'unread' && box === 'inbox' && unreadCount ? ` (${unreadCount})` : ''}
             </button>
           ))}
         </div>
@@ -212,7 +213,7 @@ export default function NotificationsPage({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 14px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', cursor: 'pointer', margin: 0 }}>
             <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} disabled={!visible.length} aria-label="Select all on this page" />
-            {selected.size ? `${selected.size} selected` : 'Select all'}
+            {selected.size ? tx('{{n}} selected', { n: selected.size }) : tx('Select all')}
           </label>
           <button type="button" className="button button-soft" style={{ fontSize: 12.5, padding: '5px 12px' }} disabled={!selected.size || busy} onClick={archiveSelected}>
             <i className={`bi ${box === 'archived' ? 'bi-box-arrow-up' : 'bi-archive'}`} style={{ marginRight: 6 }} />
@@ -220,23 +221,23 @@ export default function NotificationsPage({
           </button>
           {box === 'inbox' && (
             <button type="button" className="button button-secondary" style={{ fontSize: 12.5, padding: '5px 12px' }} disabled={!selected.size || busy} onClick={markSelectedRead}>
-              <i className="bi bi-envelope-open" style={{ marginRight: 6 }} /> Mark as read
+              <i className="bi bi-envelope-open" style={{ marginRight: 6 }} /> {tx("Mark as read")}
             </button>
           )}
           {box === 'inbox' && unreadCount > 0 && (
             <button type="button" onClick={onMarkAllRead} style={{ marginLeft: 'auto', border: 'none', background: 'none', color: '#6B2C3E', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
-              <i className="bi bi-check2-all" /> Mark all as read
+              <i className="bi bi-check2-all" /> {tx("Mark all as read")}
             </button>
           )}
         </div>
 
         {box === 'archived' && archived === null ? (
-          <p style={{ padding: 20, margin: 0, color: '#6b7280', fontSize: 13 }}>Loading archived notifications…</p>
+          <p style={{ padding: 20, margin: 0, color: '#6b7280', fontSize: 13 }}>{tx("Loading archived notifications…")}</p>
         ) : visible.length === 0 ? (
           <div style={{ padding: 36, textAlign: 'center', color: '#6b7280' }}>
             <i className={`bi ${box === 'archived' ? 'bi-archive' : 'bi-bell-slash'}`} style={{ fontSize: 28 }} />
             <p style={{ margin: '8px 0 0', fontSize: 13.5 }}>
-              {box === 'archived' ? 'No archived notifications.' : filter === 'unread' ? "You're all caught up." : 'No notifications.'}
+              {box === 'archived' ? tx('No archived notifications.') : filter === 'unread' ? tx("You're all caught up.") : tx('No notifications.')}
             </p>
           </div>
         ) : (
@@ -281,7 +282,7 @@ export default function NotificationsPage({
                     <div style={{ fontSize: 12, color: '#6b7280' }}>{new Date(n.createdAt).toLocaleString()}</div>
                     {target && target.view !== 'notifications' && (
                       <button type="button" className="button button-primary" style={{ marginTop: 10, fontSize: 13 }} onClick={() => goTo(n)}>
-                        {notificationType(n.type).label || 'Open'} <i className="bi bi-arrow-right" />
+                        {tx(notificationType(n.type).label || 'Open')} <i className="bi bi-arrow-right" />
                       </button>
                     )}
                     {isComment && box === 'inbox' && <ReplyBox item={n} />}
@@ -295,9 +296,9 @@ export default function NotificationsPage({
 
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 12, fontSize: 13 }}>
-          <button type="button" className="button button-secondary" disabled={current === 1} onClick={() => setPage(current - 1)}>Previous</button>
-          <span>Page {current} of {totalPages}</span>
-          <button type="button" className="button button-secondary" disabled={current === totalPages} onClick={() => setPage(current + 1)}>Next</button>
+          <button type="button" className="button button-secondary" disabled={current === 1} onClick={() => setPage(current - 1)}>{tx("Previous")}</button>
+          <span>{tx('Page {{page}} of {{total}}', { page: current, total: totalPages })}</span>
+          <button type="button" className="button button-secondary" disabled={current === totalPages} onClick={() => setPage(current + 1)}>{tx("Next")}</button>
         </div>
       )}
     </div>

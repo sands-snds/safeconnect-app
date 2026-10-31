@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { showPopup } from '../../shared/popup';
 import { exportReport } from '../../../Services/api';
 import GenerateReportModal from './GenerateReportModal';
+import { tx } from "../../../i18n/adminText";
 
 // Drop-in "Generate Report" control for an admin list page. Renders a single
 // button that opens a small PDF/Excel choice, calls the export endpoint, and
@@ -66,7 +67,7 @@ const GenerateReportButton = ({
         style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
       >
         <i className={`bi ${loading ? 'bi-hourglass-split' : 'bi-file-earmark-arrow-down'}`}></i>
-        {loading ? 'Generating…' : label}
+        {loading ? tx('Generating…') : tx(label)}
       </button>
 
       {showForm && (
@@ -101,7 +102,7 @@ const GenerateReportButton = ({
             style={dropdownItemStyle}
           >
             <i className="bi bi-file-earmark-pdf" style={{ color: '#dc3545' }}></i>
-            Download as PDF
+            {tx("Download as PDF")}
           </button>
           <button
             type="button"
@@ -109,7 +110,7 @@ const GenerateReportButton = ({
             style={dropdownItemStyle}
           >
             <i className="bi bi-file-earmark-excel" style={{ color: '#16a34a' }}></i>
-            Download as Excel
+            {tx("Download as Excel")}
           </button>
         </div>
       )}
