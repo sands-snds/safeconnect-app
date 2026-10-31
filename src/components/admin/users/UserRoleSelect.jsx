@@ -1,4 +1,5 @@
 import { ROLE_LABELS } from "../../shared/roles";
+import { tx } from "../../../i18n/adminText";
 
 // Stored values stay the same; labels are the shown names
 // (admin = Official, super_admin = Admin).
@@ -40,7 +41,7 @@ export default function UserRoleSelect({
         >
             {USER_ROLES.map((r) => (
                 <option key={r.value} value={r.value} style={{ background: "#fff", color: "#111827" }}>
-                    {r.label}
+                    {tx(r.label)}
                 </option>
             ))}
         </select>

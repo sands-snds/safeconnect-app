@@ -1,3 +1,4 @@
+import { tx } from "../../../i18n/adminText";
 // Account statuses the backend accepts (see ALLOWED_STATUSES in
 // backend/controllers/userController.js). "Pending" is no longer offered
 // (accounts work as soon as the email is verified) but still shows on any
@@ -36,7 +37,7 @@ export default function UserStatusSelect({
             }}
         >
             {(USER_STATUSES.includes(value) ? USER_STATUSES : [value, ...USER_STATUSES]).map((s) => (
-                <option key={s} value={s} style={{ background: "#fff", color: "#111827" }}>{s}</option>
+                <option key={s} value={s} style={{ background: "#fff", color: "#111827" }}>{tx(s)}</option>
             ))}
         </select>
     );

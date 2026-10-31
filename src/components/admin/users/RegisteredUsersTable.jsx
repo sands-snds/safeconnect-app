@@ -133,7 +133,7 @@ const RegisteredUsersTable = ({
         setFilters={setFilters}
         headers={headers}
         renderRow={renderRow}
-        sectionTitle={`Residents (${residents.length})`}
+        sectionTitle={`${tx("Residents")} (${residents.length})`}
         statusOptions={[allOption('All Statuses'), ...USER_STATUSES]}
         exportType="users"
         exportWithOptions
@@ -149,7 +149,7 @@ const RegisteredUsersTable = ({
           setFilters={setFilters}
           headers={headers}
           renderRow={renderRow}
-          sectionTitle={`Admins & Officials (${staff.length})`}
+          sectionTitle={`${tx("Admins & Officials")} (${staff.length})`}
           statusOptions={[]}
           showFilters={false}
           itemLabel={tx("accounts")}

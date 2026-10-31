@@ -829,7 +829,15 @@
   }
 
   .admin-header-title {
-    font-size: 20px;
+    font-size: 18px;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+  }
+
+  /* Phones: the EN / TL switch is in the menu drawer, so the page title
+     (longer in Tagalog) keeps the room and wraps onto a second line. */
+  .admin-header-lang {
+    display: none !important;
   }
 
   .admin-page-body {
@@ -891,14 +899,73 @@
     flex: 1;
   }
 
+  /* The setting's label (long in Tagalog) wraps; the dropdown gets its own
+     full-width line under it. */
   .archive-toolbar-setting {
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px !important;
   }
 
-  .archive-toolbar-setting .form-select {
-    flex: 1;
+  .archive-toolbar-setting > span {
+    white-space: normal !important;
+  }
+
+  .archive-toolbar-setting .form-select,
+  .archive-toolbar-setting > strong {
+    flex: 1 1 100%;
     min-width: 0 !important;
-    max-width: 200px;
+    max-width: none;
+  }
+
+  /* Tables (shared/Table.jsx): each row becomes a card. The first cell (the
+     name) goes on top; every other cell gets its column name as a label
+     (data-label) and a full-width line, so dropdowns are readable. */
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-table tr {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+
+  .admin-table td {
+    padding: 6px 0 !important;
+    border: none !important;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-table td[data-label]:not(:first-child)::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+
+  .admin-table td:first-child {
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+  }
+
+  .admin-table td select,
+  .admin-table td .form-select {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
   /* Card lists: Announcements narrows them to 70% on desktop. */

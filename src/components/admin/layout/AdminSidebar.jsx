@@ -1,5 +1,6 @@
 import React from "react";
 import { MAIN_LOGO } from "../../shared/logos";
+import LanguageToggle from "../../shared/LanguageToggle";
 import { tx } from "../../../i18n/adminText";
 
 const AdminSidebar = ({
@@ -194,9 +195,14 @@ const AdminSidebar = ({
           </div>
         ))}
 
-        {/* Logout: phone drawer only. On computers it is in the account menu (top right). */}
+        {/* Phone drawer only: the EN / TL switch (in the header on computers)
+            and Logout (in the account menu on computers). */}
         {showProfile && (
           <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", marginTop: 4 }}>
+              <span style={{ fontSize: 13, opacity: 0.85 }}>{tx("Language")}</span>
+              <LanguageToggle variant="light" />
+            </div>
             {/* Divider */}
             <div
               style={{

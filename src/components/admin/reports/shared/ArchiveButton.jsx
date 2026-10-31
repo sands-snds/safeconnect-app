@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { showPopup } from "../../../shared/popup";
+import { tx } from "../../../../i18n/adminText";
 
 // Archive / Restore button shown next to a report's status. Only Resolved and
 // Dismissed reports can be archived; archived ones get a Restore button instead.
@@ -37,7 +38,7 @@ const ArchiveButton = ({ report, reportType, onArchive }) => {
         whiteSpace: "nowrap"
       }}
     >
-      {isSubmitting ? "Saving..." : isArchived ? "Restore" : "Archive"}
+      {isSubmitting ? tx("Saving…") : isArchived ? tx("Restore") : tx("Archive")}
     </button>
   );
 };
