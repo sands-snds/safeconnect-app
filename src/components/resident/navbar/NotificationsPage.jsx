@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import { confirmPopup } from "../../shared/popup";
 import SwipeToArchive from "./SwipeToArchive";
+import ResidentPagination from "../ResidentPagination";
 
 const SNACK_MS = 5000;
 const PAGE_SIZE = 20;
@@ -318,17 +319,14 @@ export default function NotificationsPage({
                         )}
                     </div>
 
-                    {totalPages > 1 && (
-                        <nav className="np-pagination" aria-label={t("notificationsPage.pagination")}>
-                            <button type="button" className="np-page-btn" disabled={current === 1} onClick={() => goToPage(current - 1)}>
-                                <i className="bi bi-chevron-left" aria-hidden="true"></i><span>{t("notificationsPage.prevPage")}</span>
-                            </button>
-                            <span className="np-page-info">{t("notificationsPage.pageOf", { page: current, total: totalPages })}</span>
-                            <button type="button" className="np-page-btn" disabled={current === totalPages} onClick={() => goToPage(current + 1)}>
-                                <span>{t("notificationsPage.nextPage")}</span><i className="bi bi-chevron-right" aria-hidden="true"></i>
-                            </button>
-                        </nav>
-                    )}
+                    {/* Page numbers in the My Reports style */}
+                    <ResidentPagination
+                        page={current}
+                        pageSize={PAGE_SIZE}
+                        total={list.length}
+                        onPageChange={goToPage}
+                        label={t("notificationsPage.pagination")}
+                    />
                 </div>
             </div>
 
