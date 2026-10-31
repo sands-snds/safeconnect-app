@@ -311,7 +311,9 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 #### Notifications: `notificationRoutes.js` → `notificationController.js`
 | Method | Path | Access | Purpose | Called from |
 |---|---|---|---|---|
-| GET | `/notifications/mine` | user | The caller's personal notifications and unread count | `fetchMyNotifications()` → resident bell |
+| GET | `/notifications/mine` | user | The caller's personal notifications and unread count | `fetchMyNotifications()` → resident bell and Notifications page |
+| PUT | `/notifications/mine/archive` | user | Archive or restore some of the caller's notifications | resident Notifications page |
+| POST | `/notifications/mine/delete` | user | Delete some of the caller's notifications | resident Notifications page |
 | PUT | `/notifications/mine/:id/read` | user | Mark one as read (only if it belongs to the caller) | `markMyNotificationRead()` |
 | PUT | `/notifications/mine/read-all` | user | Mark all of the caller's notifications as read | `markAllMyNotificationsRead()` |
 | GET | `/notifications` | admin | Staff notifications (`user_id IS NULL`) that aren't archived, and the unread count. `?archived=1`: the archived ones. | `fetchNotifications({ archived })` → admin bell, Notifications page |
@@ -334,7 +336,7 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 | GET | `/export/pdf/:type` | admin (super for users, signinLogs and adminLogs) | Streams a PDF file |
 | GET | `/export/excel/:type` | same | Streams an `.xlsx` file |
 
-`:type` is one of `reportsOverTime`, `statusSummary`, `emergency`, `assistance`, `pettyCrime`, `users`, `signinLogs` or `adminLogs`. The query string carries the filters: `status`, `from`, `to`, `days`, `search` and `tzOffset`. The System types also take `role` (`resident`, `admin`, `super_admin`, or `unknown` for sign-ins without an account) and `archived=1`, and `adminLogs` takes `admin` (an email). `signinLogs` only ever includes residents and `unknown`. Statuses include `Dismissed`. The frontend caller is `exportReport()`, which downloads the file as a blob.
+`:type` is one of `analytics`, `reportsOverTime`, `statusSummary`, `emergency`, `assistance`, `pettyCrime`, `users`, `signinLogs` or `adminLogs`. The query string carries the filters: `status`, `from`, `to`, `days`, `search` and `tzOffset`. The System types also take `role` (`resident`, `admin`, `super_admin`, or `unknown` for sign-ins without an account) and `archived=1`, and `adminLogs` takes `admin` (an email). `signinLogs` only ever includes residents and `unknown`. Statuses include `Dismissed`. `analytics` (the dashboard's Analytical Report) takes `bar=0` / `pie=0` to leave a part out, and `status` for the pie chart only. The file name comes back in `Content-Disposition` (e.g. `SafeConnect-SantaFe Emergency Reports_All time.pdf`); `server.js` exposes that header through CORS so the browser can read it. The frontend caller is `exportReport()`, which downloads the file as a blob.
 
 #### Site contacts: `siteContentRoutes.js` → `siteContentController.js` → `siteContentService.js`
 | Method | Path | Access | Purpose | Called from |
@@ -383,9 +385,9 @@ Services hold logic that is shared, has several steps, or talks to outside syste
 | `announcementService.js` | **Create:** insert the row, create an `announcement` staff notification, and **email every active resident** in the background (a failed email doesn't fail the request). **Update:** keeps the existing image unless a new one is uploaded or `remove_image` is set. **`fetchLinkPreview(url)`:** fetches the page (with a browser User-Agent, up to 3 redirects and a 5-second timeout), reads only the `<head>`, and pulls out `og:title`, `og:image` and `og:site_name` (falling back to Twitter-card tags and then `<title>`). |
 | `notificationService.js` | A thin helper that creates a staff notification (with no `user_id`). |
 | `emailService.js` | `nodemailer` over SMTP with a branded HTML layout. Sends: the sign-up code, the welcome email, the sign-in alert, the password-reset code, and announcement emails (`sendAnnouncementToAll` sends each one separately, so one bad address doesn't block the rest). |
-| `exportService.js` | The **`EXPORTERS`** map. Each export type has a title, a file name prefix and a `build(filters)` function that returns `{ summary, columns, rows }`. It handles status and date-range filters, the admin's timezone (`tzOffset`) and Philippine time formatting. The result is passed to `pdfService` or `excelService`. |
-| `pdfService.js` | Generic branded table PDF (`pdfkit`): header with logos, summary block, table with page breaks, and page-number footers. Streams straight into the HTTP response. |
-| `excelService.js` | The Excel version (`exceljs`): header rows, summary, a styled table and column widths. Streams an `.xlsx` file. |
+| `exportService.js` | The **`EXPORTERS`** map. Each export type has a title, a `fileTitle` (the download's name, plus the period via `fileName()`) and a `build(filters)` function that returns `{ summary, columns, rows }`, or `{ summary, sections }` for the Analytical Report (each section: title, an optional bar or pie chart, a table and a Total row). It handles status and date-range filters, the admin's timezone (`tzOffset`) and Philippine time formatting. The result is passed to `pdfService` or `excelService`. |
+| `pdfService.js` | Generic branded table PDF (`pdfkit`): header with logos, summary block, one table or several sections (with vector bar and pie charts drawn by `drawChart`, and bold Total rows), page breaks, and page-number footers. |
+| `excelService.js` | The Excel version (`exceljs`): header rows, summary, one table or several sections (no charts), and column widths. |
 | `archiveService.js` | Report archiving. `ensureSchema()` adds the columns and settings table. `runAutoArchive()` sets `archived_at = NOW()` on Resolved and Dismissed rows whose `COALESCE(resolved_at, submitted time)` is older than the configured number of months (`resolved_at` is the closing time for both). `setArchived(type, id, bool)` archives only Resolved or Dismissed reports. `startScheduler()` runs the setup, then auto-archives now and every 6 hours. |
 | `announcementArchiveService.js` | Announcement archiving: the `announcement_auto_archive_months` setting (0, 3, 6 or 12; default 0 = Off), `runAutoArchive()` (announcements posted longer ago than that), `setArchived(id, bool)`, and a 6-hour scheduler. |
 | `adminPresence.js` | An in-memory map from admin id to "last seen". `verifyAdmin` updates it on every admin request. An admin counts as online if seen in the last **2 minutes**; the admin panel polls every 30 seconds while open. |
@@ -411,7 +413,7 @@ Each model is a class of `static async` methods that run parameterized SQL throu
 | `Notification.js` | `notifications` | `ensureColumns`, `create` (optional `commentId`); staff: `findAll({ archived })`, `unreadCount`, `markAsRead`, `markAllAsRead`, `markManyAsRead(ids)`, `setArchived(ids, bool)` (all where `user_id IS NULL`; counts skip archived ones); personal: `findByUser`, `unreadCountForUser`, `markAsReadForUser`, `markAllAsReadForUser` |
 | `Log.js` | `signin_logs` | `ensureColumns`, `logSignin(name, email, status, { ip, device })`, `setSigninLocation`, `getSigninLogs({ archived, role, status, from, to, residentsOnly })` (joined with the account's current role) |
 | `ResidentActivity.js` | `resident_activity_logs` | `ensureTable`, `record(userId, email, action, details)`, `forEmailsSince(emails, since)` |
-| `AdminActivity.js` | `admin_activity_logs` | `ensureTable`, `record(admin, action, details)`, `getRecent(limit, { archived, role, from, to })` (joined with the account's current role), `getAdminSummaries()` (each Admin/Official account with its role, last login and latest action) |
+| `AdminActivity.js` | `admin_activity_logs` | `ensureTable`, `record(admin, action, details)`, `getRecent(limit, { archived, role, from, to })` (joined with the account's current role), `getAdminSummaries()` (each Admin/Official account with its role, contact number, last login and latest action) |
 | `Dashboard.js` | several | `getStatistics()`: the user count, emergency report counts by status and the announcement count |
 | `SystemSetting.js` | `system_settings` | `getAll`, `get(key)`, `update(key, value)` |
 
@@ -625,7 +627,8 @@ The frontend is in `src/`. It is a Create React App project with React 19.
 | `index.js` | Mounts `<App/>` and loads Bootstrap, Bootstrap Icons and the global CSS. |
 | `App.js` | Wraps everything in `<LanguageProvider>`, shows `<LanguageGate>`, and defines the routes `/` → `LandingPage`, `/resident` → `ResidentPage` and `/admin` → `AdminPage`. |
 | `i18n/LanguageContext.js` | Provides `useLanguage()`, which returns `{ language, setLanguage, t, hasChosenLanguage }`. `t('nav.home', vars)` looks the key up in the current language, falls back to English, and fills in `{{placeholders}}`. The choice is saved in `localStorage.sf_language`. |
-| `i18n/translations.js` | The `en` and `tl` dictionaries, grouped by component. They cover the **landing page and resident app**; the admin panel is English only. |
+| `i18n/translations.js` | The `en` and `tl` dictionaries, grouped by component, for the **landing page and resident app**. |
+| `i18n/adminTranslations.js` + `i18n/adminText.js` | The **admin panel's** Tagalog, keyed by the English text: `tx("View details")` returns the Tagalog when the panel is in Tagalog, otherwise the English (untranslated text stays English). `AdminPage` calls `setAdminLanguage(language)` while rendering, so every admin component can use `tx()`. Generate Report is deliberately left in English. |
 
 ### 6.2 `Services/api.js`
 
@@ -679,11 +682,12 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 |---|---|
 | `DesktopNavbar.jsx` | The wide-screen bar: links, news, the notification bell, weather, the language toggle and the user dropdown. |
 | `MobileNavbar.jsx` / `MobileMenu.jsx` | The phone bar and its slide-out menu with the same features. |
-| `NotificationPanel.jsx` | The notification dropdown list, with category colors and "mark all read". |
+| `NotificationPanel.jsx` | The notification dropdown list, with category colors and "mark all read", and "See all". |
+| `NotificationsPage.jsx` / `SwipeToArchive.jsx` | The resident Notifications page: Inbox / Archived, All / Unread / Read, checkboxes and select all, archive / restore / delete, swipe to archive on phones, pages in the My Reports style (`resident/ResidentPagination.jsx`). Opening one goes to the exact report, reply or article. |
 | `NewsOverlay.jsx` | A full-screen news feed built from `AnnouncementCard`s. It can scroll to a specific article. |
 | `AnnouncementCard.jsx` | One announcement: its image, the linked article's preview image, or a placeholder showing the source site. Its action bar has **Like**, **Comment** and **Share**. Comments are shown as YouTube-style threads: replies (from the barangay) sit under the comment they answer, with an @mention, a smaller avatar, a "Barangay Admin" tag and a "N replies / Hide replies" toggle. Residents can delete their own comments. |
 | `UserDropdown.jsx` | The avatar menu: My Reports, Settings, Logout. |
-| `WeatherCard.jsx` | Shows the forecast from `useWeather`. |
+| `WeatherCard.jsx` | Shows the 7-day forecast from `useWeather`; each day can be opened for its hourly forecast. |
 | `DemoVideoCard.jsx` | Right below the weather card in News: the Video for Residents, when one is set and "Show in the resident News tab" is on (off by default). Not an announcement (no comments or likes). |
 | `NavbarStyle.css` | Styles for all of the above. |
 
@@ -757,6 +761,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `logs/LogsPage.jsx` | Switches between Resident Logs and Admin Logs, and filters sign-ins. |
 | `logs/SignInLogsTable.jsx` | Residents only: user, time, **Activity** (what they did until their next sign-in; the first three, then "Show N more"), **Device & IP address** (device, then IP, then location) and status. An `ArchiveToolbar` switches between Active and Archived sign-ins and sets the auto-archive period. It filters and exports whichever list is showing. |
 | `logs/AdminLogsTable.jsx` | Admin & Official account cards (role badge, **online / last seen**, latest action), plus the searchable activity list with an `ArchiveToolbar` for Recent / Archived activity and its auto-archive period. |
+| `logs/AdminLogsTable.jsx` (Details) | The accounts table also shows each Admin's / Official's full name and phone number (a `tel:` link). |
 | `logs/logArchive.js` | The auto-archive period choices for the logs (Off, 30 days, 90 days, 6 months, 1 year). |
 | `settings/SiteContentsPage.jsx` | Content → Page Contents (Admins only): the two carousels (upload, describe, reorder, remove with a confirmation) and the Video for Residents (landing page and/or News tab switches) and admin demo video (upload with progress or YouTube link, title, caption, show/hide switches, live preview). Titles up to 40 characters; **Preview** shows everything before saving. |
 | `settings/AccountSettingsPage.jsx` | Account Settings for the signed-in Admin or Official, opened from the account menu: photo, username, contact number, email (locked for the main account) and password. |
@@ -773,7 +778,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `ListView.jsx` | The standard list page: search, status filter, extra filters, sort, an "Add" button, a **Generate Report** button, and a table or card layout with **pagination**. It resets to page 1 when filters change, but not on a background refresh. Optional `sectionTitle`, `showFilters` and `exportFilters` props. |
-| `Table.jsx`, `Section.jsx` | Table shell and card wrapper. |
+| `Table.jsx`, `Section.jsx` | Table shell (headings translated with `tx`; on phones each row becomes a card, every cell labelled with its column name through `data-label`) and card wrapper. |
 | `Pagination.jsx` | Page numbers with gaps ("…"), "Showing x–y of z", and a rows-per-page picker. |
 | `ReportCard.jsx` | A collapsible report row: accent color, title, tag pills, then the status pill; actions and View / Hide details on the right; details below. |
 | `StatusSelect.jsx` | A **forward-only** status control: a "Move to …" button in the next status's color (blue In Progress, green Resolved) and a red **Dismiss** for open reports. `statusBadge(status)` gives the pill shown beside the title. |
@@ -791,6 +796,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 
 | Component | What it does |
 |---|---|
+| `PrivacyPolicyModal.jsx` | The Privacy Policy (RA 10173), opened from the footer. |
 | `DonationFooter.jsx` | The site footer (translated), used on the landing and resident pages, in three columns: the logo beside the name and description; Contact Us with the barangay officials; the Emergency Hotline (`footerHotlines`, its own list) and socials. Then the "Created by Group Tres" credit. Everything comes from `useSiteContent()` (edited under Content → Page Contacts → Footer); the `content` prop shows unsaved changes in the Preview. |
 | `EmergencyContactList.jsx` | The contacts inside the floating call button (a contact with `choices` asks who to call). `formatMobile()` formats mobile and landline numbers. |
 | `useSiteContent.js` | Loads the site contacts once per page load and shares them with every component; caches the last copy in `localStorage` (`sf_siteContent`) and has the defaults built in. `contactDescription(contact, t)` shows the translated default description until an Admin changes it; `officialName(o)` joins an official's position and name. `useSiteMedia()` does the same for the carousel photos and demo videos (`sf_siteMedia`); `mediaSrc()` turns an uploaded path into a full URL. |
@@ -808,7 +814,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 
 | File | Covers |
 |---|---|
-| `App.css` / `src/App.css` | Global and landing styles |
+| `App.css` / `src/App.css` | Global and landing styles (including `.leaflet-container { isolation: isolate }`, which keeps maps under the sticky admin header and its menus) |
 | `resident.css` | The resident app |
 | `emergencyreport.css`, `residentemergencymodal.css`, `evacuation.css` | Report section and report modals |
 | `admin.css` | The admin panel: buttons (`button-primary`, `button-soft`, `button-danger-soft`, `button-status-*`), the dashboard counters (`dash-stat*`, container queries), the bell panel on phones (`admin-notif-wrap`), and the phone layouts (`lv-*` list filters, `report-card-*`, `dash-summary-*`, `archive-toolbar*`) |
