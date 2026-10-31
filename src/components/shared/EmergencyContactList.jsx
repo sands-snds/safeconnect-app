@@ -42,7 +42,8 @@ export default function EmergencyContactList({ contacts, onCall }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {contacts.map((c) => {
+      {/* hidden: turned off in Page Contacts (only 911 can be) */}
+      {contacts.filter((c) => !c.hidden).map((c) => {
         const choices = hasChoices(c);
         const open = choices && openId === c.id;
         return (

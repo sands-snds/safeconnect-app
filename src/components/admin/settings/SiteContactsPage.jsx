@@ -259,7 +259,23 @@ const SiteContactsPage = () => {
             <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
               <button type="button" style={iconButton()} title="Move up" disabled={i === 0} onClick={() => setContacts((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
               <button type="button" style={iconButton()} title="Move down" disabled={i === draft.emergencyContacts.length - 1} onClick={() => setContacts((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
-              <button type="button" style={iconButton(true)} title="Remove" disabled={draft.emergencyContacts.length === 1} onClick={() => removeAt(setContacts, i, `"${c.label || "this contact"}" from the call button`)}><i className="bi bi-trash3" /></button>
+              {c.number === "911" ? (
+                // 911 can't be removed, only hidden from the call button.
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={!c.hidden}
+                  title={c.hidden ? "Hidden from the call button. Click to show it." : "Shown in the call button. Click to hide it."}
+                  onClick={() => updateContact(i, { hidden: !c.hidden })}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 34, padding: "0 10px", borderRadius: 8, cursor: "pointer", fontSize: 12.5, fontWeight: 600,
+                    border: `1px solid ${c.hidden ? "#d1d5db" : "#166534"}`, background: c.hidden ? "#f3f4f6" : "#dcfce7", color: c.hidden ? "#6b7280" : "#166534" }}
+                >
+                  <i className={`bi ${c.hidden ? "bi-toggle-off" : "bi-toggle-on"}`} style={{ fontSize: 18 }} />
+                  {c.hidden ? "Off" : "On"}
+                </button>
+              ) : (
+                <button type="button" style={iconButton(true)} title="Remove" disabled={draft.emergencyContacts.length === 1} onClick={() => removeAt(setContacts, i, `"${c.label || "this contact"}" from the call button`)}><i className="bi bi-trash3" /></button>
+              )}
             </div>
 
             {/* Optional: let the caller choose who to call */}

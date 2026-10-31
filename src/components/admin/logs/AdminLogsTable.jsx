@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import GenerateReportButton from '../shared/GenerateReportButton';
 import ArchiveToolbar from '../reports/shared/ArchiveToolbar';
 import { roleLabel } from '../../shared/roles';
+import { formatMobile } from '../../shared/EmergencyContactList';
 import { fetchAdminLogs, fetchLogArchiveSettings, updateLogArchiveSettings } from '../../../Services/api';
 import { LOG_PERIOD_OPTIONS } from './logArchive';
 import { timeAgo, formatDateTime } from '../shared/timeUtils';
@@ -155,6 +156,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
             <thead className="table-header">
               <tr>
                 <th className="table-header-cell">Account</th>
+                <th className="table-header-cell">Details</th>
                 <th className="table-header-cell">Status</th>
                 <th className="table-header-cell">Last Login</th>
                 <th className="table-header-cell">Latest Activity</th>
@@ -163,7 +165,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
             <tbody>
               {admins.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: 'center', padding: '32px', color: '#6b7280' }}>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '32px', color: '#6b7280' }}>
                     No Admin or Official accounts found
                   </td>
                 </tr>
@@ -181,6 +183,17 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
                           </span>
                         </div>
                       </div>
+                    </td>
+                    {/* Details: full name and phone number, to reach them */}
+                    <td className="table-cell" style={{ fontSize: 13 }}>
+                      <div style={{ fontWeight: 600, color: '#111827' }}>{admin.fullName || '—'}</div>
+                      {admin.contact ? (
+                        <a href={`tel:${admin.contact.replace(/\s/g, '')}`} style={{ color: '#6B2C3E', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                          <i className="bi bi-telephone-fill" style={{ marginRight: 4 }} />{formatMobile(admin.contact)}
+                        </a>
+                      ) : (
+                        <span style={{ color: '#9ca3af' }}>No number</span>
+                      )}
                     </td>
                     <td className="table-cell">
                       <PresenceLabel admin={admin} />

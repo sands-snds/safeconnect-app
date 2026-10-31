@@ -151,7 +151,7 @@ These run on every start, so local and Azure databases stay in sync without manu
 | `siteContentService.ensureSchema()` | `system_settings.setting_value` is `TEXT`, so the site contacts JSON fits. Then `siteMediaService.hideNewsVideoOnce()` turns the News tab's video off once on sites saved before its switch came back (marker setting `site_media_news_off_v1`). |
 | `announcementArchiveService.startScheduler()` | `announcements.archived_at` exists; the setting `announcement_auto_archive_months` exists (default `0` = Off). It then auto-archives now and every 6 hours. |
 | `Notification.ensureColumns()` | `notifications` has `archived_at` (Notifications page archive) and `comment_id` (the comment to reply to) |
-| `ResidentActivity.ensureTable()` | Table `resident_activity_logs` exists (the Activity column of Resident Sign-in Logs) |
+| `ResidentActivity.ensureTable()` | Table `resident_activity_logs` exists (the Activity column of Resident Logs) |
 | `User.ensureArchiveColumn()` | `registered_users.archived_at` exists (archived Closed accounts) |
 | `mainAccount.ensureMainAccount()` | The barangay's main account (safeconnect.brgy.santafe@gmail.com) exists and is an Active Admin. A new one gets a random password; the barangay sets theirs with "Forgot password?". |
 | `archiveService.startScheduler()` | The three report tables have `resolved_at`, `archived_at` and `dismissal_reason` (an older `rejection_reason` column is renamed, and "Rejected" reports become "Dismissed"); table `system_settings` exists with `report_auto_archive_months` (default `12`). It then runs auto-archive immediately and every 6 hours. |
@@ -545,7 +545,7 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
    - `NotificationService.create({ notificationType: "emergency" })` creates a staff notification
    - responds `{ success, id, reportReference }`
 4. The modal shows the reference number to the resident.
-5. `logResidentActivity("Submitted emergency report")` records it for the Activity column of Resident Sign-in Logs.
+5. `logResidentActivity("Submitted emergency report")` records it for the Activity column of Resident Logs.
 6. The admin panel reloads right away through the live-update channel (or the 30-second refresh), so the **admin bell** shows the notification and the report appears in the Emergency Reports tab. "See report" in the bell opens that report with its details showing.
 
 ### An admin moves a report forward, and the resident is told
@@ -710,7 +710,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `layout/AdminLayout.jsx` | The page shell: sidebar and header around the current tab. |
-| `layout/AdminSidebar.jsx` | Navigation groups: General (Dashboard, Notifications); Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Page Contacts** and **Page Contents** for Admins only); **System** (Users, Resident Sign-in Logs, Admin Logs), which only Admins see. On phones it becomes a drawer, opened by the ☰ button, with a Logout at the bottom. |
+| `layout/AdminSidebar.jsx` | Navigation groups: General (Dashboard, Notifications); Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Page Contacts** and **Page Contents** for Admins only); **System** (Users, Resident Logs, Admin Logs), which only Admins see. On phones it becomes a drawer, opened by the ☰ button, with a Logout at the bottom. |
 | `layout/AdminHeader.jsx` | Sticky at the top. On phones a ☰ menu button before the page title; the title; the refresh button (with the last update time); the **notification bell** (`AdminNotificationPanel`); and the account menu (profile picture, on phones too) with Account Settings, the demo video and Logout. |
 | `layout/AdminStats.jsx` | The dashboard counters: the three report types (in the resident page's report colors), the other totals (outlined), Create Announcement and Total Reports. Sized by the card's width (container queries in `admin.css`); `compact` on phones shows only Create Announcement and Total Reports. |
 
@@ -754,7 +754,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 |---|---|
 | `users/UsersPage.jsx` | An `ArchiveToolbar` (Active / Archived accounts), then filters users by search and status and splits them into Residents and Admins & Officials. |
 | `users/RegisteredUsersTable.jsx` | Two tables, **Residents** then **Admins & Officials**, under one shared search / status filter / Generate Report row (the second `ListView` uses `showFilters={false}`). Inline `UserRoleSelect` and `UserStatusSelect`; every change is confirmed in `UserChangeConfirmModal`. Your own account and the main barangay account ("Main account" badge) are locked. Closed accounts get **Archive** (archived ones **Restore**). |
-| `logs/LogsPage.jsx` | Switches between Resident Sign-in Logs and Admin Logs, and filters sign-ins. |
+| `logs/LogsPage.jsx` | Switches between Resident Logs and Admin Logs, and filters sign-ins. |
 | `logs/SignInLogsTable.jsx` | Residents only: user, time, **Activity** (what they did until their next sign-in; the first three, then "Show N more"), **Device & IP address** (device, then IP, then location) and status. An `ArchiveToolbar` switches between Active and Archived sign-ins and sets the auto-archive period. It filters and exports whichever list is showing. |
 | `logs/AdminLogsTable.jsx` | Admin & Official account cards (role badge, **online / last seen**, latest action), plus the searchable activity list with an `ArchiveToolbar` for Recent / Archived activity and its auto-archive period. |
 | `logs/logArchive.js` | The auto-archive period choices for the logs (Off, 30 days, 90 days, 6 months, 1 year). |

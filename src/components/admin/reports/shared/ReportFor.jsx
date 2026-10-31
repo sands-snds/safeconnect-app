@@ -70,6 +70,7 @@ export const ReportForDetails = ({ report, personLabel = "Person Affected" }) =>
             <DetailField label={personLabel} value={report.victimName} />
             <DetailField label="Their Contact" value={report.victimContact || "Not provided"} />
             <DetailField label="Relationship" value={report.victimRelationship} />
+            {report.victimDetails && <DetailField label="Additional Details" value={report.victimDetails} />}
         </div>
     );
 };

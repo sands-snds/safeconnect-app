@@ -69,7 +69,7 @@ const AdminSidebar = ({
         },
         {
           id: "sign-in-logs",
-          label: "Resident Sign-in Logs"
+          label: "Resident Logs"
         },
         {
           id: "admin-logs",

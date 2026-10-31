@@ -762,3 +762,11 @@ section {
   .carousel-indicators [data-bs-target] { width: 20px; height: 3px; }
   .carousel-indicators [data-bs-target].active { width: 30px; }
 }
+
+/* Maps (Leaflet) give their layers z-index 400-1000. Keep those inside the
+   map, so a map never covers the sticky admin header, its notification
+   panel or menus. */
+.leaflet-container {
+  isolation: isolate;
+  z-index: 0;
+}

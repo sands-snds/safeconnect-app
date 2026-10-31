@@ -115,7 +115,7 @@ const AdminPage = () => {
   "announcement-page": "Announcements",
   "create-announcement": "Create Announcement",
   "registered-users": "Registered Users",
-  "sign-in-logs": "Resident Sign-in Logs",
+  "sign-in-logs": "Resident Logs",
   "admin-logs": "Admin Logs",
   "site-contacts": "Page Contacts",
   "site-contents": "Page Contents",

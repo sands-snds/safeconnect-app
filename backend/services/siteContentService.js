@@ -88,7 +88,9 @@ const TEXT_MAX = 40;
 const NUMBER_DIGITS = { mobile: 10, landline: 9 };
 // "+63 917 123 4567", "09171234567", "639171234567" -> "9171234567".
 const localDigits = (value) => {
-    let d = String(value ?? "").replace(/\D/g, "");
+    const raw = String(value ?? "").trim();
+    if (raw.startsWith("+63")) return raw.slice(3).replace(/\D/g, "");
+    let d = raw.replace(/\D/g, "");
     if (d.startsWith("63") && d.length >= 11) d = d.slice(2);
     else if (d.startsWith("0")) d = d.slice(1);
     return d;
@@ -239,6 +241,8 @@ function validate(input = {}) {
         const original = DEFAULT_CONTENT.emergencyContacts.find((d) => d.sublabelKey && d.sublabelKey === c.sublabelKey);
         if (original && original.description === description) entry.sublabelKey = original.sublabelKey;
         if (choices.length) entry.choices = choices;
+        // 911 can't be removed; it can be hidden from the call button.
+        if (c.hidden === true) entry.hidden = true;
         emergencyContacts.push(entry);
     }
 

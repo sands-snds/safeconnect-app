@@ -61,7 +61,7 @@ class AdminActivity {
     static async getAdminSummaries() {
         const [rows] = await db.query(`
             SELECT
-                u.id, u.full_name, u.username, u.email_address, u.role, u.status, u.photo_url,
+                u.id, u.full_name, u.username, u.email_address, u.contact_number, u.role, u.status, u.photo_url,
                 (
                     SELECT MAX(l.created_at) FROM admin_activity_logs l
                     WHERE l.admin_id = u.id AND l.action = 'Logged in'

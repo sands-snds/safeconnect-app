@@ -386,6 +386,7 @@ export const fetchEmergencyReports = async () => {
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
+        victimDetails: r.victim_details || '',
         archivedAt: r.archived_at || null,
         dismissalReason: r.dismissal_reason || ''
     }));
@@ -459,6 +460,7 @@ export const fetchAssistanceRequests = async () => {
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
+        victimDetails: r.victim_details || '',
         archivedAt: r.archived_at || null,
         dismissalReason: r.dismissal_reason || ''
     }));
@@ -529,6 +531,7 @@ export const fetchPettyCrimes = async () => {
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
         victimRelationship: r.victim_relationship || '',
+        victimDetails: r.victim_details || '',
         archivedAt: r.archived_at || null,
         dismissalReason: r.dismissal_reason || ''
     }));
@@ -783,6 +786,7 @@ export const fetchAdminLogs = async ({ archived = false } = {}) => {
             fullName: a.full_name || '',
             username: a.username || '',
             email: a.email_address || '',
+            contact: a.contact_number || '',
             role: a.role || '',
             status: a.status || 'Active',
             photoUrl: resolveAssetUrl(a.photo_url),

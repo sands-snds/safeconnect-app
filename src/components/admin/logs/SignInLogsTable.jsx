@@ -21,7 +21,7 @@ const filterLogs = (logs, filter = {}) => {
   return result;
 };
 
-// System > Resident Sign-in Logs (residents only; Officials and Admins are in
+// System > Resident Logs (residents only; Officials and Admins are in
 // Admin Logs). Each sign-in lists what the resident did afterwards, until
 // their next sign-in. Entries older than the auto-archive period (default
 // 90 days) move to the Archived tab; they aren't deleted.
@@ -110,7 +110,7 @@ const SignInLogsTable = ({ data, filters, setFilters, isSuperAdmin, onRefresh })
           statusOptions={[allOption('All Statuses'), 'Success', 'Failed']}
           exportType="signinLogs"
           exportWithOptions
-          exportTitle={showArchived ? 'Archived Resident Sign-in Logs' : 'Resident Sign-in Logs'}
+          exportTitle={showArchived ? 'Archived Resident Logs' : 'Resident Logs'}
           exportFilters={showArchived ? { archived: '1' } : {}}
           itemLabel="sign-ins"
         />

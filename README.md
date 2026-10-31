@@ -57,7 +57,7 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 | **Generate Report** | Download PDF or Excel reports. Report tabs filter by status and period; System tabs filter by role, status and a From/To date range. Custom dates run from September 1, 2026 to today (no future dates). |
 | **Notifications** | The bell (same look as the residents' bell) shows only recent notifications, with **Unread / Read** tabs and Mark all as read. "See report" opens that report with its details showing. **General → Notifications** lists them all like a mailbox: Inbox / Archived, All / Unread / Read, a checkbox per notification (and select all) to **Archive** or **Mark as read**, and replies to residents' comments. Archiving is shared by all Admins and Officials, like the read state. |
 | **Users** *(Admin)* | Residents and Admins & Officials in two tables under one search and status filter. Change an account's role or status. Closed accounts can be **archived** to an Archived tab (reopening one takes it out). The barangay's main account is locked. |
-| **Resident Sign-in Logs** *(Admin)* | Every residents' sign-in attempt (Officials and Admins are in Admin Logs), with device, IP address and approximate location, and an **Activity** column: what the resident did until their next sign-in (submitted, edited or deleted reports, signing out). Entries older than 90 days (adjustable) move to an **Archived** tab. |
+| **Resident Logs** *(Admin)* | Every residents' sign-in attempt (Officials and Admins are in Admin Logs), with device, IP address and approximate location, and an **Activity** column: what the resident did until their next sign-in (submitted, edited or deleted reports, signing out). Entries older than 90 days (adjustable) move to an **Archived** tab. |
 | **Admin Logs** *(Admin)* | Which Admins and Officials are online, and a record of every action (logins, status changes, exports and more). Activity older than 90 days (adjustable) moves to an **Archived** tab. |
 | **Page Contacts** *(Admin)* | Two groups. **Call Button**: the floating call button's emergency contacts (and the people a caller can choose between). **Footer**: Barangay Officials (position, first, middle and last name), the Emergency Hotline column (its own list, without the officials) and Socials. Numbers are **Mobile** (+63 and 10 digits) or **Landline** (+63 and 9 digits), digits only; 911 stays 911. Text boxes take up to 40 characters, removing anything asks first, and **Preview** shows the call button and footer before saving. |
 | **Page Contents** *(Admin)* | Change the landing page and resident page carousel photos, and set two videos (upload an MP4/WebM up to 100 MB, or paste a YouTube link) with a title and caption. The **Video for Residents** can show on the landing page (below the carousel) and in the resident News tab (below the weather); each place has its own switch (News starts off). The **admin demo** pops up after signing in to the admin panel. The videos can't be downloaded. Titles take up to 40 characters, removing a photo or video asks first, and **Preview** shows the photos and videos before saving. |
@@ -256,7 +256,7 @@ safeconnect-app/
     │   │   ├── notifications/ # bell panel + Notifications page
     │   │   ├── settings/      # Page Contacts, Page Contents, Account Settings
     │   │   ├── users/         # Users tab
-    │   │   ├── logs/          # Resident Sign-in Logs + Admin Logs tabs
+    │   │   ├── logs/          # Resident Logs + Admin Logs tabs
     │   │   ├── layout/        # sidebar, header, dashboard counters (AdminStats)
     │   │   ├── hooks/         # useAdminData, useAdminAuth, useAdminNavigation, useIsMobile
     │   │   ├── shared/        # ListView, ReportCard, StatusSelect, Pagination, export UI…
@@ -273,7 +273,7 @@ safeconnect-app/
 |---|---|---|---|
 | **Resident** | `resident` | `/resident` | Submit reports, and view, edit or delete their own reports; manage their profile |
 | **Official** | `admin` | `/admin` | Everything in the admin panel **except** the System tabs: reports, statuses, archiving, announcements, exports |
-| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Resident Sign-in Logs and Admin Logs**, **Content → Page Contacts and Page Contents**, and changing auto-archive periods |
+| **Admin** | `super_admin` | `/admin` | Everything, including **System → Users, Resident Logs and Admin Logs**, **Content → Page Contacts and Page Contents**, and changing auto-archive periods |
 
 Only the names shown on screen, in exports and in messages changed. The values stored in the database are the same as before, so existing accounts and sign-ins keep working. In code, always show `ROLE_LABELS[role]` (`backend/utils/roles.js`, `src/components/shared/roles.js`), never the stored value.
 

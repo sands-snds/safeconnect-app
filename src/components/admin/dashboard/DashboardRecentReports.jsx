@@ -96,9 +96,10 @@ export default function DashboardRecentReports({
                             className="recent-report-row"
                             role="button"
                             tabIndex={0}
-                            onClick={() => onNavigate?.(type.view)}
-                            onKeyDown={(e) => e.key === "Enter" && onNavigate?.(type.view)}
-                            title={`Open ${type.label} reports`}
+                            // Opens this report with its details showing (like a notification's "See report").
+                            onClick={() => onNavigate?.(type.view, { focusId: r.id })}
+                            onKeyDown={(e) => e.key === "Enter" && onNavigate?.(type.view, { focusId: r.id })}
+                            title={`Open this ${type.label.toLowerCase()} report`}
                             style={{
                                 display: "flex",
                                 alignItems: "center",

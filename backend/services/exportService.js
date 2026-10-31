@@ -371,7 +371,7 @@ const EXPORTERS = {
     // System > Sign-in Logs. filters: archived, role ("unknown" = no
     // account), status (Success / Failed), from / to.
     signinLogs: {
-        reportTitle: "Resident Sign-In Logs Report",
+        reportTitle: "Resident Logs Report",
         filenamePrefix: "SignIn_Logs",
         async build(filters = {}) {
             const { role, status, from, to, archived, subtitle } = systemOptions(filters, SIGNIN_STATUSES, { allowUnknownRole: true });
