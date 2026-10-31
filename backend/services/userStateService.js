@@ -6,6 +6,8 @@ const db = require("../config/db");
 //                 "announcement:<id>"  an announcement in the bell
 //                 "weather:<YYYY-MM-DD>" that day's rain advisory
 //                 "admin-demo:hidden"  "Don't show the admin demo again"
+//                 "notif-archived:<id>" an announcement archived from the bell
+//                 "notif-deleted:<id>"  an announcement deleted from the bell
 //   preferences - { language: "en" | "tl" }
 
 const ITEM_KEY_REGEX = /^[a-z-]{1,30}:[A-Za-z0-9._-]{1,60}$/;
@@ -60,6 +62,18 @@ async function markRead(userId, keys) {
     );
 }
 
+// Only archived announcements can be "un-marked" (restored to the inbox).
+const RESTORABLE_PREFIX = "notif-archived:";
+
+async function unmark(userId, keys) {
+    const restorable = keys.filter((k) => k.startsWith(RESTORABLE_PREFIX));
+    if (!restorable.length) return;
+    await db.query(
+        `DELETE FROM user_read_items WHERE user_id = ? AND item_key IN (?)`,
+        [userId, restorable]
+    );
+}
+
 async function setLanguage(userId, language) {
     await db.query(
         `INSERT INTO user_preferences (user_id, language) VALUES (?, ?)
@@ -68,4 +82,4 @@ async function setLanguage(userId, language) {
     );
 }
 
-module.exports = { LANGUAGES, ensureSchema, getState, cleanKeys, markRead, setLanguage };
+module.exports = { LANGUAGES, ensureSchema, getState, cleanKeys, markRead, unmark, setLanguage };

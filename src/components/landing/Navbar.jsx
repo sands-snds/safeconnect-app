@@ -15,6 +15,19 @@ function Navbar() {
   // Removed: showDropdown
   // Removed: dropdownRef
   const mobileMenuRef = useRef(null);
+  const navRef = useRef(null);
+
+  // The navbar sticks to the top; section links scroll to just below it
+  // (App.css reads --landing-navbar-height for scroll-margin-top).
+  useEffect(() => {
+    const navEl = navRef.current;
+    if (!navEl || typeof ResizeObserver === 'undefined') return undefined;
+    const setHeightVar = () => document.documentElement.style.setProperty('--landing-navbar-height', `${navEl.offsetHeight}px`);
+    setHeightVar();
+    const ro = new ResizeObserver(setHeightVar);
+    ro.observe(navEl);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -359,7 +372,7 @@ function Navbar() {
         }
       `}</style>
       
-      <nav className="navbar-custom">
+      <nav className="navbar-custom" ref={navRef}>
         <div className="container-fluid px-3 px-sm-4">
           <div className="navbar-container">
             <button className="navbar-brand" onClick={handleHomeClick}>

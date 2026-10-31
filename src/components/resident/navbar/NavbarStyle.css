@@ -2044,3 +2044,393 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     .news-weather-days li { padding: 10px 4px; }
     .news-weather-scroll-btn { width: 32px; height: 32px; }
 }
+
+/* ── Swipe a notification left/right to archive it (phones) ── */
+.swipe-archive {
+    position: relative;
+    overflow: hidden;
+}
+
+.swipe-archive-content {
+    position: relative;
+    background: #fff;
+    touch-action: pan-y;
+}
+
+.swipe-archive-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 22px;
+    background: #6B2C3E;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.swipe-archive-bg.left { justify-content: flex-start; }
+.swipe-archive-bg.right { justify-content: flex-end; }
+.swipe-archive.leaving { pointer-events: none; }
+
+/* "Notification archived · Undo" under the bell's list */
+.panel-undo {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 16px;
+    background: #2b1b20;
+    color: #fff;
+    font-size: 0.8rem;
+}
+
+.panel-undo button {
+    border: none;
+    background: none;
+    color: #fbc4d0;
+    font-weight: 800;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+/* ── Notifications page (same frame as My Reports) ── */
+.notifications-fullscreen {
+    position: fixed;
+    top: var(--resident-navbar-height, 76px);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #f5f2f3;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.notifications-fullscreen.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.np-header {
+    background: #fff;
+    padding: 1.1rem clamp(1.5rem, 5vw, 4rem);
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    border-bottom: 1px solid #f0e8ea;
+    flex-shrink: 0;
+}
+
+.np-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #6B2C3E 0%, #8B3A52 100%);
+    box-shadow: 0 4px 12px rgba(107, 44, 62, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.np-header h2 {
+    color: #1a1416;
+    font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.25;
+}
+
+.np-header-sub {
+    color: #938c8f;
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin: 0.15rem 0 0;
+}
+
+.np-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 5vw, 4rem) 5rem;
+}
+
+.np-wrap { max-width: 880px; margin: 0 auto; }
+
+.np-tabs {
+    display: flex;
+    gap: 1.6rem;
+    border-bottom: 2px solid #ece4e6;
+    margin-bottom: 1rem;
+}
+
+.np-tab {
+    border: none;
+    background: none;
+    padding: 0 0 0.7rem;
+    margin-bottom: -2px;
+    border-bottom: 2px solid transparent;
+    color: #6b7280;
+    font-size: 0.92rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+.np-tab:hover { color: #6B2C3E; }
+.np-tab.active { color: #6B2C3E; border-bottom-color: #6B2C3E; }
+
+.np-tab .count {
+    font-size: 0.7rem;
+    background: #f1ecee;
+    color: #6b7280;
+    border-radius: 999px;
+    padding: 1px 7px;
+}
+
+.np-tab.active .count { background: #fbe4e9; color: #6B2C3E; }
+
+.np-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+
+.np-filter {
+    border: 1px solid #e5d9dc;
+    background: #fff;
+    color: #4b5563;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.np-filter span {
+    background: #dc3545;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    padding: 0 6px;
+}
+
+.np-filter.active { background: #6B2C3E; border-color: #6B2C3E; color: #fff; }
+.np-filter.active span { background: #fff; color: #6B2C3E; }
+
+.np-bulk {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #efe6e8;
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 0.6rem;
+    position: sticky;
+    top: -1px;
+    z-index: 2;
+}
+
+.np-bulk.has-selection { border-color: #d9b8c1; box-shadow: 0 6px 18px rgba(107, 44, 62, 0.08); }
+
+.np-check-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #374151;
+    cursor: pointer;
+    margin: 0;
+}
+
+.np-check-all input,
+.np-item-check {
+    width: 18px;
+    height: 18px;
+    accent-color: #6B2C3E;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.np-bulk-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.np-btn {
+    border: 1px solid #e5d9dc;
+    background: #fff;
+    color: #6B2C3E;
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.np-btn:hover:not(:disabled) { background: #faf5f6; border-color: #6B2C3E; }
+.np-btn.danger { color: #dc2626; }
+.np-btn.danger:hover:not(:disabled) { background: #fef2f2; border-color: #dc2626; }
+.np-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.np-swipe-hint { display: none; font-size: 0.76rem; color: #8a8285; margin: 0 0 0.6rem; }
+
+.np-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    border: 1px solid #efe6e8;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.np-list > li + li { border-top: 1px solid #f3eef0; }
+
+.np-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #fff;
+}
+
+.np-item.unread { background: #fdfaf8; }
+.np-item.selected { background: #fbf1f4; }
+.np-item-check { margin-top: 8px; }
+
+.np-item-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.np-item-main {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: none;
+    padding: 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    cursor: pointer;
+    color: inherit;
+}
+
+.np-item-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.np-item-title { font-size: 0.92rem; font-weight: 700; color: #1f2937; }
+.np-item.unread .np-item-title { font-weight: 800; }
+.np-item-title-row .n-tag { margin-bottom: 0; }
+.np-item-title-row .unread-dot { margin-top: 0; }
+.np-item-message { font-size: 0.86rem; color: #4b5563; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.np-item-time { font-size: 0.74rem; color: #9ca3af; }
+.np-item-main:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 4px; border-radius: 6px; }
+
+.np-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+.np-icon-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.np-icon-btn:hover { background: #f5eef0; color: #6B2C3E; }
+.np-icon-btn.danger:hover { background: #fef2f2; color: #dc2626; }
+.np-icon-btn:focus-visible,
+.np-btn:focus-visible,
+.np-tab:focus-visible,
+.np-filter:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; }
+
+.np-empty {
+    text-align: center;
+    padding: 3.5rem 1rem;
+    color: #9ca3af;
+    background: #fff;
+    border: 1px solid #efe6e8;
+    border-radius: 16px;
+}
+
+.np-empty i { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+.np-empty p { margin: 0; font-weight: 600; }
+
+.np-snack {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #2b1b20;
+    color: #fff;
+    padding: 11px 18px;
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+    font-size: 0.85rem;
+    max-width: calc(100% - 32px);
+    z-index: 5;
+}
+
+.np-snack button {
+    border: none;
+    background: none;
+    color: #fbc4d0;
+    font-weight: 800;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+/* Phones: swipe to archive, so inbox rows keep just View and Delete. */
+@media (max-width: 600px) {
+    .np-swipe-hint { display: block; }
+    .np-item { padding: 12px; gap: 10px; }
+    .np-item-icon { width: 34px; height: 34px; font-size: 0.9rem; }
+    .np-item-actions { flex-direction: column; gap: 2px; }
+    .np-list.inbox .np-item-actions .np-icon-btn:nth-child(2) { display: none; }
+    .np-bulk-actions { width: 100%; }
+    .np-bulk-actions .np-btn { flex: 1; justify-content: center; }
+    .np-tabs { gap: 1.2rem; }
+    .np-snack { bottom: 88px; }
+}
+
+/* Where a notification takes you: the report / article / reply glows. */
+@keyframes sc-target-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(107, 44, 62, 0); }
+    15%, 60% { box-shadow: 0 0 0 4px rgba(107, 44, 62, 0.35), 0 10px 26px rgba(107, 44, 62, 0.18); }
+}
+
+.sc-highlight {
+    animation: sc-target-glow 3.2s ease;
+    outline: 2px solid #6B2C3E;
+    outline-offset: 2px;
+}

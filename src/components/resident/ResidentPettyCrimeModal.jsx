@@ -527,7 +527,9 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               onChange={handleChange}
               style={{
                 width:'100%',
-                padding:'10px 14px',
+                // Room on the right for the arrow; long choices end in "…".
+                padding:'10px 36px 10px 14px',
+                textOverflow:'ellipsis',
                 borderRadius:'6px',
                 border:'1px solid #d1d5db'
               }}

@@ -939,6 +939,21 @@ export const markItemsRead = async (keys) => {
     }
 };
 
+// Restores archived announcements to the bell ("notif-archived:<id>" keys).
+export const unmarkItems = async (keys) => {
+    if (!getAuthToken() || !keys.length) return false;
+    try {
+        const res = await apiFetch(`${API_ENDPOINTS.ME}/unread`, {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({ keys }),
+        });
+        return (await res.json()).success === true;
+    } catch {
+        return false;
+    }
+};
+
 export const saveLanguagePreference = async (language) => {
     if (!getAuthToken()) return false;
     try {
@@ -964,9 +979,30 @@ export const fetchMyNotifications = async () => {
         message: item.message,
         type: item.notification_type,
         referenceId: item.reference_id,
+        commentId: item.comment_id || null,
         isRead: Boolean(item.is_read),
+        archived: Boolean(item.archived_at),
         createdAt: item.created_at
     }));
+};
+
+// Notifications page: archive / restore or delete the signed-in user's own.
+export const archiveMyNotifications = async (ids, archived = true) => {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine/archive`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids, archived }),
+    });
+    return Boolean((await res.json()).success);
+};
+
+export const deleteMyNotifications = async (ids) => {
+    const res = await apiFetch(`${API_ENDPOINTS.NOTIFICATIONS}/mine/delete`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids }),
+    });
+    return Boolean((await res.json()).success);
 };
 
 // Admin bell: marks a single notification read (e.g. when "See report" is clicked).

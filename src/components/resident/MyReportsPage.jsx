@@ -7,6 +7,7 @@ import {
   deletePettyCrimeReport
 } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { flashHighlight } from '../shared/highlight';
 import { showPopup, confirmPopup } from '../shared/popup';
 import ResidentEmergencyModal from "./ResidentEmergencyModal";
 import ResidentAssistanceModal from "./ResidentAssistanceModal";
@@ -123,7 +124,9 @@ const getRelativeTime = (dateStr) => {
 const FILTERS = ['All', 'Emergency', 'Assistance', 'Petty Crime'];
 const FILTER_LABEL_KEYS = { All: 'all', Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 
-function MyReportsPage({ isOpen, onClose, userId }) {
+// focusReport: { type, id, nonce } from a notification -- that report is
+// shown (filters cleared, right page, details open) and highlighted.
+function MyReportsPage({ isOpen, onClose, userId, focusReport }) {
   const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -174,6 +177,11 @@ function MyReportsPage({ isOpen, onClose, userId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, userId]);
 
+  const lastLoadedAt = useRef(0);
+  const handledFocus = useRef(null);
+  const skipPageReset = useRef(false);
+  const [highlightKey, setHighlightKey] = useState(null);
+
   const loadReports = async () => {
     if (!userId) {
       setError(t('myReports.noAccount'));
@@ -188,6 +196,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
     } catch (err) {
       setError(t('myReports.loadError'));
     } finally {
+      lastLoadedAt.current = Date.now();
       setLoading(false);
     }
   };
@@ -226,7 +235,45 @@ function MyReportsPage({ isOpen, onClose, userId }) {
 
   // Pages of PAGE_SIZE; back to page 1 whenever the filters change.
   const pageCount = Math.max(1, Math.ceil(filteredReports.length / PAGE_SIZE));
-  useEffect(() => { setPage(1); }, [activeFilter, statusFilter, searchQuery, sortOrder]);
+  useEffect(() => {
+    // Opening a report from a notification picks its page itself.
+    if (skipPageReset.current) { skipPageReset.current = false; return; }
+    setPage(1);
+  }, [activeFilter, statusFilter, searchQuery, sortOrder]);
+
+  useEffect(() => {
+    if (!isOpen || !focusReport || handledFocus.current === focusReport.nonce || loading) return;
+    const key = `${focusReport.type}-${focusReport.id}`;
+    // Same order as the list with no filters: newest first.
+    const ordered = [...reports].sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
+    const index = ordered.findIndex((r) => `${r.type}-${r.id}` === key);
+    if (index === -1) {
+      // Maybe this list is from before the report existed: wait for a fresh load.
+      if (lastLoadedAt.current > focusReport.nonce) handledFocus.current = focusReport.nonce;
+      return;
+    }
+    handledFocus.current = focusReport.nonce;
+    const filtersChange = activeFilter !== 'All' || statusFilter !== 'all' || searchQuery !== '' || sortOrder !== 'newest';
+    skipPageReset.current = filtersChange;
+    setActiveFilter('All');
+    setStatusFilter('all');
+    setSearchQuery('');
+    setSortOrder('newest');
+    setPage(Math.floor(index / PAGE_SIZE) + 1);
+    setExpandedKeys((prev) => ({ ...prev, [key]: true }));
+    setHighlightKey(key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, focusReport, reports, loading]);
+
+  useEffect(() => {
+    if (!highlightKey) return undefined;
+    // After the page change and the panel's slide-in.
+    const timer = setTimeout(() => {
+      flashHighlight(document.querySelector(`[data-report-key="${highlightKey}"]`));
+      setHighlightKey(null);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [highlightKey, page]);
   useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
   const pagedReports = filteredReports.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -1038,7 +1085,7 @@ function MyReportsPage({ isOpen, onClose, userId }) {
                 const hasMoreDetails = !!description || detailItems.length > 0 || hasCoords || !!r.photo_url;
 
                 return (
-                  <div key={key} className="mr-card" style={{ borderLeftColor: theme.accent, '--mr-accent': theme.accent }}>
+                  <div key={key} data-report-key={key} className="mr-card" style={{ borderLeftColor: theme.accent, '--mr-accent': theme.accent }}>
                     <div className="mr-card-top">
                       <div className="mr-card-icon" style={{ background: theme.bg, color: theme.accent }}>
                         <i className={`bi ${theme.icon}`}></i>

@@ -1,11 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
+import { flashHighlight } from "../../shared/highlight";
 import {
     toggleAnnouncementLike,
     fetchAnnouncementComments,
     postAnnouncementComment,
     deleteAnnouncementComment
 } from "../../../Services/api";
+
+// A notification asks the News page to show one article (and optionally
+// one comment or reply under it): { announcementId, commentId?, openComments? }.
+const FOCUS_EVENT = "safeconnect:focus-news";
+export const focusNewsItem = (detail) => window.dispatchEvent(new CustomEvent(FOCUS_EVENT, { detail }));
 
 const hostnameOf = (url) => {
     try {
@@ -117,6 +123,46 @@ export default function AnnouncementCard({
     const [postingReply, setPostingReply] = useState(false);
 
     const [shareFeedback, setShareFeedback] = useState(false);
+
+    // The comment a notification points to, highlighted once comments load.
+    const [focusCommentId, setFocusCommentId] = useState(null);
+
+    useEffect(() => {
+        const onFocus = async (e) => {
+            const { announcementId, commentId, openComments } = e.detail || {};
+            if (String(announcementId) !== String(announcement.id)) return;
+            const card = document.getElementById(`news-item-${announcement.id}`);
+            if (!openComments) {
+                flashHighlight(card, "start");
+                return;
+            }
+            // Fresh copy, so a reply that just arrived is there.
+            setShowComments(true);
+            setCollapsedReplies({});
+            setCommentsLoading(true);
+            try {
+                const data = await fetchAnnouncementComments(announcement.id);
+                setComments(Array.isArray(data) ? data : []);
+            } catch {
+                setComments((prev) => prev || []);
+            } finally {
+                setCommentsLoading(false);
+            }
+            if (commentId) setFocusCommentId(commentId);
+            else flashHighlight(card, "start");
+        };
+        window.addEventListener(FOCUS_EVENT, onFocus);
+        return () => window.removeEventListener(FOCUS_EVENT, onFocus);
+    }, [announcement.id]);
+
+    useEffect(() => {
+        if (!focusCommentId || commentsLoading || !comments) return;
+        const el = document.getElementById(`news-comment-${focusCommentId}`)
+            || document.getElementById(`news-item-${announcement.id}`);
+        setFocusCommentId(null);
+        // Let the opened comments lay out first.
+        setTimeout(() => flashHighlight(el), 60);
+    }, [focusCommentId, comments, commentsLoading, announcement.id]);
 
     const handleToggleLike = async () => {
         if (likeBusy) return;
@@ -230,7 +276,7 @@ export default function AnnouncementCard({
     // replyingTo: the commenter a reply answers, shown as an @mention.
     // threadId: the top-level comment a Reply joins.
     const renderComment = (c, replyingTo, threadId = c.id) => (
-        <div className={`news-comment ${replyingTo ? 'news-comment-reply' : ''}`} key={c.id}>
+        <div className={`news-comment ${replyingTo ? 'news-comment-reply' : ''}`} key={c.id} id={`news-comment-${c.id}`}>
             <div
                 className={`news-comment-avatar ${c.isAdmin ? 'news-comment-avatar-admin' : ''}`}
                 style={c.isAdmin ? undefined : { background: colorForName(c.author) }}

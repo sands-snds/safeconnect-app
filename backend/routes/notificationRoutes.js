@@ -8,6 +8,8 @@ const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
 // Resident-facing: a signed-in user's own notifications (status-change replies, etc).
 router.get("/mine", verifyToken, controller.getMyNotifications);
 router.put("/mine/read-all", verifyToken, controller.markAllMineAsRead);
+router.put("/mine/archive", verifyToken, controller.archiveMine);
+router.post("/mine/delete", verifyToken, controller.deleteMine);
 router.put("/mine/:id/read", verifyToken, controller.markMineAsRead);
 
 // Admin-only: feeds the admin header notification bell.

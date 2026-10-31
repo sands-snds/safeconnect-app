@@ -47,6 +47,8 @@ export default function DesktopNavbar({
     openNewsPage,
     openReportsPage,
     openSettingsPage,
+    openNotificationsPage,
+    archiveNotifications,
     handleNavigation
 
 }) {
@@ -128,7 +130,8 @@ export default function DesktopNavbar({
                     describeWeatherCode={describeWeatherCode}
                     getCategoryIcon={getCategoryIcon}
                     getCategoryColor={getCategoryColor}
-                    onViewAll={openNewsPage}
+                    onViewAll={openNotificationsPage}
+                    onArchive={archiveNotifications}
                     onClose={toggleNotifications}
                 />
 

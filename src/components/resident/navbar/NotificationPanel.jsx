@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
+import SwipeToArchive from "./SwipeToArchive";
+
+const UNDO_MS = 5000;
 
 export default function NotificationPanel({
     show,
@@ -27,10 +30,30 @@ export default function NotificationPanel({
     getCategoryColor,
 
     onViewAll,
-    onClose
+    onClose,
+    onArchive
 }) {
     const { t } = useLanguage();
     const [tab, setTab] = useState('all');
+    // The last notification swiped away, for "Undo".
+    const [undoId, setUndoId] = useState(null);
+
+    useEffect(() => {
+        if (undoId === null) return undefined;
+        const timer = setTimeout(() => setUndoId(null), UNDO_MS);
+        return () => clearTimeout(timer);
+    }, [undoId]);
+
+    const archiveOne = (id) => {
+        onArchive([id], true);
+        setUndoId(id);
+    };
+
+    const undoArchive = () => {
+        if (undoId === null) return;
+        onArchive([undoId], false);
+        setUndoId(null);
+    };
 
     if (!show) return null;
 
@@ -121,8 +144,8 @@ export default function NotificationPanel({
                 {visibleNotifications.map((n) => {
                     const color = colorOf(n.category);
                     return (
+                        <SwipeToArchive key={n.id} onArchive={onArchive ? () => archiveOne(n.id) : null} label={t('notificationPanel.archive')}>
                         <div
-                            key={n.id}
                             className={`notification-item ${n.unread ? "unread" : ""}`}
                             onClick={() => handleNotificationClick(n.id)}
                         >
@@ -144,9 +167,17 @@ export default function NotificationPanel({
 
                             {n.unread && <span className="unread-dot"></span>}
                         </div>
+                        </SwipeToArchive>
                     );
                 })}
             </div>
+
+            {undoId !== null && (
+                <div className="panel-undo" role="status">
+                    <span><i className="bi bi-archive-fill" aria-hidden="true"></i> {t('notificationPanel.archived')}</span>
+                    <button type="button" onClick={undoArchive}>{t('notificationsPage.undo')}</button>
+                </div>
+            )}
 
             {onViewAll && (
                 <button className="panel-footer-link" onClick={onViewAll}>

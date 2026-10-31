@@ -88,6 +88,31 @@ class Notification {
         return result.affectedRows;
     }
 
+    // A resident archives (or restores) their own notifications. Archiving
+    // also marks them read, so they leave the bell's count.
+    static async setArchivedForUser(ids, userId, archived) {
+        if (!ids.length) return 0;
+        const [result] = await db.query(
+            archived
+                ? `UPDATE notifications SET archived_at = NOW(), is_read = TRUE WHERE user_id = ? AND id IN (?)`
+                : `UPDATE notifications SET archived_at = NULL WHERE user_id = ? AND id IN (?)`,
+            [userId, ids]
+        );
+        changedFor(userId);
+        return result.affectedRows;
+    }
+
+    // A resident deletes their own notifications for good.
+    static async deleteForUser(ids, userId) {
+        if (!ids.length) return 0;
+        const [result] = await db.query(
+            `DELETE FROM notifications WHERE user_id = ? AND id IN (?)`,
+            [userId, ids]
+        );
+        changedFor(userId);
+        return result.affectedRows;
+    }
+
     // A resident's own personal notifications (e.g. status-change replies).
     static async findByUser(userId) {
         const [rows] = await db.query(
@@ -169,7 +194,7 @@ class Notification {
             `
             SELECT COUNT(*) AS total
             FROM notifications
-            WHERE is_read = FALSE AND user_id = ?
+            WHERE is_read = FALSE AND user_id = ? AND archived_at IS NULL
             `,
             [userId]
         );

@@ -52,6 +52,8 @@ export default function MobileNavbar({
     openNewsPage,
     openReportsPage,
     openSettingsPage,
+    openNotificationsPage,
+    archiveNotifications,
 
     handleNavigation
 
@@ -101,7 +103,8 @@ export default function MobileNavbar({
                         describeWeatherCode={describeWeatherCode}
                         getCategoryIcon={getCategoryIcon}
                         getCategoryColor={getCategoryColor}
-                        onViewAll={openNewsPage}
+                        onViewAll={openNotificationsPage}
+                        onArchive={archiveNotifications}
                         onClose={() => setShowNotifications(false)}
                     />
 

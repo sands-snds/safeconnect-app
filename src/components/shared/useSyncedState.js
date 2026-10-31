@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { fetchMyState, markItemsRead } from '../../Services/api';
+import { fetchMyState, markItemsRead, unmarkItems } from '../../Services/api';
 
 // The signed-in account's synced state (GET/POST /api/me, see
 // backend/services/userStateService.js): what they've read or dismissed and
 // their language. Kept on the server so it follows them to every device;
 // this module holds the copy for the current page.
 //
-// Read keys: "announcement:<id>", "weather:<YYYY-MM-DD>", "admin-demo:hidden".
+// Read keys: "announcement:<id>", "weather:<YYYY-MM-DD>", "admin-demo:hidden",
+// "notif-archived:<id>" / "notif-deleted:<id>" (announcements in the bell).
 
 let readItems = new Set();
 let language = null;
@@ -51,6 +52,16 @@ export const markSyncedRead = (keys) => {
   readItems = new Set([...readItems, ...fresh]);
   emit();
   saveKeys(fresh);
+};
+
+// Takes keys back off (only "notif-archived:" ones are kept off by the server).
+export const unmarkSynced = (keys) => {
+  const present = keys.filter((k) => readItems.has(k));
+  if (!present.length) return;
+  readItems = new Set([...readItems].filter((k) => !present.includes(k)));
+  present.forEach((k) => unsaved.delete(k));
+  emit();
+  unmarkItems(present);
 };
 
 export const isSyncedRead = (key) => readItems.has(key);

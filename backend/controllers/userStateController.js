@@ -36,6 +36,19 @@ exports.markRead = async (req, res) => {
     }
 };
 
+// POST /api/me/unread  { keys: ["notif-archived:12", ...] } -- restore archived announcements
+exports.unmark = async (req, res) => {
+    const keys = userState.cleanKeys(req.body?.keys);
+    if (!keys) return res.status(400).json({ success: false, message: "Invalid items." });
+    try {
+        await userState.unmark(req.user.id, keys);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Could not save that." });
+    }
+};
+
 // PUT /api/me/preferences  { language: "en" | "tl" }
 exports.updatePreferences = async (req, res) => {
     const { language } = req.body || {};

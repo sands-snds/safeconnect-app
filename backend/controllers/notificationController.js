@@ -95,6 +95,28 @@ exports.markMineAsRead = async (req, res) => {
     }
 };
 
+// Notifications page: archive / restore or delete several of your own.
+// Body: { ids: [1, 2, 3] } (and archived: true | false for /mine/archive).
+exports.archiveMine = async (req, res) => {
+    try {
+        const affected = await Notification.setArchivedForUser(idsFrom(req), req.user.id, req.body?.archived !== false);
+        res.json({ success: true, affected });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Couldn't update the notifications." });
+    }
+};
+
+exports.deleteMine = async (req, res) => {
+    try {
+        const affected = await Notification.deleteForUser(idsFrom(req), req.user.id);
+        res.json({ success: true, affected });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Couldn't delete the notifications." });
+    }
+};
+
 exports.markAllMineAsRead = async (req, res) => {
     try {
         await Notification.markAllAsReadForUser(req.user.id);

@@ -612,10 +612,18 @@ section {
 }
 
 /* Landing Page Container */
+/* clip, not hidden: hidden would make this a scroll box and stop the
+   navbar from sticking to the top (browsers without clip use hidden). */
 .landing-page {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* Section links land below the sticky navbar, not under it. */
+.landing-page [id] {
+  scroll-margin-top: var(--landing-navbar-height, 76px);
 }
 
 /* Responsive Design */

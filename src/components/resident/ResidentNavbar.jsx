@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import MyReportsPage from './MyReportsPage';
 import SettingsPage from './SettingsPage';
 import NewsOverlay from "./navbar/NewsOverlay";
+import NotificationsPage from "./navbar/NotificationsPage";
+import { focusNewsItem } from "./navbar/AnnouncementCard";
 import DesktopNavbar from "./navbar/DesktopNavbar";
 import MobileNavbar from "./navbar/MobileNavbar";
 import useAnnouncements from "./navbar/hooks/useAnnouncements";
@@ -22,6 +24,13 @@ import "./navbar/NavbarStyle.css";
 // Fallback refresh while the tab is visible (live updates usually arrive
 // within a second or two; see useLiveUpdates).
 const POLL_INTERVAL_MS = 30 * 1000;
+
+// Report status notifications -> the My Reports type they belong to.
+const REPORT_TYPE_BY_NOTIFICATION = {
+  emergency_status: 'Emergency',
+  assistance_status: 'Assistance',
+  petty_crime_status: 'Petty Crime'
+};
 
 const RAIN_ALERT_THRESHOLD = 40;
 
@@ -120,6 +129,9 @@ function ResidentNavbar() {
   const [showNewsPage, setShowNewsPage] = useState(false);
   const [showReportsPage, setShowReportsPage] = useState(false);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
+  const [showNotificationsPage, setShowNotificationsPage] = useState(false);
+  // The report a notification points to: My Reports shows and highlights it.
+  const [reportFocus, setReportFocus] = useState(null);
 
   // Which nav item should read as "active": 'home' | 'emergency' | 'news' |
   // 'reports' | 'settings'. Emergency has no panel of its own (it's an
@@ -179,10 +191,13 @@ function ResidentNavbar() {
       showNotifications,
       setShowNotifications,
       notifications,
+      archivedNotifications,
       unreadCount,
       totalBadgeCount,
       markOneAsRead,
       markAllAsRead,
+      archiveNotifications,
+      deleteNotifications,
       reloadPersonalNotifications
   } = useNotifications(
       announcements,
@@ -195,9 +210,9 @@ function ResidentNavbar() {
   };
 
   useEffect(() => {
-    document.body.style.overflow = (showNewsPage || showReportsPage || showSettingsPage) ? 'hidden' : 'auto';
+    document.body.style.overflow = (showNewsPage || showReportsPage || showSettingsPage || showNotificationsPage) ? 'hidden' : 'auto';
     return () => { document.body.style.overflow = 'auto'; };
-  }, [showNewsPage, showReportsPage, showSettingsPage]);
+  }, [showNewsPage, showReportsPage, showSettingsPage, showNotificationsPage]);
 
   useEffect(() => {
     reloadAnnouncements();
@@ -283,6 +298,7 @@ function ResidentNavbar() {
     setShowNewsPage(true);
     setShowReportsPage(false);
     setShowSettingsPage(false);
+    setShowNotificationsPage(false);
     setShowMobileMenu(false);
     setShowDropdown(false);
     setShowNotifications(false);
@@ -296,6 +312,7 @@ function ResidentNavbar() {
     setShowReportsPage(true);
     setShowNewsPage(false);
     setShowSettingsPage(false);
+    setShowNotificationsPage(false);
     setShowMobileMenu(false);
     setShowDropdown(false);
     setShowNotifications(false);
@@ -308,10 +325,29 @@ function ResidentNavbar() {
     setShowSettingsPage(true);
     setShowNewsPage(false);
     setShowReportsPage(false);
+    setShowNotificationsPage(false);
     setShowMobileMenu(false);
     setShowDropdown(false);
     setShowNotifications(false);
   };
+
+  // Every notification (the bell shows only the latest), with archive and
+  // delete. Opened from the bell's "View all notifications".
+  const openNotificationsPage = () => {
+    setActiveView('notifications');
+    setShowNotificationsPage(true);
+    setShowNewsPage(false);
+    setShowReportsPage(false);
+    setShowSettingsPage(false);
+    setShowMobileMenu(false);
+    setShowDropdown(false);
+    setShowNotifications(false);
+    markNotificationsViewed();
+    reloadAnnouncements();
+    reloadPersonalNotifications();
+  };
+
+  const markManyAsRead = (ids) => ids.forEach((id) => markOneAsRead(id));
 
   const closeSettingsPage = () => setShowSettingsPage(false);
 
@@ -322,33 +358,37 @@ function ResidentNavbar() {
     setShowNewsPage(false);
     setShowReportsPage(false);
     setShowSettingsPage(false);
+    setShowNotificationsPage(false);
   };
 
-  // Clicking a notification: mark it read. For announcements, also open the
-  // News page and scroll straight to that article. Personal notifications
-  // (e.g. "your report status changed") don't have a matching news article --
-  // take the resident straight to My Reports instead, since that's where
-  // they can actually see the report the update is about. The exception is
-  // "Barangay replied to your comment", which opens the announcement it's on.
+  // Clicking a notification marks it read and opens exactly what it is
+  // about, highlighted:
+  //   report status update      -> that report in My Reports
+  //   "... replied to your comment" -> that reply under its announcement
+  //   announcement              -> that article on the News page
   const handleNotificationClick = (id) => {
     markOneAsRead(id);
+    setShowNotifications(false);
 
-    let newsId = id;
+    let focus = { announcementId: id };
     if (typeof id === 'string' && id.startsWith('personal-')) {
-      const note = notifications.find((n) => n.id === id);
+      const note = [...notifications, ...archivedNotifications].find((n) => n.id === id);
+      const reportType = note && REPORT_TYPE_BY_NOTIFICATION[note.category];
+      if (reportType && note.referenceId) {
+        openReportsPage();
+        setReportFocus({ type: reportType, id: note.referenceId, nonce: Date.now() });
+        return;
+      }
       if (note?.category !== 'comment_reply' || !note.referenceId) {
         openReportsPage();
         return;
       }
-      newsId = note.referenceId;
+      focus = { announcementId: note.referenceId, commentId: note.commentId, openComments: true };
     }
 
-    setShowNotifications(false);
     openNewsPage();
-    setTimeout(() => {
-      const el = document.getElementById(`news-item-${newsId}`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 300);
+    // After the News page has rendered its articles.
+    setTimeout(() => focusNewsItem(focus), 300);
   };
 
   const handleWeatherNotificationClick = () => {
@@ -474,6 +514,8 @@ function ResidentNavbar() {
               openNewsPage={openNewsPage}
               openReportsPage={openReportsPage}
               openSettingsPage={openSettingsPage}
+              openNotificationsPage={openNotificationsPage}
+              archiveNotifications={archiveNotifications}
 
               handleNavigation={handleNavigation}
             />
@@ -526,6 +568,8 @@ function ResidentNavbar() {
               openNewsPage={openNewsPage}
               openReportsPage={openReportsPage}
               openSettingsPage={openSettingsPage}
+              openNotificationsPage={openNotificationsPage}
+              archiveNotifications={archiveNotifications}
 
               handleNavigation={handleNavigation}
             />
@@ -550,6 +594,20 @@ function ResidentNavbar() {
         isOpen={showReportsPage}
         onClose={closeReportsPage}
         userId={currentUser?.id}
+        focusReport={reportFocus}
+      />
+
+      <NotificationsPage
+        isOpen={showNotificationsPage}
+        notifications={notifications}
+        archivedNotifications={archivedNotifications}
+        onOpen={handleNotificationClick}
+        onArchive={archiveNotifications}
+        onDelete={deleteNotifications}
+        onMarkRead={markManyAsRead}
+        formatRelativeTime={formatRelativeTime}
+        getCategoryIcon={getCategoryIcon}
+        getCategoryColor={getCategoryColor}
       />
 
       <SettingsPage

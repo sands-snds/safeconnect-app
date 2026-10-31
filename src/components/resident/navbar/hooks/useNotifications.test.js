@@ -2,7 +2,8 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import useNotifications from './useNotifications';
 import { refreshSyncedState, __resetSyncedState } from '../../../shared/useSyncedState';
 import {
-  fetchMyNotifications, markAllMyNotificationsRead, markMyNotificationRead, fetchMyState, markItemsRead
+  fetchMyNotifications, markAllMyNotificationsRead, markMyNotificationRead, fetchMyState, markItemsRead,
+  archiveMyNotifications, deleteMyNotifications, unmarkItems
 } from '../../../../Services/api';
 
 jest.mock('../../../../Services/api', () => ({
@@ -10,7 +11,10 @@ jest.mock('../../../../Services/api', () => ({
   markAllMyNotificationsRead: jest.fn(),
   markMyNotificationRead: jest.fn(),
   fetchMyState: jest.fn(),
-  markItemsRead: jest.fn()
+  markItemsRead: jest.fn(),
+  archiveMyNotifications: jest.fn(),
+  deleteMyNotifications: jest.fn(),
+  unmarkItems: jest.fn()
 }));
 
 const ANNOUNCEMENTS = [
@@ -26,6 +30,9 @@ beforeEach(() => {
   markAllMyNotificationsRead.mockResolvedValue(true);
   markMyNotificationRead.mockResolvedValue(true);
   markItemsRead.mockResolvedValue(true);
+  archiveMyNotifications.mockResolvedValue(true);
+  deleteMyNotifications.mockResolvedValue(true);
+  unmarkItems.mockResolvedValue(true);
   fetchMyState.mockResolvedValue({ success: true, readItems: [], preferences: { language: null } });
 });
 
@@ -86,4 +93,38 @@ test('a save that fails is kept and sent again on the next refresh', async () =>
   await act(() => refreshSyncedState());
   expect(markItemsRead).toHaveBeenLastCalledWith(['announcement:11']);
   expect(result.current.unreadCount).toBe(2);
+});
+
+test('archiving moves notifications out of the bell, marks them read, and saves it', async () => {
+  const { result } = setup();
+  await waitFor(() => expect(result.current.unreadCount).toBe(3));
+  await act(() => result.current.archiveNotifications([11, 'personal-5']));
+  expect(result.current.notifications.map((n) => n.id)).toEqual([12]);
+  expect(result.current.archivedNotifications.map((n) => n.id).sort()).toEqual([11, 'personal-5'].sort());
+  expect(result.current.unreadCount).toBe(1);
+  expect(markItemsRead).toHaveBeenCalledWith(['notif-archived:11', 'announcement:11']);
+  expect(archiveMyNotifications).toHaveBeenCalledWith([5], true);
+});
+
+test('restoring brings archived notifications back to the inbox', async () => {
+  const { result } = setup();
+  await waitFor(() => expect(result.current.unreadCount).toBe(3));
+  await act(() => result.current.archiveNotifications([11, 'personal-5']));
+  await act(() => result.current.archiveNotifications([11, 'personal-5'], false));
+  expect(result.current.archivedNotifications).toHaveLength(0);
+  expect(result.current.notifications).toHaveLength(3);
+  expect(unmarkItems).toHaveBeenCalledWith(['notif-archived:11']);
+  expect(archiveMyNotifications).toHaveBeenLastCalledWith([5], false);
+});
+
+test('deleting removes notifications for good, even after a refresh', async () => {
+  const { result } = setup();
+  await waitFor(() => expect(result.current.unreadCount).toBe(3));
+  await act(() => result.current.deleteNotifications([12, 'personal-5']));
+  expect(result.current.notifications.map((n) => n.id)).toEqual([11]);
+  expect(deleteMyNotifications).toHaveBeenCalledWith([5]);
+  expect(markItemsRead).toHaveBeenCalledWith(['notif-deleted:12', 'announcement:12']);
+  // The server list fetched before the delete landed still has it.
+  await act(() => result.current.reloadPersonalNotifications());
+  expect(result.current.notifications.map((n) => n.id)).toEqual([11]);
 });

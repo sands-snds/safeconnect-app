@@ -50,7 +50,8 @@ const STYLES = `
   .auth-section ~ .auth-section { margin-top: 6px; padding-top: 16px; border-top: 1px solid #f0eaec; }
   .auth-grid { display: grid; gap: 0 14px; }
   .auth-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-  .auth-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  /* align-items: end keeps a wrapped label (e.g. "Gitnang Pangalan (opsyonal)") from pushing its box out of line. */
+  .auth-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; align-items: end; }
 
   .auth-field { margin-bottom: 14px; }
   .auth-label { display: block; margin-bottom: 6px; font-size: 0.84rem; font-weight: 600; color: #374151; }

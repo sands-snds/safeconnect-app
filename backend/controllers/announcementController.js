@@ -124,7 +124,8 @@ exports.createComment = async (req, res) => {
                 title: isAdmin ? "Barangay replied to your comment" : `${authorName} replied to your comment`,
                 message: announcement?.title ? `On "${announcement.title}": ${text}` : text,
                 notificationType: "comment_reply",
-                referenceId: Number(req.params.id)
+                referenceId: Number(req.params.id),
+                commentId: id
             }).catch((err) => console.error("Comment reply notification failed:", err));
         }
 
