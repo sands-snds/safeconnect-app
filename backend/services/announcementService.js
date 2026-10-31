@@ -5,8 +5,8 @@ const NotificationService = require("./notificationService");
 const { sendAnnouncementToAll } = require("./emailService");
 const db = require("../config/db");
 
-// YYYY-MM-DD for date_posted, or null when missing/unparseable (the update
-// then keeps the stored date instead of failing on a value like "10/2/2026").
+
+
 const toSqlDate = (value) => {
     if (!value) return null;
     if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
@@ -38,7 +38,7 @@ class AnnouncementService {
             referenceId: id,
         });
 
-        // Email all active residents (non-blocking — don't fail if email errors)
+        
         AnnouncementService._emailAllResidents({
             title: data.title,
             category: data.category,
@@ -50,7 +50,7 @@ class AnnouncementService {
         return { success: true, id };
     }
 
-    // Fetch all active residents and send them the announcement email.
+    
     static async _emailAllResidents(announcement) {
         const [rows] = await db.query(
             `SELECT full_name, email_address
@@ -100,22 +100,12 @@ class AnnouncementService {
                 {
                     timeout: 5000,
                     headers: {
-                        // Many real-world sites (Wikipedia, government sites
-                        // behind a WAF/CDN, etc.) reject a request outright
-                        // with 403/406 if it has no User-Agent at all -- this
-                        // was rejecting essentially every URL that wasn't
-                        // trivially simple.
                         "User-Agent":
                             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                         Accept: "text/html,application/xhtml+xml"
                     }
                 },
                 (response) => {
-                    // Follow redirects ourselves -- the raw http/https
-                    // modules don't do this automatically, and this is
-                    // exactly how something like Wikipedia's "Random
-                    // article" link is designed to work (a 30x redirect to
-                    // the actual page), not an edge case.
                     if (
                         response.statusCode >= 300 &&
                         response.statusCode < 400 &&
@@ -138,9 +128,9 @@ class AnnouncementService {
                     response.setEncoding("utf8");
                     response.on("data", (chunk) => {
                         html += chunk;
-                        // The <head> meta tags are all we need. Stop reading
-                        // big pages early -- destroy() emits "close", not
-                        // "end", so both are handled below.
+                        
+                        
+                        
                         if (html.length > 300000 || /<\/head>/i.test(chunk)) response.destroy();
                     });
 
@@ -155,8 +145,8 @@ class AnnouncementService {
                                 .replace(/&lt;/g, "<")
                                 .replace(/&gt;/g, ">");
 
-                        // Sites put the attributes in either order and use
-                        // property= (Open Graph) or name= (Twitter cards).
+                        
+                        
                         const getMeta = (...keys) => {
                             const tags = html.match(/<meta\b[^>]*>/gi) || [];
                             for (const key of keys) {

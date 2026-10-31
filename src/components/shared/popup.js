@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import ResultPopup from './ResultPopup';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-// showPopup() replaces alert() with the app's styled popup. <PopupHost />
-// (mounted once in App.js) listens for it and shows one popup at a time.
-//
-//   showPopup({ type: 'error', title: 'Couldn't Save', message: '...' })
-//   showPopup({ type: 'success', message: '...', onClose: () => ... })
-//
-// Without a title, a default for the type is used ("Success",
-// "Please Check", "Something Went Wrong") in the current language.
+
+
+
+
+
+
+
+
 
 const POPUP_EVENT = 'safeconnect:popup';
 
@@ -17,11 +17,11 @@ export const showPopup = (options) => {
   window.dispatchEvent(new CustomEvent(POPUP_EVENT, { detail: options }));
 };
 
-// Styled replacement for window.confirm(). Resolves true when the main
-// button is pressed, false on Cancel, Esc or clicking outside.
-//
-//   if (!(await confirmPopup({ type: 'danger', title: 'Delete this report?',
-//         message: '...', confirmLabel: 'Delete' }))) return;
+
+
+
+
+
 export const confirmPopup = ({ confirmLabel, cancelLabel, ...options } = {}) =>
   new Promise((resolve) => {
     showPopup({

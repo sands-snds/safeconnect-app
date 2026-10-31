@@ -74,11 +74,9 @@ const notificationsRef = useRef(null);
 const userMenuRef = useRef(null);
 
     const adminName = adminUser?.fullName || adminUser?.username || "Administrator";
-    // On phones the sidebar is hidden: the menu button before the title opens
-    // it as a drawer (the profile button opens the account menu everywhere).
+
     const isMobile = useIsMobile();
 
-    // Close whichever dropdown is open when clicking anywhere outside it.
     useEffect(() => {
         if (!showNotifications && !showUserMenu) return;
 
@@ -95,8 +93,6 @@ const userMenuRef = useRef(null);
         return () => document.removeEventListener("mousedown", handleClick);
     }, [showNotifications, showUserMenu]);
 
-    // Opens what the notification is about: the report itself (details
-    // open), or the Notifications page for a comment to reply to.
     const openNotification = (item) => {
         onMarkOneRead?.(item.id);
         setShowNotifications(false);
@@ -116,8 +112,7 @@ const userMenuRef = useRef(null);
                 position: "sticky",
                 top: 0,
                 zIndex: 50,
-                // Covers the page margin around the header, so content
-                // scrolling past it doesn't show in the gaps.
+
                 boxShadow: isMobile ? "0 1px 0 #e5e7eb" : "0 0 0 20px #f9fafb"
             }}
         >
@@ -175,7 +170,6 @@ const userMenuRef = useRef(null);
                 }
             `}</style>
 
-            {/* Left: on phones, the menu (drawer) button before the title */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                 {isMobile && onToggleMobileMenu && (
                     <button
@@ -219,7 +213,7 @@ const userMenuRef = useRef(null);
                     gap: "12px"
                 }}
             >
-                {/* English / Tagalog (same switch as the resident pages) */}
+
                 <LanguageToggle variant="dark" className="admin-header-lang" />
 
                 {lastUpdate && (
@@ -442,7 +436,6 @@ const userMenuRef = useRef(null);
                                 </button>
                                 )}
 
-                            {/* System tab: Admins (super_admin) only, like the sidebar. */}
                             {isSuperAdmin && (
                                 <button
                                     className="admin-user-menu-item"

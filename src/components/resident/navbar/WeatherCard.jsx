@@ -3,11 +3,11 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 
 const HOT_DAY_C = 34;
 
-// Clear / partly cloudy hours after dark get a moon instead of a sun.
+
 const NIGHT_ICONS = { "bi-sun-fill": "bi-moon-stars-fill", "bi-cloud-sun-fill": "bi-cloud-moon-fill" };
 
-// The forecast hours are Manila time ("2026-10-31T13:00"); this is the
-// current hour in the same form, whatever the device's own time zone.
+
+
 const manilaHourKey = () => {
     const parts = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23"
@@ -16,8 +16,8 @@ const manilaHourKey = () => {
     return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:00`;
 };
 
-// A row that scrolls sideways: swipe on phones; on computers drag it, use
-// the arrows, or scroll with a trackpad. A drag doesn't count as a click.
+
+
 function useSideScroll(deps) {
     const ref = useRef(null);
     const drag = useRef(null);
@@ -45,7 +45,7 @@ function useSideScroll(deps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [updateEdges, ...deps]);
 
-    // One full view of cards (plus the gap) at a time.
+    
     const page = (dir) => {
         const el = ref.current;
         if (el) el.scrollBy({ left: dir * (el.clientWidth + 8), behavior: "smooth" });
@@ -54,7 +54,7 @@ function useSideScroll(deps) {
     const handlers = {
         onPointerDown: (e) => {
             dragged.current = false;
-            // Touch already swipes natively; only mice need help.
+            
             if (e.pointerType !== "mouse" || e.button !== 0) return;
             drag.current = { x: e.clientX, left: ref.current.scrollLeft, moved: false };
         },
@@ -106,23 +106,22 @@ function ScrollButtons({ edges, page, prevLabel, nextLabel }) {
     );
 }
 
-// News page: today's weather in Barangay Sta. Fe, the 7-day forecast, and
-// hour by hour for whichever day is picked. The bell's rain advisory scrolls
-// here (#news-item-weather).
+
+
+
 export default function WeatherCard({
     weather,
     formatNewsDate,
     describeWeatherCode,
     RAIN_ALERT_THRESHOLD
 }) {
-
     const { t, language } = useLanguage();
     const locale = language === "tl" ? "fil-PH" : "en-US";
     const days = weather && Array.isArray(weather.days) ? weather.days : [];
     const [selected, setSelected] = useState(0);
     const day = days[Math.min(selected, Math.max(0, days.length - 1))];
 
-    // The picked day's hours; for today, from the current hour on.
+    
     const dayHours = useMemo(() => {
         const hours = weather && Array.isArray(weather.hours) ? weather.hours : [];
         if (!day) return [];
@@ -135,7 +134,7 @@ export default function WeatherCard({
     const week = useSideScroll([days.length]);
     const hourly = useSideScroll([dayHours.length, selected]);
 
-    // A new day starts at its first hour.
+    
     useEffect(() => {
         if (hourly.ref.current) hourly.ref.current.scrollLeft = 0;
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,7 +154,7 @@ export default function WeatherCard({
             ? { icon: "bi-brightness-high-fill", text: t('weather.tipHot') }
             : { icon: "bi-emoji-smile-fill", text: t('weather.tipFair') };
 
-    // "2026-10-29" read as a local date (not UTC midnight).
+    
     const dateOf = (iso) => new Date(`${iso}T00:00:00`);
     const shortDay = (d, i) => (i === 0 ? t('weather.todayShort') : dateOf(d.date).toLocaleDateString(locale, { weekday: 'short' }));
     const longDay = (d, i) => {
@@ -169,7 +168,6 @@ export default function WeatherCard({
     const dayInfo = day ? describeWeatherCode(day.code) : null;
 
     return (
-        // A div, not <section>: styles/App.css zeroes every section's padding.
         <div
             role="region"
             id="news-item-weather"
@@ -278,5 +276,4 @@ export default function WeatherCard({
             </p>
         </div>
     );
-
 }

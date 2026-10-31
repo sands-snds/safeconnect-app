@@ -1,17 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { API_ENDPOINTS, getAuthToken } from '../../Services/api';
 
-// Live updates from GET /api/me/events (backend/services/liveUpdates.js):
-// the server names what changed ("state", "notifications", "announcements", "reports",
-// "profile", "admin-notifications") and the matching handler reloads it, so
-// changes made on another device show up within a second or two.
-//
-// Read with fetch rather than EventSource so the sign-in travels in the
-// Authorization header instead of the URL. Reconnects with a growing delay
-// if the connection drops; `reconnected` runs after a reconnect to catch up
-// on anything missed while disconnected. Regular polling stays as a fallback.
-//
-// handlers: { [eventType]: () => void, reconnected?: () => void }
+
+
+
+
+
+
+
+
+
+
+
 export default function useLiveUpdates(enabled, handlers) {
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
@@ -40,7 +40,7 @@ export default function useLiveUpdates(enabled, handlers) {
           cache: 'no-store',
           signal: controller.signal
         });
-        // Signed out / no longer allowed: stop (the rest of the page handles it).
+        
         if (res.status === 401 || res.status === 403) return;
         if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 

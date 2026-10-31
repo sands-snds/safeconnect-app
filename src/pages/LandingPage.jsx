@@ -10,14 +10,14 @@ import Footer from '../components/shared/DonationFooter';
 import { fetchCurrentUser, hasStoredToken } from '../Services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 
-// Someone already signed in (a saved login, or still within this browser
-// session) skips the home page and goes to their account. The server
-// confirms every sign-in first (invalid ones are deleted):
-// - a resident account goes to /resident;
-// - only a confirmed, Active admin account goes to /admin -- a resident is
-//   never sent there.
-// Right after logging out (navigate state { signedOut: true }) nothing is
-// checked, so logging out always lands here directly.
+
+
+
+
+
+
+
+
 const useSignedInRedirect = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,7 +28,7 @@ const useSignedInRedirect = () => {
     && (hasStoredToken(false) || hasStoredToken(true))
   );
 
-  // Don't keep "signed out" in history (a refresh may redirect again).
+  
   useEffect(() => {
     if (justSignedOut) navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state: null });
   }, [justSignedOut, navigate, location.pathname, location.search, location.hash]);

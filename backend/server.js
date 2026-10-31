@@ -24,9 +24,6 @@ const path = require("path");
 
 const app = express();
 
-// ── CORS: allow the React dev server plus any deployed frontends ──
-// ALLOWED_ORIGINS is a comma-separated list, e.g. the Azure Static Web App
-// URL: https://<name>.azurestaticapps.net
 const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -39,12 +36,10 @@ const allowedOrigins = [
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
-  // Lets the frontend read the file name of a generated report.
+
   exposedHeaders: ["Content-Disposition"],
 }));
 
-// Reports carry their photo/video as base64, which is ~4/3 the file size:
-// the forms allow 50MB videos, so the body can reach ~67MB.
 app.use(express.json({ limit: '75mb' }));
 app.use(express.urlencoded({ limit: '75mb', extended: true }));
 
@@ -95,18 +90,14 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Creates admin_activity_logs on existing databases (no manual migration needed).
 AdminActivity.ensureTable().catch((err) =>
   console.error("Could not create admin_activity_logs table:", err.message)
 );
 
-// Adds the IP / device / location columns to signin_logs if missing.
 Log.ensureColumns().catch((err) =>
   console.error("Could not add signin_logs columns:", err.message)
 );
 
-// Creates the News Like/Comment tables on existing databases (no manual migration needed).
-// Saved logins ("Save Login Info"); expired rows are cleared daily.
 const RememberedLogin = require("./models/RememberedLogin");
 RememberedLogin.ensureTable()
     .then(() => RememberedLogin.deleteExpired())
@@ -122,45 +113,32 @@ AnnouncementComment.ensureTable().catch((err) =>
   console.error("Could not create announcement_comments table:", err.message)
 );
 
-// Adds the report archive columns/setting, then auto-archives old resolved
-// reports now and every 6 hours.
 require("./services/archiveService").startScheduler();
 
-// Adds announcements.archived_at and auto-archives old announcements (if an
-// Admin turned it on) now and every 6 hours.
 require("./services/announcementArchiveService").startScheduler();
 
-// Archives sign-in / admin activity log entries older than each log's
-// period (default 90 days) now and every 6 hours.
 require("./services/logArchiveService").startScheduler();
 
-// Lets the editable site contacts (Content > Page Contacts) fit in system_settings,
-// then turns the News tab's video off once (see siteMediaService.hideNewsVideoOnce).
 require("./services/siteContentService").ensureSchema()
   .then(() => require("./services/siteMediaService").hideNewsVideoOnce())
   .catch((err) => console.error("Could not prepare site contacts storage:", err.message));
 
-// Per-account read state and language, synced across devices.
 require("./services/userStateService").ensureSchema().catch((err) =>
   console.error("Could not prepare synced account settings storage:", err.message)
 );
 
-// Notifications page: archived_at and comment_id on notifications.
 require("./models/Notification").ensureColumns().catch((err) =>
   console.error("Could not add notification columns:", err.message)
 );
 
-// Resident Sign-in Logs: what residents did after signing in.
 require("./models/ResidentActivity").ensureTable().catch((err) =>
   console.error("Could not create resident_activity_logs:", err.message)
 );
 
-// System > Users: archived_at for Closed accounts moved to the Archived tab.
 require("./models/User").ensureArchiveColumn().catch((err) =>
   console.error("Could not add registered_users.archived_at:", err.message)
 );
 
-// The barangay's main Admin account always exists and stays an Active Admin.
 require("./services/mainAccount").ensureMainAccount().catch((err) =>
   console.error("Could not check the main barangay account:", err.message)
 );

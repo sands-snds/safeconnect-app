@@ -4,7 +4,7 @@ import { useSiteMedia, mediaSrc, DEFAULT_SITE_MEDIA } from "../shared/useSiteCon
 
 function ResidentHero() {
   const { t } = useLanguage();
-  // Admins change these under Content > Page Contents.
+
   const { residentCarousel } = useSiteMedia();
   const heroImages = (residentCarousel?.length ? residentCarousel : DEFAULT_SITE_MEDIA.residentCarousel)
     .map((slide) => mediaSrc(slide.src));
@@ -79,8 +79,6 @@ function ResidentHero() {
         </div>
       </div>
 
-      {/* Emergency Banner -- kept outside the carousel so the indicators and
-          arrows don't sit on top of it */}
       <div className="emergency-banner text-center text-lg-start">
         <div className="d-flex align-items-center justify-content-center justify-content-lg-start">
           <i className="bi bi-telephone-forward-fill me-2"></i>

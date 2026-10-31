@@ -1,9 +1,9 @@
 import { renderHook, act } from '@testing-library/react';
 import useLocationPin from './useLocationPin';
 
-// Regression: saved reports return MySQL DECIMAL coordinates as strings.
-// A string pin sent Leaflet's bounds.contains() into infinite recursion
-// ("Maximum call stack size exceeded"), crashing the page on Edit.
+
+
+
 test('stores coordinates from the database as numbers', () => {
   const { result } = renderHook(() => useLocationPin());
   act(() => result.current.setGpsCoords({ lat: '14.3198000', lng: '120.9644000' }));

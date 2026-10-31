@@ -1,4 +1,4 @@
-// "just now" / "5m ago" / "3h ago" / "2d ago" for an ISO string or Date.
+
 export const timeAgo = (value) => {
     if (!value) return "";
     const seconds = Math.floor((Date.now() - new Date(value).getTime()) / 1000);

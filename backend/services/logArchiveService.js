@@ -1,13 +1,13 @@
 const db = require("../config/db");
 const AdminActivity = require("../models/AdminActivity");
 
-// Archiving for the System logs (sign-in logs and admin activity logs).
-// Entries older than the configured number of days get archived_at set by
-// the scheduled job below. They then show under the log's "Archived" tab
-// instead of the main list; nothing is deleted. The period is chosen per
-// log by an Admin (super_admin) and stored in system_settings.
-//
-// log key -> what the frontend/API calls it (/api/logs/archive-settings/:log)
+
+
+
+
+
+
+
 const LOGS = {
     signin: { table: "signin_logs", dateCol: "timestamp", settingKey: "signin_log_auto_archive_days" },
     admin: { table: "admin_activity_logs", dateCol: "created_at", settingKey: "admin_log_auto_archive_days" }
@@ -16,11 +16,11 @@ const LOGS = {
 const ALLOWED_DAYS = [0, 30, 90, 180, 365]; // 0 = off
 const DEFAULT_DAYS = 90;
 
-// Auto-archive runs on start and then every 6 hours.
+
 const JOB_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-// Adds archived_at to both log tables and the default settings, so existing
-// databases (local and Azure) don't need a manual migration.
+
+
 async function ensureSchema() {
     await AdminActivity.ensureTable();
     await db.query(`
@@ -70,8 +70,8 @@ async function setAutoArchiveDays(log, days) {
     );
 }
 
-// Archives entries older than each log's period. Pass a log key to run just
-// that one (used right after its setting changes). Returns how many.
+
+
 async function runAutoArchive(onlyLog = null) {
     let total = 0;
     for (const [key, { table, dateCol }] of Object.entries(LOGS)) {

@@ -1,17 +1,17 @@
-// Form helpers shared by the "Add New Report" modal flow.
-//
-// This used to exist as three separate, slightly different copies:
-//   - modals/formUtils.js + modals/formHandlers.js (unused, and formHandlers.js
-//     had a bug where the exported function only defined an identical inner
-//     function and never called it)
-//   - an inline copy inside hooks/useAdminData.js (the one actually running)
-// This is now the one copy. hooks/useAdminData.js calls the builders below.
-//
-// Field names in the returned object match what reportService.js /
-// assistanceRequestService.js read off req.body on the backend (the same
-// shape the resident-facing modals submit) — NOT the display shape used by
-// the report tables (that comes back from fetchEmergencyReports() etc.
-// after the record is created, see useAdminData.js).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const formatDate = (date) => {
   return new Date(date).toLocaleDateString("en-US", {
@@ -21,7 +21,7 @@ export const formatDate = (date) => {
   });
 };
 
-// Turns the raw <FormModal> FormData into an emergency report submission.
+
 export const buildEmergencyReportFromForm = (formData) => ({
   emergencyType: formData.get("emergency"),
   severity: formData.get("severity"),
@@ -35,7 +35,7 @@ export const buildEmergencyReportFromForm = (formData) => ({
   mediaType: null
 });
 
-// Turns the raw <FormModal> FormData into an assistance request submission.
+
 export const buildAssistanceRequestFromForm = (formData) => ({
   type: formData.get("assistanceType"),
   fullname: formData.get("requester"),

@@ -1,10 +1,6 @@
 const db = require("../config/db");
 
 class AnnouncementLike {
-
-    // Created on server start so existing databases (including Azure) pick
-    // it up without a manual migration -- same pattern as AdminActivity.
-    // Also listed in database/safeconnect_db.sql.
     static async ensureTable() {
         await db.query(`
             CREATE TABLE IF NOT EXISTS announcement_likes (
@@ -21,8 +17,8 @@ class AnnouncementLike {
         `);
     }
 
-    // Toggles the current user's like on an announcement. Returns the new
-    // liked state (true = now liked, false = now unliked).
+    
+    
     static async toggle(announcementId, userId) {
         const [existing] = await db.query(
             `SELECT id FROM announcement_likes WHERE announcement_id = ? AND user_id = ?`,
@@ -49,8 +45,8 @@ class AnnouncementLike {
         return row.count;
     }
 
-    // Batched like counts for every announcement in one query, instead of
-    // one query per card when rendering the News list.
+    
+    
     static async countsForAll() {
         const [rows] = await db.query(
             `SELECT announcement_id, COUNT(*) AS count FROM announcement_likes GROUP BY announcement_id`

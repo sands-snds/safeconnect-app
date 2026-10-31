@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 import { fetchMyState, markItemsRead, unmarkItems } from '../../Services/api';
 
-// The signed-in account's synced state (GET/POST /api/me, see
-// backend/services/userStateService.js): what they've read or dismissed and
-// their language. Kept on the server so it follows them to every device;
-// this module holds the copy for the current page.
-//
-// Read keys: "announcement:<id>", "weather:<YYYY-MM-DD>", "admin-demo:hidden",
-// "notif-archived:<id>" / "notif-deleted:<id>" (announcements in the bell).
+
+
+
+
+
+
+
 
 let readItems = new Set();
 let language = null;
-// Marked here but not yet confirmed saved (offline, a failed request): kept
-// on screen and sent again on the next refresh.
+
+
 const unsaved = new Set();
 const listeners = new Set();
 
@@ -25,13 +25,13 @@ export const subscribeSyncedState = (fn) => {
 
 export const getSyncedLanguage = () => language;
 
-// Loads the latest copy from the server. Resolves to true when it worked.
+
 export const refreshSyncedState = async () => {
   const retried = [...unsaved];
   if (retried.length) await saveKeys(retried);
   const result = await fetchMyState();
   if (!result) return false;
-  // Keep what was just re-sent too, in case the copy read back predates it.
+  
   readItems = new Set([...(result.readItems || []), ...unsaved, ...retried]);
   language = result.preferences?.language || null;
   emit();
@@ -45,7 +45,7 @@ async function saveKeys(keys) {
   if (ok) keys.forEach((k) => unsaved.delete(k));
 }
 
-// Marks items read on this page right away and saves them for the account.
+
 export const markSyncedRead = (keys) => {
   const fresh = keys.filter((k) => !readItems.has(k));
   if (!fresh.length) return;
@@ -54,7 +54,7 @@ export const markSyncedRead = (keys) => {
   saveKeys(fresh);
 };
 
-// Takes keys back off (only "notif-archived:" ones are kept off by the server).
+
 export const unmarkSynced = (keys) => {
   const present = keys.filter((k) => readItems.has(k));
   if (!present.length) return;
@@ -66,17 +66,17 @@ export const unmarkSynced = (keys) => {
 
 export const isSyncedRead = (key) => readItems.has(key);
 
-// Re-renders the component whenever the synced state changes; returns the
-// current set of read keys.
+
+
 export function useSyncedReadItems() {
   const [, setVersion] = useState(0);
   useEffect(() => subscribeSyncedState(() => setVersion((v) => v + 1)), []);
   return readItems;
 }
 
-// Keeps the page in step with the other devices: loads the state now, again
-// whenever the person comes back to this tab, and when `onRefresh` callers
-// add their own refreshes (profile, notifications) to the same moments.
+
+
+
 export function useSyncOnFocus(enabled, onRefresh) {
   useEffect(() => {
     if (!enabled) return undefined;

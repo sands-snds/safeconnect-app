@@ -19,15 +19,15 @@ jest.mock('../shared/useSiteContent', () => {
 const VIEW_FIRST = 'Please read the Terms and Conditions before creating an account.';
 const MUST_AGREE = 'You must agree to the Terms and Conditions to create an account.';
 
-// CRA resets mock implementations before each test, so set them here.
+
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem('sf_language', 'en');
   window.history.replaceState(null, '', '/');
-  // Sign-up step 1 asks the server to email a verification code.
+  
   global.fetch = jest.fn(() => Promise.resolve({ json: () => Promise.resolve({ success: true }) }));
   signinUser.mockResolvedValue({ success: false, message: 'Invalid email or password.' });
-  // The landing page also refreshes site content (carousel, contacts) on load.
+  
   fetchSiteContent.mockResolvedValue({});
 });
 
@@ -38,7 +38,7 @@ const renderHero = () => render(
   </LanguageProvider>
 );
 
-// Opens Sign Up and fills every field validly, so only the Terms rule decides.
+
 const openSignUp = () => {
   renderHero();
   fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
@@ -52,7 +52,7 @@ const openSignUp = () => {
   type('Confirm your password', 'Secret123!');
   return {
     checkbox: screen.getByRole('checkbox', { name: /I have read and agree to the Terms and Conditions/ }),
-    // The hero's own buttons are also type=submit; use the one in the form.
+    
     submit: () => fireEvent.click(document.querySelector('form button[type="submit"]'))
   };
 };

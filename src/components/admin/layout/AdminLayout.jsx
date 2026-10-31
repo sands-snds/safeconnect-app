@@ -28,7 +28,6 @@ const AdminLayout = ({
     adminUser,
     onWatchDemo
 }) => {
-
     return (
         <div className="admin-container">
 
@@ -66,7 +65,6 @@ const AdminLayout = ({
                         onWatchDemo={onWatchDemo}
                     />
 
-                    {/* Padding lives in admin.css (.admin-page-body) so phones get narrower margins. */}
                     <div className="admin-page-body">
                         {children}
                     </div>

@@ -22,8 +22,8 @@ const loadStoredAdminUser = () => {
     }
 };
 
-// Reads the user id out of the JWT payload (no verification needed here --
-// the backend still verifies the token on every request).
+
+
 const getTokenUserId = () => {
     try {
         const payload = getAuthToken()?.split(".")[1];
@@ -36,14 +36,13 @@ const getTokenUserId = () => {
 };
 
 export default function useAdminAuth() {
-
     const navigate = useNavigate();
 
-    // Nothing admin-only shows until the SERVER confirms an Active admin
-    // account (GET /auth/me). The "adminAuthenticated" flag in
-    // sessionStorage is only a hint and can't grant access by itself --
-    // anyone can set it, residents included. (Admin data is also refused by
-    // the server for non-admins: verifyAdmin.)
+    
+    
+    
+    
+    
     const [authChecked, setAuthChecked] = useState(false);
 
     const [isAuthenticated, setIsAuthenticated] =
@@ -52,7 +51,7 @@ export default function useAdminAuth() {
     const [showSigninModal, setShowSignInModal] =
         useState(false);
 
-    // The signed-in admin's profile ({ id, fullName, username, email, photoUrl, ... }).
+    
     const [adminUser, setAdminUserState] =
         useState(loadStoredAdminUser);
 
@@ -75,7 +74,6 @@ export default function useAdminAuth() {
                 setIsAuthenticated(true);
                 setShowSignInModal(false);
             } else {
-                // Not signed in, not an admin (e.g. a resident), or rejected.
                 sessionStorage.removeItem("adminAuthenticated");
                 setAdminUser(null);
                 if (!result.offline) clearAuthToken();
@@ -88,9 +86,9 @@ export default function useAdminAuth() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Refresh the profile from the backend (using the id in the token) each
-    // time the panel opens: older sessions didn't store it at all, and the
-    // role decides which tabs show, so it shouldn't be a stale copy.
+    
+    
+    
     useEffect(() => {
         if (!isAuthenticated) return;
 
@@ -113,10 +111,10 @@ export default function useAdminAuth() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated]);
 
-    // The backend rejected our token (e.g. signed out in another tab).
-    // Show the sign-in box over the current screen rather than logging
-    // out, so an announcement being written isn't lost -- after signing
-    // back in the admin can just submit again.
+    
+    
+    
+    
     const [sessionExpired, setSessionExpired] = useState(false);
 
     useEffect(() => {
@@ -139,8 +137,8 @@ export default function useAdminAuth() {
         });
         if (!confirmed) return;
 
-        // Need the token, so they run before clearAuthToken(). logoutUser
-        // revokes a saved login ("Save Login Info") on the server.
+        
+        
         await logoutAdmin();
         await logoutUser();
 
@@ -156,14 +154,13 @@ export default function useAdminAuth() {
 
         setShowSignInModal(true);
 
-        // Straight to the home page, without its "already signed in" forwarding.
+        
         navigate("/", { replace: true, state: { signedOut: true } });
     };
 
     const isSuperAdmin = adminUser?.role === "super_admin";
 
     return {
-
         authChecked,
         isAuthenticated,
         isSuperAdmin,
@@ -179,7 +176,5 @@ export default function useAdminAuth() {
         setAdminUser,
 
         handleLogout
-
     };
-
 }

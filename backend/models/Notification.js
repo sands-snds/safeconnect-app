@@ -1,12 +1,10 @@
 const db = require("../config/db");
 const live = require("../services/liveUpdates");
 
-// Open pages reload their bell as soon as a notification is added or read.
+
 const changedFor = (userId) => (userId ? live.notifyUser(userId, "notifications") : live.notifyAdmins("admin-notifications"));
 
 class Notification {
-    // archived_at: admin notifications archived from the Notifications page.
-    // comment_id: for "announcement_comment", the comment to reply to.
     static async ensureColumns() {
         const [existing] = await db.query(
             `SELECT COLUMN_NAME AS name FROM information_schema.COLUMNS
@@ -51,8 +49,8 @@ class Notification {
         return result.insertId;
     }
 
-    // Notifications for the admin panel (not tied to a specific resident).
-    // archived: the Notifications page's Archived tab instead.
+    
+    
     static async findAll({ archived = false } = {}) {
         const [rows] = await db.query(
             `
@@ -88,8 +86,8 @@ class Notification {
         return result.affectedRows;
     }
 
-    // A resident archives (or restores) their own notifications. Archiving
-    // also marks them read, so they leave the bell's count.
+    
+    
     static async setArchivedForUser(ids, userId, archived) {
         if (!ids.length) return 0;
         const [result] = await db.query(
@@ -102,7 +100,7 @@ class Notification {
         return result.affectedRows;
     }
 
-    // A resident deletes their own notifications for good.
+    
     static async deleteForUser(ids, userId) {
         if (!ids.length) return 0;
         const [result] = await db.query(
@@ -113,7 +111,7 @@ class Notification {
         return result.affectedRows;
     }
 
-    // A resident's own personal notifications (e.g. status-change replies).
+    
     static async findByUser(userId) {
         const [rows] = await db.query(
             `

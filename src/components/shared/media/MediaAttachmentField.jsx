@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { showPopup } from '../popup';
 
-// Photo/video attachment for the resident report forms (petty crime,
-// assistance), with the same file rules as Report Emergency
-// (ResidentEmergencyModal.jsx). Reports store the file as a base64 data URL.
+
+
+
 const ALLOWED_MEDIA_TYPES = [
   'image/jpeg', 'image/jpg',
   'video/mp4', 'video/quicktime', 'video/webm'
@@ -21,13 +21,13 @@ export const readAsDataUrl = (file) => new Promise((resolve, reject) => {
   reader.readAsDataURL(file);
 });
 
-// media = { file, previewUrl, type: 'image' | 'video' }; type and file are
-// null until something valid is picked.
+
+
 export const useMediaAttachment = (t) => {
   const [media, setMedia] = useState(EMPTY_MEDIA);
   const fileInputRef = useRef(null);
 
-  // Revoke the preview's object URL when it changes or the form unmounts
+  
   useEffect(() => {
     return () => {
       if (media.previewUrl) URL.revokeObjectURL(media.previewUrl);
@@ -64,7 +64,7 @@ export const useMediaAttachment = (t) => {
 
 const previewStyle = { display: 'block', width: '100%', maxHeight: '220px', objectFit: 'cover', background: '#000' };
 
-// requiredMark: show the red *; optionalMark: show "(optional)".
+
 const MediaAttachmentField = ({
   t,
   label,

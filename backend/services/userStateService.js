@@ -1,14 +1,14 @@
 const db = require("../config/db");
 
-// Per-account state that used to live only in one browser, so it now
-// follows the person to every device they sign in on:
-//   read items  - what they've marked as read or dismissed, as keys:
-//                 "announcement:<id>"  an announcement in the bell
-//                 "weather:<YYYY-MM-DD>" that day's rain advisory
-//                 "admin-demo:hidden"  "Don't show the admin demo again"
-//                 "notif-archived:<id>" an announcement archived from the bell
-//                 "notif-deleted:<id>"  an announcement deleted from the bell
-//   preferences - { language: "en" | "tl" }
+
+
+
+
+
+
+
+
+
 
 const ITEM_KEY_REGEX = /^[a-z-]{1,30}:[A-Za-z0-9._-]{1,60}$/;
 const LANGUAGES = ["en", "tl"];
@@ -48,7 +48,7 @@ async function getState(userId) {
     };
 }
 
-// Returns the cleaned keys, or null if the request is invalid.
+
 function cleanKeys(keys) {
     if (!Array.isArray(keys) || keys.length === 0 || keys.length > MAX_KEYS_PER_REQUEST) return null;
     const unique = [...new Set(keys.map((k) => String(k)))];
@@ -62,7 +62,7 @@ async function markRead(userId, keys) {
     );
 }
 
-// Only archived announcements can be "un-marked" (restored to the inbox).
+
 const RESTORABLE_PREFIX = "notif-archived:";
 
 async function unmark(userId, keys) {

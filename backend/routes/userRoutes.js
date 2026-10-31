@@ -26,7 +26,6 @@ const describeUserTarget = async (req) => {
     return user ? (user.email_address || user.username) : `User #${req.params.id}`;
 };
 
-// Super admin only (System > Users): full user list / status + role management
 router.get("/", verifyToken, verifyAdmin, verifySuperAdmin, userController.getUsers);
 router.put("/:id", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
 router.patch("/:id/status", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
@@ -35,9 +34,8 @@ router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, logActivit
 router.patch("/:id/archive", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Archived account", describeUserTarget), userController.archiveUser);
 router.patch("/:id/restore", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Restored archived account", describeUserTarget), userController.restoreUser);
 
-// Self-or-admin: a resident's own profile (SettingsPage.jsx, MyReportsPage.jsx)
 router.get("/:id", verifyToken, verifySelfOrAdmin, userController.getUserById);
-// The account's other open pages pick up profile changes right away.
+
 const { afterSuccess, notifyUser } = require("../services/liveUpdates");
 const profileChanged = afterSuccess((req) => notifyUser(req.params.id, "profile"));
 

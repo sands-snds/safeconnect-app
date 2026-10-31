@@ -1,14 +1,8 @@
 import React from "react";
 import { tx } from "../../../i18n/adminText";
 
-// A Philippine number for Page Contacts: Mobile or Landline, then +63 (fixed)
-// and only digits. Saved as "+63..." with numberType, checked again by
-// backend/services/siteContentService.js (checkNumber).
 export const NUMBER_DIGITS = { mobile: 10, landline: 9 };
 
-// "+639171234567", "09171234567" -> "9171234567". A value starting with
-// "+63" is what this box saves, so everything after it is the number, even
-// while it's still being typed ("+639" -> "9").
 export const localDigits = (value) => {
   const raw = String(value ?? "").trim();
   if (raw.startsWith("+63")) return raw.slice(3).replace(/\D/g, "");

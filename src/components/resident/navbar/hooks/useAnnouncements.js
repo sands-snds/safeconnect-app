@@ -6,17 +6,16 @@ export default function useAnnouncements() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const loadAnnouncements = useCallback(async () => {
-
         try {
             setLoading(true);
             setError("");
             const data = await fetchAnnouncements();
             if (!Array.isArray(data)) throw new Error("Unexpected response");
 
-            // fetchAnnouncements() already returns camelCase fields with the
-            // image URL resolved. This used to re-map snake_case keys
-            // (image_url, source_url, ...) that no longer exist, which left
-            // every image and article link empty on the News page.
+            
+            
+            
+            
             const formatted = data.map(item => ({
                 id: item.id,
                 title: item.title || "",

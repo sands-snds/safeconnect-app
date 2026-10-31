@@ -9,8 +9,8 @@ import {
     deleteAnnouncementComment
 } from "../../../Services/api";
 
-// A notification asks the News page to show one article (and optionally
-// one comment or reply under it): { announcementId, commentId?, openComments? }.
+
+
 const FOCUS_EVENT = "safeconnect:focus-news";
 export const focusNewsItem = (detail) => window.dispatchEvent(new CustomEvent(FOCUS_EVENT, { detail }));
 
@@ -22,8 +22,8 @@ const hostnameOf = (url) => {
     }
 };
 
-// Matches the category colors used in the notification bell (ResidentNavbar)
-// so a post reads the same way wherever a resident sees it.
+
+
 const CATEGORY_THEME = {
     'Emergency Alert':   { color: '#dc2626', icon: 'bi-exclamation-triangle-fill' },
     'Weather Advisory':  { color: '#3b82f6', icon: 'bi-cloud-rain-fill' },
@@ -35,8 +35,8 @@ const CATEGORY_THEME = {
 };
 const themeFor = (category) => CATEGORY_THEME[category] || { color: '#6B2C3E', icon: 'bi-megaphone-fill' };
 
-// Gives each commenter a consistent, distinct avatar color (by name hash)
-// instead of every avatar being the same flat maroon circle.
+
+
 const AVATAR_COLORS = ['#6B2C3E', '#0d9488', '#2563eb', '#7c3aed', '#d97706', '#dc2626', '#059669'];
 const colorForName = (name) => {
     const str = name || 'R';
@@ -54,8 +54,8 @@ const getCurrentUserId = () => {
     }
 };
 
-// Shown for article links with no image (or one that fails to load), so the
-// card shows which site the article is from instead of an empty box.
+
+
 const MediaPlaceholder = ({ announcement }) => {
     const { t } = useLanguage();
     const site = announcement.sourceSite || hostnameOf(announcement.sourceUrl);
@@ -88,7 +88,7 @@ const formatCommentTime = (iso) => {
         " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 };
 
-// featured: the newest post at the top of the feed (bigger, "Latest" ribbon).
+
 export default function AnnouncementCard({
     announcement,
     formatNewsDate,
@@ -102,8 +102,8 @@ export default function AnnouncementCard({
         announcement.imageUrl ||
         announcement.sourceImage;
 
-    // External article images are sometimes blocked by the other site;
-    // fall back to the placeholder instead of a broken image.
+    
+    
     const [imageFailed, setImageFailed] = useState(false);
     const showImage = photo && !imageFailed;
 
@@ -117,15 +117,15 @@ export default function AnnouncementCard({
     const [commentCount, setCommentCount] = useState(announcement.commentCount || 0);
     const [commentDraft, setCommentDraft] = useState("");
     const [postingComment, setPostingComment] = useState(false);
-    // Reply box: the thread (top-level comment) being replied to, and the
-    // person the reply is for (a reply to a reply still joins that thread).
+    
+    
     const [replyTo, setReplyTo] = useState(null); // { threadId, name }
     const [replyDraft, setReplyDraft] = useState("");
     const [postingReply, setPostingReply] = useState(false);
 
     const [shareFeedback, setShareFeedback] = useState(false);
 
-    // The comment a notification points to, highlighted once comments load.
+    
     const [focusCommentId, setFocusCommentId] = useState(null);
 
     useEffect(() => {
@@ -137,7 +137,7 @@ export default function AnnouncementCard({
                 flashHighlight(card, "start");
                 return;
             }
-            // Fresh copy, so a reply that just arrived is there.
+            
             setShowComments(true);
             setCollapsedReplies({});
             setCommentsLoading(true);
@@ -245,7 +245,7 @@ export default function AnnouncementCard({
         }
     };
 
-    // Deleting a comment also removes its replies (the backend does the same).
+    
     const handleDeleteComment = async (commentId) => {
         const prevComments = comments;
         const removed = (comments || []).filter((c) => c.id === commentId || c.parentId === commentId).length;
@@ -258,8 +258,8 @@ export default function AnnouncementCard({
         }
     };
 
-    // Top-level comments with their replies (e.g. from the barangay), shown
-    // as YouTube-style threads under each comment.
+    
+    
     const threads = useMemo(() => {
         if (!comments) return [];
         const replies = {};
@@ -271,11 +271,11 @@ export default function AnnouncementCard({
             .map((c) => ({ ...c, replies: replies[c.id] || [] }));
     }, [comments]);
 
-    // Replies are shown by default; this holds the threads the resident collapsed.
+    
     const [collapsedReplies, setCollapsedReplies] = useState({});
 
-    // replyingTo: the commenter a reply answers, shown as an @mention.
-    // threadId: the top-level comment a Reply joins.
+    
+    
     const renderComment = (c, replyingTo, threadId = c.id) => (
         <div className={`news-comment ${replyingTo ? 'news-comment-reply' : ''}`} key={c.id} id={`news-comment-${c.id}`}>
             <CommentAvatar
@@ -325,7 +325,6 @@ export default function AnnouncementCard({
             try {
                 await navigator.share(shareData);
             } catch {
-                // User cancelled the native share sheet -- nothing to do.
             }
             return;
         }
@@ -361,8 +360,6 @@ export default function AnnouncementCard({
                     />
                 </div>
             ) : announcement.sourceUrl ? (
-                // Plain text announcements get no media block at all; only
-                // article links keep the placeholder (it links to the site).
                 <MediaPlaceholder announcement={announcement} />
             ) : null}
 
@@ -377,7 +374,6 @@ export default function AnnouncementCard({
                 </p>
 
                 {announcement.sourceUrl && (
-
                     <a
                         href={announcement.sourceUrl}
                         target="_blank"
@@ -392,7 +388,7 @@ export default function AnnouncementCard({
                     </a>
                 )}
 
-                {/* Category and time posted: below the photo and text, never on top of them. */}
+                
                 <div className="news-card-meta-row">
                     <span className="news-card-category" style={{ background: `${theme.color}18`, color: theme.color }}>
                         <i className={`bi ${theme.icon}`} />

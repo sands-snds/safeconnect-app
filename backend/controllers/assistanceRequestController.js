@@ -4,7 +4,7 @@ const Notification = require("../models/Notification");
 const live = require("../services/liveUpdates");
 const { validateStatusTransition, validateDismissalReason, dismissalMessage, DISMISSED } = require("../utils/statusWorkflow");
 
-// Services return { success: false, status: 400, message } for invalid input.
+
 const sendResult = (res, result, successStatus = 200) => {
     const { status, ...body } = result;
     res.status(result.success === false && status ? status : successStatus).json(body);
@@ -70,7 +70,7 @@ exports.updateStatus = async (req, res) => {
         }
 
         const affected = await AssistanceRequest.updateStatus(req.params.id, req.body.status, dismissalReason);
-        // The reporter's My Reports page (if open) shows the new status right away.
+        
         if (request.reporter_id && affected > 0) live.notifyUser(request.reporter_id, "reports");
 
         if (request.reporter_id && replyMessage) {

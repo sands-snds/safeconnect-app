@@ -3,13 +3,13 @@ const bcrypt = require("bcrypt");
 const db = require("../config/db");
 const { ROLES, MAIN_ACCOUNT_EMAIL } = require("../utils/roles");
 
-// Makes sure the barangay's main account (MAIN_ACCOUNT_EMAIL) exists and is
-// an Active Admin (super_admin). Runs on every server start, so it also
-// repairs the account if someone changed it directly in the database.
-//
-// A newly created account gets a random password nobody knows. The barangay
-// sets their own with "Forgot password?" on the sign-in screen, which emails
-// a code to the account's Gmail inbox.
+
+
+
+
+
+
+
 async function ensureMainAccount() {
     const [[existing]] = await db.query(
         `SELECT id, role, status FROM registered_users WHERE LOWER(email_address) = ?`,

@@ -1,8 +1,8 @@
-// Translation dictionary for SafeConnect's public landing page and the
-// signed-in resident dashboard. Organized by the component/section that
-// consumes each key. Admin-only screens are intentionally not covered.
-//
-// Usage: const { t } = useLanguage(); t('nav.home')
+
+
+
+
+
 
 export const translations = {
   en: {

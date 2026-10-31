@@ -1,15 +1,15 @@
-// Aggregates a resident's reports across all three report types, for
-// MyReportsPage.jsx (fetchMyReports() in Services/api.js calls
-// GET /api/reports/user/:userId).
+
+
+
 const Report = require("../models/Report");
 const AssistanceRequest = require("../models/AssistanceRequest");
 const PettyCrime = require("../models/PettyCrime");
 
-// Normalizes each report type's raw DB columns into the shape
-// MyReportsPage.jsx (list/filter/display) and the resident modals'
-// edit-prefill code expect: type, title, description, date, location,
-// status, id — plus the type-specific fields needed to restore the
-// edit form (peopleAffected/specialNeeds, urgency, suspectInfo, etc.)
+
+
+
+
+
 const normalizeEmergency = (r) => ({
     ...r,
     type: "Emergency",

@@ -1,12 +1,7 @@
 const db = require("../config/db");
 
 class User {
-
-/* =========================================================
-                    Find by Email
-============================================================*/
     static async findByEmail(email) {
-
         const [rows] = await db.query(
             "SELECT * FROM registered_users WHERE email_address = ?",
             [email]
@@ -15,12 +10,7 @@ class User {
         return rows[0];
     }
 
-/* =========================================================
-                    Find by Username
-============================================================*/
-
     static async findByUsername(username) {
-
         const [rows] = await db.query(
             "SELECT * FROM registered_users WHERE username = ?",
             [username]
@@ -29,12 +19,7 @@ class User {
         return rows[0];
     }
 
-/* =========================================================
-                    Create User
-============================================================*/
-
     static async create(user) {
-
         const [result] = await db.query(
             `INSERT INTO registered_users
             (full_name, username, contact_number, email_address, password, role)
@@ -52,10 +37,6 @@ class User {
         return result.insertId;
     }
 
-/* =========================================================
-                    Find by ID
-============================================================*/
-
     static async findById(id) {
         const [rows] = await db.query(
             `
@@ -70,8 +51,6 @@ class User {
         return rows[0];
     }
 
-    // Includes the password hash — only for internal use (e.g. verifying
-    // the current password before a change), never returned to the client.
     static async findByIdWithPassword(id) {
         const [rows] = await db.query(
             `SELECT * FROM registered_users WHERE id = ?`,
@@ -79,10 +58,6 @@ class User {
         );
         return rows[0];
     }
-
-/* =========================================================
-                    Profile Self-Service
-============================================================*/
 
     static async updatePhoto(id, photoUrl) {
         const [result] = await db.query(
@@ -100,9 +75,6 @@ class User {
         return result.affectedRows;
     }
 
-    // Also signs the account out of every saved login ("Save Login Info"),
-    // so an old saved device can't keep using it after a password change or
-    // reset. Required here to avoid a load-order cycle with RememberedLogin.
     static async updatePassword(id, hashedPassword) {
         const [result] = await db.query(
             `UPDATE registered_users SET password = ? WHERE id = ?`,
@@ -136,12 +108,6 @@ class User {
         return result.affectedRows;
     }
 
-// Sign-in attempts are logged by Log.logSignin (models/Log.js).
-
-/* =========================================================
-                    Get All Users
-============================================================*/
-
     static async getAll() {
         const [rows] = await db.query(
             `
@@ -162,11 +128,6 @@ class User {
         return rows;
     }
 
-/* =========================================================
-                    Update User Status
-============================================================*/
-
-    // Reopening a Closed account also takes it out of the archive.
     static async updateStatus(id, status) {
         const [result] = await db.query(
             `
@@ -179,11 +140,6 @@ class User {
         return result.affectedRows;
     }
 
-/* =========================================================
-                    Archive (Closed accounts)
-============================================================*/
-
-    // System > Users: Closed accounts can be moved to an Archived tab.
     static async ensureArchiveColumn() {
         const [cols] = await db.query(
             `SELECT 1 FROM information_schema.COLUMNS
@@ -205,10 +161,6 @@ class User {
         return result.affectedRows;
     }
 
-/* =========================================================
-                    Update User Role
-============================================================*/
-
     static async updateRole(id, role) {
         const [result] = await db.query(
             `UPDATE registered_users SET role = ? WHERE id = ?`,
@@ -216,7 +168,6 @@ class User {
         );
         return result.affectedRows;
     }
-
 }
 
 module.exports = User;

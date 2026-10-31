@@ -10,15 +10,9 @@ import {
 import { roleLabel, MAIN_ACCOUNT_EMAIL } from "../../shared/roles";
 import { tx } from "../../../i18n/adminText";
 
-// Account Settings for whoever is signed in to the admin panel (Admins and
-// Officials), opened from the account menu at the top right. Same options
-// as the resident Settings page: photo, username, contact number, email and
-// password. The main barangay account's email can't be changed.
-
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// "+639171234567" -> "9171234567" (the input shows the +63 prefix itself).
 const stripPhonePrefix = (raw) => String(raw || "").replace(/\D/g, "").slice(-10);
 
 const formatDate = (value) => {

@@ -4,8 +4,6 @@ import useSiteContent, { DEFAULT_SITE_CONTENT, officialName } from "./useSiteCon
 import { formatMobile } from "./EmergencyContactList";
 import { MAIN_LOGO, FOOTER_LOGO } from "./logos";
 
-// "+63464165393" -> "+63 46 416 5393", "+639929474309" -> "+63 992 947 4309".
-// Anything else (e.g. "911") is shown as-is.
 const formatPhone = (number) => {
   const m = String(number).match(/^\+63(\d+)$/);
   if (!m) return number;
@@ -15,27 +13,22 @@ const formatPhone = (number) => {
   return number;
 };
 
-// Landlines and +63 numbers via formatPhone, 09XX mobiles via formatMobile.
 const formatHotline = (number) => {
   const formatted = formatPhone(number);
   return formatted === number ? formatMobile(number) : formatted;
 };
 
-// Plain-looking tel: link, so numbers can be tapped on phones.
 const PhoneLink = ({ number, children }) => (
   <a href={`tel:${String(number).replace(/\s/g, "")}`} className="footer-phone text-white-50 text-decoration-none">
     {children || number}
   </a>
 );
 
-// Sized by .footer-logo in styles/resident.css (64px, smaller in the narrow
-// three-column layout so the name fits beside it).
-// The logo is white: no circle behind it on the dark footer.
 const FooterLogo = () => (
   <div className="footer-logo">
     <img
       src={FOOTER_LOGO}
-      // Until "Safe Connect Logo 3.png" is in public/images/logos/.
+
       onError={(e) => { if (!e.currentTarget.src.endsWith(MAIN_LOGO)) e.currentTarget.src = MAIN_LOGO; }}
       alt="Safe Connect logo"
       style={{ width: "100%", height: "100%", display: "block", objectFit: "contain" }}
@@ -43,25 +36,17 @@ const FooterLogo = () => (
   </div>
 );
 
-// Officials, hotlines and socials are edited by Admins under Content > Page
-// Contacts > Footer (the hotlines are separate from the call button's list).
-// content: optional unsaved contacts (Page Contacts > Preview); otherwise the live ones.
 export default function DonationFooter({ content }) {
   const { t } = useLanguage();
   const live = useSiteContent();
-  // footerHotlines: its own list (not the call button's), so the barangay
-  // officials aren't repeated. Older cached copies don't have it yet.
+
   const { footerHotlines = DEFAULT_SITE_CONTENT.footerHotlines, officials = [], socials = {} } = content || live;
   return (
     <footer className="footer-section bg-dark text-white py-4">
       <div className="container">
-        {/* Three columns from 992px: brand | Contact Us + officials (the widest,
-            for long names) | hotlines + socials. Each column's content is
-            centered in its column (except the brand, which stays left-aligned),
-            and the columns are centered vertically.
-            Tablets: brand on top, the other two side by side. Phones: stacked. */}
+
         <div className="row gy-4 align-items-center">
-          {/* 1. Brand: logo beside the name and description, left-aligned */}
+
           <div className="col-12 col-lg-3 footer-brand d-flex align-items-center gap-3">
             <FooterLogo />
             <div style={{ minWidth: 0 }}>
@@ -93,7 +78,6 @@ export default function DonationFooter({ content }) {
             </div>
           </div>
 
-          {/* 3. Emergency hotlines (Page Contacts > Footer > Emergency Hotline) and socials */}
           <div className="col-12 col-md-5 col-lg-3 small text-white-50 footer-contact-list d-md-flex justify-content-center">
             <div className="footer-col">
               {footerHotlines.length > 0 && (

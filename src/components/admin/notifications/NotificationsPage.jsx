@@ -5,10 +5,6 @@ import { timeAgo } from '../shared/timeUtils';
 import { notificationType, notificationTarget } from './notificationTypes';
 import { tx } from "../../../i18n/adminText";
 
-// General > Notifications: every admin notification, like a mailbox. Tick
-// notifications (or "select all") and Archive them, or Mark them read.
-// Open one to see all of it: "See report" for reports, or reply to a
-// resident's comment right here. The bell only shows the recent ones.
 const PAGE_SIZE = 20;
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -27,7 +23,6 @@ const chipStyle = (active) => ({
   border: `1px solid ${active ? '#6B2C3E' : '#d1d5db'}`, background: active ? '#FDECEC' : '#fff', color: active ? '#6B2C3E' : '#374151'
 });
 
-// Reply to a resident's comment from its notification.
 const ReplyBox = ({ item, onReplied }) => {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -84,7 +79,7 @@ export default function NotificationsPage({
   onMarkAllRead,
   onArchive,             // (ids, archived) -> Promise<boolean>
   onNavigate,
-  focus                  // { id } to open one notification (from the bell)
+  focus
 }) {
   const [box, setBox] = useState('inbox');        // inbox | archived
   const [filter, setFilter] = useState('all');
@@ -102,7 +97,6 @@ export default function NotificationsPage({
     if (box === 'archived' && archived === null) loadArchived();
   }, [box, archived]);
 
-  // Opened from the bell: show that notification, open.
   useEffect(() => {
     if (!focus?.id) return;
     setBox('inbox');
@@ -127,7 +121,6 @@ export default function NotificationsPage({
     if (focus?.id && openId === focus.id) focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [focus, openId, page]);
 
-  // A different tab or filter starts with nothing selected, on page 1.
   useEffect(() => {
     setSelected(new Set());
     setPage(1);
@@ -209,7 +202,7 @@ export default function NotificationsPage({
       </div>
 
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
-        {/* Toolbar: select all, then actions for the ticked notifications */}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 14px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', cursor: 'pointer', margin: 0 }}>
             <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} disabled={!visible.length} aria-label="Select all on this page" />

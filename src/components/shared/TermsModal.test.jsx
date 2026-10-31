@@ -44,7 +44,7 @@ test('a plain document: title, date, introduction and 13 sections of numbered cl
   expect(screen.getByText('1.1')).toBeInTheDocument();
   expect(screen.getByText('9.4')).toBeInTheDocument();
   expect(screen.getByText('13.1')).toBeInTheDocument();
-  // No decorative extras (badge, summary box, contents chips, section icons)
+  
   expect(container.querySelector('.tc-badge, .tc-summary, .tc-chip, .tc-num')).toBeNull();
   expect(container.querySelectorAll('.tc-body i.bi')).toHaveLength(0);
   expect(screen.getByRole('heading', { name: /1\.\s*Acceptance of Terms/ })).toBeInTheDocument();

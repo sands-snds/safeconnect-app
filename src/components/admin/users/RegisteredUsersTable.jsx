@@ -16,8 +16,6 @@ const badgeStyle = (bg, color) => ({
   borderRadius: 999
 });
 
-// System > Users: Residents, then Admins & Officials, as two tables under
-// one shared search / status filter / Generate Report row.
 const RegisteredUsersTable = ({
   residents,
   staff,
@@ -28,7 +26,6 @@ const RegisteredUsersTable = ({
   onArchiveUser,
   currentAdminId
 }) => {
-  // { user, field: 'role' | 'status', value } while the confirm dialog is open.
   const [pendingChange, setPendingChange] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -51,7 +48,6 @@ const RegisteredUsersTable = ({
         return;
       }
     } else {
-      // updateStatus already shows the backend's message on failure.
       await onUpdateStatus(user.id, value, 'users');
       setIsSubmitting(false);
     }
@@ -59,7 +55,6 @@ const RegisteredUsersTable = ({
     closeModal();
   };
 
-  // Closed accounts: Archive (to the Archived tab) or Restore.
   const handleArchive = async (user) => {
     const archiving = !user.archivedAt;
     if (archiving) {

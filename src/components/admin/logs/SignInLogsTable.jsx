@@ -22,14 +22,8 @@ const filterLogs = (logs, filter = {}) => {
   return result;
 };
 
-// System > Resident Logs (residents only; Officials and Admins are in
-// Admin Logs). Each sign-in lists what the resident did afterwards, until
-// their next sign-in. Entries older than the auto-archive period (default
-// 90 days) move to the Archived tab; they aren't deleted.
-
 const ACTIVITY_SHOWN = 3;
 
-// The ACTIVITY cell: the first few actions, the rest behind "Show N more".
 const ActivityCell = ({ activity }) => {
   const [open, setOpen] = useState(false);
   if (!activity.length) return <span className="text-gray-500 text-xs">—</span>;

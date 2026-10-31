@@ -27,7 +27,7 @@ test('shows a styled confirmation with Cancel and the confirm button', () => {
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   expect(dialog.querySelector('.bi-trash3-fill')).not.toBeNull();
-  // Safer default: Enter on the focused button cancels.
+  
   expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
 });
 

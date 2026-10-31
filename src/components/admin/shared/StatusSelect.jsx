@@ -11,32 +11,24 @@ const STATUS_COLORS = {
   "Dismissed": { bg: "#fee2e2", text: "#991b1b" }
 };
 
-// The status as a pill, for ReportCard's badge next to the report's title.
 export const statusBadge = (status) => {
   const colors = STATUS_COLORS[status] || { bg: "#f3f4f6", text: "#374151" };
   return { text: status, bg: colors.bg, color: colors.text };
 };
 
-// "Move to ..." takes the color of the status it moves to (admin.css).
 const NEXT_BUTTON_CLASS = {
   "In Progress": "button-status-progress",
   "Resolved": "button-status-resolved"
 };
 
-// Reports that are still open can also be dismissed (with a reason).
 const CLOSED_STATUSES = ["Resolved", "Dismissed"];
 
-// Forward-only status control. Instead of a free dropdown (which let admins
-// jump to any status, including backward), this shows the current status as
-// a badge plus a single button to advance to the next step -- so an invalid
-// transition simply isn't an available action, and there's no cramped
-// <select> with cut-off text. "Dismiss" closes an open report instead.
 const StatusSelect = ({
   value,
   reportId,
   reportType,
   onUpdateStatus,
-  // false when the status is already shown elsewhere (next to the title).
+
   showBadge = true
 }) => {
   const [pendingNext, setPendingNext] = useState(null);
@@ -50,7 +42,6 @@ const StatusSelect = ({
   const colors = STATUS_COLORS[value] || { bg: "#f3f4f6", text: "#374151" };
   const canDismiss = !CLOSED_STATUSES.includes(value);
 
-  // reason: from the confirm dialog, only when dismissing.
   const confirmAdvance = async (reason) => {
     setIsSubmitting(true);
     try {

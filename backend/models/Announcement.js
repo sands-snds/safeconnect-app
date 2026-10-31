@@ -1,11 +1,6 @@
-// Announcements model (table: announcements).
-// Field names match what CreateAnnouncementView.jsx sends (via
-// createAnnouncement()/updateAnnouncement() in Services/api.js) and what
-// fetchAnnouncements() expects back.
 const db = require("../config/db");
 
 class Announcement {
-
     static async create(data) {
         const [result] = await db.query(
             `
@@ -40,8 +35,6 @@ class Announcement {
         return result.insertId;
     }
 
-    // includeArchived: the admin panel's list (Active and Archived tabs);
-    // everyone else only sees announcements that aren't archived.
     static async findAll({ includeArchived = false } = {}) {
         const [rows] = await db.query(`
             SELECT *

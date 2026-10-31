@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 
-// A stand-in AudioContext that counts the chime's tones.
+
 let tones = 0;
 class FakeAudioContext {
   constructor() { this.state = 'running'; this.currentTime = 0; this.destination = {}; }
@@ -9,7 +9,7 @@ class FakeAudioContext {
   resume() { return Promise.resolve(); }
 }
 
-// The hook reads the page's title once, when it loads.
+
 window.AudioContext = FakeAudioContext;
 document.title = 'Safe Connect | Barangay Sta. Fe';
 const useTabNotificationsModule = require('./useTabNotifications');

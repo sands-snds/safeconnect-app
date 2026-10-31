@@ -1,24 +1,11 @@
 const db = require("../config/db");
 const ResidentActivity = require("../models/ResidentActivity");
 
-// Route-level logging of what residents do, for Resident Sign-in Logs. Put
-// after verifyToken:
-//
-//   router.delete("/:id", verifyToken, ...,
-//       logResidentActivity("Deleted emergency report", reportReference("emergency_reports")),
-//       controller.deleteReport);
-//
-// Like middleware/activityLogger.js: describe(req) runs BEFORE the
-// controller (so a deleted report's reference can still be read), and the
-// entry is written only after a successful response, and only when the
-// signed-in account is a resident (Officials and Admins have Admin Logs).
-// A new report's reference comes from the response (reportReference).
 const logResidentActivity = (action, describe) => async (req, res, next) => {
     let details = null;
     try {
         details = describe ? await describe(req) : null;
     } catch {
-        // details are best-effort; still log the action itself
     }
 
     let body;
@@ -45,7 +32,6 @@ const logResidentActivity = (action, describe) => async (req, res, next) => {
     next();
 };
 
-// details: the report's reference (e.g. "SC-2026-000021").
 const reportReference = (table) => async (req) => {
     const [[row]] = await db.query(`SELECT report_reference FROM ${table} WHERE id = ?`, [req.params.id]);
     return row?.report_reference || `#${req.params.id}`;

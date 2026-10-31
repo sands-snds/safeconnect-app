@@ -17,7 +17,6 @@ import { tx } from "../../../i18n/adminText";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-// Months after posting before an announcement is archived automatically.
 const ANNOUNCEMENT_ARCHIVE_OPTIONS = [
   { value: 0, label: "Off" },
   { value: 3, label: "After 3 months" },
@@ -53,21 +52,15 @@ const CATEGORY_COLORS = {
 const AnnouncementsTable = ({
   filters,
   setFilters,
-  // Optional: the current logged-in-once-per-app editingAnnouncement state
-  // (from useAdminNavigation, threaded through AdminPage -> AnnouncementsPage)
-  // doubles as "which announcement is open in the edit modal, if any".
+
   editingAnnouncement,
   setEditingAnnouncement,
-  // Optional: lets the Dashboard's "Create Announcement" shortcut open this
-  // modal directly once it has navigated here, instead of just landing on
-  // the list. See useEffect below.
+
   pendingCreateAnnouncement,
   onConsumePendingCreateAnnouncement,
-  // Optional: useAdminData's own announcements loader, kept separate from
-  // this table's local `data` state (see loadAnnouncements below) so the
-  // dashboard's stat counts stay in sync too after a create/edit/delete.
+
   refreshDashboardData,
-  // Admins can change the auto-archive period; Officials only see it.
+
   isSuperAdmin = false
 }) => {
   const [data, setData] = useState([]);
@@ -81,7 +74,7 @@ const AnnouncementsTable = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   // Active / Archived tab (ArchiveToolbar).
   const [showArchived, setShowArchived] = useState(false);
-  // { type, title, message } for the success/error popup, or null.
+
   const [popup, setPopup] = useState(null);
 
   const filterType = "announcements";
@@ -106,9 +99,6 @@ const AnnouncementsTable = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Dashboard FAB clicked -> already navigated to this tab -> open the
-  // create modal, then tell the parent we've handled it so it doesn't
-  // reopen every time this component happens to re-render.
   useEffect(() => {
     if (pendingCreateAnnouncement) {
       setShowCreateModal(true);
@@ -123,7 +113,6 @@ const AnnouncementsTable = ({
     if (setEditingAnnouncement) setEditingAnnouncement(null);
   };
 
-  // From the Edit form: archive an announcement (or restore an archived one).
   const handleArchiveToggle = async (announcement) => {
     const archiving = !announcement.archivedAt;
     if (archiving) {
@@ -155,8 +144,6 @@ const AnnouncementsTable = ({
     if (refreshDashboardData) refreshDashboardData();
   };
 
-  // The search box and sort dropdown live in ListView, but this table owns
-  // the raw data, so filtering/sorting/pagination all happen here.
   const activeCount = data.filter((a) => !a.archivedAt).length;
   const processedData = useMemo(() => {
     let result = data.filter((a) => Boolean(a.archivedAt) === showArchived);
@@ -177,8 +164,6 @@ const AnnouncementsTable = ({
       });
     }
 
-    // "All Items" is the placeholder/default option - treat it (and an
-    // empty value) as "no filter applied".
     const statusFilter = (currentFilters.status || "").trim();
 
     if (statusFilter && statusFilter.toLowerCase() !== "all items") {
@@ -197,7 +182,6 @@ const AnnouncementsTable = ({
         return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
       }
 
-      // Same date posted - fall back to id so ordering stays stable.
       return sortOrder === "newest" ? b.id - a.id : a.id - b.id;
     });
 
@@ -212,13 +196,10 @@ const AnnouncementsTable = ({
     return processedData.slice(start, start + pageSize);
   }, [processedData, safePage, pageSize]);
 
-  // Reset back to page 1 whenever the search term or sort order changes,
-  // so the user isn't stranded on an empty page.
   useEffect(() => {
     setCurrentPage(1);
   }, [currentFilters.search, currentFilters.status, sortOrder, showArchived]);
 
-  // Which cards have their comments panel open ({ [id]: true }).
   const [openComments, setOpenComments] = useState({});
 
   const toggleComments = (id) =>
@@ -486,7 +467,6 @@ const AnnouncementsTable = ({
         </div>
       )}
 
-      {/* Full width, lined up with the search row below (like the report tabs). */}
       <ArchiveToolbar
         showArchived={showArchived}
         setShowArchived={setShowArchived}

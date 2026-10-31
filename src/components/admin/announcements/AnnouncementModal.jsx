@@ -1,15 +1,9 @@
 import React, { useEffect } from "react";
 import CreateAnnouncementView from "./CreateAnnouncementView";
 
-// Wraps CreateAnnouncementView in a popup instead of a separate page. Reuses
-// the app's existing .modal-overlay backdrop class (see admin.css) for
-// consistency with the other admin modals, but with its own wider content
-// box -- the generic .modal-content caps at 600px, which is cramped once
-// the image preview / link preview blocks are showing.
 const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved, onArchiveToggle }) => {
     const isEditMode = !!editingAnnouncement;
 
-    // Esc closes the modal, matching the click-outside-to-close affordance below.
     useEffect(() => {
         if (!show) return;
         const handleKeyDown = (e) => {

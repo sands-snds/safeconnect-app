@@ -1,8 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// Share menu for an admin announcement card: the device's share sheet (where
-// the browser has one), Facebook, or copy the announcement text. Links to the
-// article for news-link announcements, otherwise to the public SafeConnect site.
 const AnnouncementShareButton = ({ announcement }) => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);

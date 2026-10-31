@@ -7,19 +7,19 @@ import ResidentPagination from "../ResidentPagination";
 const SNACK_MS = 5000;
 const PAGE_SIZE = 20;
 
-// What "View" opens for each kind of notification.
+
 const openLabelKey = (n) => {
     if (!n.isPersonal) return "notificationsPage.openArticle";
     if (n.category === "comment_reply") return "notificationsPage.openComment";
     return "notificationsPage.openReport";
 };
 
-// Full list of the resident's notifications (the bell shows only the
-// latest), laid out like the admin's Notifications page: Inbox / Archived
-// and All / Unread / Read on one row, then one card with a toolbar (select
-// all, archive or restore, mark read, delete, mark all read) over the list.
-// Click a notification to open it in place -- the whole message, its date,
-// and View / Archive / Delete; swipe one away on phones. 20 per page.
+
+
+
+
+
+
 export default function NotificationsPage({
     isOpen,
     notifications,
@@ -39,7 +39,7 @@ export default function NotificationsPage({
     const [selected, setSelected] = useState(() => new Set());
     const [openId, setOpenId] = useState(null);
     const [page, setPage] = useState(1);
-    // { text, undo: { ids, archived } | null }
+    
     const [snack, setSnack] = useState(null);
 
     useEffect(() => {
@@ -50,7 +50,7 @@ export default function NotificationsPage({
         }
     }, [isOpen]);
 
-    // A different tab or filter starts with nothing selected, on page 1.
+    
     useEffect(() => {
         setSelected(new Set());
         setOpenId(null);
@@ -68,7 +68,7 @@ export default function NotificationsPage({
         filter === "all" || (filter === "unread" ? n.unread : !n.unread)
     ), [source, filter]);
 
-    // Drop selections that are no longer listed (archived elsewhere, etc).
+    
     useEffect(() => {
         setSelected((prev) => {
             const ids = new Set(list.map((n) => n.id));
@@ -149,7 +149,7 @@ export default function NotificationsPage({
         setSelected(new Set());
     };
 
-    // Opening one shows all of it (and counts as read).
+    
     const toggleOpen = (n) => {
         setOpenId((id) => (id === n.id ? null : n.id));
         if (n.unread && box === "inbox") onMarkRead([n.id]);
@@ -188,7 +188,7 @@ export default function NotificationsPage({
 
             <div className="np-body">
                 <div className="np-wrap">
-                    {/* Tabs, filters and the toolbar stay at the top while the list scrolls. */}
+                    
                     <div className="np-sticky">
                         <div className="np-topbar">
                             <div className="np-tabs" role="tablist">
@@ -223,7 +223,7 @@ export default function NotificationsPage({
                             </div>
                         </div>
 
-                        {/* Toolbar: select all, then actions for the ticked notifications */}
+                        
                         <div className={`np-toolbar ${selectedIds.length ? "has-selection" : ""}`}>
                             <label className="np-check-all">
                                 <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} disabled={!visible.length} aria-label={t("notificationsPage.selectAll")} />

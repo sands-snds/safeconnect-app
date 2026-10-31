@@ -3,21 +3,6 @@ import { showPopup } from '../../shared/popup';
 import { exportReport } from '../../../Services/api';
 import GenerateReportModal from './GenerateReportModal';
 
-// Drop-in "Generate Report" control for an admin list page. Renders a single
-// button that opens a small PDF/Excel choice, calls the export endpoint, and
-// triggers the browser download. Designed to sit in the same row as a
-// ListView's search/filter controls.
-//
-// Props:
-//   type    - export type key the backend understands, e.g. "emergency"
-//   label   - optional button label override (defaults to "Generate Report")
-//   filters - optional plain object of the currently-applied filters/search,
-//             forwarded to the backend so the export matches what's on screen
-//   inline  - true when not in a labelled form row (e.g. above a chart); drops
-//             the invisible spacer label used to line up with ListView fields
-//   withOptions  - open the report form (status / period / file type) instead
-//                  of the PDF/Excel dropdown; used by the report tabs
-//   optionsTitle - subtitle shown in that form, e.g. "Emergency Reports"
 const GenerateReportButton = ({
   type,
   label = 'Generate Report',

@@ -12,9 +12,6 @@ const TYPES = {
     pettyCrime: { label: "Petty Crime", icon: "bi-shield-exclamation",        color: "#b45309", bg: "#fef3c7", view: "petty-crime-reports" }
 };
 
-// Newest first across all three report types (the old version just took the
-// first 5 of emergency + assistance + petty crime without sorting, so it
-// was mostly showing emergency reports, not the most recent ones).
 const buildRecent = (emergencyReports, assistanceRequests, pettyCrimeReports) =>
     [
         ...emergencyReports.map(r => ({
@@ -97,7 +94,7 @@ export default function DashboardRecentReports({
                             className="recent-report-row"
                             role="button"
                             tabIndex={0}
-                            // Opens this report with its details showing (like a notification's "See report").
+
                             onClick={() => onNavigate?.(type.view, { focusId: r.id })}
                             onKeyDown={(e) => e.key === "Enter" && onNavigate?.(type.view, { focusId: r.id })}
                             title={`Open this ${type.label.toLowerCase()} report`}

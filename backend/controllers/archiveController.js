@@ -10,7 +10,7 @@ exports.getSettings = async (req, res) => {
     }
 };
 
-// Body: { months: 0 | 6 | 12 } (0 = auto-archive off).
+
 exports.updateSettings = async (req, res) => {
     const months = Number(req.body.months);
     if (!ArchiveService.ALLOWED_MONTHS.includes(months)) {
@@ -19,7 +19,7 @@ exports.updateSettings = async (req, res) => {
 
     try {
         await ArchiveService.setAutoArchiveMonths(months);
-        // Apply the new period right away instead of waiting for the next run.
+        
         const archived = await ArchiveService.runAutoArchive();
         res.json({ success: true, months, archived });
     } catch (err) {

@@ -8,18 +8,18 @@ import {
 } from "../../../../Services/api";
 import { markSyncedRead, unmarkSynced, useSyncedReadItems } from "../../../shared/useSyncedState";
 
-// Announcements read before this was synced were kept per browser under
-// this key; they're moved to the account once, then the key is removed.
+
+
 const OLD_READ_STORAGE_KEY = "resident_read_announcements";
 
-// Personal notification ids (from the backend, e.g. a "your report status
-// changed" reply) are prefixed so they can be told apart from announcement
-// ids when marking as read / handling clicks. Both are saved on the server
-// for the account, so read/unread is the same on every device.
+
+
+
+
 const PERSONAL_PREFIX = "personal-";
 
 export const announcementKey = (id) => `announcement:${id}`;
-// Announcements archived / deleted from the bell, saved for the account.
+
 export const archivedKey = (id) => `notif-archived:${id}`;
 export const deletedKey = (id) => `notif-deleted:${id}`;
 
@@ -38,10 +38,10 @@ export default function useNotifications(
 
     const [personalNotifications, setPersonalNotifications] = useState([]);
 
-    // Marked read on this page: kept read even if a refresh that started
-    // before the server saved it comes back with the old value.
+    
+    
     const locallyRead = useRef(new Set());
-    // Same for archive / restore (id -> true | false) and delete.
+    
     const locallyArchived = useRef(new Map());
     const locallyDeleted = useRef(new Set());
 
@@ -65,7 +65,7 @@ export default function useNotifications(
         loadPersonalNotifications();
     }, [loadPersonalNotifications]);
 
-    // One-time move of this browser's old read list to the account.
+    
     useEffect(() => {
         if (!userId) return;
         try {
@@ -112,8 +112,8 @@ export default function useNotifications(
             .sort((a, b) => new Date(b.date) - new Date(a.date));
     }, [mappedPersonalNotifications, announcementNotifications]);
 
-    // The bell (and its count) shows the inbox; archived ones live on the
-    // Notifications page's Archived tab.
+    
+    
     const notifications = useMemo(() => allNotifications.filter(n => !n.archived), [allNotifications]);
     const archivedNotifications = useMemo(() => allNotifications.filter(n => n.archived), [allNotifications]);
 
@@ -124,7 +124,7 @@ export default function useNotifications(
         [notifications]
     );
 
-    // The bell's number: unread notifications plus today's rain advisory.
+    
     const totalBadgeCount = useMemo(() => {
         return unreadCount +
             (showRainNotice ? 1 : 0);
@@ -137,16 +137,16 @@ export default function useNotifications(
             setPersonalNotifications(prev =>
                 prev.map(n => String(n.id) === realId ? { ...n, isRead: true } : n)
             );
-            // Saved on the backend too, otherwise the next poll would bring
-            // it back as unread.
+            
+            
             markMyNotificationRead(realId).catch(() => {});
             return;
         }
         markSyncedRead([announcementKey(id)]);
     }, []);
 
-    // Archive (archived = true) or restore notifications. Archiving also
-    // marks them read.
+    
+    
     const archiveNotifications = useCallback((ids, archived = true) => {
         const personal = ids.filter(isPersonalId).map(personalRealId);
         const announcementIds = ids.filter(id => !isPersonalId(id));
@@ -168,8 +168,6 @@ export default function useNotifications(
                 : n));
             return archiveMyNotifications(personal.map(Number), archived)
                 .then(ok => {
-                    // Saved: later refreshes already carry it (and may carry
-                    // a restore made on another device).
                     if (ok) personal.forEach(id => locallyArchived.current.delete(id));
                     return ok;
                 })
@@ -178,8 +176,8 @@ export default function useNotifications(
         return Promise.resolve(true);
     }, []);
 
-    // Deletes notifications for good. Announcements themselves stay on the
-    // News page; they just no longer show in this account's notifications.
+    
+    
     const deleteNotifications = useCallback((ids) => {
         const personal = ids.filter(isPersonalId).map(personalRealId);
         const announcementIds = ids.filter(id => !isPersonalId(id));

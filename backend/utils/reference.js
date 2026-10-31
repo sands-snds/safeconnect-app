@@ -1,6 +1,6 @@
-// Shared "SC-<year>-<sequence>" reference number generator, used by all
-// report types (emergency, assistance, petty crime) so the numbering logic
-// isn't duplicated three times.
+
+
+
 const generateReference = async (getLatestFn) => {
     const year = new Date().getFullYear();
     const latest = await getLatestFn();

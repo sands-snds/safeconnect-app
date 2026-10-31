@@ -1,7 +1,3 @@
-// Admin notifications by notification_type (set by the backend): icon,
-// color, and where "See ..." takes you. focus: "report" opens that report on
-// its tab (referenceId = report id); "notification" opens the notification
-// itself on the Notifications page (to reply to a comment).
 const TYPES = {
   emergency:            { icon: 'bi-exclamation-triangle-fill', color: '#dc2626', view: 'emergency-reports',   label: 'See report',  focus: 'report' },
   emergency_status:     { icon: 'bi-exclamation-triangle-fill', color: '#dc2626', view: 'emergency-reports',   label: 'See report',  focus: 'report' },
@@ -17,7 +13,6 @@ const FALLBACK = { icon: 'bi-bell-fill', color: '#6B2C3E' };
 
 export const notificationType = (type) => TYPES[type] || FALLBACK;
 
-// Where opening this notification goes: { view, focusId } or null.
 export const notificationTarget = (item) => {
   const t = TYPES[item.type];
   if (!t || !t.view) return null;

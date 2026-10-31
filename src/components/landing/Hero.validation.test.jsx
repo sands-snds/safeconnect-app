@@ -97,7 +97,7 @@ describe('Sign Up', () => {
     expect(errorOf('suConfirm')).toBe('Passwords do not match');
     expect(errorOf('suFirst')).toBeUndefined();
     await waitFor(() => expect(document.activeElement).toBe(field('suContact')));
-    // Changing the password clears the "do not match" message under the confirmation.
+    
     type('suPassword', 'Secret123?');
     expect(errorOf('suConfirm')).toBeUndefined();
   });

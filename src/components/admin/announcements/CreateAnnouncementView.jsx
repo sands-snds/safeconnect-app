@@ -12,7 +12,6 @@ const toInputDate = (value) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-// onArchiveToggle: edit mode only; archives (or restores) the announcement.
 const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onArchiveToggle }) => {
   const isEditMode = !!editingAnnouncement;
 
@@ -31,8 +30,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // Save failures; the form stays open so nothing typed is lost. (Success
-  // is shown by the page, since the form closes on success.)
+
   const [saveError, setSaveError] = useState("");
   const debounceRef = useRef(null);
 
@@ -41,8 +39,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
       setTitle(editingAnnouncement.title || "");
       setCategory(editingAnnouncement.category || "Announcement");
       setMessage(editingAnnouncement.message || "");
-      // .date is a display string ("10/2/2026"), which the date input can't
-      // show and MySQL rejects on save -- use the raw date as YYYY-MM-DD.
+
       setDate(toInputDate(editingAnnouncement.rawDate) || today);
       setSourceUrl(editingAnnouncement.sourceUrl || "");
       setExistingImageUrl(editingAnnouncement.imageUrl || "");
@@ -126,8 +123,6 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
   };
 
   useEffect(() => {
-    // Revoke the object URL when it changes or the form unmounts, so we
-    // don't leak memory across repeated image selections.
     return () => {
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     };
@@ -154,11 +149,6 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
     setSubmitting(true);
 
     try {
-      // createAnnouncement/updateAnnouncement in Services/api.js send
-      // whatever they're given straight through as the fetch body, so it
-      // has to already be a real FormData object -- a plain JS object here
-      // silently produces an empty request body, which is why every column
-      // was landing NULL.
       const payload = new FormData();
       payload.append("title", title);
       payload.append("category", category);
@@ -167,8 +157,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
 
       if (sourceUrl.trim()) {
         payload.append("source_url", sourceUrl.trim());
-        // Save the fetched preview so the resident News page can show the
-        // article's image/title without re-fetching the link.
+
         if (linkPreview) {
           if (linkPreview.title) payload.append("source_title", linkPreview.title);
           if (linkPreview.image) payload.append("source_image", linkPreview.image);
@@ -186,7 +175,6 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
         ? await updateAnnouncement(editingAnnouncement.id, payload)
         : await createAnnouncement(payload);
 
-      // The sign-in box is already showing; the form keeps its contents.
       if (isSessionError(result)) return;
 
       if (!result.success) {

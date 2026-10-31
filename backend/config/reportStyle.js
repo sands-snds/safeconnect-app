@@ -1,18 +1,17 @@
-// Look of every generated report (Generate Report -> PDF / Excel).
-//
-// This is the one place to restyle the files: change a color, a line of
-// header text or a logo here and every report type picks it up. Colors are
-// hex codes ("#RRGGBB"). Logos must be PNG or JPEG files in backend/assets/
-// (the backend can't read the frontend's public/ folder once deployed, and
-// PDFs can't embed SVG). safeconnect-logo.png is a 600px copy of the maroon
-// "Safe Connect Logo" (the white-house logo used on the website would not
-// show on a white page).
+
+
+
+
+
+
+
+
+
 const path = require("path");
 
 const asset = (file) => path.join(__dirname, "..", "assets", file);
 
 module.exports = {
-    // Header block at the top of the first page.
     header: {
         title: "SAFECONNECT",
         lines: [
@@ -21,8 +20,8 @@ module.exports = {
         ]
     },
 
-    // Left and right logos in the header. If a file is missing, the PDF
-    // shows a dashed placeholder circle with `placeholder` written in it.
+    
+    
     logos: {
         left: { file: asset("safeconnect-logo.png"), placeholder: "SafeConnect" },
         right: { file: asset("barangay-logo.png"), placeholder: "Barangay Logo" },
@@ -38,7 +37,7 @@ module.exports = {
         gridLine: "#E5E7EB"
     },
 
-    // Built-in PDF fonts: Helvetica, Times-Roman, Courier (+ "-Bold").
+    
     fonts: {
         regular: "Helvetica",
         bold: "Helvetica-Bold",

@@ -1,22 +1,22 @@
 import React, { useEffect } from 'react';
 
-// Success / warning / error popup used across the app in place of the
-// browser's alert(). Same look as the resident "Report Submitted" popup.
-// Render it directly, or call showPopup() (./popup.js) from anywhere.
-//
-// Props:
-//   type        - "success" (green check), "warning" (amber !) or "error" (red !)
-//   title       - e.g. "Announcement Posted"
-//   message     - one or two sentences under the title
-//   buttonLabel - defaults to "Done" for success, "OK" otherwise
-//   accent      - button color; defaults to the admin maroon on /admin and
-//                 the resident red elsewhere
-//   onClose     - called by the button, Esc or clicking outside
-//
-// Confirmation (in place of window.confirm(); see confirmPopup() in
-// ./popup.js): pass cancelLabel and onCancel too. Then there are two
-// buttons, the main one calls onClose (= confirmed), and Esc / clicking
-// outside call onCancel. type "danger" shows a red trash icon.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const ICONS = {
   success: { icon: 'bi-check-lg', color: '#16a34a' },
@@ -52,7 +52,7 @@ const ResultPopup = ({ type = 'success', title, message, buttonLabel, accent, on
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        // Above the report modals and the success popups (10001).
+        
         zIndex: 10050,
         padding: '20px'
       }}

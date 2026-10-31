@@ -12,7 +12,7 @@ export default function UserDropdown({
   onLogout,
 }) {
   const { t } = useLanguage();
-  // photoUrl is already a full URL — api.js resolves it before storing
+  
   const resolved = photoUrl || null;
 
   const initials = (username || "U")

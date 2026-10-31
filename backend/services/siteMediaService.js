@@ -1,30 +1,14 @@
 const db = require("../config/db");
 
-// Photos and videos on the public site, editable by an Admin (super_admin)
-// under Content > Page Contents:
-//   carousel    - the landing page's background slideshow
-//   systemDemo  - the video for residents: on the landing page (below the
-//                 carousel, above "What you can do") and/or in the resident
-//                 News tab (below the weather card); each can be turned off
-//   adminDemo   - walkthrough video shown when someone signs in to the
-//                 admin panel; can also be watched again from Page Contents
-// Stored as JSON in system_settings (key "site_media"). Until an Admin saves
-// changes, DEFAULT_MEDIA is used. Uploaded files live in backend/uploads.
-//
-// A video is { source: "none" | "upload" | "youtube", url }:
-//   upload  -> url is "/uploads/<file>" (MP4 / WebM)
-//   youtube -> url is the YouTube video id
-
 const SETTING_KEY = "site_media";
 
 const DEFAULT_MEDIA = {
-    // Frontend images (public/images), used until an Admin uploads others.
     carousel: [
         { src: "/images/Santa Fe 3.jpg", alt: "Barangay Sta. Fe" },
         { src: "/images/Santa Fe 2.jpg", alt: "Community rescue" },
         { src: "/images/Santa Fe.jpg", alt: "Evacuation" }
     ],
-    // The resident page's slideshow (behind "Stay safe, stay informed").
+
     residentCarousel: [
         { src: "/images/resident-background.jpg", alt: "Barangay Sta. Fe" },
         { src: "/images/resident-background2.jpg", alt: "Barangay Sta. Fe" },
@@ -46,11 +30,10 @@ const DEFAULT_MEDIA = {
 };
 
 const MAX_SLIDES = 10;
-// Titles and photo descriptions; captions can be longer (300).
+
 const TEXT_MAX = 40;
 const text = (v, max) => String(v ?? "").trim().slice(0, max);
 
-// Accepts a full YouTube link (watch, youtu.be, shorts, embed) or a bare id.
 const youtubeId = (value) => {
     const v = String(value || "").trim();
     if (/^[\w-]{11}$/.test(v)) return v;
@@ -94,8 +77,6 @@ function validateVideo(video = {}, name) {
     return { video: { source: "none", url: "" } };
 }
 
-// Cleans what the editor sent. Returns { media } or { error }.
-// name: "landing page" / "resident page", for messages.
 function validateSlides(slidesIn, name) {
     if (!Array.isArray(slidesIn) || slidesIn.length === 0) return { error: `Keep at least one ${name} carousel photo.` };
     if (slidesIn.length > MAX_SLIDES) return { error: `You can have up to ${MAX_SLIDES} ${name} carousel photos.` };
@@ -142,8 +123,6 @@ function validate(input = {}) {
     };
 }
 
-// The News tab's video was hidden on 2026-10-27; its toggle is back, so turn
-// it off once on sites saved before then. An Admin can turn it on again.
 const NEWS_OFF_MARKER = "site_media_news_off_v1";
 async function hideNewsVideoOnce() {
     const [[done]] = await db.query(`SELECT 1 AS ok FROM system_settings WHERE setting_key = ?`, [NEWS_OFF_MARKER]);
@@ -157,7 +136,6 @@ async function hideNewsVideoOnce() {
                 await saveMedia(saved);
             }
         } catch {
-            // unreadable JSON: getMedia() falls back to the defaults (News off)
         }
     }
     await db.query(`INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES (?, '1')`, [NEWS_OFF_MARKER]);

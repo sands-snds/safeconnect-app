@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { MAIN_LOGO } from '../shared/logos';
 
-// Shared look for the home page's account windows (Sign In, Sign Up, email
-// verification, Forgot Password, Save Login Info) in Hero.jsx: a white card
-// with the Safe Connect logo, a title and subtitle, then the content.
+
+
+
 
 const STYLES = `
   .auth-overlay {
@@ -182,11 +182,11 @@ export const AuthAlert = ({ type = 'error', children }) => {
   );
 };
 
-// Label + input with a leading icon. Pass the input itself as children with
-// className "auth-input" (and the same id as htmlFor).
-// error: what's wrong with this field (red outline + the message under it,
-// in place of the hint). The input points to it with aria-describedby
-// "<id>-error" (see fieldProps in Hero.jsx).
+
+
+
+
+
 export const AuthField = ({ id, label, optional, icon, prefix, toggle, hint, hintTone, error, children }) => (
   <div className={`auth-field${error ? ' has-error' : ''}`}>
     <label className="auth-label" htmlFor={id}>

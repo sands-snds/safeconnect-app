@@ -39,8 +39,8 @@ exports.markAllAsRead = async (req, res) => {
     }
 };
 
-// Notifications page: archive / restore, or mark read, several at once.
-// Body: { ids: [1, 2, 3] } (and archived: true | false for /archive).
+
+
 const idsFrom = (req) => (Array.isArray(req.body?.ids) ? req.body.ids.map(Number).filter(Number.isInteger).slice(0, 500) : []);
 
 exports.archiveNotifications = async (req, res) => {
@@ -63,9 +63,7 @@ exports.markManyAsRead = async (req, res) => {
     }
 };
 
-/* =========================================================
-        Resident-facing: a user's own notifications
-============================================================*/
+
 
 exports.getMyNotifications = async (req, res) => {
     try {
@@ -84,7 +82,7 @@ exports.getMyNotifications = async (req, res) => {
     }
 };
 
-// Only marks it if the notification belongs to the signed-in user.
+
 exports.markMineAsRead = async (req, res) => {
     try {
         const affected = await Notification.markAsReadForUser(req.params.id, req.user.id);
@@ -95,8 +93,8 @@ exports.markMineAsRead = async (req, res) => {
     }
 };
 
-// Notifications page: archive / restore or delete several of your own.
-// Body: { ids: [1, 2, 3] } (and archived: true | false for /mine/archive).
+
+
 exports.archiveMine = async (req, res) => {
     try {
         const affected = await Notification.setArchivedForUser(idsFrom(req), req.user.id, req.body?.archived !== false);

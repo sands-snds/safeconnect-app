@@ -1,8 +1,6 @@
 import { ROLE_LABELS } from "../../shared/roles";
 import { tx } from "../../../i18n/adminText";
 
-// Stored values stay the same; labels are the shown names
-// (admin = Official, super_admin = Admin).
 export const USER_ROLES = [
     { value: "resident", label: ROLE_LABELS.resident },
     { value: "admin", label: ROLE_LABELS.admin },

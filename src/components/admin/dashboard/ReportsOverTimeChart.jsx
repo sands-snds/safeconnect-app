@@ -21,8 +21,6 @@ const RANGE_OPTIONS = [
     { key: "90d", label: "Last 90 Days", days: 90 }
 ];
 
-// "category" puts each category's bar side by side per day; "overall"
-// stacks them into one bar showing the day's total.
 const VIEW_OPTIONS = [
     { key: "category", label: "Each Category" },
     { key: "overall", label: "Overall" }
@@ -45,8 +43,6 @@ const REPORT_SERIES = [
     { key: "pettyCrime", label: "Petty Crime", color: "#f59e0b" }
 ];
 
-// Local YYYY-MM-DD key -- deliberately not toISOString(), which shifts to
-// UTC and can push a late-evening local report into the "wrong" day's bucket.
 const dayKey = (date) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -71,9 +67,6 @@ export default function ReportsOverTimeChart({
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Pre-build one bucket per day in the selected range, oldest first,
-        // so days with zero reports still show up as a flat bar instead of
-        // silently disappearing from the axis.
         const buckets = [];
         const bucketByKey = {};
         for (let i = range.days - 1; i >= 0; i--) {
@@ -138,8 +131,6 @@ export default function ReportsOverTimeChart({
                         </button>
                     ))}
 
-                    {/* Exports the same range as the chart, one row per day. */}
-                    {/* The Analytical Report: bar graph and / or pie chart, any period. */}
                     <GenerateReportButton
                         type="analytics"
                         inline
@@ -154,7 +145,6 @@ export default function ReportsOverTimeChart({
                     {tx("No reports in this period yet")}
                 </div>
             ) : (
-
                 <div style={{ width: "100%", minWidth: 0, overflow: "hidden" }}>
                     <ResponsiveContainer width="100%" height={320} debounce={200}>
                         <BarChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>

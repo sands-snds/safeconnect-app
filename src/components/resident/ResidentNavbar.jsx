@@ -21,11 +21,11 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { MAIN_LOGO } from "../shared/logos";
 import "./navbar/NavbarStyle.css";
 
-// Fallback refresh while the tab is visible (live updates usually arrive
-// within a second or two; see useLiveUpdates).
+
+
 const POLL_INTERVAL_MS = 30 * 1000;
 
-// Report status notifications -> the My Reports type they belong to.
+
 const REPORT_TYPE_BY_NOTIFICATION = {
   emergency_status: 'Emergency',
   assistance_status: 'Assistance',
@@ -51,8 +51,8 @@ const formatNewsDate = (dateStr) => {
   return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 };
 
-// News articles: date and time posted, in Philippine time, e.g.
-// "Mon, Oct 26, 2026 · 9:40 PM".
+
+
 const formatPublishedAt = (dateStr) => {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -96,15 +96,15 @@ const getCategoryIcon = (category) => {
     'emergency_status': 'bi-exclamation-triangle-fill',
     'assistance_status': 'bi-hand-index-thumb-fill',
     'petty_crime_status': 'bi-shield-fill-exclamation',
-    // Barangay replied to the resident's comment on an announcement
+    
     'comment_reply': 'bi-chat-left-text-fill'
   };
   return map[category] || 'bi-megaphone-fill';
 };
 
-// Color-codes each notification by category so, e.g., a general emergency
-// alert and a personal "your report status changed" update don't look
-// visually identical just because both use a triangle icon.
+
+
+
 const getCategoryColor = (category) => {
   const map = {
     'Emergency Alert': '#dc2626',
@@ -128,20 +128,20 @@ function ResidentNavbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showNewsPage, setShowNewsPage] = useState(false);
   const [showReportsPage, setShowReportsPage] = useState(false);
-  // Goes up when the barangay changes one of this resident's report
-  // statuses; an open My Reports page then reloads in place.
+  
+  
   const [reportsVersion, setReportsVersion] = useState(0);
   const refreshReports = () => setReportsVersion((v) => v + 1);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
   const [showNotificationsPage, setShowNotificationsPage] = useState(false);
-  // The report a notification points to: My Reports shows and highlights it.
+  
   const [reportFocus, setReportFocus] = useState(null);
 
-  // Which nav item should read as "active": 'home' | 'emergency' | 'news' |
-  // 'reports' | 'settings'. Emergency has no panel of its own (it's an
-  // anchor scroll on the dashboard), so this can't be derived from the
-  // show*Page booleans alone -- it's set explicitly by whichever nav
-  // action the resident actually took.
+  
+  
+  
+  
+  
   const [activeView, setActiveView] = useState('home');
 
   const {
@@ -158,9 +158,9 @@ function ResidentNavbar() {
   const mobileNotificationsRef = useRef(null);
   const navigate = useNavigate();
 
-  // Exposes the navbar's real rendered height as a CSS variable so the
-  // News/My Reports/Settings panels can sit flush below it (position:
-  // fixed; top: var(--resident-navbar-height)) instead of covering it.
+  
+  
+  
   useEffect(() => {
     const navEl = navRef.current;
     if (!navEl) return;
@@ -234,8 +234,8 @@ function ResidentNavbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Changes made on another device (read notifications, profile, language)
-  // show up as soon as the resident comes back to this tab.
+  
+  
   const focusRefresh = useRef(null);
   focusRefresh.current = () => {
     reloadAnnouncements();
@@ -245,7 +245,7 @@ function ResidentNavbar() {
   };
   useSyncOnFocus(Boolean(currentUser?.id), () => focusRefresh.current());
 
-  // ...and right away while this tab is open: the server says what changed.
+  
   useLiveUpdates(Boolean(currentUser?.id), {
     state: refreshSyncedState,
     notifications: reloadPersonalNotifications,
@@ -258,12 +258,12 @@ function ResidentNavbar() {
     }
   });
 
-  // Unread count in the browser tab (title + icon), chime for new ones.
+  
   const { t } = useLanguage();
   useTabNotifications(totalBadgeCount, { blinkText: t('notificationPanel.tabNew'), alertCount: unreadCount });
 
-  // "Mark all read" also clears today's rain advisory, so the bell's count
-  // always drops to zero.
+  
+  
   const markEverythingRead = () => {
     markAllAsRead();
     if (showRainNotice) dismissWeatherNotice();
@@ -298,8 +298,8 @@ function ResidentNavbar() {
     }
   };
 
-  // Only one of News / My Reports / Settings shows at a time -- they're
-  // tabs below the navbar now, not independent overlays.
+  
+  
   const openNewsPage = () => {
     setActiveView('news');
     setShowNewsPage(true);
@@ -338,8 +338,8 @@ function ResidentNavbar() {
     setShowNotifications(false);
   };
 
-  // Every notification (the bell shows only the latest), with archive and
-  // delete. Opened from the bell's "View all notifications".
+  
+  
   const openNotificationsPage = () => {
     setActiveView('notifications');
     setShowNotificationsPage(true);
@@ -358,9 +358,9 @@ function ResidentNavbar() {
 
   const closeSettingsPage = () => setShowSettingsPage(false);
 
-  // Shared by Home and the Emergency anchor link: returns to the normal
-  // dashboard view so the navbar's own nav items are the only "back"
-  // affordance a resident needs (no more hunting for the X button).
+  
+  
+  
   const closeAllPanels = () => {
     setShowNewsPage(false);
     setShowReportsPage(false);
@@ -368,11 +368,11 @@ function ResidentNavbar() {
     setShowNotificationsPage(false);
   };
 
-  // Clicking a notification marks it read and opens exactly what it is
-  // about, highlighted:
-  //   report status update      -> that report in My Reports
-  //   "... replied to your comment" -> that reply under its announcement
-  //   announcement              -> that article on the News page
+  
+  
+  
+  
+  
   const handleNotificationClick = (id) => {
     markOneAsRead(id);
     setShowNotifications(false);
@@ -394,7 +394,7 @@ function ResidentNavbar() {
     }
 
     openNewsPage();
-    // After the News page has rendered its articles.
+    
     setTimeout(() => focusNewsItem(focus), 300);
   };
 
@@ -426,7 +426,7 @@ function ResidentNavbar() {
         cancelLabel: t('residentNav.logoutConfirmNo')
       });
       if (!confirmed) return;
-      // Revokes a saved login on the server first (needs the token).
+      
       await logoutUser();
       localStorage.removeItem('residentName');
       sessionStorage.removeItem('userAuthenticated');
@@ -435,8 +435,8 @@ function ResidentNavbar() {
     }
     setShowDropdown(false);
     setShowMobileMenu(false);
-    // Logging out lands on the home page directly: "signedOut" stops it from
-    // forwarding anywhere based on other sign-ins in this browser.
+    
+    
     if (path === '/') navigate('/', { replace: true, state: { signedOut: true } });
     else navigate(path);
   };

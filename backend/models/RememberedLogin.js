@@ -1,18 +1,16 @@
 const crypto = require("crypto");
 const db = require("../config/db");
 
-// "Save Login Info" (the Yes answer after signing in). Each saved login is a
-// row here, and its 30-day token carries the row's id as `jti`. verifyToken
-// only accepts such a token while its row exists, so a saved login can be
-// revoked on the server: signing out deletes the row, and changing or
-// resetting the password deletes all of the user's rows (User.updatePassword).
-// Ordinary sign-ins (No) are short tokens with no row (utils/jwt.js).
+
+
+
+
+
+
 
 const REMEMBER_DAYS = 30;
 
 class RememberedLogin {
-
-    // Created on server start, like the other tables (no manual migration).
     static async ensureTable() {
         await db.query(`
             CREATE TABLE IF NOT EXISTS remembered_logins (
@@ -28,7 +26,7 @@ class RememberedLogin {
         `);
     }
 
-    // Returns the new saved login's id (the token's jti).
+    
     static async create(userId, device) {
         const id = crypto.randomUUID();
         await db.query(

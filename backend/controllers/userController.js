@@ -8,14 +8,13 @@ const { ROLES, ALL_ROLES, roleLabel, isMainAccount } = require("../utils/roles")
 const MAIN_ACCOUNT_LOCKED = "This is the barangay's main Admin account. Its role, status and email can't be changed.";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Matches the +63 + 10-digit format the resident sign-up/settings forms
-// always submit (a "+63" prefix badge next to a 10-digit numeric input).
+
 const PH_CONTACT_REGEX = /^\+63\d{10}$/;
 
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.getAll();
-        // is_main_account: the barangay's own account, which can't be changed.
+
         return res.json(users.map((u) => ({ ...u, is_main_account: isMainAccount(u.email_address) })));
     }
 
@@ -28,8 +27,6 @@ exports.getUsers = async (req, res) => {
     }
 };
 
-// "Pending" is no longer offered: accounts are usable as soon as the email
-// is verified. Older Pending accounts can still be moved to another status.
 const ALLOWED_STATUSES = ["Active", "Suspended", "Closed"];
 
 exports.updateUserStatus = async (req, res) => {
@@ -44,7 +41,6 @@ exports.updateUserStatus = async (req, res) => {
             });
         }
 
-        // An admin suspending/closing their own account would lock them out.
         if (String(req.user.id) === String(id)) {
             return res.status(400).json({
                 success: false,
@@ -84,9 +80,6 @@ const ROLE_CHANGE_MESSAGES = {
     [ROLES.RESIDENT]: `User is now a ${roleLabel(ROLES.RESIDENT)}.`
 };
 
-// Change a user's role (resident / admin / super admin). Super admin only.
-// verifyAdmin reads the role from the database, so this takes effect on the
-// account's very next request -- no re-login needed.
 exports.updateUserRole = async (req, res) => {
     try {
         const { id } = req.params;
@@ -99,7 +92,6 @@ exports.updateUserRole = async (req, res) => {
             });
         }
 
-        // Also guarantees there's always at least one admin left.
         if (String(req.user.id) === String(id)) {
             return res.status(400).json({
                 success: false,
@@ -130,10 +122,6 @@ exports.updateUserRole = async (req, res) => {
         });
     }
 };
-
-/* =========================================================
-        Profile Self-Service (SettingsPage.jsx / MyReportsPage.jsx)
-============================================================*/
 
 exports.getUserById = async (req, res) => {
     try {
@@ -277,12 +265,9 @@ exports.changePassword = async (req, res) => {
         if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
         const hashed = await bcrypt.hash(newPassword, 10);
-        // Also signs the account out of every saved login (User.updatePassword).
+
         await User.updatePassword(req.params.id, hashed);
 
-        // Keep the person who changed it signed in on this device: if they
-        // were on a saved login, give this device a fresh one to replace the
-        // one that was just revoked. Other devices stay signed out.
         let token;
         if (req.user?.jti && String(req.user.id) === String(req.params.id)) {
             const rememberedId = await RememberedLogin.create(user.id, req.headers["user-agent"]);
@@ -295,8 +280,6 @@ exports.changePassword = async (req, res) => {
     }
 };
 
-
-// System > Users: move a Closed account to the Archived tab, or back.
 const setUserArchived = (archived) => async (req, res) => {
     try {
         const target = await User.findById(req.params.id);

@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
 import { exportReport } from '../../../Services/api';
 
-// "Generate Report" form.
-//   Report tabs (emergency, assistance, petty crime): status, a period
-//   (presets or custom dates) and PDF or Excel.
-//   System tabs (users, sign-in logs, admin logs; see SYSTEM_REPORTS): role,
-//   status and a manual From / To date range instead of presets.
-//   Dashboard ("analytics"): the same period choices, what to include (the
-//   bar graph and / or the pie chart), and the reports to include for the
-//   pie chart (the bar graph always counts every report).
-// baseFilters (System tabs) are sent along unchanged, e.g. the tab's search
-// or archived: '1' when generated from an Archived tab.
-
 const STATUS_CHOICES = [
   { value: '', label: 'All Reports' },
   { value: 'Received', label: 'Received' },
@@ -25,8 +14,6 @@ const FORMAT_CHOICES = [
   { value: 'excel', label: 'Excel', hint: 'For sorting and editing', icon: 'bi-file-earmark-excel', color: '#16a34a' }
 ];
 
-// Local YYYY-MM-DD (not toISOString(), which is UTC and can be a day off).
-// The first day SafeConnect has records for: the custom date pickers start here.
 const EARLIEST_DATE = '2026-09-01';
 
 const dayKey = (date) =>
@@ -66,7 +53,6 @@ const chipStyle = (active) => ({
 
 const sectionLabel = { display: 'block', fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 8 };
 
-// Role names follow the shown labels: admin = Official, super_admin = Admin.
 const ALL_ROLES = { value: '', label: 'All roles' };
 const SYSTEM_REPORTS = {
   users: {
@@ -75,7 +61,6 @@ const SYSTEM_REPORTS = {
     dateLabel: 'Date registered'
   },
   signinLogs: {
-    // Residents only (Officials and Admins are in Admin Logs).
     roles: [ALL_ROLES, { value: 'resident', label: 'Residents' }, { value: 'unknown', label: 'No account' }],
     statuses: [{ value: '', label: 'All attempts' }, { value: 'Success', label: 'Successful' }, { value: 'Failed', label: 'Failed' }],
     dateLabel: 'Sign-in date'
@@ -98,7 +83,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [format, setFormat] = useState('pdf');
-  // Dashboard analytical report: which charts (with their tables) to include.
+
   const analytics = type === 'analytics';
   const [includeBar, setIncludeBar] = useState(true);
   const [includePie, setIncludePie] = useState(true);
@@ -115,7 +100,6 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
     }
   };
 
-  // Dates from when SafeConnect started (EARLIEST_DATE) up to today; no future dates.
   const today = dayKey(new Date());
 
   const handleGenerate = async (e) => {
@@ -124,7 +108,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
       setError('The "From" date must be on or before the "To" date.');
       return;
     }
-    // Dates typed by hand can get past the pickers' min / max.
+
     if ((from && from > today) || (to && to > today)) {
       setError("Dates can't be in the future. Pick today or an earlier date.");
       return;

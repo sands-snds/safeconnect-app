@@ -24,8 +24,6 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { setAdminLanguage } from '../i18n/adminText';
 
 const AdminPage = () => {
-  // English / Tagalog for the whole panel (tx() in i18n/adminText.js). Set
-  // while rendering, before the children, so they all use the new language.
   const { language } = useLanguage();
   setAdminLanguage(language);
 
@@ -42,7 +40,7 @@ const AdminPage = () => {
     handleLogout,
     authChecked
   } = useAdminAuth();
-  
+
   const {
     isLoading,
     isRefreshing,
@@ -63,7 +61,7 @@ const AdminPage = () => {
     archiveNotifications,
 
     loadAllData,
-    refreshAllData,   
+    refreshAllData,
     loadAnnouncements,
     loadNotifications,
     handleRefresh,
@@ -89,13 +87,8 @@ const AdminPage = () => {
     clearFocus
   } = useAdminNavigation();
 
-  // Dashboard's "Create Announcement" shortcut needs to both navigate to the
-  // Announcements tab and open the create modal once there -- navigation
-  // alone would just land on the list. See AnnouncementsTable.jsx's
-  // pendingCreateAnnouncement effect for the other half of this.
   const [pendingCreateAnnouncement, setPendingCreateAnnouncement] = useState(false);
 
-  // Admin demo video opened from the account menu ("Watch demo video").
   const [showDemo, setShowDemo] = useState(false);
 
   const handleCreateAnnouncementShortcut = () => {
@@ -129,8 +122,6 @@ const AdminPage = () => {
   "account-settings": "Account Settings"
 };
 
-// Admin-only tabs (super_admin): the SYSTEM tabs plus Page Contacts and
-// Page Contents under CONTENT.
 const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts", "site-contents"];
 
   const alerts = [];
@@ -151,9 +142,7 @@ const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "sit
 
     if (crimePending > 0)
         alerts.push(`🚔 ${crimePending} Crime Reports Pending`);
-  
-  // Only after the server has confirmed the admin (useAdminAuth) -- the
-  // sessionStorage flag on its own must not open the panel.
+
   useEffect(() => {
     if (authChecked && !showSigninModal && sessionStorage.getItem('adminAuthenticated') === 'true' && !isAuthenticated) {
         setIsAuthenticated(true);
@@ -179,8 +168,6 @@ useEffect(() => {
 // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [isAuthenticated]);
 
-// The role can arrive after the first load (it comes from the profile
-// fetch), so load the System tab data once it turns out to be a super admin.
 const wasSuperAdmin = useRef(isSuperAdmin);
 useEffect(() => {
     if (isAuthenticated && isSuperAdmin && !wasSuperAdmin.current) {
@@ -206,11 +193,8 @@ useEffect(() => {
     return () => clearInterval(interval);
 }, [isAuthenticated, activeView, refreshAllData]);
 
-  // Account settings saved on other devices (language, demo video choice).
   useSyncOnFocus(isAuthenticated);
 
-  // Live: the admin bell (a new report or a read on another device brings
-  // the reports along too), announcements and synced settings.
   useLiveUpdates(isAuthenticated, {
     'admin-notifications': () => refreshAllData(),
     announcements: loadAnnouncements,
@@ -218,7 +202,6 @@ useEffect(() => {
     reconnected: () => { refreshAllData(); refreshSyncedState(); loadNotifications(); }
   });
 
-  // Unread count in the browser tab (title + icon), chime for new ones.
   useTabNotifications(isAuthenticated ? unreadCount : 0);
 
   if (!authChecked) {
@@ -234,8 +217,6 @@ useEffect(() => {
     return null;
   }
 
-  // Not a confirmed admin: only the sign-in box, on a plain background --
-  // none of the dashboard (sidebar, menus, pages) is rendered.
   if (!isAuthenticated) {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #6B2C3E 0%, #3d1823 100%)' }}>
@@ -253,22 +234,22 @@ useEffect(() => {
       </div>
     );
   }
-  
+
   if (isLoading && isAuthenticated) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100vh',
         flexDirection: 'column',
         gap: '16px',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white'
       }}>
-        <div style={{ 
-          fontSize: '48px', 
-          animation: 'spin 1s linear infinite' 
+        <div style={{
+          fontSize: '48px',
+          animation: 'spin 1s linear infinite'
         }}>⟳</div>
         <p style={{ fontSize: '18px' }}>Loading data...</p>
       </div>
@@ -278,8 +259,6 @@ useEffect(() => {
   const adminName =
     adminUser?.fullName || adminUser?.username || "Administrator";
 
-  // Officials never see the Admin-only tabs; fall back to the dashboard if
-  // one is somehow selected (e.g. a stat card or a demoted Admin).
   const visibleView = !isSuperAdmin && ADMIN_ONLY_VIEWS.includes(activeView)
     ? "dashboard"
     : activeView;
@@ -293,7 +272,7 @@ useEffect(() => {
             assistanceRequests={assistanceRequests}
             registeredUsers={registeredUsers}
             signInLogs={signInLogs}
-            adminLogs={adminLogs} 
+            adminLogs={adminLogs}
             announcements={announcements}
             pettyCrimeReports={pettyCrimeReports}
             onShowSignInModal={() => setShowSignInModal(true)}
@@ -410,7 +389,7 @@ useEffect(() => {
             assistanceRequests={assistanceRequests}
             registeredUsers={registeredUsers}
             signInLogs={signInLogs}
-            adminLogs={adminLogs} 
+            adminLogs={adminLogs}
             announcements={announcements}
             pettyCrimeReports={pettyCrimeReports}
             onShowSignInModal={() => setShowSignInModal(true)}

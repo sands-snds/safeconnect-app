@@ -24,12 +24,12 @@ const statusLabel = (status, t) => (STATUS_LABEL_KEYS[status] ? t(`myReports.sta
 
 const STAGE_KEYS = ['received', 'inProgress', 'resolved'];
 
-// Status filter choices (Pending counts as Received, Completed as Resolved,
-// Cancelled as Dismissed).
+
+
 const STATUS_FILTERS = ['Received', 'In Progress', 'Resolved', 'Dismissed'];
 
-// The short message under each report's details, by status (Dismissed also
-// shows the reason the barangay gave).
+
+
 const STATUS_MESSAGES = {
   Received: { key: 'received', icon: 'bi-inbox-fill' },
   Pending: { key: 'received', icon: 'bi-inbox-fill' },
@@ -41,7 +41,7 @@ const STATUS_MESSAGES = {
 
 const PAGE_SIZE = 5;
 
-// Page numbers with gaps, e.g. 1 … 4 5 6 … 12.
+
 const pageItems = (page, count) => {
   if (count <= 7) return Array.from({ length: count }, (_, i) => i + 1);
   const items = [1];
@@ -54,8 +54,8 @@ const pageItems = (page, count) => {
   return items;
 };
 
-// Per-type accent color/icon so the three report kinds are easy to tell
-// apart at a glance across the overview bar, tabs, and cards.
+
+
 const TYPE_THEME = {
   Emergency: { accent: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)', icon: 'bi-exclamation-triangle-fill' },
   Assistance: { accent: '#0d9488', bg: 'rgba(13, 148, 136, 0.1)', icon: 'bi-life-preserver' },
@@ -84,9 +84,9 @@ const LEVEL_STYLE = {
 };
 const getLevelStyle = (level) => LEVEL_STYLE[level] || { bg: '#f3f4f6', color: '#374151' };
 
-// Reports move Received/Pending -> In Progress -> Resolved/Completed. Dismissed
-// and Cancelled are terminal off-ramps, not a stage on that line, so they get
-// their own badge instead of a half-filled progress stepper.
+
+
+
 const STAGES = ['Received', 'In Progress', 'Resolved'];
 const getStageIndex = (status) => {
   if (status === 'Received' || status === 'Pending') return 0;
@@ -124,10 +124,10 @@ const getRelativeTime = (dateStr) => {
 const FILTERS = ['All', 'Emergency', 'Assistance', 'Petty Crime'];
 const FILTER_LABEL_KEYS = { All: 'all', Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 
-// focusReport: { type, id, nonce } from a notification -- that report is
-// shown (filters cleared, right page, details open) and highlighted.
-// liveVersion: goes up when the barangay changes one of this resident's
-// report statuses (live update), so an open page reloads in place.
+
+
+
+
 function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }) {
   const { t } = useLanguage();
   const [reports, setReports] = useState([]);
@@ -145,7 +145,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showCrimeModal, setShowCrimeModal] = useState(false);
-  // Card whose three-dot (Edit / Delete) menu is open, by report key.
+  
   const [openMenuKey, setOpenMenuKey] = useState(null);
 
   useEffect(() => {
@@ -186,9 +186,9 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
 
   const loadSeq = useRef(0);
 
-  // quiet: a live update -- swap in the new list without the loading
-  // spinner (keeping the tab, filters, page and open cards), and keep the
-  // current list if it fails. Only the latest load's answer is used.
+  
+  
+  
   const loadReports = async ({ quiet = false } = {}) => {
     if (!userId) {
       setError(t('myReports.noAccount'));
@@ -252,10 +252,9 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
     });
   }, [reports, activeFilter, statusFilter, searchQuery, sortOrder]);
 
-  // Pages of PAGE_SIZE; back to page 1 whenever the filters change.
+  
   const pageCount = Math.max(1, Math.ceil(filteredReports.length / PAGE_SIZE));
   useEffect(() => {
-    // Opening a report from a notification picks its page itself.
     if (skipPageReset.current) { skipPageReset.current = false; return; }
     setPage(1);
   }, [activeFilter, statusFilter, searchQuery, sortOrder]);
@@ -263,11 +262,10 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
   useEffect(() => {
     if (!isOpen || !focusReport || handledFocus.current === focusReport.nonce || loading) return;
     const key = `${focusReport.type}-${focusReport.id}`;
-    // Same order as the list with no filters: newest first.
+    
     const ordered = [...reports].sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
     const index = ordered.findIndex((r) => `${r.type}-${r.id}` === key);
     if (index === -1) {
-      // Maybe this list is from before the report existed: wait for a fresh load.
       if (lastLoadedAt.current > focusReport.nonce) handledFocus.current = focusReport.nonce;
       return;
     }
@@ -286,7 +284,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
 
   useEffect(() => {
     if (!highlightKey) return undefined;
-    // After the page change and the panel's slide-in.
+    
     const timer = setTimeout(() => {
       flashHighlight(document.querySelector(`[data-report-key="${highlightKey}"]`));
       setHighlightKey(null);
@@ -307,7 +305,6 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(''), 1500);
     } catch {
-      // Clipboard API unavailable — silently ignore, the reference is still visible to copy manually.
     }
   };
 
@@ -1311,11 +1308,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
 
         </div>
 
-        {/* Rendered into <body>: .myreports-fullscreen has a transform (its
-            slide-in), which makes it the containing block for position:fixed
-            children -- the edit modals were laid out inside it, pushed down
-            by the navbar's height (their Save button off-screen) and stacked
-            under the navbar. */}
+        
         {createPortal(
         <>
         <ResidentEmergencyModal

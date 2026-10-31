@@ -7,7 +7,6 @@ import { tx } from "../../../i18n/adminText";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-// The filter value every tab treats as "don't filter by status".
 export const ALL_OPTION = 'All Items';
 export const allOption = (label) => ({ value: ALL_OPTION, label });
 
@@ -21,21 +20,15 @@ const ListView = ({
   headers,
   renderRow,
   statusOptions,
-  // "table" (default) renders the classic <table>. "cards" renders
-  // renderRow() results in a plain stacked list instead -- used by the
-  // report tables (emergency/assistance/petty crime).
+
   layout = 'table',
-  // Only used when layout === 'cards'. Defaults to a stacked list (used by
-  // the report tables); Announcements overrides this with a responsive grid.
+
   cardsContainerStyle = { display: 'flex', flexDirection: 'column', gap: '10px' },
   // Optional sort dropdown (Announcements).
   sortOptions,
   sortValue,
   onSortChange,
-  // Pagination: by default ListView paginates `data` itself. Pass `page` +
-  // `totalPages` + `onPageChange` (+ totalItems/pageSize) to control it from
-  // outside instead -- Announcements does, since it sorts before paging and
-  // passes in only the current page's items.
+
   page,
   totalPages,
   onPageChange,
@@ -43,24 +36,20 @@ const ListView = ({
   pageSize,
   onPageSizeChange,
   itemLabel,
-  // Optional: pass an export type key (see exportService.js's EXPORTERS map
-  // on the backend) to render a "Generate Report" PDF/Excel button in the
-  // filter row. Omit to leave a page without one.
+
   exportType,
   exportLabel,
   exportWithOptions = false,
   exportTitle = '',
-  // Extra filters sent with the export (e.g. archived: '1' on an Archived tab).
+
   exportFilters = {},
-  // Optional override for the "+ Add New" button text.
+
   addLabel = '+ Add New',
-  // Optional: extra filter controls rendered after the status filter.
+
   extraFilters,
-  // Optional heading inside the table card (defaults to "All <title>"
-  // when a title is given, otherwise none).
+
   sectionTitle,
-  // false hides the search/filter row -- the Users tab shows one shared row
-  // above its two tables.
+
   showFilters = true
 }) => {
   const isControlled = typeof page === 'number';
@@ -69,9 +58,6 @@ const ListView = ({
   const [internalPageSize, setInternalPageSize] = useState(DEFAULT_PAGE_SIZE);
   const listTopRef = useRef(null);
 
-  // Back to page 1 whenever the search/filters change -- but not when the
-  // data itself refreshes (the 30s auto-refresh shouldn't throw you back to
-  // page 1 while you're reading page 3).
   const filterKey = JSON.stringify(filters?.[filterType] || {});
   useEffect(() => {
     setInternalPage(1);
@@ -82,7 +68,7 @@ const ListView = ({
   const effectiveTotalPages = isControlled
     ? (totalPages || 1)
     : Math.max(1, Math.ceil(data.length / internalPageSize));
-  // Clamp in case the list shrank (e.g. a filter or refresh removed items).
+
   const currentPage = Math.min(isControlled ? page : internalPage, effectiveTotalPages);
 
   const visibleData = isControlled
@@ -96,7 +82,7 @@ const ListView = ({
     } else {
       setInternalPage(clamped);
     }
-    // Bring the top of the list back into view after switching pages.
+
     listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -111,9 +97,6 @@ const ListView = ({
     <div ref={listTopRef} style={{ scrollMarginTop: 96 }}>
       {title && <h1 className="font-bold text-2xl mb-5">{title}</h1>}
 
-      {/* lv-* classes: on phones admin.css turns this row into a grid --
-          search on its own line, the filters two per line, then the
-          action button full width. */}
       {showFilters && (
       <div className="lv-filters" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '16px', marginBottom: '20px' }}>
         <div className="lv-search" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1 1 240px', minWidth: '200px' }}>
@@ -140,9 +123,7 @@ const ListView = ({
             }))}
             className="form-select"
           >
-            {/* An option is either a string or { value, label } -- the
-                "show everything" option must have the value 'All Items'
-                (ALL_OPTION, top of this file), whatever its label. */}
+
             {statusOptions.map(opt => {
               const value = typeof opt === 'object' ? opt.value : opt;
               const label = typeof opt === 'object' ? opt.label : opt;

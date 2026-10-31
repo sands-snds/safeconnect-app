@@ -1,9 +1,9 @@
 import React from "react";
 
-// The resident's photo or video attachment. Reports store the file as a
-// base64 data URL; mediaType ("image" | "video") says which it is, and
-// older reports without it are treated as images unless the data URL
-// itself says video.
+
+
+
+
 const ReportImage = ({ photo, mediaType }) => {
   if (!photo) return null;
 

@@ -7,9 +7,6 @@ import DashboardRecentReports from "./DashboardRecentReports";
 import useIsMobile from "../hooks/useIsMobile";
 import { tx } from "../../../i18n/adminText";
 
-// Phones: the summary card (Create Announcement and Total Reports only, no
-// counters), then a toggle between Recent Reports (the default) and Analytics
-// (the charts), instead of one very long page.
 const MOBILE_TABS = [
     { key: "recent", label: "Recent Reports" },
     { key: "analytics", label: "Analytics" }
@@ -26,8 +23,6 @@ const tabStyle = (active) => ({
     fontWeight: 600,
     cursor: "pointer"
 });
-// DashboardAlerts and DashboardQuickActions are intentionally not rendered here.
-// Kept in the codebase for potential future use -- see components/admin/dashboard/.
 
 export default function Dashboard({
     emergencyReports,

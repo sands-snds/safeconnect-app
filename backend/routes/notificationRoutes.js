@@ -5,7 +5,7 @@ const router = express.Router();
 const controller = require("../controllers/notificationController");
 const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
 
-// Resident-facing: a signed-in user's own notifications (status-change replies, etc).
+
 router.get("/mine", verifyToken, controller.getMyNotifications);
 router.put("/mine/read-all", verifyToken, controller.markAllMineAsRead);
 router.put("/mine/archive", verifyToken, controller.archiveMine);

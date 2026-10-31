@@ -4,10 +4,10 @@ import { LanguageProvider } from '../../i18n/LanguageContext';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
 import { showPopup } from '../shared/popup';
 
-// The map needs a real browser; the form logic under test doesn't.
+
 jest.mock('../shared/location/LocationPickerMap', () => () => null);
-// Same object every render, like the real hook's stable state setters --
-// a fresh setGpsCoords each render would re-run the edit prefill effect forever.
+
+
 jest.mock('../shared/location/useLocationPin', () => {
   const pin = {
     gpsCoords: { lat: 14.32, lng: 120.96 },
@@ -28,7 +28,7 @@ jest.mock('../../Services/api', () => ({
 }));
 jest.mock('../shared/popup', () => ({ showPopup: jest.fn() }));
 
-// CRA resets mock implementations before each test, so set them here.
+
 beforeEach(() => {
   createAssistanceRequest.mockResolvedValue({ success: true, id: 1 });
   updateAssistanceRequest.mockResolvedValue({ success: true });

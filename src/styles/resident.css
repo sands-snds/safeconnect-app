@@ -178,7 +178,7 @@ body {
 header {
     position: relative;
 
-    background: 
+    background:
         linear-gradient(rgba(140, 27, 27, 0.82), rgba(140, 27, 27, 0.82)),
         url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?fit=crop&w=1350&q=80');
     background-blend-mode: multiply;
@@ -203,8 +203,6 @@ header {
     padding: 4rem 2rem;
     position: relative;
 }
-
-/* Hero text is centered at every breakpoint, including desktop. */
 
 .badge-pill {
     background-color: rgba(255, 255, 255, 0.2);
@@ -237,10 +235,6 @@ header {
     text-align: center;
 }
 
-/* Each line gets its own full-width box so it's centered independently --
-   relying on the parent's shrink-wrapped width made "Safe Connect" center
-   under whichever line happened to be widest, instead of the two lines
-   lining up with each other. */
 #residentHeroCarousel .hero-title .hero-title-line {
     display: block;
     width: 100%;
@@ -1372,10 +1366,6 @@ header {
         gap: 0.2rem;
     }
 }
-/* ========================================
-   MOBILE RESPONSIVE STYLES - iPhone SE & Up
-   Additional styles for existing CSS
-   ======================================== */
 
 /* Tablet Styles (768px - 1024px) */
 @media (max-width: 1024px) {
@@ -1383,47 +1373,46 @@ header {
     font-size: 1.15rem;
     padding: 0.75rem 1.25rem;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom {
     width: 38px;
     height: 38px;
   }
-  
+
   .resident-nav-item-custom {
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
   }
-  
+
   #residentHeroCarousel .hero-title {
     font-size: 3.5rem;
     letter-spacing: 5px;
   }
-  
+
   #residentHeroCarousel .hero-subtitle {
     font-size: 1.2rem;
   }
 }
 
-/* Mobile Landscape & Tablet Portrait (577px - 768px) */
 @media (max-width: 768px) {
   .resident-navbar-custom {
     min-height: 65px;
   }
-  
+
   .resident-navbar-custom .navbar-content-wrapper {
     flex-wrap: wrap;
   }
-  
+
   .resident-navbar-custom .navbar-brand-custom {
     padding: 0.75rem 1rem;
     font-size: 1.1rem;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom {
     width: 36px;
     height: 36px;
   }
-  
+
   .resident-nav-links-custom {
     width: 100%;
     overflow-x: auto;
@@ -1434,67 +1423,67 @@ header {
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
-  
+
   .resident-nav-links-custom::-webkit-scrollbar {
     display: none;
   }
-  
+
   .resident-nav-item-custom {
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
     flex-shrink: 0;
     white-space: nowrap;
   }
-  
+
   .resident-user-menu {
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
   }
-  
+
   .resident-user-dropdown {
     min-width: 180px;
   }
-  
+
   #residentHeroCarousel .hero-title {
     font-size: 2.8rem;
     letter-spacing: 4px;
     margin-top: 60px;
   }
-  
+
   #residentHeroCarousel .hero-subtitle {
     font-size: 1.1rem;
     line-height: 1.6;
   }
-  
+
   .cta-buttons {
     flex-direction: column;
     gap: 1rem;
     width: 100%;
     max-width: 400px;
   }
-  
+
   .btn-donate, .btn-help {
     width: 100%;
     justify-content: center;
   }
-  
+
   .emergency-banner {
     flex-direction: column;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
   }
-  
+
   .nav-arrow {
     width: 40px;
     height: 40px;
     font-size: 1.2rem;
   }
-  
+
   .nav-arrow-left {
     left: 1rem;
   }
-  
+
   .nav-arrow-right {
     right: 1rem;
   }
@@ -1505,190 +1494,190 @@ header {
   .resident-navbar-custom {
     min-height: 60px;
   }
-  
+
   .resident-navbar-custom .navbar-brand-custom {
     padding: 0.65rem 0.75rem;
     font-size: 1rem;
     gap: 0.5rem;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom {
     width: 34px;
     height: 34px;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom i {
     font-size: 1rem;
   }
-  
+
   .resident-nav-item-custom {
     padding: 0.65rem 0.85rem;
     font-size: 0.8rem;
     gap: 0.4rem;
   }
-  
+
   .resident-nav-item-custom i {
     font-size: 1rem;
   }
-  
+
   .resident-user-menu {
     padding: 0.65rem 0.85rem;
     font-size: 0.8rem;
   }
-  
+
   header {
     min-height: 500px;
     padding: 0;
   }
-  
+
   .hero-content {
     padding: 3rem 1.5rem;
   }
-  
+
   .badge-pill {
     padding: 0.4rem 1rem;
     font-size: 0.75rem;
     gap: 0.4rem;
     margin-bottom: 1.5rem;
   }
-  
+
   #residentHeroCarousel .hero-title {
     font-size: 2.2rem;
     letter-spacing: 3px;
     margin-top: 40px;
     margin-bottom: 1rem;
   }
-  
+
   #residentHeroCarousel .hero-subtitle {
     font-size: 0.95rem;
     line-height: 1.5;
     margin-bottom: 2rem;
   }
-  
+
   .cta-buttons {
     gap: 0.75rem;
     max-width: 100%;
   }
-  
+
   .btn-donate, .btn-help {
     padding: 0.85rem 1.75rem;
     font-size: 0.9rem;
   }
-  
+
   .carousel-indicators-custom {
     gap: 0.5rem;
   }
-  
+
   .indicator {
     width: 8px;
     height: 8px;
   }
-  
+
   .indicator.active {
     width: 24px;
   }
-  
+
   .nav-arrow {
     width: 38px;
     height: 38px;
     font-size: 1.1rem;
   }
-  
+
   .nav-arrow-left {
     left: 0.75rem;
   }
-  
+
   .nav-arrow-right {
     right: 0.75rem;
   }
-  
+
   .emergency-banner {
     font-size: 0.8rem;
     padding: 0.65rem 0.75rem;
   }
-  
+
   .emergency-banner i {
     font-size: 1rem;
   }
-  
+
   .report-emergency-section,
   .request-assistance-section {
     padding: 3rem 1.5rem;
   }
-  
+
   .section-header,
   .assist-header {
     margin-bottom: 2rem;
   }
-  
+
   .section-icon,
   .assist-icon-top {
     width: 55px;
     height: 55px;
   }
-  
+
   .section-icon i,
   .assist-icon-top i {
     font-size: 1.8rem;
   }
-  
+
   .section-header h2,
   .assist-header h2 {
     font-size: 1.8rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .section-header p,
   .assist-header p {
     font-size: 0.9rem;
   }
-  
+
   .emergency-cards,
   .assist-cards {
     gap: 1.25rem;
   }
-  
+
   .emergency-card,
   .assist-card {
     padding: 1.5rem;
   }
-  
+
   .card-icon,
   .assist-icon {
     width: 48px;
     height: 48px;
   }
-  
+
   .card-icon i,
   .assist-icon i {
     font-size: 1.5rem;
   }
-  
+
   .card-title-row h3,
   .assist-card h3 {
     font-size: 1.1rem;
   }
-  
+
   .badge {
     font-size: 0.7rem;
     padding: 0.2rem 0.6rem;
   }
-  
+
   .card-desc,
   .assist-desc {
     font-size: 0.85rem;
     margin-bottom: 1.25rem;
   }
-  
+
   .assist-list li {
     font-size: 0.8rem;
   }
-  
+
   .assist-status {
     font-size: 0.75rem;
     padding: 0.5rem;
   }
-  
+
   .report-btn,
   .assist-btn {
     font-size: 0.8rem;
@@ -1696,242 +1685,241 @@ header {
   }
 }
 
-/* iPhone SE & Small Mobile (375px - 480px) */
 @media (max-width: 480px) {
   .resident-navbar-custom {
     min-height: 56px;
   }
-  
+
   .resident-navbar-custom .navbar-brand-custom {
     padding: 0.6rem 0.65rem;
     font-size: 0.95rem;
     gap: 0.4rem;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom {
     width: 32px;
     height: 32px;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom i {
     font-size: 0.95rem;
   }
-  
+
   .resident-nav-item-custom {
     padding: 0.6rem 0.75rem;
     font-size: 0.75rem;
     gap: 0.35rem;
   }
-  
+
   .resident-nav-item-custom i {
     font-size: 0.95rem;
   }
-  
+
   .resident-nav-item-custom span {
     display: none;
   }
-  
+
   .resident-nav-item-custom.active::after {
     content: attr(data-label);
     display: inline;
     margin-left: 0.3rem;
     font-size: 0.7rem;
   }
-  
+
   .resident-user-menu {
     padding: 0.6rem 0.75rem;
     font-size: 0.75rem;
   }
-  
+
   .resident-user-menu span {
     display: none;
   }
-  
+
   header {
     min-height: 450px;
   }
-  
+
   .hero-content {
     padding: 2.5rem 1rem;
   }
-  
+
   .badge-pill {
     padding: 0.35rem 0.85rem;
     font-size: 0.7rem;
     gap: 0.35rem;
     margin-bottom: 1.25rem;
   }
-  
+
   .badge-pill i {
     font-size: 0.85rem;
   }
-  
+
   #residentHeroCarousel .hero-title {
     font-size: 1.8rem;
     letter-spacing: 2px;
     margin-top: 30px;
     margin-bottom: 0.75rem;
   }
-  
+
   #residentHeroCarousel .hero-subtitle {
     font-size: 0.85rem;
     line-height: 1.4;
     margin-bottom: 1.75rem;
     padding: 0 0.5rem;
   }
-  
+
   .cta-buttons {
     gap: 0.65rem;
     width: 100%;
   }
-  
+
   .btn-donate, .btn-help {
     padding: 0.75rem 1.5rem;
     font-size: 0.85rem;
     border-radius: 10px;
   }
-  
+
   .btn-donate i, .btn-help i {
     font-size: 1rem;
   }
-  
+
   .carousel-indicators-custom {
     gap: 0.4rem;
   }
-  
+
   .indicator {
     width: 7px;
     height: 7px;
   }
-  
+
   .indicator.active {
     width: 20px;
   }
-  
+
   .nav-arrow {
     width: 34px;
     height: 34px;
     font-size: 1rem;
   }
-  
+
   .nav-arrow-left {
     left: 0.5rem;
   }
-  
+
   .nav-arrow-right {
     right: 0.5rem;
   }
-  
+
   .emergency-banner {
     font-size: 0.75rem;
     padding: 0.6rem;
     gap: 0.5rem;
   }
-  
+
   .emergency-banner i {
     font-size: 0.95rem;
     margin-right: 0.35rem;
   }
-  
+
   .report-emergency-section,
   .request-assistance-section {
     padding: 2.5rem 1rem;
   }
-  
+
   .section-header,
   .assist-header {
     margin-bottom: 1.75rem;
   }
-  
+
   .section-icon,
   .assist-icon-top {
     width: 50px;
     height: 50px;
     margin-bottom: 0.75rem;
   }
-  
+
   .section-icon i,
   .assist-icon-top i {
     font-size: 1.6rem;
   }
-  
+
   .section-header h2,
   .assist-header h2 {
     font-size: 1.6rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .section-header p,
   .assist-header p {
     font-size: 0.85rem;
     padding: 0 0.5rem;
   }
-  
+
   .emergency-cards,
   .assist-cards {
     gap: 1rem;
   }
-  
+
   .emergency-card,
   .assist-card {
     padding: 1.25rem;
     border-radius: 10px;
   }
-  
+
   .card-icon,
   .assist-icon {
     width: 45px;
     height: 45px;
     margin-bottom: 0.75rem;
   }
-  
+
   .card-icon i,
   .assist-icon i {
     font-size: 1.4rem;
   }
-  
+
   .card-title-row h3,
   .assist-card h3 {
     font-size: 1rem;
   }
-  
+
   .badge {
     font-size: 0.65rem;
     padding: 0.2rem 0.55rem;
   }
-  
+
   .card-desc,
   .assist-desc {
     font-size: 0.8rem;
     margin-bottom: 1rem;
   }
-  
+
   .assist-list {
     margin-bottom: 1rem;
   }
-  
+
   .assist-list li {
     font-size: 0.75rem;
     margin-bottom: 0.4rem;
   }
-  
+
   .assist-list .check {
     font-size: 0.9rem;
   }
-  
+
   .assist-status {
     font-size: 0.7rem;
     padding: 0.45rem;
     margin-bottom: 1rem;
   }
-  
+
   .report-btn,
   .assist-btn {
     font-size: 0.75rem;
     padding: 0.6rem;
     border-radius: 10px;
   }
-  
+
   .report-btn i,
   .assist-btn i {
     font-size: 0.95rem;
@@ -1943,172 +1931,172 @@ header {
   html, body {
     font-size: 15px;
   }
-  
+
   .resident-navbar-custom {
     min-height: 54px;
   }
-  
+
   .resident-navbar-custom .navbar-brand-custom {
     padding: 0.55rem 0.6rem;
     font-size: 0.9rem;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom {
     width: 30px;
     height: 30px;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom i {
     font-size: 0.9rem;
   }
-  
+
   .resident-nav-item-custom {
     padding: 0.55rem 0.7rem;
     font-size: 0.7rem;
   }
-  
+
   .resident-nav-item-custom i {
     font-size: 0.9rem;
   }
-  
+
   .resident-user-menu {
     padding: 0.55rem 0.7rem;
     font-size: 0.7rem;
   }
-  
+
   .resident-user-dropdown {
     min-width: 160px;
     right: 0.25rem;
   }
-  
+
   .resident-dropdown-item {
     padding: 0.55rem 0.85rem;
     font-size: 0.8rem;
   }
-  
+
   header {
     min-height: 420px;
   }
-  
+
   .hero-content {
     padding: 2rem 0.85rem;
   }
-  
+
   .badge-pill {
     padding: 0.3rem 0.75rem;
     font-size: 0.65rem;
     margin-bottom: 1rem;
   }
-  
+
   #residentHeroCarousel .hero-title {
     font-size: 1.6rem;
     letter-spacing: 1.5px;
     margin-top: 25px;
     margin-bottom: 0.65rem;
   }
-  
+
   #residentHeroCarousel .hero-subtitle {
     font-size: 0.8rem;
     line-height: 1.35;
     margin-bottom: 1.5rem;
     padding: 0 0.25rem;
   }
-  
+
   .cta-buttons {
     gap: 0.6rem;
   }
-  
+
   .btn-donate, .btn-help {
     padding: 0.7rem 1.3rem;
     font-size: 0.8rem;
     border-radius: 9px;
   }
-  
+
   .carousel-indicators-custom {
     gap: 0.35rem;
   }
-  
+
   .indicator {
     width: 6px;
     height: 6px;
   }
-  
+
   .indicator.active {
     width: 18px;
   }
-  
+
   .nav-arrow {
     width: 32px;
     height: 32px;
     font-size: 0.95rem;
   }
-  
+
   .emergency-banner {
     font-size: 0.7rem;
     padding: 0.55rem;
   }
-  
+
   .report-emergency-section,
   .request-assistance-section {
     padding: 2rem 0.85rem;
   }
-  
+
   .section-icon,
   .assist-icon-top {
     width: 48px;
     height: 48px;
   }
-  
+
   .section-icon i,
   .assist-icon-top i {
     font-size: 1.5rem;
   }
-  
+
   .section-header h2,
   .assist-header h2 {
     font-size: 1.5rem;
   }
-  
+
   .section-header p,
   .assist-header p {
     font-size: 0.8rem;
   }
-  
+
   .emergency-cards,
   .assist-cards {
     gap: 0.9rem;
   }
-  
+
   .emergency-card,
   .assist-card {
     padding: 1.15rem;
   }
-  
+
   .card-icon,
   .assist-icon {
     width: 42px;
     height: 42px;
   }
-  
+
   .card-icon i,
   .assist-icon i {
     font-size: 1.3rem;
   }
-  
+
   .card-title-row h3,
   .assist-card h3 {
     font-size: 0.95rem;
   }
-  
+
   .card-desc,
   .assist-desc {
     font-size: 0.75rem;
   }
-  
+
   .assist-list li {
     font-size: 0.7rem;
   }
-  
+
   .report-btn,
   .assist-btn {
     font-size: 0.7rem;
@@ -2121,52 +2109,52 @@ header {
   html, body {
     font-size: 14px;
   }
-  
+
   .resident-navbar-custom {
     min-height: 52px;
   }
-  
+
   .resident-navbar-custom .navbar-brand-custom {
     padding: 0.5rem 0.55rem;
     font-size: 0.85rem;
   }
-  
+
   .resident-navbar-custom .brand-icon-custom {
     width: 28px;
     height: 28px;
   }
-  
+
   .resident-nav-item-custom,
   .resident-user-menu {
     padding: 0.5rem 0.65rem;
     font-size: 0.65rem;
   }
-  
+
   #residentHeroCarousel .hero-title {
     font-size: 1.4rem;
     letter-spacing: 1px;
     margin-top: 20px;
   }
-  
+
   #residentHeroCarousel .hero-subtitle {
     font-size: 0.75rem;
   }
-  
+
   .btn-donate, .btn-help {
     padding: 0.65rem 1.2rem;
     font-size: 0.75rem;
   }
-  
+
   .section-header h2,
   .assist-header h2 {
     font-size: 1.3rem;
   }
-  
+
   .emergency-card,
   .assist-card {
     padding: 1rem;
   }
-  
+
   .card-title-row h3,
   .assist-card h3 {
     font-size: 0.9rem;
@@ -2179,44 +2167,44 @@ header {
     max-width: 95%;
     border-radius: 10px;
   }
-  
+
   .modal-header {
     padding: 1.25rem 1.5rem;
   }
-  
+
   .modal-icon,
   .modal-icon-assist {
     width: 40px;
     height: 40px;
   }
-  
+
   .modal-icon i,
   .modal-icon-assist i {
     font-size: 1.6rem;
   }
-  
+
   .modal-header h2 {
     font-size: 1.2rem;
   }
-  
+
   .modal-form {
     padding: 1.5rem;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
     gap: 0.85rem;
   }
-  
+
   .form-group {
     margin-bottom: 1rem;
   }
-  
+
   .form-group label {
     font-size: 0.85rem;
     margin-bottom: 0.4rem;
   }
-  
+
   .form-group input,
   .form-group textarea,
   .form-group select {
@@ -2224,13 +2212,13 @@ header {
     font-size: 0.85rem;
     border-radius: 7px;
   }
-  
+
   .modal-actions {
     flex-direction: column;
     gap: 0.75rem;
     margin-top: 1.25rem;
   }
-  
+
   .btn-cancel,
   .btn-submit {
     width: 100%;
@@ -2244,41 +2232,41 @@ header {
     max-width: 98%;
     border-radius: 8px;
   }
-  
+
   .modal-header {
     padding: 1rem 1.25rem;
   }
-  
+
   .modal-icon,
   .modal-icon-assist {
     width: 36px;
     height: 36px;
   }
-  
+
   .modal-icon i,
   .modal-icon-assist i {
     font-size: 1.4rem;
   }
-  
+
   .modal-header h2 {
     font-size: 1.1rem;
   }
-  
+
   .modal-form {
     padding: 1.25rem;
   }
-  
+
   .form-group label {
     font-size: 0.8rem;
   }
-  
+
   .form-group input,
   .form-group textarea,
   .form-group select {
     padding: 0.6rem;
     font-size: 0.8rem;
   }
-  
+
   .btn-cancel,
   .btn-submit {
     padding: 0.7rem;
@@ -2292,34 +2280,34 @@ header {
   .footer-container {
     padding: 0 1.5rem;
   }
-  
+
   .footer-logo-circle {
     width: 32px;
     height: 32px;
   }
-  
+
   .footer-logo-circle i {
     font-size: 1.1rem;
   }
-  
+
   .footer-brand-text {
     font-size: 1.2rem;
   }
-  
+
   .footer-description {
     font-size: 0.8rem;
   }
-  
+
   .footer-column-title {
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .footer-links-list a,
   .contact-item {
     font-size: 0.8rem;
   }
-  
+
   .footer-bottom {
     font-size: 0.75rem;
     padding-top: 1rem;
@@ -2330,30 +2318,30 @@ header {
   .footer-container {
     padding: 0 1rem;
   }
-  
+
   .footer-logo-circle {
     width: 28px;
     height: 28px;
   }
-  
+
   .footer-logo-circle i {
     font-size: 1rem;
   }
-  
+
   .footer-brand-text {
     font-size: 1.1rem;
   }
-  
+
   .footer-description,
   .footer-links-list a,
   .contact-item {
     font-size: 0.75rem;
   }
-  
+
   .footer-column-title {
     font-size: 0.85rem;
   }
-  
+
   .footer-bottom {
     font-size: 0.7rem;
   }
@@ -2364,7 +2352,7 @@ header {
   .hide-mobile {
     display: none !important;
   }
-  
+
   .show-mobile {
     display: block !important;
   }
@@ -2402,17 +2390,13 @@ body {
     padding-left: max(0px, env(safe-area-inset-left));
     padding-right: max(0px, env(safe-area-inset-right));
   }
-  
+
   .hero-content {
     padding-left: max(1rem, env(safe-area-inset-left));
     padding-right: max(1rem, env(safe-area-inset-right));
   }
 }
-/* ============================================================
-   HERO SIZING (resident + landing) & SHARED FOOTER -- mobile fix
-   Heights used to be inline (80vh/100vh) so the hero filled the
-   whole phone screen; they live here now so mobile can shrink it.
-   ============================================================ */
+
 .resident-hero-slide {
     background-size: cover;
     background-position: center;
@@ -2521,7 +2505,6 @@ body {
         text-align: center;
     }
 
-    /* Room for the floating call button so it doesn't cover the credits */
     .footer-section {
         padding-bottom: 88px !important;
     }
@@ -2547,8 +2530,6 @@ body {
     margin-top: 4px;
 }
 
-/* Officials: one column on phones, two content-sized columns from 576px up
-   (so a long name doesn't wrap and leave a gap in the other column). */
 .footer-section .footer-officials {
     display: grid;
     grid-template-columns: 1fr;
@@ -2563,14 +2544,12 @@ body {
     }
 }
 
-/* Phones: the centered list keeps its two columns centered too. */
 @media (min-width: 576px) and (max-width: 767.98px) {
     .footer-section .footer-officials {
         justify-content: center;
     }
 }
 
-/* Footer columns 2 and 3: content-sized, centered in their column (DonationFooter.jsx). */
 .footer-section .footer-col {
     max-width: 100%;
 }
@@ -2586,8 +2565,6 @@ body {
     line-height: 1.2;
 }
 
-/* 992-1199px: the brand column is narrow, so shrink the logo and name to
-   keep them side by side. */
 @media (min-width: 992px) and (max-width: 1199.98px) {
     .footer-section .footer-logo {
         width: 52px;
@@ -2599,14 +2576,11 @@ body {
     }
 }
 
-/* The brand is left-aligned beside its logo (phones too). */
 .footer-section .footer-brand .footer-about {
     margin-left: 0;
     margin-right: 0;
 }
 
-/* Resident hero: small yellow line above the heading, and the heading's
-   second line in yellow (like the home page hero). */
 #residentHeroCarousel .resident-hero-eyebrow {
     margin: 0 0 0.9rem;
     color: #FFC107;
@@ -2621,10 +2595,7 @@ body {
     color: #FFC107;
 }
 
-/* Natural letter spacing for the hero heading on every screen size, like the
-   other headings on the site (the size-specific rules above used 1-7px). */
 #residentHeroCarousel .hero-title {
     letter-spacing: -0.01em;
     line-height: 1.15;
 }
-

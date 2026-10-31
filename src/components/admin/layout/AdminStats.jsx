@@ -1,13 +1,6 @@
 import React from 'react';
 import { tx } from "../../../i18n/adminText";
 
-// Dashboard counters (dash-stat* classes in styles/admin.css). Report counts
-// are filled pink cards on top, the other totals outlined cards below, and
-// Create Announcement + the big Total Reports card in a column on the right.
-// Tablets put the outlined cards in a 2x2 grid. Phones (compact) show only
-// Create Announcement and Total Reports.
-
-// theme: the report type's colors ({ color, rgb }) for the filled cards.
 const StatCard = ({ label, value, icon, variant, theme, onClick }) => (
   <button
     type="button"
@@ -23,8 +16,6 @@ const StatCard = ({ label, value, icon, variant, theme, onClick }) => (
   </button>
 );
 
-// The same colors as the resident page's "Report an Incident" cards
-// (components/resident/EmergencyReportSection.jsx).
 const REPORT_THEMES = {
   emergency: { color: '#dc2626', rgb: '220, 38, 38' },
   assistance: { color: '#ea580c', rgb: '234, 88, 12' },
@@ -51,7 +42,7 @@ const AdminStats = ({
   ];
   const others = [
     { label: 'Total Announcements', value: announcements.length, icon: 'bi-megaphone-fill', view: 'announcement-page' },
-    // System tab stats: Admins only, like the tabs they open.
+
     ...(isSuperAdmin ? [
       { label: 'Registered Users', value: registeredUsers.length, icon: 'bi-people-fill', view: 'registered-users' },
       { label: 'Resident Sign-ins', value: signInLogs.length, icon: 'bi-box-arrow-in-right', view: 'sign-in-logs' },

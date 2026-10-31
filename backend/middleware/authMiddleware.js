@@ -18,7 +18,6 @@ const verifyToken = (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-
         if (err) {
             return res.status(403).json({
                 success: false,
@@ -26,11 +25,11 @@ const verifyToken = (req, res, next) => {
             });
         }
 
-        // A signed token alone isn't enough: tokens last 7 days, so check the
-        // account still exists and is Active. Otherwise a deleted or
-        // suspended account could keep using the API until its token
-        // expired. "Invalid token." makes the frontend sign out (api.js
-        // SESSION_ERRORS); signing in again explains the account status.
+        
+        
+        
+        
+        
         try {
             const account = await User.findById(decoded.id);
             if (!account || (account.status && account.status !== "Active")) {
@@ -40,9 +39,9 @@ const verifyToken = (req, res, next) => {
                     code: account ? "ACCOUNT_INACTIVE" : "ACCOUNT_NOT_FOUND"
                 });
             }
-            // A saved login ("Save Login Info") is only valid while its
-            // remembered_logins row exists: signing out or changing the
-            // password revokes it, even though the token itself hasn't expired.
+            
+            
+            
             if (decoded.jti && !(await RememberedLogin.isValid(decoded.jti, decoded.id))) {
                 return res.status(401).json({
                     success: false,
@@ -60,10 +59,10 @@ const verifyToken = (req, res, next) => {
     });
 };
 
-// Like verifyToken, but never blocks the request -- used on public GET
-// routes that enrich their response when the caller happens to be signed
-// in (e.g. "did I like this announcement?") without requiring sign-in to
-// view the page at all.
+
+
+
+
 const attachUserIfPresent = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) return next();
@@ -75,13 +74,12 @@ const attachUserIfPresent = (req, res, next) => {
     });
 };
 
-// Checks the role against the database rather than trusting the token's
-// role claim -- tokens last 7 days, so otherwise a demoted/suspended admin
-// would keep admin access (and a newly promoted one wouldn't get it) until
-// their token expired. Attaches the admin's row as req.admin for activity logging.
-// Lets in both admins and super admins; see verifySuperAdmin for System tabs.
-const verifyAdmin = async (req, res, next) => {
 
+
+
+
+
+const verifyAdmin = async (req, res, next) => {
     if (!req.user) {
         return res.status(403).json({
             success: false,
@@ -109,9 +107,9 @@ const verifyAdmin = async (req, res, next) => {
     }
 };
 
-// System tabs (users, sign-in logs, admin logs, settings) and other
-// account-wide actions. Must run after verifyAdmin, which loads req.admin
-// from the database.
+
+
+
 const verifySuperAdmin = (req, res, next) => {
     if (!req.admin || !isSuperAdminRole(req.admin.role)) {
         return res.status(403).json({
@@ -122,11 +120,10 @@ const verifySuperAdmin = (req, res, next) => {
     next();
 };
 
-// Allows anyone to manage their own profile (photo/username/password),
-// and a super admin to manage any account. Checks the database rather than
-// the token's role claim, for the same reason as verifyAdmin.
-const verifySelfOrAdmin = async (req, res, next) => {
 
+
+
+const verifySelfOrAdmin = async (req, res, next) => {
     if (!req.user) {
         return res.status(401).json({
             success: false,
@@ -152,17 +149,17 @@ const verifySelfOrAdmin = async (req, res, next) => {
     }
 };
 
-// Loads the signed-in account from the database and checks it against
-// `level`: "admin" (admin or super admin) or "super" (super admin only).
+
+
 const hasActiveRole = async (userId, level) => {
     const requester = await User.findById(userId);
     if (!requester || (requester.status && requester.status !== "Active")) return false;
     return level === "super" ? isSuperAdminRole(requester.role) : isAdminRole(requester.role);
 };
 
-// For a single report (/:id on emergency_reports, assistance_requests,
-// petty_crimes): lets through the resident who submitted it, or an admin
-// at `level` ("admin" to view, "super" to edit/delete).
+
+
+
 const verifyReportAccess = (table, level) => async (req, res, next) => {
     try {
         const [[report]] = await db.query(
@@ -188,7 +185,7 @@ const verifyReportAccess = (table, level) => async (req, res, next) => {
     }
 };
 
-// A resident's own report list (/reports/user/:userId), or any admin.
+
 const verifySelfOrAnyAdmin = async (req, res, next) => {
     try {
         if (String(req.user.id) === String(req.params.userId)) return next();
@@ -200,10 +197,10 @@ const verifySelfOrAnyAdmin = async (req, res, next) => {
     }
 };
 
-// New reports are always filed under the signed-in account. The forms send
-// userId / name / contact too, but they're client-supplied, so a resident
-// could otherwise file reports as someone else (and have them show up in that
-// person's My Reports). Use after verifyToken, which loads req.account.
+
+
+
+
 const reportAsSignedInUser = (req, res, next) => {
     const account = req.account;
     req.body = {

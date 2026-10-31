@@ -5,15 +5,15 @@ import WeatherCard from "./WeatherCard";
 import DemoVideoCard from "./DemoVideoCard";
 import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 
-// News page, laid out as a grid:
-//   phones / tablets: search + categories, then the weather, then the feed
-//   desktop:          search + categories and the feed on the left, the
-//                     weather on the right
-// The residents' video (if an Admin turned it on for News) sits under the
-// weather.
-//
-// Filters reset whenever the page opens, so a notification that jumps to
-// a post (ResidentNavbar scrolls to #news-item-<id>) always finds it.
+
+
+
+
+
+
+
+
+
 const NewsOverlay = ({
     isOpen,
 
@@ -29,7 +29,6 @@ const NewsOverlay = ({
 
     RAIN_ALERT_THRESHOLD
 }) => {
-
     const { t } = useLanguage();
     const { systemDemo } = useSiteMedia();
     const [category, setCategory] = useState("all");
@@ -44,7 +43,7 @@ const NewsOverlay = ({
 
     const articleCount = announcements.length;
 
-    // Categories in use, most common first, with counts.
+    
     const categories = useMemo(() => {
         const counts = new Map();
         announcements.forEach((a) => counts.set(a.category, (counts.get(a.category) || 0) + 1));
@@ -64,9 +63,9 @@ const NewsOverlay = ({
     const hasSide = Boolean(weather) || showVideo;
     const hasContent = announcements.length > 0 || hasSide;
 
-    // Desktop keeps the weather column in view while the articles scroll. If
-    // the column is taller than the window, it scrolls along until its bottom
-    // shows and then holds there, so the whole forecast can always be seen.
+    
+    
+    
     const bodyRef = useRef(null);
     const slotRef = useRef(null);
     useEffect(() => {
@@ -75,7 +74,6 @@ const NewsOverlay = ({
         if (!isOpen || !body || !slot || typeof ResizeObserver === "undefined") return undefined;
         const GAP = 20;
         const update = () => {
-            // Sticky "top" counts from inside the body's top padding.
             const padTop = parseFloat(getComputedStyle(body).paddingTop) || 0;
             const room = body.clientHeight - padTop - slot.offsetHeight - GAP;
             slot.style.setProperty("--weather-sticky-top", `${Math.min(GAP, room)}px`);

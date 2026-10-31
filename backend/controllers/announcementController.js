@@ -24,14 +24,13 @@ exports.createAnnouncement = async (req, res) => {
     }
 };
 
-// Public listing — returns the raw array, matching fetchAnnouncements()
-// in Services/api.js which calls data.map(...) directly on the response.
-// Each row is enriched with its like/comment counts (and, when the caller
-// is signed in via attachUserIfPresent, whether they've liked it) so the
-// News page doesn't need a request per card just to show those numbers.
+
+
+
+
+
 exports.getAnnouncements = async (req, res) => {
     try {
-        // Archived ones only for Admins/Officials who ask (?includeArchived=1).
         const includeArchived = req.query.includeArchived === "1" && isAdminRole(req.user?.role);
         const announcements = await Announcement.findAll({ includeArchived });
         const [likeCounts, commentCounts, likedIds] = await Promise.all([
@@ -81,7 +80,7 @@ exports.getComments = async (req, res) => {
             userId: c.user_id,
             isAdmin: isAdminRole(c.role),
             role: isAdminRole(c.role) ? c.role : "resident",
-            // The commenter's current profile photo (an /uploads path), or null.
+            
             photoUrl: c.photo_url || null,
             date: c.created_at
         }));
@@ -102,8 +101,8 @@ exports.createComment = async (req, res) => {
             return res.status(400).json({ success: false, message: "Comment is too long." });
         }
 
-        // Replies are one level deep: replying to a reply attaches to the
-        // top-level comment it belongs to.
+        
+        
         let parent = null;
         if (req.body.parentId) {
             parent = await AnnouncementComment.findById(req.body.parentId);
@@ -118,7 +117,7 @@ exports.createComment = async (req, res) => {
         const authorName = author?.full_name || author?.username || "Resident";
         const isAdmin = isAdminRole(author?.role);
 
-        // Let the commenter know when someone replies to their comment.
+        
         if (parent && String(parent.user_id) !== String(req.user.id)) {
             const announcement = await Announcement.findById(req.params.id);
             Notification.create({
@@ -131,8 +130,8 @@ exports.createComment = async (req, res) => {
             }).catch((err) => console.error("Comment reply notification failed:", err));
         }
 
-        // Admin panel: residents' comments and replies, so Officials and
-        // Admins can answer them from the Notifications page.
+        
+        
         if (!isAdmin) {
             const announcement = await Announcement.findById(req.params.id);
             Notification.create({
@@ -227,8 +226,8 @@ exports.getLinkPreview = async (req, res) => {
             return res.status(400).json({ success: false, message: "A url query parameter is required." });
         }
         const preview = await AnnouncementService.fetchLinkPreview(url);
-        // CreateAnnouncementView checks result.success -- without it every
-        // preview was treated as a failure and discarded.
+        
+        
         res.json({ success: true, ...preview });
     } catch (err) {
         res.status(422).json({ success: false, message: err.message || "Could not read that link." });
@@ -247,7 +246,7 @@ exports.getArchiveSettings = async (req, res) => {
     }
 };
 
-// Body: { months: 0 | 3 | 6 | 12 } (0 = auto-archive off).
+
 exports.updateArchiveSettings = async (req, res) => {
     const months = Number(req.body?.months);
     if (!AnnouncementArchive.ALLOWED_MONTHS.includes(months)) {

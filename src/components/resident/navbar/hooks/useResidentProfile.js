@@ -23,7 +23,6 @@ const loadCurrentUser = () => {
 
 
     export default function useResidentProfile() {
-
     const [currentUser, setCurrentUser] = useState(
         () => loadCurrentUser()
     );
@@ -31,11 +30,9 @@ const loadCurrentUser = () => {
     const [username, setUsername] = useState("User");
 
     useEffect(() => {
-
         const user = loadCurrentUser();
 
         if (user) {
-
         setCurrentUser(user);
 
         setUsername(
@@ -45,7 +42,6 @@ const loadCurrentUser = () => {
         );
 
         return;
-
         }
 
         const storedName =
@@ -54,13 +50,10 @@ const loadCurrentUser = () => {
         if (storedName) {
         setUsername(storedName);
         }
-
     }, []);
 
     const updateProfile = (updates) => {
-
         setCurrentUser((prev) => {
-
         const next = {
             ...(prev || {}),
             ...updates,
@@ -69,28 +62,23 @@ const loadCurrentUser = () => {
         saveCurrentUser(next);
 
         return next;
-
         });
 
         if (updates.username) {
-
         setUsername(updates.username);
 
         try {
-
             localStorage.setItem(
             "residentName",
             updates.username
             );
-
         } catch {
             // Ignore storage errors
         }
         }
-
     };
 
-    // Picks up changes made on another device (name, photo, contact...).
+    
     const refreshProfile = useCallback(async () => {
         const result = await fetchCurrentUser({ admin: false });
         if (!result.success || !result.user) return;
@@ -104,7 +92,6 @@ const loadCurrentUser = () => {
     }, []);
 
     return {
-
         currentUser,
         refreshProfile,
         username,
@@ -113,7 +100,5 @@ const loadCurrentUser = () => {
         setUsername,
 
         updateProfile,
-
     };
-
     }

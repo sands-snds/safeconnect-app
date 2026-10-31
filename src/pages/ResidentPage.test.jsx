@@ -7,8 +7,8 @@ jest.mock('../components/resident/ResidentHero', () => () => null);
 jest.mock('../components/resident/EmergencyReportSection', () => () => null);
 jest.mock('../components/shared/DonationFooter', () => () => null);
 jest.mock('../components/resident/ResidentPettyCrimeModal', () => () => null);
-// Stand-ins: the emergency form's "Request Assistance" button after a report
-// is sent, and the assistance form showing whether it's open.
+
+
 jest.mock('../components/resident/ResidentEmergencyModal', () => ({ onRequestAssistance }) => (
   <button onClick={() => onRequestAssistance({ location: 'Pinned', latitude: 14.32, longitude: 120.94 })}>
     Request Assistance

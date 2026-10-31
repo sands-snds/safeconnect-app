@@ -58,7 +58,7 @@ export default function NotificationPanel({
     if (!show) return null;
 
     const colorOf = (category) => (getCategoryColor ? getCategoryColor(category) : '#6B2C3E');
-    // Today's rain advisory counts as unread until dismissed, like the bell.
+    
     const hasWeather = Boolean(showRainNotice && weather);
     const badgeCount = totalBadgeCount ?? unreadCount;
     const visibleNotifications = tab === 'unread' ? notifications.filter((n) => n.unread) : notifications;

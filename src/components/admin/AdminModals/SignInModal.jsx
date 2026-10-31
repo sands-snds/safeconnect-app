@@ -6,9 +6,6 @@ import { showAccountStatusPopup } from '../../shared/accountStatusPopup';
 import { markAdminJustSignedIn } from './AdminDemoPopup';
 import { tx } from "../../../i18n/adminText";
 
-// This modal never existed in the project — isAuthenticated had no way to
-// ever become true, which is why the dashboard/reports/etc never rendered
-// even though nothing was throwing an error.
 const SignInModal = ({ onSuccess, notice }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,8 +23,6 @@ const SignInModal = ({ onSuccess, notice }) => {
 
     setIsSubmitting(false);
 
-    // Closed / suspended accounts get the same explanation popup as the
-    // resident sign-in.
     if (!result.success && result.code && showAccountStatusPopup(result.code, t, socials?.email)) {
       setPassword('');
       return;
@@ -46,7 +41,7 @@ const SignInModal = ({ onSuccess, notice }) => {
     sessionStorage.setItem('adminAuthenticated', 'true');
     sessionStorage.setItem('adminUser', JSON.stringify(result.user || {}));
     setAuthToken(result.token, true);
-    // A fresh sign-in (not an expired session) shows the admin demo video.
+
     if (!notice) markAdminJustSignedIn();
     onSuccess(result.user);
   };

@@ -1,8 +1,5 @@
 import { tx } from "../../../i18n/adminText";
-// Account statuses the backend accepts (see ALLOWED_STATUSES in
-// backend/controllers/userController.js). "Pending" is no longer offered
-// (accounts work as soon as the email is verified) but still shows on any
-// older account that has it.
+
 export const USER_STATUSES = ["Active", "Suspended", "Closed"];
 
 const STATUS_COLORS = {

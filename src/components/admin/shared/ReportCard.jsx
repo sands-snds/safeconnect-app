@@ -1,19 +1,12 @@
 import React from "react";
 import { tx } from "../../../i18n/adminText";
 
-// Shared collapsed/expandable report card used by all three report tables
-// (emergency, assistance, petty crime). Collapsed: a short horizontal
-// summary row. Expanded: grows to show the full detail view underneath.
-//
-// On phones (report-card rules in styles/admin.css) the row wraps: title
-// and "View details" on top, then the status control full width below,
-// instead of squeezing everything into one line.
 const ReportCard = ({
   accentColor = "#d1d5db",
   title,
-  // The status pill ({ text, bg, color }), shown last after the title's pills.
+
   badge,
-  // Optional pills between the title and the status (e.g. "For <name>").
+
   tag,
   subtitle,
   statusControl,
@@ -57,7 +50,7 @@ const ReportCard = ({
               {title}
             </span>
             {tag}
-            {/* The status, last in the row (after "N people", "For <name>"). */}
+
             {badge && (
               <span
                 style={{

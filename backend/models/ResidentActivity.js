@@ -1,9 +1,5 @@
 const db = require("../config/db");
 
-// What residents did after signing in, for System > Resident Sign-in Logs:
-// signing out and submitting, editing or deleting their reports. Written by
-// middleware/residentActivity.js; read per sign-in by logController.
-
 class ResidentActivity {
     static async ensureTable() {
         await db.query(`
@@ -27,7 +23,6 @@ class ResidentActivity {
         );
     }
 
-    // Every activity of these accounts since `since`, oldest first.
     static async forEmailsSince(emails, since) {
         if (!emails.length) return [];
         const [rows] = await db.query(

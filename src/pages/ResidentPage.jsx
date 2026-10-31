@@ -15,8 +15,8 @@ function ResidentPage() {
   const [emergencyOpen,   setEmergencyOpen]   = useState(false);
   const [assistanceOpen,  setAssistanceOpen]  = useState(false);
   const [pettyCrimeOpen,  setPettyCrimeOpen]  = useState(false);
-  // Location of an emergency report just sent, when its "Request Assistance"
-  // button opens the assistance form.
+  
+  
   const [assistancePrefill, setAssistancePrefill] = useState(null);
 
   const openAssistance = (prefill = null) => {

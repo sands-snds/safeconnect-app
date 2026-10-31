@@ -2,12 +2,9 @@ const Report = require("../models/Report");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
 
-// Emergency Reports service. Field names map 1:1 to what
-// ResidentEmergencyModal.jsx sends via createEmergencyReport().
+
+
 class ReportService {
-    /* ==========================================
-                    CREATE REPORT
-    ========================================== */
     static async create(data) {
         const reference = await generateReference(Report.getLatestReference);
 
@@ -49,9 +46,7 @@ class ReportService {
         };
     }
 
-    /* ==========================================
-                    UPDATE REPORT
-    ========================================== */
+    
     static async update(id, data) {
         const affected = await Report.update(id, {
             emergencyType: data.emergencyType,

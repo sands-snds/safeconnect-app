@@ -63,7 +63,7 @@ test('a refresh that started before the save does not bring a read item back', a
   const { result } = setup();
   await waitFor(() => expect(result.current.unreadCount).toBe(3));
   act(() => result.current.markAllAsRead());
-  // The server still says unread (the save hadn't landed yet).
+  
   await act(() => result.current.reloadPersonalNotifications());
   expect(result.current.unreadCount).toBe(0);
 });
@@ -124,7 +124,7 @@ test('deleting removes notifications for good, even after a refresh', async () =
   expect(result.current.notifications.map((n) => n.id)).toEqual([11]);
   expect(deleteMyNotifications).toHaveBeenCalledWith([5]);
   expect(markItemsRead).toHaveBeenCalledWith(['notif-deleted:12', 'announcement:12']);
-  // The server list fetched before the delete landed still has it.
+  
   await act(() => result.current.reloadPersonalNotifications());
   expect(result.current.notifications.map((n) => n.id)).toEqual([11]);
 });

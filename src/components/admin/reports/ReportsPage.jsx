@@ -19,12 +19,10 @@ const ReportsPage = ({
     onArchive,
     onRefresh,
     isSuperAdmin,
-    // From a notification's "See report": show only that report, opened.
+
     focusId,
     onClearFocus
 }) => {
-    // Archived reports are still loaded (the dashboard counts them) but
-    // only listed here when the "Archived" tab is selected.
     const [showArchived, setShowArchived] = useState(false);
 
     const filterData = (data, filterType, statusKey = "status") => {
@@ -102,7 +100,6 @@ const ReportsPage = ({
     };
 
     switch (activeView) {
-
         case "emergency-reports":
             return (
                 <>

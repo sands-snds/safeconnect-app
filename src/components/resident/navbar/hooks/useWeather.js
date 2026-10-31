@@ -9,15 +9,15 @@ const WEATHER_DISMISSED_KEY = "sf_weatherNoticeDismissed";
 
 const RAIN_ALERT_THRESHOLD = 40;
 
-// The hour-by-hour forecast changes during the day, so a saved copy is
-// fetched again once it is an hour old.
+
+
 const WEATHER_MAX_AGE_MS = 60 * 60 * 1000;
 
 const getTodayKey = () =>
     new Date().toISOString().split("T")[0];
 
-// Dismissing the advisory is saved for the account (useSyncedState), so it
-// stays dismissed that day on every device; this browser also remembers it.
+
+
 const weatherKey = () => `weather:${getTodayKey()}`;
 
 const loadWeatherDismissed = () => {
@@ -33,7 +33,6 @@ const loadWeatherDismissed = () => {
     };
 
     export default function useWeather() {
-
     const [weather, setWeather] = useState(null);
 
     const readItems = useSyncedReadItems();
@@ -50,7 +49,6 @@ const loadWeatherDismissed = () => {
 
     const loadWeather = useCallback(async () => {
         try {
-
         const today = getTodayKey();
 
         const cachedRaw =
@@ -62,7 +60,7 @@ const loadWeatherDismissed = () => {
             ? JSON.parse(cachedRaw)
             : null;
 
-        // Older copies don't have the hourly forecast: fetch again for those.
+        
         if (
             cached &&
             cached.date === today &&
@@ -74,16 +72,13 @@ const loadWeatherDismissed = () => {
         }
 
         const response = await fetch(
-
             `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&daily=precipitation_probability_max,weathercode,temperature_2m_max,temperature_2m_min&hourly=temperature_2m,weathercode,precipitation_probability,is_day&timezone=Asia%2FManila&forecast_days=7`
-
         );
 
         const json =
             await response.json();
 
         const data = {
-
             date: today,
 
             rainChance:
@@ -109,7 +104,7 @@ const loadWeatherDismissed = () => {
                 tMin: Math.round(json.daily.temperature_2m_min[i])
             })),
 
-            // Every hour of those 7 days, in Manila time ("2026-10-31T13:00").
+            
             hours: json.hourly.time.map((time, i) => ({
                 time,
                 temp: Math.round(json.hourly.temperature_2m[i]),
@@ -117,7 +112,6 @@ const loadWeatherDismissed = () => {
                 rainChance: json.hourly.precipitation_probability[i],
                 isDay: json.hourly.is_day[i] === 1
             }))
-
         };
 
         localStorage.setItem(
@@ -137,7 +131,6 @@ const loadWeatherDismissed = () => {
         ) {
             setWeatherDismissed(false);
         }
-
         } catch (err) {
         console.error(
             "Weather fetch failed:",
@@ -151,7 +144,6 @@ const loadWeatherDismissed = () => {
     }, [loadWeather]);
 
     const dismissWeatherNotice = () => {
-
         try {
         localStorage.setItem(
             WEATHER_DISMISSED_KEY,

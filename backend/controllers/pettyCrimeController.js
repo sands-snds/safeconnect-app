@@ -4,15 +4,15 @@ const Notification = require("../models/Notification");
 const live = require("../services/liveUpdates");
 const { validateStatusTransition, validateDismissalReason, dismissalMessage, DISMISSED } = require("../utils/statusWorkflow");
 
-// Anonymous reports: admins get no way to link the report to an account.
-// (Name and contact were never stored; this removes reporter_id.)
+
+
 const hideAnonymousReporter = (report) => {
     if (!report || !report.is_anonymous) return report;
     const { reporter_id, ...rest } = report;
     return rest;
 };
 
-// Services return { success: false, status: 400, message } for invalid input.
+
 const sendResult = (res, result, successStatus = 200) => {
     const { status, ...body } = result;
     res.status(result.success === false && status ? status : successStatus).json(body);
@@ -78,7 +78,7 @@ exports.updateStatus = async (req, res) => {
         }
 
         const affected = await PettyCrime.updateStatus(req.params.id, req.body.status, dismissalReason);
-        // The reporter's My Reports page (if open) shows the new status right away.
+        
         if (report.reporter_id && affected > 0) live.notifyUser(report.reporter_id, "reports");
 
         if (report.reporter_id && replyMessage) {

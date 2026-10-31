@@ -1,7 +1,7 @@
-// Cross-resource report routes. Type-specific CRUD lives in
-// emergencyReportRoutes.js, assistanceRequestRoutes.js, and
-// pettyCrimeRoutes.js — this file handles the aggregate "my reports" view
-// used by MyReportsPage.jsx and archiving, which works the same for all three.
+
+
+
+
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");

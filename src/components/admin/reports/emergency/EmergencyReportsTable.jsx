@@ -23,7 +23,7 @@ const EmergencyReportsTable = ({
   setFilters,
   onUpdateStatus,
   onArchive,
-  // Opened from a notification: start with that report's details open.
+
   focusId
 }) => {
   const [expandedRowId, setExpandedRowId] = useState(focusId ?? null);

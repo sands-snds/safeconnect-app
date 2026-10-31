@@ -4,36 +4,10 @@ const STYLE = require("../config/reportStyle");
 
 const CELL_PAD = 4;
 
-// attachment; filename="..." (plus filename* for any non-ASCII letters).
 const attachment = (name) =>
     `attachment; filename="${name.replace(/[^\x20-\x7e]/g, "_").replace(/"/g, "'")}"; filename*=UTF-8''${encodeURIComponent(name)}`;
 
-// Generic, branded table-report PDF generator used by every export type
-// (reports, users, sign-in logs, admin logs). Category-specific field
-// mapping lives in exportService.js; colors, header text and logos live in
-// config/reportStyle.js. This file only lays out a header, an optional
-// summary block and a column/row table.
 class PDFService {
-
-    // options:
-    //   reportTitle    - e.g. "Emergency Incident Report"
-    //   filename       - the download's name without ".pdf"
-    //                    (exportService.fileName); filenamePrefix is the old form
-    //   subtitle       - optional line under the title (e.g. applied filters)
-    //   summary        - optional array of { label, value }
-    //   columns        - array of { label, weight? } -- weight is the column's
-    //                    relative width (default 1), e.g. 2.5 for Location
-    //   rows           - array of arrays of cell values, same order as columns
-    //   sections       - instead of columns / rows: several tables, each
-    //                    { title, chart?, columns, rows, totalRow? }. chart is
-    //                    { type: "bar", labels, series: [{ label, color, values }] }
-    //                    or { type: "pie", slices: [{ label, value, color }] };
-    //                    totalRow makes the last row bold (a Total row).
-    //
-    // Builds the whole PDF into memory first and only writes to `res` once
-    // it's fully assembled. pdfkit would otherwise stream bytes (and flush
-    // response headers) as content is added, so an error part-way through
-    // would reach the browser as a truncated file instead of a clean 500.
     static generateTableReport(options, res) {
         return new Promise((resolve, reject) => {
             try {
@@ -54,8 +28,7 @@ class PDFService {
                     size: "A4",
                     margin: 40,
                     layout: widest > 5 ? "landscape" : "portrait",
-                    // Keep every page so footers ("Page 2 of 5") can be
-                    // added once the total is known.
+
                     bufferPages: true
                 });
 
@@ -97,7 +70,7 @@ class PDFService {
             doc.image(logo.file, x, y, { fit: [size, size], align: "center", valign: "center" });
             return;
         }
-        // Placeholder until a real logo file is added to backend/assets.
+
         const r = size / 2;
         doc.save()
             .circle(x + r, y + r, r - 1)
@@ -137,7 +110,6 @@ class PDFService {
             doc.text(line, textX, doc.y, { width: textWidth, align: "center" });
         });
 
-        // Rule under the header, below whichever is taller: logos or text.
         const ruleY = Math.max(doc.y, top + size) + 8;
         doc.moveTo(left, ruleY).lineTo(pageRight, ruleY)
             .lineWidth(1.5).strokeColor(STYLE.colors.brand).stroke();
@@ -175,7 +147,6 @@ class PDFService {
         doc.moveDown(1);
     }
 
-    // A section heading; starts a new page when little room is left.
     static drawSectionTitle(doc, title, notFirst) {
         const left = doc.page.margins.left;
         const bottomLimit = doc.page.height - doc.page.margins.bottom - 20;
@@ -188,8 +159,6 @@ class PDFService {
         doc.moveDown(0.4);
     }
 
-    // Simple vector charts (no images): a stacked bar chart or a pie chart
-    // with a legend. Moves doc.y below the chart.
     static drawChart(doc, chart) {
         const left = doc.page.margins.left;
         const width = doc.page.width - left - doc.page.margins.right;
@@ -207,7 +176,6 @@ class PDFService {
             const plotH = height - 40;
             const baseY = top + plotH;
 
-            // Y axis: 0, half and max, with light grid lines.
             doc.font(STYLE.fonts.regular).fontSize(fontSize).fillColor(STYLE.colors.mutedText);
             [0, 0.5, 1].forEach((f) => {
                 const y = baseY - plotH * f;
@@ -259,7 +227,7 @@ class PDFService {
             chart.slices.forEach((s) => {
                 if (!s.value) return;
                 const sweep = (Math.PI * 2 * s.value) / total;
-                // Polygon approximation of the arc (pdfkit has no arc-to).
+
                 doc.moveTo(cx, cy);
                 const steps = Math.max(2, Math.ceil(sweep / 0.05));
                 for (let k = 0; k <= steps; k++) {
@@ -309,8 +277,6 @@ class PDFService {
             return String(value);
         };
 
-        // Height of a row = its tallest wrapped cell. This is what keeps
-        // long locations from spilling into the next row.
         const rowHeight = (cells, font) => {
             doc.font(font).fontSize(fontSize);
             const tallest = Math.max(...cells.map((text, i) =>
@@ -357,7 +323,6 @@ class PDFService {
             const cells = cols.map((_, i) => cellText(row[i]));
             const h = rowHeight(cells, STYLE.fonts.regular);
 
-            // Start a new page (repeating the header row) if this row won't fit.
             if (y + h > bottomLimit) {
                 doc.addPage();
                 y = drawHeaderRow(doc.page.margins.top);
@@ -381,8 +346,6 @@ class PDFService {
         for (let i = start; i < start + count; i++) {
             doc.switchToPage(i);
 
-            // The footer sits inside the bottom margin; lift the margin while
-            // writing so pdfkit doesn't push it onto a new page.
             const margin = doc.page.margins.bottom;
             doc.page.margins.bottom = 0;
 

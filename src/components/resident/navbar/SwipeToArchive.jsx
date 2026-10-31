@@ -1,9 +1,9 @@
 import React, { useRef, useState } from "react";
 
-// Phones: swipe a notification left or right to archive it. Only touch
-// drags count (a mouse click still just opens it), and a mostly vertical
-// drag is left to the page so the list scrolls as usual.
-const START_PX = 10;      // movement before we decide it's a sideways swipe
+
+
+
+const START_PX = 10;      
 const ARCHIVE_SHARE = 0.35; // of the row's width, or...
 const ARCHIVE_MIN_PX = 90;  // ...at least this far
 
@@ -55,7 +55,7 @@ export default function SwipeToArchive({ onArchive, label, disabled = false, cla
         }
     };
 
-    // A swipe isn't a tap: don't open the notification after one.
+    
     const onClickCapture = (e) => {
         if (swiped.current) {
             e.preventDefault();

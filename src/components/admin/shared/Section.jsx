@@ -1,6 +1,6 @@
 import React from 'react';
 
-// Simple card/section wrapper used by ListView and the dashboard's pie charts.
+
 const Section = ({ title, children }) => {
   return (
     <div

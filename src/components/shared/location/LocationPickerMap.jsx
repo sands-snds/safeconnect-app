@@ -4,25 +4,25 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { SANTA_FE_BOUNDARY, SANTA_FE_CENTER } from './santaFeArea';
 
-// Map of Barangay Santa Fe with its boundary and a pin.
-// - Report forms: the resident places the pin by tapping the map or dragging
-//   it (or via "Use my current location", handled in useLocationPin).
-// - Admin report details (readOnly): shows where the report was pinned.
-// A Map / Satellite switch helps where streets aren't labelled: residents
-// can recognise their own roof.
-//
-// Props:
-//   pin        - { lat, lng } or null
-//   onPick     - (lat, lng) => void, when the resident taps or drags
-//   isOutside  - pin is outside Santa Fe (shows `outsideMessage`)
-//   disabled   - e.g. while submitting
-//   readOnly   - display only: no tapping/dragging, no hints
-//   height     - map height in px
 
-// OpenStreetMap blocks tile requests that arrive without a Referer
-// ("Access blocked"). Azure Static Web Apps sends Referrer-Policy:
-// same-origin, which strips it, so the policy is set on the tiles too (and
-// site-wide in staticwebapp.config.json).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const BASEMAPS = {
   map: {
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -32,11 +32,11 @@ const BASEMAPS = {
   satellite: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
-    maxNativeZoom: 18 // Esri has no finer imagery here; zooms past it are upscaled
+    maxNativeZoom: 18 
   }
 };
 
-// A drawn pin (Leaflet's default marker images don't survive the CRA build).
+
 const pinIcon = (color) => L.divIcon({
   className: '',
   html: `<i class="bi bi-geo-alt-fill" style="font-size:36px;color:${color};text-shadow:0 2px 4px rgba(0,0,0,.45);line-height:1"></i>`,
@@ -51,8 +51,8 @@ const ClickToPin = ({ onPick, disabled }) => {
   return null;
 };
 
-// Pans to the pin when it moves off-screen (e.g. after "Use my current
-// location"), and fixes the map's size once the modal has finished opening.
+
+
 const FollowPin = ({ pin }) => {
   const map = useMap();
   useEffect(() => {
@@ -60,7 +60,6 @@ const FollowPin = ({ pin }) => {
     return () => clearTimeout(t);
   }, [map]);
   useEffect(() => {
-    // Only when the pin is off-screen, so tapping the map doesn't jump it around.
     if (pin && !map.getBounds().contains([pin.lat, pin.lng])) {
       map.panTo([pin.lat, pin.lng], { animate: true });
     }
@@ -87,8 +86,6 @@ const LocationPickerMap = ({
   readOnly = false,
   height = 240
 }) => {
-  // Leaflet needs numbers: a string coordinate (MySQL DECIMALs arrive as
-  // strings) sends bounds.contains() into infinite recursion.
   const pinLat = Number(rawPin?.lat);
   const pinLng = Number(rawPin?.lng);
   const hasPin = rawPin != null && Number.isFinite(pinLat) && Number.isFinite(pinLng);
@@ -109,7 +106,7 @@ const LocationPickerMap = ({
     }
   }), [onPick]);
 
-  // On satellite the boundary needs to stand out against the imagery.
+  
   const boundaryStyle = basemap === 'satellite'
     ? { color: '#facc15', weight: 3, dashArray: '6 4', fillOpacity: 0 }
     : { color: '#dc3545', weight: 2, dashArray: '6 4', fillColor: '#dc3545', fillOpacity: 0.06 };
@@ -155,7 +152,7 @@ const LocationPickerMap = ({
           <FollowPin pin={pin} />
         </MapContainer>
 
-        {/* Map / Satellite switch (top-right, clear of the zoom buttons). */}
+        
         <div
           style={{
             position: 'absolute',

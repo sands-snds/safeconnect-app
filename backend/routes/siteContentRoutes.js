@@ -9,9 +9,6 @@ const { logActivity } = require("../middleware/activityLogger");
 
 const adminOnly = [verifyToken, verifyAdmin, verifySuperAdmin];
 
-// Carousel photos (images, 5 MB) and demo videos (MP4 / WebM, 100 MB).
-// Bigger videos are better linked from YouTube: Azure ends requests that
-// take longer than about 4 minutes, which a slow upload can.
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const VIDEO_TYPES = ["video/mp4", "video/webm"];
 const mediaUpload = multer({
@@ -27,7 +24,6 @@ const mediaUpload = multer({
     }
 });
 
-// Images over 5 MB are refused after upload (multer's limit is per route).
 const checkImageSize = (req, res, next) => {
     if (req.file && IMAGE_TYPES.includes(req.file.mimetype) && req.file.size > 5 * 1024 * 1024) {
         require("fs").unlink(req.file.path, () => {});
@@ -43,8 +39,6 @@ const handleUpload = (req, res, next) =>
         res.status(400).json({ success: false, message });
     });
 
-// Public: emergency contacts, footer officials and socials, plus the
-// carousel photos and demo videos.
 router.get("/", controller.getContent);
 
 // Admin (super_admin) only: Content > Page Contacts.

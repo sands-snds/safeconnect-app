@@ -1,18 +1,9 @@
 const db = require("../config/db");
 
-// Announcement archiving (Content > Announcements). An announcement can be
-// archived by hand (from its Edit form), and the scheduled job below
-// archives announcements automatically once they were posted longer ago than
-// the configured period (Off / 3 months / 6 months / 1 year, stored in
-// system_settings; Off by default). Archived announcements stay in the
-// table with archived_at set: residents and the landing page no longer see
-// them, Admins and Officials find them under "Archived" and can restore them.
-
 const SETTING_KEY = "announcement_auto_archive_months";
 const ALLOWED_MONTHS = [0, 3, 6, 12];
 const DEFAULT_MONTHS = 0;
 
-// Runs on start and then every 6 hours.
 const JOB_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 async function ensureSchema() {
@@ -27,7 +18,7 @@ async function ensureSchema() {
             if (err.code !== "ER_DUP_FIELDNAME") throw err;
         }
     }
-    // system_settings is created by archiveService.ensureSchema / siteContentService.
+
     await db.query(
         `INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES (?, ?)`,
         [SETTING_KEY, String(DEFAULT_MONTHS)]
@@ -51,7 +42,6 @@ async function setAutoArchiveMonths(months) {
     );
 }
 
-// Archives announcements posted more than `months` ago. Returns how many.
 async function runAutoArchive() {
     const months = await getAutoArchiveMonths();
     if (!months) return 0;
@@ -64,7 +54,6 @@ async function runAutoArchive() {
     return result.affectedRows;
 }
 
-// archived: true to archive, false to restore. Returns affected rows.
 async function setArchived(id, archived) {
     const [result] = await db.query(
         `UPDATE announcements SET archived_at = ${archived ? "NOW()" : "NULL"} WHERE id = ?`,

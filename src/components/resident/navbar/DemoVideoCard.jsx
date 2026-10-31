@@ -3,10 +3,6 @@ import { useLanguage } from '../../../i18n/LanguageContext';
 import DemoVideoPlayer from '../../shared/DemoVideoPlayer';
 import { useSiteMedia, hasVideo } from '../../shared/useSiteContent';
 
-// News page: the residents' video (systemDemo), right below the weather
-// card. Shown only when an Admin has added a video and turned on "Show in
-// the resident News tab" (Content > Page Contents > Video for Residents).
-// It isn't an announcement: no comments or likes.
 export default function DemoVideoCard() {
   const { t } = useLanguage();
   const { systemDemo } = useSiteMedia();

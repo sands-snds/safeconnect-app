@@ -1,9 +1,6 @@
 import AdminStats from "../layout/AdminStats";
 import { tx } from "../../../i18n/adminText";
 
-// Dashboard top card: welcome line, then the counters (AdminStats), which
-// also hold Create Announcement and Total Reports. dash-summary-* classes:
-// sizes and the phone layout in styles/admin.css.
 export default function DashboardSummary({
     adminName = "Administrator",
     ...stats
@@ -48,7 +45,6 @@ export default function DashboardSummary({
                 <p
                     className="dash-summary-intro"
                     style={{
-                        // One line on computers (no width cap); wraps only on narrower screens.
                         color: "#6b7280",
                         fontSize: "14.5px",
                         lineHeight: 1.6,

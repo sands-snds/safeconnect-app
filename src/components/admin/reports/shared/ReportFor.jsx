@@ -3,10 +3,6 @@ import React from "react";
 import DetailField from "../../shared/DetailField";
 import { tx } from "../../../../i18n/adminText";
 
-// Residents can file a report / request help on behalf of someone else
-// (report_for = "others" + victim_name/contact/relationship). These pieces
-// surface that on the admin side, shared by all three report types.
-
 export const isForOthers = (report) => report?.reportFor === "others";
 
 const relationshipText = (report) =>
@@ -38,8 +34,6 @@ export const ReportForTag = ({ report }) => {
     );
 };
 
-// Block at the top of the expanded details. personLabel is what the other
-// person is called for this report type ("Person Affected", "Victim", ...).
 export const ReportForDetails = ({ report, personLabel = "Person Affected" }) => {
     if (!isForOthers(report)) return null;
 
@@ -82,7 +76,6 @@ export const REPORT_FOR_OPTIONS = [
     { value: "others", label: "Someone else" }
 ];
 
-// "Filed for" filter, passed to ListView as extraFilters.
 export const ReportForFilter = ({ filterType, filters, setFilters }) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <label className="font-medium text-sm">{tx("Filed for")}</label>

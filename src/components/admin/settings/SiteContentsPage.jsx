@@ -5,18 +5,12 @@ import { setSiteMedia, mediaSrc, hasVideo } from "../../shared/useSiteContent";
 import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
 import { tx } from "../../../i18n/adminText";
 
-// Text boxes are up to 40 characters, except the captions (and pasted links).
 const TEXT_MAX = 40;
-
-// Content > Page Contents (Admins only): the landing page carousel photos,
-// the video for residents (systemDemo: landing page and/or News tab)
-// and the admin demo video (shown when someone signs in to the admin panel). Saved with
-// PUT /api/site-content/media (backend/services/siteMediaService.js).
 
 const card = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, marginBottom: 20 };
 const hint = { margin: "0 0 12px", fontSize: 13, color: "#6b7280" };
 const label = { fontSize: 12, fontWeight: 600, color: "#6b7280" };
-// A field stacked in a vertical column (no flex-basis, which would become height).
+
 const stackedField = { display: "flex", flexDirection: "column", gap: 4 };
 const smallButton = (danger) => ({
   width: 32, height: 32, border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff",
@@ -48,7 +42,6 @@ const Toggle = ({ checked, onChange, children }) => (
   </label>
 );
 
-// Upload (with progress) for a photo or video. onUploaded(url).
 function useUploader() {
   const [progress, setProgress] = useState(null); // null = idle
   const upload = async (file, onUploaded) => {
@@ -64,7 +57,6 @@ function useUploader() {
   return { progress, upload };
 }
 
-// Editor for one demo video: source (none / upload / YouTube), title, caption.
 function VideoEditor({ demo, onChange, children }) {
   const fileRef = useRef(null);
   const { progress, upload } = useUploader();
@@ -169,8 +161,6 @@ function VideoEditor({ demo, onChange, children }) {
   );
 }
 
-// One carousel's photos: upload, describe, reorder, remove.
-// onChange(fn) receives an updater for the slides list.
 function CarouselEditor({ icon, title, hint: hintText, slides, onChange }) {
   const photoRef = useRef(null);
   const { progress, upload } = useUploader();
@@ -265,7 +255,6 @@ export default function SiteContentsPage() {
   if (!draft) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>{tx("Loading page contents...")}</div>;
 
   const handleSave = async () => {
-    // A YouTube choice with no valid link would be refused; catch it here.
     for (const [key, name] of [["systemDemo", "Video for Residents"], ["adminDemo", "Admin demo"]]) {
       if (draft[key].video.source === "youtube" && !draft[key].video.url) {
         showPopup({ type: "warning", title: tx("Check the YouTube Link"), message: `The ${name} video needs a valid YouTube link, or choose "No video".` });
@@ -364,7 +353,6 @@ export default function SiteContentsPage() {
   );
 }
 
-// The photos and videos as they'll appear (unsaved changes included).
 function MediaPreview({ draft, onClose }) {
   const strip = (title, slides) => (
     <div>

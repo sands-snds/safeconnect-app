@@ -14,20 +14,16 @@ const {
     sendPasswordResetEmail,
 } = require("../services/emailService");
 
-// ── In-memory stores ──────────────────────────────────────────────────────────
-// Signup OTPs:  email → { otp, expiresAt, userData }
+
+
 const otpStore = new Map();
-// Reset OTPs:   email → { otp, expiresAt, verified }
+
 const resetStore = new Map();
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   EMAIL DOMAIN VALIDATION
-   Checks DNS MX records — blocks fake domains (@notreal.xyz) while accepting
-   all real providers: Gmail, Yahoo, Outlook, school emails, company emails, etc.
-───────────────────────────────────────────────────────────────────────────── */
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const verifyEmailDomain = async (email) => {
@@ -41,10 +37,7 @@ const verifyEmailDomain = async (email) => {
     }
 };
 
-/* =========================================================
-   STEP 1 — REQUEST SIGNUP OTP
-   POST /api/auth/request-otp
-============================================================*/
+
 exports.requestOtp = async (req, res) => {
     try {
         const { fullName, username, contact, email, password } = req.body;
@@ -109,10 +102,7 @@ exports.requestOtp = async (req, res) => {
     }
 };
 
-/* =========================================================
-   STEP 2 — VERIFY SIGNUP OTP + CREATE ACCOUNT
-   POST /api/auth/verify-otp
-============================================================*/
+
 exports.verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -167,10 +157,7 @@ exports.verifyOtp = async (req, res) => {
     }
 };
 
-/* =========================================================
-   RESEND SIGNUP OTP
-   POST /api/auth/resend-otp
-============================================================*/
+
 exports.resendOtp = async (req, res) => {
     try {
         const { email } = req.body;
@@ -200,10 +187,7 @@ exports.resendOtp = async (req, res) => {
     }
 };
 
-/* =========================================================
-   FORGOT PASSWORD — STEP 1: SEND RESET OTP
-   POST /api/auth/forgot-password
-============================================================*/
+
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -215,8 +199,8 @@ exports.forgotPassword = async (req, res) => {
             });
         }
 
-        // Always return a generic success so we don't reveal
-        // whether an account exists for a given email.
+        
+        
         const user = await User.findByEmail(email);
         if (!user) {
             return res.json({
@@ -252,10 +236,7 @@ exports.forgotPassword = async (req, res) => {
     }
 };
 
-/* =========================================================
-   FORGOT PASSWORD — STEP 2: VERIFY RESET OTP
-   POST /api/auth/verify-reset-otp
-============================================================*/
+
 exports.verifyResetOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -287,7 +268,7 @@ exports.verifyResetOtp = async (req, res) => {
             return res.json({ success: false, message: "Incorrect verification code." });
         }
 
-        // Mark as verified — user can now submit a new password
+        
         entry.verified = true;
         resetStore.set(email, entry);
 
@@ -298,10 +279,7 @@ exports.verifyResetOtp = async (req, res) => {
     }
 };
 
-/* =========================================================
-   FORGOT PASSWORD — STEP 3: SET NEW PASSWORD
-   POST /api/auth/reset-password
-============================================================*/
+
 exports.resetPassword = async (req, res) => {
     try {
         const { email, newPassword } = req.body;
@@ -367,10 +345,7 @@ exports.resetPassword = async (req, res) => {
     }
 };
 
-/* =========================================================
-   RESEND RESET OTP
-   POST /api/auth/resend-reset-otp
-============================================================*/
+
 exports.resendResetOtp = async (req, res) => {
     try {
         const { email } = req.body;
@@ -405,9 +380,7 @@ exports.resendResetOtp = async (req, res) => {
     }
 };
 
-/* =========================================================
-   SIGN UP — backwards-compatible direct path (no OTP)
-============================================================*/
+
 exports.signup = async (req, res) => {
     try {
         const { fullName, username, contact, email, password } = req.body;
@@ -443,11 +416,9 @@ exports.signup = async (req, res) => {
     }
 };
 
-/* =========================================================
-   SIGN IN
-============================================================*/
-// Logs a sign-in attempt with the visitor's IP and device, then fills in the
-// approximate location in the background so the login isn't kept waiting.
+
+
+
 const recordSignin = async (req, fullName, email, status) => {
     const ctx = signinContext(req);
     const id = await Log.logSignin(fullName, email, status, ctx);
@@ -482,8 +453,8 @@ exports.signin = async (req, res) => {
 
         if (user.status && user.status !== "Active") {
             await recordSignin(req, user.full_name, email, "Failed");
-            // code: the sign-in screens show a dedicated popup for each
-            // (translated on the frontend); message is the English fallback.
+            
+            
             const STATUS_RESPONSES = {
                 Suspended: {
                     code: "ACCOUNT_SUSPENDED",
@@ -493,7 +464,7 @@ exports.signin = async (req, res) => {
                     code: "ACCOUNT_CLOSED",
                     message: "This account has been permanently closed and can no longer be used to sign in. If you believe this is a mistake, please contact the Barangay Sta. Fe administrator."
                 },
-                // No longer assigned; kept for any older accounts.
+                
                 Pending: {
                     code: "ACCOUNT_PENDING",
                     message: "Your account isn't active yet. Please contact the Barangay Sta. Fe administrator."
@@ -528,8 +499,8 @@ exports.signin = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error." });
     }
 };
-// The signed-in user as the frontend stores it (sessionStorage "currentUser").
-// photo_url is resolved to a full URL so the navbar avatar works right away.
+
+
 function toPublicUser(user) {
     const assetBase = process.env.ASSET_BASE || `http://localhost:${process.env.PORT || 5000}`;
     const photo = user.photo_url;
@@ -548,9 +519,9 @@ function toPublicUser(user) {
     };
 }
 
-// GET /api/auth/me -- confirms the token belongs to an existing, Active
-// account (verifyToken checks that and loads req.account). The Resident page
-// calls it before showing anything (RequireResident.jsx).
+
+
+
 exports.me = (req, res) => {
     res.json({
         success: true,
@@ -559,12 +530,12 @@ exports.me = (req, res) => {
     });
 };
 
-// POST /api/auth/remember -- "Save Login Info" > Yes. Exchanges the current
-// (session) sign-in for a 30-day saved login that the server can revoke.
+
+
 exports.remember = async (req, res) => {
     try {
         const RememberedLogin = require("../models/RememberedLogin");
-        // Re-answering Yes replaces that device's previous saved login.
+        
         if (req.user.jti) await RememberedLogin.delete(req.user.jti);
         const rememberedId = await RememberedLogin.create(req.account.id, req.headers["user-agent"]);
         res.json({
@@ -578,9 +549,9 @@ exports.remember = async (req, res) => {
     }
 };
 
-// POST /api/auth/logout -- revokes a saved login so its token stops working
-// immediately (the frontend also deletes its copy). Session sign-ins have
-// nothing to revoke; they expire on their own.
+
+
+
 exports.logout = async (req, res) => {
     try {
         if (req.user.jti) await require("../models/RememberedLogin").delete(req.user.jti);

@@ -1,23 +1,23 @@
 import { useEffect, useRef } from 'react';
 import { TAB_ICON } from './logos';
 
-// Shows the unread notification count in the browser tab -- "(3) Safe
-// Connect | ..." in the title and a red number on the tab icon -- and, when a
-// NEW notification arrives, plays a short chime and makes the tab blink
-// (title and icon alternate) until the person opens the notification bell or
-// the count goes down. Used by the resident page and the admin panel.
-//
-// The bells call markNotificationsViewed() when they open.
-//
-// Browsers only allow sound after the person has clicked or tapped the page,
-// so the audio is unlocked on the first interaction.
+
+
+
+
+
+
+
+
+
+
 
 const BASE_TITLE = typeof document !== 'undefined' ? document.title.replace(/^(\(\d+\+?\)|🔔[^|]*?)\s*/, '') : '';
-const SETTLE_MS = 6000; // counts loaded right after the page opens don't chime
+const SETTLE_MS = 6000; 
 const BLINK_MS = 1000;
 export const NOTIFICATIONS_VIEWED_EVENT = 'safeconnect:notifications-viewed';
 
-// Called by the notification bells when they open.
+
 export const markNotificationsViewed = () => {
   window.dispatchEvent(new Event(NOTIFICATIONS_VIEWED_EVENT));
 };
@@ -30,7 +30,7 @@ const getAudio = () => {
   return audioCtx;
 };
 
-// Two soft rising tones (no audio file needed).
+
 export const playNotificationSound = () => {
   try {
     const ctx = getAudio();
@@ -49,14 +49,13 @@ export const playNotificationSound = () => {
       osc.stop(now + delay + 0.4);
     });
   } catch {
-    // audio unavailable: the badge and title still show the count
   }
 };
 
-// The number on the installed app's icon (home screen / taskbar / dock),
-// where the browser supports it: Chrome and Edge on Windows and Mac, and
-// Safari on iPhone / iPad (iOS 16.4+, once notifications are allowed).
-// Elsewhere this does nothing.
+
+
+
+
 export const setAppIconBadge = (n) => {
   try {
     const nav = typeof navigator !== 'undefined' ? navigator : null;
@@ -70,7 +69,7 @@ export const setAppIconBadge = (n) => {
 
 const iconLinks = () => [...document.querySelectorAll('link[rel~="icon"]')];
 
-// The tab icon with a red count bubble, as a data URL (null if drawing fails).
+
 const drawBadgedIcon = (src, label) => new Promise((resolve) => {
   const img = new Image();
   img.onload = () => {
@@ -105,15 +104,15 @@ const drawBadgedIcon = (src, label) => new Promise((resolve) => {
   img.src = src;
 });
 
-// count: the number shown in the tab. alertCount: what counts as a new
-// notification for the chime / blinking (defaults to count) -- the resident
-// page leaves out the daily weather advisory, which isn't something arriving.
+
+
+
 export default function useTabNotifications(count, { sound = true, blinkText = 'New notification', alertCount } = {}) {
   const tracked = alertCount === undefined ? count : alertCount;
   const previous = useRef(tracked);
   const openedAt = useRef(Date.now());
   const originalIcons = useRef(null);
-  const badgedIcon = useRef(null);  // data URL of the icon with the count
+  const badgedIcon = useRef(null);  
   const blinkTimer = useRef(null);
   const blinkOn = useRef(false);
   const label = useRef('');
@@ -140,14 +139,14 @@ export default function useTabNotifications(count, { sound = true, blinkText = '
       blinkOn.current = !blinkOn.current;
       if (blinkOn.current) {
         document.title = `🔔 ${blinkText} | ${BASE_TITLE}`;
-        restoreIcon(); // the plain icon, flashing against the badged one
+        restoreIcon(); 
       } else {
         showSteady();
       }
     }, BLINK_MS);
   };
 
-  // Unlock audio on the first click / tap / key press.
+  
   useEffect(() => {
     if (!sound) return undefined;
     const unlock = () => {
@@ -170,7 +169,7 @@ export default function useTabNotifications(count, { sound = true, blinkText = '
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Title, tab icon badge, chime and blinking for new ones.
+  
   useEffect(() => {
     const n = Math.max(0, Number(count) || 0);
     label.current = n > 0 ? (n > 99 ? '99+' : String(n)) : '';
@@ -197,7 +196,7 @@ export default function useTabNotifications(count, { sound = true, blinkText = '
       if (sound) playNotificationSound();
       startBlinking();
     }
-    // Read (fewer unread) or none left: stop blinking.
+    
     if (a < previous.current || n === 0) stopBlinking();
     else if (!blinkOn.current) document.title = steadyTitle();
     if (n === 0) restoreIcon();
@@ -208,7 +207,7 @@ export default function useTabNotifications(count, { sound = true, blinkText = '
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, tracked, sound]);
 
-  // Leaving the page puts the plain title and icon back.
+  
   useEffect(() => () => {
     if (blinkTimer.current) clearInterval(blinkTimer.current);
     document.title = BASE_TITLE;

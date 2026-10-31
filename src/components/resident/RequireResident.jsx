@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { fetchCurrentUser, clearAuthToken, SESSION_EXPIRED_EVENT } from '../../Services/api';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-// Guards /resident. Nothing protected renders until the SERVER confirms the
-// sign-in (GET /api/auth/me checks the token and that the account is still
-// Active). Missing, expired or rejected sign-ins go to the home page with the
-// Sign In box open. This only decides what the browser shows: the real
-// protection is the API, which requires a valid token for every resident
-// action and data request (backend/middleware/authMiddleware.js).
+
+
+
+
+
+
 
 export const SIGN_IN_REDIRECT = '/?signin=required';
 
@@ -37,7 +37,6 @@ export default function RequireResident({ children }) {
     setState('checking');
     const result = await fetchCurrentUser();
     if (result.success && result.user) {
-      // Refresh what the resident pages read (also restores it in a new tab).
       sessionStorage.setItem('currentUser', JSON.stringify(result.user));
       sessionStorage.setItem('userAuthenticated', 'true');
       setState('allowed');
@@ -50,8 +49,8 @@ export default function RequireResident({ children }) {
 
   useEffect(() => { verify(); }, [verify]);
 
-  // Any later API call that finds the sign-in gone (expired, suspended,
-  // signed out in another tab) sends the resident back to Sign In.
+  
+  
   useEffect(() => {
     window.addEventListener(SESSION_EXPIRED_EVENT, toSignIn);
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, toSignIn);

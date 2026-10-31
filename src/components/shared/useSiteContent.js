@@ -1,17 +1,8 @@
 import { useEffect, useState } from 'react';
 import { fetchSiteContent, resolveAssetUrl } from '../../Services/api';
 
-// Contact details for the public site (floating call button, footer):
-// { emergencyContacts, footerHotlines, officials, socials }. Admins edit them under
-// Content > Page Contacts (backend/services/siteContentService.js).
-//
-// Shows the last copy this browser saw (or the defaults below) right away,
-// then refreshes from the server once per page load.
-
 const CACHE_KEY = 'sf_siteContent';
 
-// Same as DEFAULT_CONTENT in backend/services/siteContentService.js, used
-// until the server answers (or if it can't be reached).
 export const DEFAULT_SITE_CONTENT = {
   emergencyContacts: [
     { id: 'police', label: '911 Emergency', description: 'National Emergency Hotline', sublabelKey: 'police', number: '911', icon: 'bi-shield-fill-exclamation', color: '#dc2626' },
@@ -47,8 +38,6 @@ export const DEFAULT_SITE_CONTENT = {
   }
 };
 
-// Carousel photos and demo videos (Content > Page Contents). Same as
-// DEFAULT_MEDIA in backend/services/siteMediaService.js.
 const MEDIA_CACHE_KEY = 'sf_siteMedia';
 export const DEFAULT_SITE_MEDIA = {
   carousel: [
@@ -89,7 +78,6 @@ const writeCache = (key, value) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage unavailable */ }
 };
 
-// One request per page load, shared by every component using the hooks.
 let current = readCache(CACHE_KEY) || DEFAULT_SITE_CONTENT;
 let currentMedia = readCache(MEDIA_CACHE_KEY) || DEFAULT_SITE_MEDIA;
 let request = null;
@@ -119,7 +107,6 @@ export const refreshSiteContent = () => {
   return request;
 };
 
-// Lets the Content > Page Contents editor show its changes immediately.
 export const setSiteMedia = (media) => setCurrentMedia(media);
 
 export function useSiteMedia() {
@@ -134,16 +121,12 @@ export function useSiteMedia() {
   return media;
 }
 
-// Full URL for a carousel photo or uploaded video: uploads come from the
-// backend, the default photos from the frontend's public/images.
 export const mediaSrc = (src) =>
   String(src || '').startsWith('/uploads/') ? resolveAssetUrl(src) : src;
 
-// True when a demo video has something to play.
 export const hasVideo = (demo) =>
   Boolean(demo?.video && demo.video.source !== 'none' && demo.video.url);
 
-// Lets the Content > Page Contacts editor show its changes immediately.
 export const setSiteContent = (content) => setCurrent(content);
 
 export default function useSiteContent() {
@@ -158,10 +141,6 @@ export default function useSiteContent() {
   return content;
 }
 
-// Description for an emergency contact: the translated default while it's
-// unchanged (sublabelKey), otherwise the text an Admin typed.
-// An official's display name: "PB Emmanuel B. Noora" (position, first,
-// middle, last), or the saved one-line name from before the split.
 export const officialName = (o) =>
   [o.position, o.firstName, o.middleName, o.lastName].filter(Boolean).join(' ') || o.name || '';
 

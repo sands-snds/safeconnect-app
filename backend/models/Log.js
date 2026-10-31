@@ -1,8 +1,5 @@
 const db = require("../config/db");
 
-// Columns added to signin_logs after the original schema. ensureColumns()
-// adds any that are missing when the server starts, so existing databases
-// (local and Azure) don't need a manual migration.
 const SIGNIN_EXTRA_COLUMNS = {
     ip_address: "VARCHAR(45) DEFAULT NULL",
     device: "VARCHAR(120) DEFAULT NULL",
@@ -23,8 +20,6 @@ class Log {
         }
     }
 
-    // Records one sign-in attempt. ctx = { ip, device } from
-    // utils/signinContext.js. Returns the new row's id.
     static async logSignin(fullName, email, status, ctx = {}) {
         try {
             const [result] = await db.query(
@@ -35,8 +30,6 @@ class Log {
             );
             return result.insertId;
         } catch (err) {
-            // Columns not added yet (ensureColumns still running or failed):
-            // log without them rather than failing the sign-in.
             if (err.code !== "ER_BAD_FIELD_ERROR") throw err;
             const [result] = await db.query(
                 `INSERT INTO signin_logs (full_name, email_address, status) VALUES (?, ?, ?)`,
@@ -50,15 +43,7 @@ class Log {
         await db.query(`UPDATE signin_logs SET location = ? WHERE id = ?`, [location, id]);
     }
 
-    // System > Sign-in Logs. Old entries are archived by
-    // services/logArchiveService.js; archived: true lists those instead.
-    // Optional filters (Generate Report): role ("unknown" = no account),
-    // status, from / to (Date bounds, `to` exclusive). residentsOnly: leave
-    // out Officials and Admins (System > Resident Sign-in Logs); attempts
-    // with an email that has no account stay in.
     static async getSigninLogs({ archived = false, role, status, from, to, residentsOnly = false } = {}) {
-        // role: the account's current role, looked up by email (NULL for
-        // failed attempts with an email that has no account).
         let sql = `
             SELECT s.*, u.role
             FROM signin_logs s
@@ -77,6 +62,5 @@ class Log {
         const [rows] = await db.query(sql, values);
         return rows;
     }
-
 }
 module.exports = Log;

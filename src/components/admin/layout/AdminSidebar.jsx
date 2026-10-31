@@ -81,9 +81,6 @@ const AdminSidebar = ({
     }
   ];
 
-  // showProfile: the phone drawer, opened from the header's menu button (before
-  // the page title). The account (Account Settings, demo video, Logout) is in
-  // the header's profile menu, on phones too; the drawer keeps a Logout.
   const SidebarContent = ({ showProfile = false }) => (
     <>
       {/* Logo */}
@@ -101,7 +98,6 @@ const AdminSidebar = ({
             width: "42px",
             height: "42px",
             flexShrink: 0
-            // The logo is white: no circle behind it on the dark sidebar.
           }}
         >
           <img
@@ -161,7 +157,7 @@ const AdminSidebar = ({
             </div>
 
             {section.items
-              // Admin-only items (e.g. Page Contacts) are hidden from Officials.
+
               .filter((item) => isSuperAdmin || !item.superAdminOnly)
               .map((item) => (
               <div
@@ -195,8 +191,6 @@ const AdminSidebar = ({
           </div>
         ))}
 
-        {/* Phone drawer only: the EN / TL switch (in the header on computers)
-            and Logout (in the account menu on computers). */}
         {showProfile && (
           <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", marginTop: 4 }}>

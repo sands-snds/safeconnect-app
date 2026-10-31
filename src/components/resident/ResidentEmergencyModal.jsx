@@ -6,7 +6,7 @@ import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
  
  
-// Fixed service area — form only accepts reports from this barangay
+
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
   city: 'Dasmariñas',
@@ -26,12 +26,12 @@ const SPECIAL_NEEDS_OPTIONS = [
   { key: 'pets', value: 'Pets' }
 ];
 
-// Not everyone in the barangay knows the person they're reporting for by
-// name — these relationships make the name field optional instead of required.
+
+
 const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
  
-// Accepted media for the required photo/video attachment.
-// Images are restricted to JPG/JPEG only.
+
+
 const ALLOWED_MEDIA_TYPES = [
   'image/jpeg', 'image/jpg',
   'video/mp4', 'video/quicktime', 'video/webm'
@@ -40,17 +40,17 @@ const ALLOWED_MEDIA_EXTENSIONS = /\.(jpe?g|mp4|mov|webm)$/i;
 const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
  
-// Anti-spam: minimum time a resident must wait between EMERGENCY report
-// submissions. Each modal (Emergency / Assistance / Petty Crime) tracks its
-// own cooldown independently, so submitting one doesn't block the others.
+
+
+
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_emergency';
-// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+
 const REPORT_COOLDOWN_MS = 0;
  
-// Reads the currently logged-in resident's name/contact, set at sign-in.
-// Tries several common shapes for the id field since different sign-in
-// implementations name it differently (id / user_id / userId), and some
-// store the whole { success, user } response instead of just the user object.
+
+
+
+
 const getCurrentUser = () => {
   let raw = {};
   try {
@@ -59,7 +59,7 @@ const getCurrentUser = () => {
     raw = {};
   }
  
-  // Unwrap if the whole signin response ({ success, user, ... }) was stored
+  
   const source = raw && raw.user ? raw.user : raw;
  
   const id =
@@ -72,10 +72,10 @@ const getCurrentUser = () => {
   return { ...source, id };
 };
  
-// Cooldown is tracked per-account, not per-browser: the localStorage key is
-// suffixed with the currently logged-in user's id (or "guest" when nobody
-// is signed in) so switching accounts on the same device/browser doesn't
-// inherit someone else's cooldown timer.
+
+
+
+
 const getCooldownStorageKey = () => {
   const currentUser = getCurrentUser();
   return `${REPORT_COOLDOWN_KEY}_${currentUser.id ?? 'guest'}`;
@@ -105,7 +105,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     street: '',
     floorUnit: '',
     landmark: '',
-    location: '', // single editable address field, used only when editing
+    location: '', 
     details: '',
     people: '',
     special: [],
@@ -113,7 +113,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     mediaPreviewUrl: null,
     mediaType: null,
     consent: false
-
   });
  
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,8 +127,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
 
-  // Map pin, "Use my current location" and the Santa Fe boundary check
-  // (../shared/location/useLocationPin.js). A new pin fills in the address.
+  
+  
   const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
     setFormData((prev) => (isEditing
       ? { ...prev, location: fullAddress }
@@ -166,10 +165,10 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       mediaPreviewUrl: null,
       mediaType: null
     }));
-    // Only house#/street were ever collected separately at create time — the
-    // backend only stores the merged address string, so on edit we restore
-    // that string as-is into a single "Location" field rather than trying
-    // to (unreliably) split it back into house#/street.
+    
+    
+    
+    
     if (editingReport.latitude != null && editingReport.longitude != null) {
       setGpsCoords({ lat: editingReport.latitude, lng: editingReport.longitude });
     }
@@ -182,7 +181,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     };
   }, [show]);
  
-  // Tick the cooldown countdown while the modal is open
+  
   useEffect(() => {
     if (!show) return;
     setCooldownRemaining(getCooldownRemainingMs());
@@ -193,7 +192,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   }, [show]);
  
  
-  // Revoke the object URL used for the media preview when it changes/unmounts
+  
   useEffect(() => {
     return () => {
       if (formData.mediaPreviewUrl) URL.revokeObjectURL(formData.mediaPreviewUrl);
@@ -248,7 +247,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
  
-  // Removes the currently attached photo/video and resets the file input
+  
   const removeMedia = () => {
     if (formData.mediaPreviewUrl) URL.revokeObjectURL(formData.mediaPreviewUrl);
     setFormData((prev) => ({ ...prev, media: null, mediaPreviewUrl: null, mediaType: null }));
@@ -337,7 +336,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       }
     }
 
-    // The map already shows why; bring it into view.
+    
     if (isOutsideSantaFe) {
       locationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -353,9 +352,9 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       return;
     }
 
-    // Media is required when filing a new report, but an edit already has a
-    // photo/video on file — only require a new one if the resident chooses
-    // to replace it.
+    
+    
+    
     if (!isEditing && !formData.media) {
       showPopup({ type: 'warning', message: t('emergencyModal.mediaRequired') });
       return;
@@ -380,8 +379,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
 
     const currentUser = getCurrentUser();
  
-    // Not fatal — reports can still be submitted anonymously — but it means
-    // this report will NOT show up under "My Reports" for anyone.
+    
+    
     if (!currentUser.id) {
       console.warn(
         'No user id found in sessionStorage("currentUser"). This report will be saved without a user_id and will not appear in "My Reports".'
@@ -406,7 +405,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           details: formData.details,
           people: formData.people || 0,
           special: formData.special.join(', ') || null,
-          // Only overwrite the saved photo/video if the resident attached a new one
+          
           ...(mediaUrl ? { photoUrl: mediaUrl, mediaType: formData.mediaType || null } : {})
         });
         if (!result.success) {
@@ -432,8 +431,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       const composedAddress = [formData.houseNumber.trim(), formData.street.trim()]
         .filter(Boolean)
         .join(' ');
-      // A pinned report may have no typed address -- the pin is the exact spot.
-      // The landmark goes in the same text, so admins and exports see it too.
+      
+      
       const landmark = formData.landmark.trim();
       const fullLocation = [
         formData.floorUnit.trim(),
@@ -457,7 +456,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         details: formData.details,
         people: formData.people || 0,
         special: formData.special.join(', ') || null,
-        // photoUrl kept for backend compatibility; mediaType distinguishes image vs video
+        
         photoUrl: mediaUrl || null,
         mediaType: formData.mediaType || null,
         reportFor,
@@ -473,7 +472,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         throw new Error(result.message || t('reportForm.submitFailed'));
       }
  
-      // Start this modal's own 1-hour cooldown for the currently logged-in account
+      
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
       setCooldownRemaining(REPORT_COOLDOWN_MS);
 
@@ -485,7 +484,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
 
       resetForm();
       setShowAssistancePrompt(true);
- 
     } catch (error) {
       console.error('Error submitting report:', error);
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('emergencyModal.submitError') });
@@ -1021,7 +1019,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       {show && (
         <div className="modal-overlay">
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            {/* The title stays at the top while the form scrolls under it (above the map's layers, which go up to 1000). */}
+            
             <div className="modal-header" style={{ position: 'sticky', top: 0, zIndex: 1100, background: '#fff' }}>
               <div className="header-icon">
                 <i className="bi bi-exclamation-triangle-fill"></i>

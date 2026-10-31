@@ -10,13 +10,6 @@ import { confirmPopup } from "../../shared/popup";
 import CommentAvatar from "../../shared/CommentAvatar";
 import { tx } from "../../../i18n/adminText";
 
-// Comments panel under an admin announcement card: residents' comments with
-// their replies, a box to comment as the barangay, a Reply box per comment,
-// and Delete for moderation. Replies are one level deep (the backend attaches
-// a reply-to-a-reply to the top-level comment). The resident is notified when
-// an admin replies (see createComment in announcementController.js).
-//
-// onCountChange(delta) keeps the card's comment count in sync.
 const initialsOf = (name) =>
   (name || "R").trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
 
@@ -102,7 +95,6 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
     onCountChange && onCountChange(-(1 + replyCount));
   };
 
-  // Replies are shown by default; this holds the threads the admin collapsed.
   const [collapsed, setCollapsed] = useState({});
 
   const openReply = (thread) => {
@@ -117,7 +109,6 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
     </CommentAvatar>
   );
 
-  // replyingTo: the top-level comment's author, shown as an @mention on replies.
   const renderComment = (c, thread, replyingTo) => (
     <div className={`ac-comment ${replyingTo ? "ac-reply" : ""}`} key={c.id}>
       {avatar(c, !!replyingTo)}

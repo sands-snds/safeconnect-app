@@ -1,19 +1,19 @@
-// Live updates for open pages (Server-Sent Events on GET /api/me/events).
-// Each signed-in tab keeps one connection open; when something it shows
-// changes elsewhere -- read on another device, a new notification, an
-// announcement posted -- it gets a short event naming WHAT changed and
-// reloads just that. Events carry no data, so nothing private is sent here.
-//
-// Event types:
-//   state               read items / language (GET /api/me/state)
-//   notifications       the resident's own notifications
-//   admin-notifications the admin bell
-//   announcements       the news / announcement list
-//   profile             the account's profile details
-//   reports             the resident's own reports (the barangay changed a status)
-//
-// Connections live in this process's memory. If the API ever runs on more
-// than one instance, pages still catch up through their regular polling.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const { isAdminRole } = require("../utils/roles");
 
@@ -29,8 +29,8 @@ function send(client, type) {
     }
 }
 
-// isAdmin: from the account's current role in the database (the caller looks
-// it up), not the token's possibly outdated role claim.
+
+
 function subscribe(req, res, { role } = {}) {
     res.writeHead(200, {
         "Content-Type": "text/event-stream",
@@ -66,7 +66,7 @@ const notifyAll = (type) => {
     for (const c of clients) send(c, type);
 };
 
-// Route middleware: runs `fn(req)` after the request finished successfully.
+
 const afterSuccess = (fn) => (req, res, next) => {
     res.on("finish", () => {
         if (res.statusCode < 400) {

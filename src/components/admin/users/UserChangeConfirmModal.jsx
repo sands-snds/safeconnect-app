@@ -2,8 +2,6 @@ import React from "react";
 import { ROLE_LABELS } from "../../shared/roles";
 import { tx } from "../../../i18n/adminText";
 
-// Confirmation dialog for Users tab changes (role promotion/demotion and
-// account status). Same look as shared/StatusConfirmModal.jsx.
 const CONSEQUENCES = {
     role: {
         super_admin: "As an Admin, they'll get full access to the admin panel, including the System tabs (users, logs) and the Page Contacts and Page Contents tabs. This applies on their next action; no re-login needed.",

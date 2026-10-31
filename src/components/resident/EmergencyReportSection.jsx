@@ -7,7 +7,7 @@ import ResidentPettyCrimeModal from './ResidentPettyCrimeModal';
 
 function EmergencyCallButton() {
   const { t } = useLanguage();
-  // Editable by Admins under Content > Page Contacts; also the footer's hotlines.
+
   const { emergencyContacts } = useSiteContent();
   const [open, setOpen] = useState(false);
 
@@ -122,7 +122,6 @@ function EmergencyCallButton() {
 }
 
 function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrimeClick }) {
-
   const { t } = useLanguage();
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showPettyCrimeModal, setShowPettyCrimeModal] = useState(false);

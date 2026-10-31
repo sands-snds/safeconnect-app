@@ -1,8 +1,8 @@
 import { showPopup } from './popup';
 
-// Popups for accounts that can't sign in. The backend's sign-in response
-// carries a code (backend/controllers/authController.js); the wording is
-// translated here. Returns true if a popup was shown.
+
+
+
 const STATUS_POPUPS = {
   ACCOUNT_CLOSED: { type: 'error', title: 'auth.accountClosedTitle', message: 'auth.accountClosedMessage' },
   ACCOUNT_SUSPENDED: { type: 'warning', title: 'auth.accountSuspendedTitle', message: 'auth.accountSuspendedMessage' },

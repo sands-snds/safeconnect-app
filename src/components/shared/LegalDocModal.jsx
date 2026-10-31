@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-// A plain legal document in a modal (Terms and Conditions, Privacy Policy),
-// opened from any page by a link to its hash ("#terms", "#privacy") -- the
-// footer has both -- so it can also be shared as <site>/#privacy.
-//
-// doc: { title, lastUpdated, intro, close, understand, sections: [{ id, title, points }] }
-// from translations.js. idPrefix: section ids become "<idPrefix>-<id>".
-// onOpen: called each time it opens. renderAfterSection(section): extra
-// content under a section (e.g. live contact details).
+
+
+
+
+
+
+
+
 
 export default function LegalDocModal({ hash, doc, idPrefix, onOpen, renderAfterSection }) {
   const isOpenHash = useCallback(() => typeof window !== 'undefined' && window.location.hash === hash, [hash]);
@@ -23,8 +23,8 @@ export default function LegalDocModal({ hash, doc, idPrefix, onOpen, renderAfter
     return () => window.removeEventListener('hashchange', onHashChange);
   }, [isOpenHash]);
 
-  // Drop the hash from the address without jumping the page, so the same
-  // link opens it again next time.
+  
+  
   const close = useCallback(() => {
     setOpen(false);
     if (isOpenHash()) {
@@ -38,8 +38,8 @@ export default function LegalDocModal({ hash, doc, idPrefix, onOpen, renderAfter
 
   useEffect(() => {
     if (!open) return undefined;
-    // Caught first (window, capture) and stopped there, so Escape closes only
-    // this document -- not a Sign Up form open underneath it.
+    
+    
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
       e.stopPropagation();

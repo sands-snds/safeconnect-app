@@ -13,9 +13,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import PhotoCropModal from '../shared/PhotoCropModal';
 import { useInstallApp } from '../shared/installApp';
 
-const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // before cropping; the saved photo is a small 512px JPEG
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024; 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Same rules as Sign Up (Hero.jsx) and the server (backend/utils/validation.js).
+
 const PASSWORD_RULES = [
   { key: 'length', test: (pw) => pw.length >= 8 },
   { key: 'uppercase', test: (pw) => /[A-Z]/.test(pw) },
@@ -33,9 +33,9 @@ const SECTIONS = [
   { key: 'account', icon: 'bi-info-circle-fill' }
 ];
 
-// Strips whatever prefix a stored number has (+63, 63, or a leading 0) and
-// keeps the last 10 digits, so an existing "+639171234567" loads back into
-// the same "9XXXXXXXXX" input the sign-up form uses.
+
+
+
 const stripPhonePrefix = (raw) => {
   if (!raw) return '';
   return String(raw).replace(/\D/g, '').slice(-10);
@@ -122,8 +122,6 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const loadProfile = async () => {
     setLoadingProfile(true);
     try {
-      // GET /users/:id returns the raw registered_users row directly
-      // (full_name, contact_number, email_address, photo_url, ...).
       const result = await fetchUserProfile(user.id);
       const mapped = (result && result.id) ? {
         id: result.id,
@@ -139,7 +137,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
       setProfile(mapped);
       fillForms(mapped);
-      // Keep the navbar (and the stored signed-in user) in sync with the server.
+      
       if (mapped?.id) {
         onProfileUpdate?.({
           fullName: mapped.fullName, username: mapped.username, email: mapped.email,
@@ -147,7 +145,6 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         });
       }
     } catch {
-      // keep what we have; the forms still work
     } finally {
       setLoadingProfile(false);
     }
@@ -477,7 +474,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         <div className="st-wrap">
 
           {/* ── Profile summary + photo ── */}
-          {/* div, not <section>: styles/App.css zeroes every section's margin and padding with !important */}
+          
           <div className="st-summary" role="region" aria-label={t('settings.profilePhoto')}>
             <div className="st-avatar-wrap">
               <div className="st-avatar">
@@ -612,7 +609,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                       )}
                     </div>
                   </div>
-                  {/* Requirements appear once a new password is being typed. */}
+                  
                   {newPassword && (
                     <ul className="st-checklist" aria-label={t('signUp.passwordRules')}>
                       {PASSWORD_RULES.map((r) => {
@@ -653,7 +650,6 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                       </button>
                     </div>
                   ) : (
-                    // No install prompt from this browser: explain the manual steps.
                     <ol className="st-steps">
                       {(install.ios
                         ? [t('settings.installIos1'), t('settings.installIos2'), t('settings.installIos3')]
@@ -681,8 +677,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         </div>
       </div>
 
-      {/* Rendered into <body>: .settings-fullscreen has a transform (its
-          slide-in), which would otherwise trap position:fixed children. */}
+      
       {cropFile && createPortal(
         <PhotoCropModal
           file={cropFile}

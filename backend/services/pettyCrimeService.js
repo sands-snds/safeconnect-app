@@ -2,8 +2,8 @@ const PettyCrime = require("../models/PettyCrime");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
 
-// A photo/video is optional for these crime types and required for the rest.
-// Keep in sync with PHOTO_OPTIONAL_CRIME_TYPES in ResidentPettyCrimeModal.jsx.
+
+
 const PHOTO_OPTIONAL_CRIME_TYPES = ["Theft", "Suspicious Activity", "Harassment"];
 const ANONYMOUS_NAME = "Anonymous";
 
@@ -20,10 +20,10 @@ class PettyCrimeService {
         const isAnonymous = data.isAnonymous === true || data.isAnonymous === "true";
         const reference = await generateReference(PettyCrime.getLatestReference);
 
-        // Anonymous reports keep reporter_id so the resident still sees the
-        // report in My Reports and gets status updates, but their name and
-        // number are never stored, and admins never receive reporter_id
-        // (see pettyCrimeController).
+        
+        
+        
+        
         const reportId = await PettyCrime.create({
             reportReference: reference,
             reporterId: data.userId || null,
@@ -60,8 +60,6 @@ class PettyCrimeService {
     }
 
     static async update(id, data) {
-        // Changing to a crime type that needs a photo: one must be attached
-        // now or already be on file.
         if (isPhotoRequired(data.crimeType) && !data.photoUrl && !(await PettyCrime.hasMedia(id))) {
             return { success: false, status: 400, message: PHOTO_REQUIRED_MESSAGE };
         }

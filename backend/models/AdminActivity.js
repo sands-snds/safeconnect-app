@@ -1,12 +1,9 @@
 const db = require("../config/db");
 
-// Every admin action worth auditing (logins, status/role changes,
-// announcements, exports...). Replaces the old admin_logs table, which only
-// ever stored an email + login time.
-class AdminActivity {
 
-    // Created on server start so existing databases pick it up without a
-    // manual migration (also listed in database/safeconnect_db.sql).
+
+
+class AdminActivity {
     static async ensureTable() {
         await db.query(`
             CREATE TABLE IF NOT EXISTS admin_activity_logs (
@@ -23,7 +20,7 @@ class AdminActivity {
         `);
     }
 
-    // admin: a registered_users row (id, email_address, username).
+    
     static async record(admin, action, details = null) {
         if (!admin) return;
         await db.query(
@@ -34,10 +31,10 @@ class AdminActivity {
         );
     }
 
-    // Newest first. Old entries are archived by services/logArchiveService.js;
-    // archived: true lists those instead. role: the account's current role.
-    // Optional filters (Generate Report): role, from / to (Date bounds,
-    // `to` exclusive).
+    
+    
+    
+    
     static async getRecent(limit = 500, { archived = false, role, from, to } = {}) {
         let sql = `
             SELECT l.*, u.role
@@ -56,8 +53,8 @@ class AdminActivity {
         return rows;
     }
 
-    // One row per current admin account with their last login and most
-    // recent activity.
+    
+    
     static async getAdminSummaries() {
         const [rows] = await db.query(`
             SELECT

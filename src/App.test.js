@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 import { fetchCurrentUser } from './Services/api';
 
-// The real routes from App.js, with the pages stubbed (the full pages pull in
-// the map library, which this Jest setup can't load). What's under test is
-// that /resident is guarded at the route level.
+
+
+
 jest.mock('./pages/LandingPage', () => () => <p>Landing page</p>);
 jest.mock('./pages/AdminPage', () => () => <p>Admin page</p>);
 jest.mock('./pages/ResidentPage', () => () => <p>Resident page (protected)</p>);

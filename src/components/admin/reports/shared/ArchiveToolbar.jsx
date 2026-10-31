@@ -4,24 +4,12 @@ import { showPopup } from "../../../shared/popup";
 import { fetchArchiveSettings, updateArchiveSettings } from "../../../../Services/api";
 import { tx } from "../../../../i18n/adminText";
 
-// Report tabs: months after a report is resolved.
 const REPORT_PERIOD_OPTIONS = [
   { value: 0, label: "Off" },
   { value: 6, label: "After 6 months" },
   { value: 12, label: "After 1 year" }
 ];
 
-// Sits above a list with an archive: switches between the current and
-// archived entries, and shows the auto-archive period (Admins can change
-// it). onSettingsChanged is called after the period is saved, since a
-// shorter period may archive entries right away.
-//
-// Defaults to the report tabs' setting. The System logs pass their own:
-//   loadSetting()        -> Promise<value | null>
-//   saveSetting(value)   -> Promise<{ success, archived?, message? }>
-//   periodOptions        -> [{ value, label }]
-//   settingLabel         -> e.g. "Auto-archive sign-ins:"
-// Counts can be null (not loaded yet) to hide the number.
 const ArchiveToolbar = ({
   showArchived,
   setShowArchived,
@@ -79,8 +67,6 @@ const ArchiveToolbar = ({
   const count = (n) => (n === null || n === undefined ? "" : ` (${n})`);
 
   return (
-    // archive-toolbar*: phone layout in styles/admin.css (tabs full width,
-    // the auto-archive setting on its own line).
     <div
       className="archive-toolbar"
       style={{

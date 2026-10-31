@@ -1,8 +1,8 @@
-// Device, IP address and approximate location for the sign-in logs.
-//
-// Privacy: IP addresses and device details are personal information under
-// the Data Privacy Act. They're only shown to super admins (System > Sign-in
-// Logs), and the IP is sent to ipapi.co for the location lookup.
+
+
+
+
+
 const https = require("https");
 
 /* ---------------------------------------------------------------- IP ---- */
@@ -10,7 +10,7 @@ const https = require("https");
 const cleanIp = (ip) => {
     if (!ip) return null;
     let v = String(ip).trim();
-    // "[2001:db8::1]:443" / "180.194.229.101:54321" -> address only
+    
     const bracketed = v.match(/^\[([^\]]+)\](?::\d+)?$/);
     if (bracketed) v = bracketed[1];
     else if (/^\d+\.\d+\.\d+\.\d+:\d+$/.test(v)) v = v.split(":")[0];
@@ -18,9 +18,9 @@ const cleanIp = (ip) => {
     return v || null;
 };
 
-// Azure App Service passes the visitor's address in X-Client-IP, and appends
-// it (with a port) as the LAST entry of X-Forwarded-For. Earlier entries of
-// X-Forwarded-For come from the visitor and can be faked, so they're ignored.
+
+
+
 const getClientIp = (req) => {
     const fromAzure = req.headers["x-client-ip"];
     if (fromAzure) return cleanIp(fromAzure);
@@ -43,10 +43,10 @@ const isPrivateIp = (ip) =>
 
 /* ------------------------------------------------------------ Device ---- */
 
-// Model-code prefixes -> brand, for Android phones. Chrome usually hides the
-// model in the User-Agent ("Android 10; K"), so `hints.model` (sent by the
-// login page from navigator.userAgentData, Chrome/Edge/Samsung Internet
-// only) is tried first.
+
+
+
+
 const ANDROID_BRANDS = [
     [/^(SM-|SAMSUNG|Galaxy)/i, "Samsung"],
     [/^(Redmi|POCO|Mi |MI |M2\d{3}|2\d{3}[A-Z0-9]{4,}|Xiaomi)/i, "Xiaomi"],
@@ -81,9 +81,9 @@ const browserName = (ua) => {
     return null;
 };
 
-// e.g. "Phone · Samsung SM-S918B · Android 14 · Chrome"
-//      "Computer · Windows · Edge"
-//      "Phone · Apple iPhone · iOS 17.5 · Safari"
+
+
+
 const describeDevice = (userAgent = "", hints = {}) => {
     const ua = String(userAgent);
     if (!ua) return null;
@@ -104,9 +104,6 @@ const describeDevice = (userAgent = "", hints = {}) => {
         brand = "Apple iPad";
         os = "iPadOS";
     } else if (/Android/i.test(ua)) {
-        // UA model: "Android 13; SM-A546E Build/..." -> "SM-A546E". Chrome's
-        // reduced UA says "Android 10; K" on every phone: model hidden and a
-        // fake version, so only trust the version when the model is real.
         const uaModel = ((ua.match(/Android [^;)]*;\s*([^;)]+?)(?:\s+Build\/|\)|;)/i) || [])[1] || "").trim();
         const reducedUa = uaModel === "K";
         const v = ua.match(/Android (\d+(?:\.\d+)?)/i);
@@ -114,7 +111,7 @@ const describeDevice = (userAgent = "", hints = {}) => {
             ? String(hints.platformVersion).split(".")[0]
             : (!reducedUa && v ? v[1] : null);
         os = `Android${version ? " " + version : ""}`;
-        // Firefox puts "Mobile" / "rv:126.0" where other browsers put the model.
+        
         const model = [hints.model, uaModel]
             .map((m) => (m || "").trim())
             .find((m) => m && m !== "K" && !/^(Mobile|Tablet|rv:|wv\b|Linux|U\b)/i.test(m));
@@ -136,9 +133,9 @@ const describeDevice = (userAgent = "", hints = {}) => {
 
 /* ---------------------------------------------------------- Location ---- */
 
-// Approximate city + internet provider for an IP, via ipapi.co (HTTPS, no
-// key, ~1000 lookups/day free). City-level at best; mobile data often shows
-// the carrier's location instead of the user's. Resolves null on any error.
+
+
+
 const lookupLocation = (ip) => new Promise((resolve) => {
     if (isPrivateIp(ip)) return resolve(null);
 
@@ -165,8 +162,8 @@ const lookupLocation = (ip) => new Promise((resolve) => {
     req.on("error", () => resolve(null));
 });
 
-// Everything signin needs for the log, from the request.
-// `hints` = req.body.device from the login page (optional).
+
+
 const signinContext = (req) => {
     const hints = req.body && typeof req.body.device === "object" ? req.body.device : {};
     return {

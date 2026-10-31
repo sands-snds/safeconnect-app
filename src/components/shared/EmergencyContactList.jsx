@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { contactDescription } from './useSiteContent';
 
-// The contacts inside the red floating call button (landing + resident
-// pages). Most contacts call right away. A contact with `choices` (e.g.
-// Barangay Sta. Fe: the Punong Barangay or the Secretary) opens a short
-// list first, so the caller picks who to call.
 
-// "09354984838" -> "0935 498 4838", "+639354984838" -> "+63 935 498 4838",
-// landline "+63462420002" -> "+63 46 242 0002".
+
+
+
+
+
+
 export const formatMobile = (number) => {
   const n = String(number).replace(/\s/g, '');
   let m = n.match(/^(09\d{2})(\d{3})(\d{4})$/);
@@ -42,7 +42,7 @@ export default function EmergencyContactList({ contacts, onCall }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {/* hidden: turned off in Page Contacts (only 911 can be) */}
+      
       {contacts.filter((c) => !c.hidden).map((c) => {
         const choices = hasChoices(c);
         const open = choices && openId === c.id;

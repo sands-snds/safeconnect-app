@@ -1,10 +1,6 @@
-// Assistance Requests model (table: assistance_requests).
-// Field names map to what ResidentAssistanceModal.jsx sends via
-// createAssistanceRequest()/updateAssistanceRequest() in Services/api.js.
 const db = require("../config/db");
 
 class AssistanceRequest {
-
     static async create(request) {
         const [result] = await db.query(
             `
@@ -46,7 +42,7 @@ class AssistanceRequest {
                 request.latitude || null,
                 request.longitude || null,
                 request.peopleAffected || 1,
-                request.urgency || "", // residents no longer pick one; blank, not a made-up level
+                request.urgency || "",
                 request.situation,
                 request.specialNeeds || null,
                 request.victimOfEmergency || null,
@@ -72,7 +68,6 @@ class AssistanceRequest {
             values.push(filters.status);
         }
 
-        // Date range from the Generate Report form (Date objects; `to` is exclusive).
         if (filters.from) {
             sql += " AND timestamp >= ?";
             values.push(filters.from);
@@ -103,8 +98,6 @@ class AssistanceRequest {
         return rows[0];
     }
 
-    // Status changes only need these columns. findById also pulls the
-    // photo/video (stored as base64 text), which can be several MB.
     static async findStatusById(id) {
         const [rows] = await db.query(
             `SELECT id, status, reporter_id FROM assistance_requests WHERE id = ?`,
@@ -113,7 +106,6 @@ class AssistanceRequest {
         return rows[0];
     }
 
-    // Whether a photo/video is already on file, without loading it.
     static async hasMedia(id) {
         const [rows] = await db.query(
             `SELECT photo_url IS NOT NULL AND photo_url <> '' AS has_media FROM assistance_requests WHERE id = ?`,
@@ -144,7 +136,7 @@ class AssistanceRequest {
                 request.location,
                 request.latitude || null,
                 request.longitude || null,
-                request.urgency || null, // keep the saved level when none is sent
+                request.urgency || null,
                 request.situation,
                 request.specialNeeds || null,
                 request.victimOfEmergency || null,
@@ -156,11 +148,8 @@ class AssistanceRequest {
         return result.affectedRows;
     }
 
-    // dismissalReason: only for status "Dismissed" (utils/statusWorkflow.js).
     static async updateStatus(id, status, dismissalReason = null) {
         const [result] = await db.query(
-            // resolved_at (the closing time) starts the auto-archive countdown
-            // for Resolved and Dismissed reports (services/archiveService.js).
             `UPDATE assistance_requests
              SET status = ?,
                  resolved_at = IF(? IN ('Resolved', 'Dismissed'), NOW(), resolved_at),

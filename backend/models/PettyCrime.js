@@ -1,10 +1,6 @@
-// Petty Crime Reports model (table: petty_crimes).
-// Field names map to what ResidentPettyCrimeModal.jsx sends via
-// createPettyCrimeReport()/updatePettyCrimeReport() in Services/api.js.
 const db = require("../config/db");
 
 class PettyCrime {
-
     static async create(report) {
         const [result] = await db.query(
             `
@@ -66,7 +62,6 @@ class PettyCrime {
             values.push(filters.status);
         }
 
-        // Date range from the Generate Report form (Date objects; `to` is exclusive).
         if (filters.from) {
             sql += " AND timestamp >= ?";
             values.push(filters.from);
@@ -97,8 +92,6 @@ class PettyCrime {
         return rows[0];
     }
 
-    // Status changes only need these columns. findById also pulls the
-    // photo/video (stored as base64 text), which can be several MB.
     static async findStatusById(id) {
         const [rows] = await db.query(
             `SELECT id, status, reporter_id FROM petty_crimes WHERE id = ?`,
@@ -107,7 +100,6 @@ class PettyCrime {
         return rows[0];
     }
 
-    // Whether a photo/video is already on file, without loading it.
     static async hasMedia(id) {
         const [rows] = await db.query(
             `SELECT photo_url IS NOT NULL AND photo_url <> '' AS has_media FROM petty_crimes WHERE id = ?`,
@@ -146,11 +138,8 @@ class PettyCrime {
         return result.affectedRows;
     }
 
-    // dismissalReason: only for status "Dismissed" (utils/statusWorkflow.js).
     static async updateStatus(id, status, dismissalReason = null) {
         const [result] = await db.query(
-            // resolved_at (the closing time) starts the auto-archive countdown
-            // for Resolved and Dismissed reports (services/archiveService.js).
             `UPDATE petty_crimes
              SET status = ?,
                  resolved_at = IF(? IN ('Resolved', 'Dismissed'), NOW(), resolved_at),

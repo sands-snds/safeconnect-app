@@ -81,9 +81,6 @@ const PresenceLabel = ({ admin }) => {
   );
 };
 
-// System > Admin Logs: every Admin / Official account, and the activity log.
-// Activity older than the auto-archive period (default 90 days) moves to the
-// Archived tab; nothing is deleted.
 const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSuperAdmin, onRefresh }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -113,7 +110,6 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
 
   const onlineCount = admins.filter(a => a.online).length;
 
-  // Every account that shows up in the log, including ones since demoted.
   const adminOptions = useMemo(() => {
     const emails = new Set([...admins.map(a => a.email), ...shownActivity.map(l => l.email)]);
     return [...emails].filter(Boolean).sort();
@@ -185,7 +181,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
                         </div>
                       </div>
                     </td>
-                    {/* Details: full name and phone number, to reach them */}
+
                     <td className="table-cell" style={{ fontSize: 13 }}>
                       <div style={{ fontWeight: 600, color: '#111827' }}>{admin.fullName || '—'}</div>
                       {admin.contact ? (

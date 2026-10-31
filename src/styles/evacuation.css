@@ -856,7 +856,7 @@ body {
         font-size: 0.85rem;
     }
 
-    /* Hide text in nav links, show only icons */
+    
     .nav-links a span:not(.material-icons) {
         display: none;
     }
@@ -1033,7 +1033,7 @@ body {
         border-radius: 0;
     }
 
-    /* Stack card content vertically on very small screens */
+    
     .area-actions {
         flex-direction: column;
     }

@@ -1,11 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { tx } from '../../../i18n/adminText';
 
-// Renders the <table> shell: a header row built from `headers`, and a body
-// that's just whatever <tr> rows the caller (ListView) already built via
-// renderRow(). Kept dumb on purpose so every list page can reuse it.
-// On phones (admin.css) each row is a card and every cell shows its column
-// name, taken from the data-label set here after each render.
 const Table = ({ headers = [], children }) => {
   const tableRef = useRef(null);
   useEffect(() => {

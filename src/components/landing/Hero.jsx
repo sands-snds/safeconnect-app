@@ -24,9 +24,9 @@ const getMissingRequirements = (pw) =>
     PASSWORD_REQUIREMENTS.filter(r => !r.test(pw)).map(r => r.key);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// A server answer that is about one field (e.g. "Username is already
-// taken."), so the form can point at that field. [pattern, inputId] pairs,
-// checked in order; null when the message isn't about a field.
+
+
+
 const fieldForMessage = (message, pairs) => {
     const text = String(message || '');
     const hit = pairs.find(([re]) => re.test(text));
@@ -54,7 +54,7 @@ const apiPost = async (path, body) => {
 // ── EmergencyCallButton ───────────────────────────────────────────────────────
 function EmergencyCallButton() {
     const { t } = useLanguage();
-    // Editable by Admins under Content > Page Contacts; also the footer's hotlines.
+    
     const { emergencyContacts } = useSiteContent();
     const [showContacts, setShowContacts] = useState(false);
     const handleCall = (n) => { window.location.href = `tel:${n}`; setShowContacts(false); };
@@ -104,13 +104,13 @@ function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs }) {
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
     const { t } = useLanguage();
-    const siteContent = useSiteContent(); // support email for the account popups
-    // Background photos: editable by Admins under Content > Page Contents.
+    const siteContent = useSiteContent(); 
+    
     const { carousel: slides = [] } = useSiteMedia();
     const slidesKey = slides.map((s) => s.src).join('|');
     const carouselRef = useRef(null);
-    // React remounts the carousel when the photos change (see key below), so
-    // start Bootstrap's autoplay on the new element.
+    
+    
     useEffect(() => {
         if (!carouselRef.current) return undefined;
         const instance = Carousel.getOrCreateInstance(carouselRef.current, { interval: 4000, ride: 'carousel', pause: 'hover' });
@@ -122,21 +122,21 @@ function Hero() {
     const [showSignUp,    setShowSignUp]    = useState(false);
     const [showForgot,    setShowForgot]    = useState(false);
 
-    // Sign-in step: 'form' | 'remember' (the "Save Login Info" question after a
-    // successful sign-in; pendingSignIn holds that sign-in until it's answered)
+    
+    
     const [signInStep,    setSignInStep]    = useState('form');
     const [pendingSignIn, setPendingSignIn] = useState(null);
 
     // Sign-up step: 'form' | 'otp'
     const [signUpStep,    setSignUpStep]    = useState('form');
-    // Forgot password step: 'email' | 'otp' | 'reset' | 'done'
+    
     const [forgotStep,    setForgotStep]    = useState('email');
 
     // Sign-in fields
     const [siEmail,       setSiEmail]       = useState('');
     const [siPassword,    setSiPassword]    = useState('');
-    // Creating an account requires ticking "I agree", which unlocks only
-    // after the Terms and Conditions have been opened (termsConsent.js).
+    
+    
     const [suAgree,       setSuAgree]       = useState(false);
     const [termsViewed,   setTermsViewed]   = useState(hasViewedTerms);
     useEffect(() => {
@@ -144,7 +144,7 @@ function Hero() {
         window.addEventListener(TERMS_VIEWED_EVENT, onViewed);
         return () => window.removeEventListener(TERMS_VIEWED_EVENT, onViewed);
     }, []);
-    // Before the Terms have been opened, the box opens them instead of ticking.
+    
     const handleAgreeChange = (e) => {
         if (!termsViewed) { openTerms(); return; }
         setSuAgree(e.target.checked);
@@ -171,7 +171,7 @@ function Hero() {
     const [showFpNewPw,   setShowFpNewPw]   = useState(false);
     const [showFpConfPw,  setShowFpConfPw]  = useState(false);
 
-    // Shared OTP state (reused for both signup and reset)
+    
     const [otp,           setOtp]           = useState(['','','','','','']);
     const [otpEmail,      setOtpEmail]      = useState('');
     const [resendCooldown,setResendCooldown]= useState(0);
@@ -180,8 +180,8 @@ function Hero() {
     const [isSubmitting,  setIsSubmitting]  = useState(false);
     const [error,         setError]         = useState('');
     const [successMsg,    setSuccessMsg]    = useState('');
-    // Shown in Sign In when the Resident page sent the visitor here
-    // (RequireResident.jsx redirects to /?signin=required).
+    
+    
     const [signInNotice,  setSignInNotice]  = useState('');
 
     useEffect(() => {
@@ -189,7 +189,7 @@ function Hero() {
         if (params.get('signin') !== 'required') return;
         setShowSignIn(true);
         setSignInNotice(t('signIn.signInRequired'));
-        // Drop the flag so refreshing doesn't reopen Sign In.
+        
         params.delete('signin');
         const query = params.toString();
         window.history.replaceState(null, '', window.location.pathname + (query ? `?${query}` : '') + window.location.hash);
@@ -203,10 +203,10 @@ function Hero() {
         return () => clearTimeout(t);
     }, [resendCooldown]);
 
-    // Fields the form couldn't accept: { [inputId]: message }, in form order.
-    // Each shows a red outline and its message; the first gets the focus
-    // (scrolled into view, which matters on phones where Sign Up scrolls).
-    // Editing a field clears its message.
+    
+    
+    
+    
     const [fieldErrors,   setFieldErrors]   = useState({});
 
     const focusField = (id) => requestAnimationFrame(() => {
@@ -216,7 +216,7 @@ function Hero() {
         el.focus({ preventScroll: true });
     });
 
-    // Returns true when there was something to fix.
+    
     const showFieldErrors = (errors) => {
         setFieldErrors(errors);
         const first = Object.keys(errors)[0];
@@ -224,8 +224,8 @@ function Hero() {
         return Boolean(first);
     };
 
-    // A password's confirmation is checked against it, so editing the
-    // password clears both.
+    
+    
     const LINKED_FIELDS = { suPassword: 'suConfirm', fpNewPw: 'fpConfirmPw' };
     const clearFieldError = (e) => {
         const ids = [e.target.id, LINKED_FIELDS[e.target.id]];
@@ -237,7 +237,7 @@ function Hero() {
         });
     };
 
-    // Props for an input: marks it invalid and links its message.
+    
     const fieldProps = (id) => (fieldErrors[id] ? { 'aria-invalid': true, 'aria-describedby': `${id}-error` } : {});
 
     const clearErr = () => { setError(''); setSuccessMsg(''); setFieldErrors({}); };
@@ -295,35 +295,33 @@ function Hero() {
         setIsSubmitting(true);
         try {
             const result = await signinUser(siEmail.trim(), siPassword);
-            // Closed / suspended accounts: close the sign-in box and explain in a popup.
+            
             if (!result.success && result.code) {
                 closeAll();
                 if (showAccountStatusPopup(result.code, t, siteContent.socials?.email)) return;
             }
             if (!result.success) {
-                // Wrong email or password: we can't tell which, so explain
-                // above and put the cursor back in the password.
                 setError(result.message || t('auth.invalidCredentials'));
                 focusField('siPassword');
                 return;
             }
-            // Admins aren't asked to save the login: the admin panel always
-            // uses a sign-in that ends when the browser closes.
+            
+            
             if (result.isAdmin) {
                 setAuthToken(result.token, true, false);
                 finishSignIn(result);
                 return;
             }
-            // Residents: ask whether to save the login before going on.
+            
             setPendingSignIn(result);
             setSignInStep('remember');
         } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
 
-    // "Save Login Info": Yes swaps the session sign-in for a 30-day saved
-    // login (kept after the browser closes, revocable on the server);
-    // No keeps the session sign-in (gone when the browser closes).
+    
+    
+    
     const answerSaveLogin = async (save) => {
         const result = pendingSignIn;
         if (!result || isSubmitting) return;
@@ -333,7 +331,6 @@ function Hero() {
         if (save) {
             const remembered = await rememberLogin(result.token);
             if (remembered.success && remembered.token) { token = remembered.token; saved = true; }
-            // If saving fails, the resident is still signed in for this session.
         }
         setAuthToken(token, result.isAdmin, saved);
         finishSignIn(result);
@@ -346,8 +343,8 @@ function Hero() {
             window.location.href = '/admin'; return;
         }
         sessionStorage.setItem('userAuthenticated', 'true');
-        // Store the full user object including photoUrl so the navbar
-        // avatar persists across sessions without a separate profile fetch.
+        
+        
         sessionStorage.setItem('currentUser', JSON.stringify({
             id:       result.user.id,
             fullName: result.user.fullName,
@@ -364,7 +361,7 @@ function Hero() {
     // ── Sign up: step 1 — send OTP ────────────────────────────────────────────
     const handleSignUpSubmit = async (e) => {
         e.preventDefault(); clearErr();
-        // Every problem at once, in the order of the form.
+        
         const problems = {};
         if (!suFirst.trim()) problems.suFirst = t('auth.firstNameRequired');
         if (!suLast.trim()) problems.suLast = t('auth.lastNameRequired');
@@ -648,7 +645,7 @@ function Hero() {
                                     placeholder={t('signUp.confirmPasswordPlaceholder')} value={suConfirm} onChange={e => setSuConfirm(e.target.value)} />
                             </AuthField>
                         </div>
-                        {/* Requirements appear once a password is being typed. */}
+                        
                         {suPassword && (
                             <ul className="auth-checklist" aria-label={t('signUp.passwordRules')}>
                                 {PASSWORD_REQUIREMENTS.map(req => {
@@ -768,7 +765,7 @@ function Hero() {
                                 toggle={<PasswordToggleButton visible={showFpNewPw} onToggle={() => setShowFpNewPw(v=>!v)} />}>
                                 <input type={showFpNewPw?'text':'password'} className="auth-input has-toggle" id="fpNewPw" {...fieldProps('fpNewPw')} autoComplete="new-password" placeholder={t('forgotPassword.newPasswordPlaceholder')} value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} />
                             </AuthField>
-                            {/* Requirements appear once a password is being typed. */}
+                            
                             {fpNewPw && (
                                 <ul className="auth-checklist" aria-label={t('signUp.passwordRules')}>
                                     {PASSWORD_REQUIREMENTS.map(req => {

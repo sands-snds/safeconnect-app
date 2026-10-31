@@ -16,8 +16,8 @@ exports.exportPDF = async (req, res) => {
         await ExportService.exportPDF(type, req.query, res);
     } catch (err) {
         console.error(err);
-        // Headers may already be sent if the failure happened mid-stream;
-        // guard against a double response.
+        
+        
         if (!res.headersSent) {
             res.status(500).json({ success: false, message: "Unable to export PDF." });
         }

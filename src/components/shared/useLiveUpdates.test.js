@@ -8,7 +8,7 @@ jest.mock('../../Services/api', () => ({
 }));
 
 const encoder = new TextEncoder();
-// A response whose body streams the given chunks, then (optionally) stays open.
+
 const streamResponse = (chunks, { status = 200, hang = true } = {}) => {
   let i = 0;
   return {

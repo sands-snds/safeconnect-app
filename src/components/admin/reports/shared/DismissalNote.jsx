@@ -1,8 +1,6 @@
 import React from "react";
 import { tx } from "../../../../i18n/adminText";
 
-// Shown at the top of a dismissed report's details: why it was dismissed
-// (the same reason the reporter was sent).
 const DismissalNote = ({ report }) => {
   if (report.status !== "Dismissed") return null;
 

@@ -1,9 +1,9 @@
 import React from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-// A compact EN/TL switch. `variant="light"` is for use on dark/maroon
-// backgrounds (navbars); the default is for use on light backgrounds
-// (e.g. inside the mobile drawer or a settings-style page).
+
+
+
 export default function LanguageToggle({ variant = 'light', className = '' }) {
   const { language, setLanguage } = useLanguage();
 

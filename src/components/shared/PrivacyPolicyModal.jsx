@@ -3,11 +3,11 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import LegalDocModal from './LegalDocModal';
 import useSiteContent, { officialName } from './useSiteContent';
 
-// Privacy Policy, opened from any page by a link to "#privacy" (the footer
-// has one). Mounted once in App.js. The text lives in translations.js under
-// `privacy` (English and Tagalog). The contact section also lists the
-// barangay's current email, Facebook page and officials (Content > Page
-// Contacts), so it stays in step with the footer.
+
+
+
+
+
 export const PRIVACY_HASH = '#privacy';
 
 function PrivacyContacts() {

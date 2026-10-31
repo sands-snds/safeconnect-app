@@ -21,19 +21,19 @@ const SPECIAL_NEEDS_OPTIONS = [
   { key: 'pets', value: 'Pets' }
 ];
 
-// "Victim of What Emergency?" choices: the Report Emergency form's types
-// (same stored values), plus Other, where the resident types it in.
+
+
 const EMERGENCY_OPTIONS = [
   { value: 'Fire Emergency', labelKey: 'emergencyModal.typeFire' },
   { value: 'Flood Emergency', labelKey: 'emergencyModal.typeFlood' },
   { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake' }
 ];
 const OTHER_EMERGENCY = 'Other';
-// Not everyone in the barangay knows the person they're requesting for by
-// name — these relationships make the name field optional instead of required.
+
+
 const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_assistance';
-// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+
 const REPORT_COOLDOWN_MS = 0;
 
 const getCurrentUser = () => {
@@ -70,8 +70,8 @@ const formatRemaining = (ms) => {
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
 };
-// prefill: { location, latitude, longitude } from an emergency report just
-// sent (its "Request Assistance" button), so the same spot is pinned here.
+
+
 function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated, prefill }) {
   const { t } = useLanguage();
   const isEditing = Boolean(editingReport);
@@ -89,14 +89,14 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     consent: false
   });
   const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
-  // Proof photo/video is required; when editing, one already on file counts.
+  
   const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
   const needsNewMedia = !hasExistingMedia;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
-  // Map pin, "Use my current location" and the Santa Fe boundary check
-  // (../shared/location/useLocationPin.js). A new pin fills in the address.
+  
+  
   const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
     setFormData((prev) => (isEditing
       ? { ...prev, location: fullAddress }
@@ -124,7 +124,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 
   useEffect(() => {
     if (!editingReport) return;
-    // A value that isn't one of the listed types was typed in under Other.
+    
     const savedEmergency = editingReport.victim_of_emergency || '';
     const isListed = EMERGENCY_OPTIONS.some((o) => o.value === savedEmergency);
     setFormData((prev) => ({
@@ -189,7 +189,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         return;
       }
     }
-    // The map already shows why; bring it into view.
+    
     if (isOutsideSantaFe) {
       locationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -245,7 +245,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           id: editingReport.id,
           type: formData.assistanceType || 'General Assistance',
           victimOfEmergency,
-          // Only replace the saved photo/video if a new one was attached
+          
           ...(photoUrl ? { photoUrl, mediaType: media.type } : {}),
           location: formData.location.trim(),
           latitude: gpsCoords ? gpsCoords.lat : null,
@@ -268,8 +268,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       const composedAddress = [formData.houseNumber.trim(), formData.street.trim()]
         .filter(Boolean)
         .join(' ');
-      // A pinned report may have no typed address -- the pin is the exact spot.
-      // The landmark goes in the same text, so admins and exports see it too.
+      
+      
       const landmark = formData.landmark.trim();
       const fullLocation = [
         formData.floorUnit.trim(),
@@ -375,7 +375,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
         }}
 >
-{/* The title stays at the top while the form scrolls under it (above the map's layers, which go up to 1000). */}
+
 <div style={{
           padding: '20px 24px',
           borderBottom: '1px solid #e5e7eb',

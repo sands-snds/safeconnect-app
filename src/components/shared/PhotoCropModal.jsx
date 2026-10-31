@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-// Profile photo editor: drag to reposition, zoom (slider, buttons, mouse
-// wheel, pinch), Recenter, and a live preview of exactly what will be saved.
-// onSave receives the cropped square photo as a JPEG File (OUTPUT_SIZE px).
+
+
+
 
 const OUTPUT_SIZE = 512;
 const MIN_ZOOM = 1;
@@ -41,13 +41,13 @@ export default function PhotoCropModal({ file, t, saving = false, onCancel, onSa
     return () => window.removeEventListener('resize', fit);
   }, []);
 
-  // Scale at zoom 1 fills the frame (like object-fit: cover).
+  
   const baseScale = img ? Math.max(frame / img.naturalWidth, frame / img.naturalHeight) : 1;
   const scale = baseScale * zoom;
   const drawnW = img ? img.naturalWidth * scale : 0;
   const drawnH = img ? img.naturalHeight * scale : 0;
 
-  // Keep the photo covering the whole frame (no empty edges).
+  
   const clampOffset = useCallback((o, z = zoom) => {
     if (!img) return o;
     const s = baseScale * z;
@@ -64,7 +64,7 @@ export default function PhotoCropModal({ file, t, saving = false, onCancel, onSa
 
   useEffect(() => { setOffset((o) => clampOffset(o)); }, [frame, clampOffset]);
 
-  // Draws the visible square (what the frame shows) onto a canvas.
+  
   const drawCrop = useCallback((canvas, size) => {
     if (!img || !canvas) return;
     canvas.width = size;
@@ -79,7 +79,7 @@ export default function PhotoCropModal({ file, t, saving = false, onCancel, onSa
     ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size);
   }, [img, frame, scale, offset]);
 
-  // Live preview = the saved image, at profile size and navbar size.
+  
   useEffect(() => {
     drawCrop(previewLargeRef.current, 192);
     drawCrop(previewSmallRef.current, 80);
@@ -96,7 +96,6 @@ export default function PhotoCropModal({ file, t, saving = false, onCancel, onSa
     if (!prev) return;
     const pts = pointers.current;
     if (pts.size >= 2) {
-      // Pinch: zoom by the change in distance between two fingers.
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       const [a, b] = [...pts.values()];
       const dist = Math.hypot(a.x - b.x, a.y - b.y);
@@ -112,7 +111,7 @@ export default function PhotoCropModal({ file, t, saving = false, onCancel, onSa
     if (pointers.current.size < 2) gesture.current = null;
   };
 
-  // Mouse wheel zoom (needs a non-passive listener to stop page scrolling).
+  
   useEffect(() => {
     const el = frameRef.current;
     if (!el) return undefined;

@@ -30,7 +30,7 @@
   top: 0;
   align-self: flex-start;
   height: 100vh;
-  /* Only scrolls on very short screens, without a visible scrollbar. */
+
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -65,11 +65,9 @@
 
 .main-content {
   flex: 1;
-  /* Without this a flex item can't shrink below its widest content (e.g.
-     a long unbroken line), which pushed the page wider than a phone. */
+
   min-width: 0;
-  /* The window scrolls, not this box (a scrolling box here kept the sticky
-     header from sticking). clip still stops sideways overflow. */
+
   overflow-x: clip;
   padding: 20px;
 }
@@ -144,8 +142,6 @@
   overflow-y: auto;
 }
 
-/* Bootstrap's .modal-content (loaded later) takes its background from a
-   variable only set inside its own .modal, which left these boxes see-through. */
 .modal-overlay > .modal-content {
   background: #fff;
   color: #1f2937;
@@ -203,8 +199,6 @@
   color: #374151;
 }
 
-/* Light pink with a maroon outline (like Page Contents' "Replace uploaded
-   video"): secondary actions such as Comments, Share, Move to ..., Archive. */
 .button-soft {
   background: #FDECEC;
   color: #6B2C3E;
@@ -215,8 +209,6 @@
   background: #f9d6da;
 }
 
-/* Red, for actions that close something for good (Dismiss a report), so
-   they don't look like the pink "Move to ..." buttons. */
 .button-danger-soft {
   background: #fee2e2;
   color: #B91C1C;
@@ -228,7 +220,6 @@
   background: #fecaca;
 }
 
-/* "Move to In Progress" / "Move to Resolved": the colors of those statuses' badges. */
 .button-status-progress {
   background: #dbeafe;
   color: #1e40af;
@@ -298,19 +289,19 @@
   .mobile-header {
     display: flex !important;
   }
-  
+
   .desktop-sidebar {
     display: none !important;
   }
-  
+
   .mobile-menu-overlay {
     display: block !important;
   }
-  
+
   .mobile-menu-drawer {
     display: flex !important;
   }
-  
+
   .mobile-menu-drawer.open {
     left: 0;
   }
@@ -320,15 +311,15 @@
   .mobile-header {
     display: none !important;
   }
-  
+
   .desktop-sidebar {
     display: flex !important;
   }
-  
+
   .mobile-menu-overlay {
     display: none !important;
   }
-  
+
   .mobile-menu-drawer {
     display: none !important;
   }
@@ -343,11 +334,7 @@
 
 /* Grid layouts */
 /* ------------------------------------------------------------------ */
-/* Dashboard counters (AdminStats.jsx). Sized by the summary card's    */
-/* own width (container queries), so the layout follows the space left */
-/* next to the sidebar, not the screen width.                          */
-/*   wide:   3 report cards | Create + Total, other totals in one row  */
-/*   medium: same, other totals in a 2x2 grid (portrait tablets)       */
+
 /*   narrow: stacked; Create + Total first (phones)                    */
 /* ------------------------------------------------------------------ */
 .dash-summary {
@@ -395,7 +382,7 @@
   border-radius: 14px;
   font: inherit;
   text-align: left;
-  /* Colors of the "SafeConnect Admin" badge above the welcome line. */
+
   color: #B91C1C;
   cursor: pointer;
   transition: transform .15s, box-shadow .15s, background .15s;
@@ -412,8 +399,6 @@
   outline-offset: 2px;
 }
 
-/* Report counts: each in its report type's color (--stat-color / --stat-rgb
-   from AdminStats.jsx), like the resident page's report cards. */
 .dash-stat-filled {
   --stat-color: #B91C1C;
   --stat-rgb: 185, 28, 28;
@@ -429,8 +414,6 @@
 .dash-stat-filled .dash-stat-icon {
   color: var(--stat-color);
 }
-
-
 
 /* Other totals: white with a maroon outline. */
 .dash-stat-outline {
@@ -448,7 +431,6 @@
   color: #6B2C3E;
 }
 
-/* Label on top (full width, so words don't break), then number + icon. */
 .dash-stat-bottom {
   display: flex;
   align-items: flex-end;
@@ -528,7 +510,6 @@
   text-align: center;
 }
 
-/* Icon beside the "Total Reports" label, the number below. */
 .dash-stats-total-head {
   display: inline-flex;
   align-items: center;
@@ -544,7 +525,6 @@
   font-weight: 600;
 }
 
-/* Phones (compact): no counters, so Create + Total Reports fill the width. */
 .dash-stats.is-compact {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "side";
@@ -578,7 +558,6 @@
   line-height: 1;
 }
 
-/* Medium (portrait tablets): the other totals in a 2x2 grid beside Total Reports. */
 @container (max-width: 860px) {
   .dash-stats,
   .dash-stats-reports,
@@ -629,7 +608,6 @@
   }
 }
 
-/* Portrait tablets with the sidebar open (~450px): smaller report cards. */
 @container (max-width: 640px) {
   .dash-stats-reports .dash-stat {
     padding: 10px;
@@ -654,7 +632,6 @@
     display: none;
   }
 
-  /* Keep "Total Reports" on one line beside its icon in the narrow column. */
   .dash-stats-total {
     padding: 16px 10px;
   }
@@ -673,8 +650,6 @@
   }
 }
 
-/* Narrow (phones): one column. Create, then a short Total Reports bar,
-   then the report counts in a row of three and the others two per row. */
 @container (max-width: 420px) {
   .dash-stats {
     grid-template-columns: minmax(0, 1fr);
@@ -704,7 +679,6 @@
     display: inline-block;
   }
 
-  /* Capitals don't fit two-per-row on a phone ("ANNOUNCEMENTS"). */
   .dash-stat-outline .dash-stat-label {
     font-size: 12px;
     text-transform: none;
@@ -787,7 +761,7 @@
   100% { transform: rotate(360deg); }
 }
 /* ------------------------------------------------------------------ */
-/* Admin header / page body (were inline styles; desktop values).     */
+
 /* ------------------------------------------------------------------ */
 .admin-header {
   padding: 18px 28px;
@@ -814,12 +788,9 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Phones. The admin panel is meant for computers, but it should still */
-/* be usable on a phone: narrower margins, stacked filters and cards.  */
+
 /* ------------------------------------------------------------------ */
 @media (max-width: 768px) {
-  /* Page frame: .main-content already pads 20px; drop that and use a
-     slim margin so cards get the width. */
   .main-content {
     padding: 0;
   }
@@ -834,8 +805,6 @@
     overflow-wrap: break-word;
   }
 
-  /* Phones: the EN / TL switch is in the menu drawer, so the page title
-     (longer in Tagalog) keeps the room and wraps onto a second line. */
   .admin-header-lang {
     display: none !important;
   }
@@ -844,8 +813,6 @@
     padding: 14px 12px 24px;
   }
 
-  /* Search + filters: search on its own line, filters two per line, the
-     action button (New Announcement / Generate Report) full width. */
   .lv-filters {
     display: grid !important;
     grid-template-columns: 1fr 1fr;
@@ -883,8 +850,6 @@
     justify-content: center;
   }
 
-  /* Archive bar (ArchiveToolbar.jsx): Active / Archived as two equal halves
-     across the width, the auto-archive setting on its own line below. */
   .archive-toolbar {
     flex-direction: column;
     align-items: stretch !important;
@@ -899,8 +864,6 @@
     flex: 1;
   }
 
-  /* The setting's label (long in Tagalog) wraps; the dropdown gets its own
-     full-width line under it. */
   .archive-toolbar-setting {
     flex-wrap: wrap;
     gap: 6px !important;
@@ -917,9 +880,6 @@
     max-width: none;
   }
 
-  /* Tables (shared/Table.jsx): each row becomes a card. The first cell (the
-     name) goes on top; every other cell gets its column name as a label
-     (data-label) and a full-width line, so dropdowns are readable. */
   .admin-table thead {
     display: none;
   }
@@ -968,7 +928,6 @@
     min-width: 0 !important;
   }
 
-  /* Card lists: Announcements narrows them to 70% on desktop. */
   .lv-cards {
     width: 100% !important;
     margin: 0 !important;
@@ -978,9 +937,6 @@
     padding: 16px !important;
   }
 
-  /* Report cards: title + "View details" on top, status control on its
-     own full-width line. The accent bar is pinned to the left edge so it
-     still spans the whole wrapped card. */
   .report-card {
     position: relative;
   }
@@ -1048,8 +1004,7 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Admin bell panel (AdminNotificationPanel.jsx): the residents' panel  */
-/* style. The close button is only needed on phones.                    */
+
 /* ------------------------------------------------------------------ */
 .admin-notif-wrap .panel-dropdown {
   top: calc(100% + 10px);
@@ -1065,8 +1020,6 @@
   display: none;
 }
 
-/* Phones: a card under the sticky header, spanning the screen with a small
-   margin, like the residents' bell on phones. */
 @media (max-width: 768px) {
   .admin-notif-wrap .panel-dropdown {
     position: fixed;

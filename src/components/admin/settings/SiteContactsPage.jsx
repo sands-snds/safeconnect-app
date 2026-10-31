@@ -7,17 +7,6 @@ import DonationFooter from "../../shared/DonationFooter";
 import PhoneNumberInput from "./PhoneNumberInput";
 import { tx } from "../../../i18n/adminText";
 
-// Content > Page Contacts (Admins only): edits what the public site shows,
-// in two groups:
-//   Call button
-//   - Emergency contacts: the floating call button (landing + resident pages)
-//   Footer
-//   - Barangay officials: the footer's "Barangay Officials" column
-//   - Emergency hotline: the footer's "Emergency Hotline" column (its own
-//     list, without the barangay officials)
-//   - Socials: the footer's support email and Facebook page
-// Saved with PUT /api/site-content (backend/services/siteContentService.js).
-
 const ICON_NAMES = {
   "bi-telephone-fill": "Phone",
   "bi-shield-fill-exclamation": "Emergency",
@@ -64,7 +53,6 @@ const iconButton = (danger) => ({
   justifyContent: "center"
 });
 
-// Title above each group of sections (Call Button, Footer).
 const GroupHeading = ({ icon, title, children }) => (
   <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0 12px" }}>
     <span style={{ width: 38, height: 38, borderRadius: 10, background: "#FDECEC", color: "#B91C1C", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
@@ -77,10 +65,8 @@ const GroupHeading = ({ icon, title, children }) => (
   </div>
 );
 
-// Every text box is up to 40 characters (the Facebook link is longer).
 const TEXT_MAX = 40;
 
-// Asks before removing anything; resolves true to go ahead.
 const confirmRemove = (what) =>
   confirmPopup({
     type: "danger",
@@ -141,14 +127,12 @@ const SiteContactsPage = () => {
       return next;
     }));
 
-  // People a caller can choose between for one contact (e.g. Barangay Sta. Fe).
   const setChoices = (index, fn) =>
     setContacts((list) => list.map((c, i) => (i === index ? { ...c, choices: fn(c.choices || []) } : c)));
 
   const updateOfficial = (index, patch) =>
     setOfficials((list) => list.map((o, i) => (i === index ? { ...o, ...patch } : o)));
 
-  // Removes list[index] (via setList) after the Admin confirms.
   const removeAt = async (setList, index, what) => {
     if (await confirmRemove(what)) setList((l) => l.filter((_, j) => j !== index));
   };
@@ -238,7 +222,6 @@ const SiteContactsPage = () => {
                 {(() => {
                   const custom = !options.colors.some((p) => p.toLowerCase() === (c.color || "").toLowerCase());
                   return (
-                    // The browser's own color picker, opened by the + button.
                     <label
                       title={tx("Custom color")}
                       aria-label={tx("Custom color")}
@@ -260,7 +243,6 @@ const SiteContactsPage = () => {
               <button type="button" style={iconButton()} title={tx("Move up")} disabled={i === 0} onClick={() => setContacts((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
               <button type="button" style={iconButton()} title={tx("Move down")} disabled={i === draft.emergencyContacts.length - 1} onClick={() => setContacts((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
               {c.number === "911" ? (
-                // 911 can't be removed, only hidden from the call button.
                 <button
                   type="button"
                   role="switch"
@@ -278,7 +260,6 @@ const SiteContactsPage = () => {
               )}
             </div>
 
-            {/* Optional: let the caller choose who to call */}
             <div style={{ flex: "1 1 100%", marginLeft: 48, minWidth: 0, background: "#f9fafb", border: "1px solid #f3f4f6", borderRadius: 10, padding: "10px 12px" }}>
               <div style={{ ...labelStyle, marginBottom: 2 }}>{tx("People to choose from (optional)")}</div>
               <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>
@@ -475,7 +456,6 @@ const SiteContactsPage = () => {
   );
 };
 
-// How the call button's list and the footer will look with these (unsaved) changes.
 const ContactsPreview = ({ draft, onClose }) => (
   <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
     <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label={tx("Preview")} style={{ background: "#fff", borderRadius: 14, width: "min(1100px, 100%)", maxHeight: "90vh", overflowY: "auto" }}>

@@ -9,7 +9,7 @@ const { logActivity } = require("../middleware/activityLogger");
 // Admin-only: these were previously public.
 router.use(verifyToken, verifyAdmin);
 
-// System > Sign-in Logs / Admin Logs: super admin only.
+
 router.get("/signin", verifySuperAdmin, logController.getSigninLogs);
 
 router.get("/admin", verifySuperAdmin, logController.getAdminLogs);
@@ -25,7 +25,7 @@ router.get("/archive-settings/:log", verifySuperAdmin, logController.getArchiveS
 router.put("/archive-settings/:log", verifySuperAdmin,
     logActivity("Changed archive settings", describePeriod), logController.updateArchiveSettings);
 
-// Called by the admin panel's Logout button (every admin) so the log shows when an admin left.
+
 router.post("/admin/logout", logController.logAdminLogout);
 
 module.exports = router;

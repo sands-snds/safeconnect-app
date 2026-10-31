@@ -1,30 +1,30 @@
 const db = require("../config/db");
 
-// Contact details shown on the public site, editable by an Admin
-// (super_admin) under Content > Page Contacts:
-//   emergencyContacts - the floating call button's list. A contact may have
-//                       "choices" ([{ name, number }], up to 4): the call
-//                       button then lets the caller pick who to call.
-//   footerHotlines    - the footer's "Emergency Hotline" column
-//                       ([{ label, number }]), edited separately so it
-//                       doesn't repeat the barangay officials
-//   officials         - the footer's "Barangay Officials" column:
-//                       { position, firstName, middleName, lastName, number,
-//                       numberType } plus `name` (all of it in one line, for display)
-//   socials           - the footer's support email and Facebook page
-// Stored as JSON in system_settings (key "site_contacts"). Until an Admin
-// saves changes, DEFAULT_CONTENT is used.
-//
-// Call button and officials' numbers are Philippine numbers saved as
-// "+63..." with a numberType: "mobile" (10 digits after +63, starting with 9)
-// or "landline" (9 digits after +63). "911" stays as is. The footer
-// hotlines are free text. Text fields are up to 40 characters (the
-// Facebook link is longer).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const SETTING_KEY = "site_contacts";
 
-// sublabelKey: a translation key for the default descriptions, so they keep
-// showing in Tagalog. It's dropped when an Admin edits the description.
+
+
 const DEFAULT_CONTENT = {
     emergencyContacts: [
         { id: "police", label: "911 Emergency", description: "National Emergency Hotline", sublabelKey: "police", number: "911", icon: "bi-shield-fill-exclamation", color: "#dc2626" },
@@ -33,15 +33,15 @@ const DEFAULT_CONTENT = {
         { id: "dswd", label: "DSWD", description: "Social Welfare & Development", sublabelKey: "dswd", number: "+63464165393", numberType: "landline", icon: "bi-people-fill", color: "#ea580c" },
         {
             id: "barangay", label: "Barangay Sta. Fe", description: "Barangay Emergency Line", sublabelKey: "barangay", number: "+639354984838", numberType: "mobile", icon: "bi-house-fill", color: "#7c3aed",
-            // The caller picks who to call (see "choices" below).
+            
             choices: [
                 { name: "PB Emmanuel B. Noora", number: "+639354984838", numberType: "mobile" },
                 { name: "Sec Hazel R. Adriano", number: "+639456355303", numberType: "mobile" }
             ]
         }
     ],
-    // The national and city lines only: the barangay's own numbers are in
-    // the officials column next to it.
+    
+    
     footerHotlines: [
         { label: "911 Emergency", number: "911" },
         { label: "Dasmariñas Police", number: "+63462420002" },
@@ -63,7 +63,7 @@ const DEFAULT_CONTENT = {
     }
 };
 
-// Icons and preset colors an Admin can pick for an emergency contact.
+
 const CONTACT_ICONS = [
     "bi-telephone-fill", "bi-shield-fill-exclamation", "bi-shield-fill", "bi-heart-pulse-fill",
     "bi-people-fill", "bi-house-fill", "bi-fire", "bi-hospital-fill", "bi-truck", "bi-lightning-charge-fill"
@@ -72,9 +72,9 @@ const CONTACT_COLORS = ["#dc2626", "#1d4ed8", "#059669", "#ea580c", "#7c3aed", "
 
 const LIMITS = { emergencyContacts: 12, footerHotlines: 12, officials: 20, choices: 4 };
 
-// The single Barangay line used before callers could choose between the
-// Punong Barangay and the Secretary. Saved contacts still on it are moved
-// to the new choices (an Admin's other edits are kept).
+
+
+
 const OLD_BARANGAY_NUMBER = "+639929474309";
 const upgradeBarangayContact = (contacts) => contacts.map((c) => {
     const def = DEFAULT_CONTENT.emergencyContacts.find((d) => d.id === "barangay");
@@ -86,7 +86,7 @@ const TEXT_MAX = 40;
 
 // Philippine numbers: digits after +63 by type.
 const NUMBER_DIGITS = { mobile: 10, landline: 9 };
-// "+63 917 123 4567", "09171234567", "639171234567" -> "9171234567".
+
 const localDigits = (value) => {
     const raw = String(value ?? "").trim();
     if (raw.startsWith("+63")) return raw.slice(3).replace(/\D/g, "");
@@ -97,7 +97,7 @@ const localDigits = (value) => {
 };
 const guessType = (d) => (d.length === 10 && d.startsWith("9") ? "mobile" : "landline");
 
-// Checks one number against its type. Returns { number, numberType } or { error }.
+
 function checkNumber(raw, type, what) {
     if (/[a-z]/i.test(String(raw ?? ""))) return { error: `${what}: the number can only have digits.` };
     const d = localDigits(raw);
@@ -112,15 +112,15 @@ function checkNumber(raw, type, what) {
     return { number: `+63${d}`, numberType };
 }
 
-// Saved before numbers had a type: "09354984838" -> "+639354984838" (mobile).
+
 const upgradeNumber = (entry) => {
     if (!entry || entry.numberType || String(entry.number).trim() === "911") return entry;
     const d = localDigits(entry.number);
     return d ? { ...entry, number: `+63${d}`, numberType: guessType(d) } : entry;
 };
 
-// Saved before officials had separate fields: "Chief Tanod Gaudencio C. Dela
-// Cruz" -> position "Chief Tanod", first "Gaudencio", middle "C.", last "Dela Cruz".
+
+
 const KNOWN_POSITIONS = ["Punong Barangay", "Chief Tanod", "SK Chairman", "Secretary", "Treasurer", "Kagawad", "PB", "Sec", "BHW", "BNS"];
 const composeName = (o) => [o.position, o.firstName, o.middleName, o.lastName].filter(Boolean).join(" ");
 const splitOfficialName = (name) => {
@@ -149,7 +149,7 @@ const upgradeContent = (content) => ({
 });
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// setting_value started as VARCHAR(255), too small for this JSON.
+
 async function ensureSchema() {
     await db.query(`
         CREATE TABLE IF NOT EXISTS system_settings (
@@ -185,7 +185,7 @@ async function getContent() {
 
 const text = (v, max) => String(v ?? "").trim().slice(0, max);
 
-// Cleans what the editor sent. Returns { content } or { error }.
+
 function validate(input = {}) {
     const contactsIn = Array.isArray(input.emergencyContacts) ? input.emergencyContacts : [];
     const officialsIn = Array.isArray(input.officials) ? input.officials : [];
@@ -214,8 +214,8 @@ function validate(input = {}) {
         }
         if (choices.length > LIMITS.choices) return { error: `"${label}" can list up to ${LIMITS.choices} people to choose from.` };
 
-        // "911" stays as it is. With people to choose from, the contact's own
-        // number may be left empty: the first person's number is used then.
+        
+        
         let numbered;
         if (String(c.number ?? "").trim() === "911") {
             numbered = { number: "911" };
@@ -234,14 +234,14 @@ function validate(input = {}) {
             description,
             ...numbered,
             icon: CONTACT_ICONS.includes(c.icon) ? c.icon : CONTACT_ICONS[0],
-            // A preset, or any custom #rrggbb picked with the color picker.
+            
             color: typeof c.color === "string" && /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : CONTACT_COLORS[0]
         };
-        // Keep the translation key only while the description is unchanged.
+        
         const original = DEFAULT_CONTENT.emergencyContacts.find((d) => d.sublabelKey && d.sublabelKey === c.sublabelKey);
         if (original && original.description === description) entry.sublabelKey = original.sublabelKey;
         if (choices.length) entry.choices = choices;
-        // 911 can't be removed; it can be hidden from the call button.
+        
         if (c.hidden === true) entry.hidden = true;
         emergencyContacts.push(entry);
     }

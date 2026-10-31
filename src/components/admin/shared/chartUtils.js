@@ -1,6 +1,3 @@
-// Chart helpers used by the dashboard's pie/status charts.
-// Merged from dashboard/chartUtils.js + dashboard/chartConstants.js
-
 export const STATUS_COLORS = {
   Received: "#fbbf24",
   Pending: "#fbbf24",
@@ -28,7 +25,6 @@ export const FALLBACK_COLORS = [
 export const getSeverityColor = severity =>
   SEVERITY_COLORS[severity] || "#6b7280";
 
-// Groups a list of records by a field and returns [{ name, value }] for pie charts
 export const buildPieData = (items, key) => {
   const counts = {};
 

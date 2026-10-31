@@ -3,9 +3,6 @@ import LocationPickerMap from "../../../shared/location/LocationPickerMap";
 import { isWithinSantaFe } from "../../../shared/location/santaFeArea";
 import { tx } from "../../../../i18n/adminText";
 
-// Where the resident pinned the report, for the report details view.
-// Renders nothing for reports without a pin (older reports, or typed
-// address only).
 const ReportLocationMap = ({ latitude, longitude }) => {
   const lat = Number(latitude);
   const lng = Number(longitude);

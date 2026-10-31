@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // Add this line
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './styles/App.css';
 import './styles/resident.css';
-import './components/shared/installApp'; // starts listening for the browser's install prompt early
+import './components/shared/installApp';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

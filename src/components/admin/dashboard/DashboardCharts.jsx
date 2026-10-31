@@ -10,7 +10,7 @@ export default function DashboardCharts({
 }) {
     return (
         <div style={{ marginTop: "24px" }}>
-        {/* Exports the counts behind these pie charts: each category by status. */}
+
         <div
             style={{
                 display: "flex",
@@ -51,7 +51,6 @@ export default function DashboardCharts({
                 colorMap={STATUS_COLORS}
             />
 
-
             <PieChartCard
                 title={tx("Emergency Reports by Status")}
                 data={buildPieData(
@@ -60,19 +59,6 @@ export default function DashboardCharts({
                 )}
                 colorMap={STATUS_COLORS}
             />
-
-            {/*
-            <PieChartCard
-                title="Reports by Severity"
-                data={buildPieData(
-                    emergencyReports,
-                    "severity"
-                )}
-                colorMap={SEVERITY_COLORS}
-            />
-            */}
-
-            
 
         </div>
         <div
@@ -91,8 +77,7 @@ export default function DashboardCharts({
                 )}
                 colorMap={STATUS_COLORS}
             />
-            
-            
+
             </div>
         </div>
     );

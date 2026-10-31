@@ -1,6 +1,4 @@
-/* =====================================================
-   RESIDENT NAVBAR
-===================================================== */
+
 
 /* =============== MAIN NAVBAR ================ */
 
@@ -22,9 +20,7 @@
 }
 
 
-/* =====================================================
-   BRAND
-===================================================== */
+
 
 .resident-navbar .navbar-brand {
     display: flex;
@@ -47,7 +43,7 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* The logo is white: it sits straight on the maroon bar (no circle). */
+
 .resident-navbar .brand-icon {
     width: 42px;
     height: 42px;
@@ -67,9 +63,7 @@
 }
 
 
-/* =====================================================
-   DESKTOP NAVIGATION
-===================================================== */
+
 
 .resident-nav-links {
     display: flex;
@@ -114,9 +108,7 @@
 }
 
 
-/* =====================================================
-   DESKTOP NOTIFICATION BUTTON
-===================================================== */
+
 
 .icon-btn-wrapper {
     position: relative;
@@ -160,9 +152,7 @@
 }
 
 
-/* =====================================================
-   USER DROPDOWN
-===================================================== */
+
 
 .resident-user-menu-wrapper {
     position: relative;
@@ -259,9 +249,7 @@
 }
 
 
-/* =====================================================
-   RESPONSIVE (DESKTOP SECTION)
-===================================================== */
+
 
 @media (max-width: 768px) {
     .resident-nav-links {
@@ -270,7 +258,6 @@
 }
 
 @media (max-width: 480px) {
-
     .resident-navbar .navbar-brand {
         font-size: 1.1rem;
         gap: 0.5rem;
@@ -283,7 +270,6 @@
 }
 
 @media (max-width: 360px) {
-
     .resident-navbar .navbar-brand {
         font-size: 1rem;
         gap: 0.4rem;
@@ -299,9 +285,7 @@
     }
 }
 
-/* =====================================================
-   NOTIFICATION PANEL
-===================================================== */
+
 
 .panel-dropdown {
     position: absolute;
@@ -364,8 +348,7 @@
     gap: 10px;
 }
 
-/* Only relevant on the mobile full-screen layout (see the max-width: 768px
-   block below) -- there's no "outside" to tap to dismiss it there. */
+
 .panel-close-btn {
     display: none;
     border: none;
@@ -592,22 +575,17 @@
 }
 
 
-/* =====================================================
-   NEWS OVERLAY
-===================================================== */
+
 
 .news-fullscreen {
     position: fixed;
-    /* Sits below the always-visible navbar instead of covering it --
-       --resident-navbar-height is set from its real rendered height in
-       ResidentNavbar.jsx, so this stays flush at any screen size. */
+    
     top: var(--resident-navbar-height, 76px);
     left: 0;
     right: 0;
     bottom: 0;
     background: #f7f5f6;
-    /* Below the navbar's own dropdowns (notifications, user menu, mobile
-       drawer) so they still render on top of this panel when both are open. */
+    
     z-index: 900;
     display: flex;
     flex-direction: column;
@@ -699,8 +677,7 @@
     padding: clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 5vw, 4rem) 4rem;
 }
 
-/* Soft decorative blobs behind the feed -- matches the rest of the app's
-   redesigned sections (About/Services/Contact) instead of a flat grey page. */
+
 .news-fullscreen-body::before,
 .news-fullscreen-body::after {
     content: '';
@@ -748,9 +725,7 @@
 }
 
 
-/* =====================================================
-   ANNOUNCEMENT CARD
-===================================================== */
+
 
 .news-card {
     background: linear-gradient(180deg, #ffffff 0%, #fffdfb 100%);
@@ -797,8 +772,7 @@
     transform: scale(1.035);
 }
 
-/* Category + date chips floated on top of the photo, "glass" style so they
-   stay legible over any image. */
+
 .news-card-media-overlay {
     position: absolute;
     top: 14px;
@@ -823,7 +797,7 @@
     color: #4b5563 !important;
 }
 
-/* No image (or it failed to load): site / category placeholder */
+
 .news-card-placeholder {
     display: flex;
     flex-direction: column;
@@ -913,7 +887,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-size: 0.85rem;
 }
 
-/* Date and time posted: darker so it reads clearly. */
+
 .news-card-date {
     display: inline-flex;
     align-items: center;
@@ -959,9 +933,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     text-decoration: none;
 }
 
-/* =====================================================
-   LIKE / COMMENT / SHARE ENGAGEMENT BAR
-===================================================== */
+
 
 .news-card-engagement {
     display: grid;
@@ -1172,9 +1144,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     cursor: not-allowed;
 }
 
-/* On mobile the panel is a card under the header, spanning the screen
-   with a small margin (anchoring it to the bell overshot the left edge),
-   instead of a full-screen takeover. */
+
 @media (max-width: 768px) {
     .mobile-header-actions .panel-dropdown {
         position: fixed;
@@ -1200,9 +1170,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     }
 }
 
-/* =====================================================
-   MOBILE HEADER
-===================================================== */
+
 
 .mobile-header-actions {
     display: none;
@@ -1228,9 +1196,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 
-/* =====================================================
-   MOBILE MENU
-===================================================== */
+
 
 .mobile-nav-overlay {
     position: fixed;
@@ -1294,9 +1260,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 
-/* =====================================================
-   MOBILE NAV ITEMS
-===================================================== */
+
 
 .mobile-nav-item {
     color: white;
@@ -1340,9 +1304,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 
-/* =====================================================
-   MOBILE USER SECTION
-===================================================== */
+
 
 .mobile-user-section {
     margin-top: 2rem;
@@ -1363,13 +1325,9 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 
-/* =====================================================
-   MOBILE RESPONSIVE
-===================================================== */
+
 
 @media (max-width: 768px) {
-
-    /* Bell right beside the menu button, on the right of the header. */
     .mobile-header-actions {
         display: flex;
         margin-left: auto;
@@ -1381,16 +1339,13 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
         align-items: center;
         justify-content: center;
     }
-
 }
 
 @media (max-width: 360px) {
-
     .mobile-nav-menu {
         width: 100%;
         right: -100%;
     }
-
 }
 
 /* ─── Profile photo in the trigger button ─────────────────────────────────── */
@@ -1428,7 +1383,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     display: block;
 }
 
-/* Initials circle shown when no photo is uploaded */
+
 .resident-dropdown-avatar-initials {
     width: 44px;
     height: 44px;
@@ -1480,8 +1435,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-weight: 700;
     flex-shrink: 0;
 }
-/* YouTube-style threads: replies (e.g. from the barangay) hang under the
-   comment they answer, lined up with its text, with a show/hide toggle. */
+
 .news-thread {
     display: flex;
     flex-direction: column;
@@ -1521,7 +1475,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-size: 0.6rem;
 }
 
-/* Replies drop the card box so they read as part of the comment above. */
+
 .news-comment-reply .news-comment-body {
     background: transparent;
     border: none;
@@ -1550,11 +1504,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     border-radius: 999px;
 }
 
-/* =====================================================
-   NEWS PAGE: search + categories, weather, feed
-   Phones/tablets: toolbar, weather, feed (one column).
-   Desktop: toolbar + feed on the left, weather on the right.
-===================================================== */
+
 
 .news-fullscreen {
     background: linear-gradient(180deg, #f8f4f5 0%, #f4f1f2 100%);
@@ -1871,9 +1821,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .news-weather-tip i { font-size: 1.1rem; color: #2563eb; margin-top: 1px; }
 
-/* Desktop: the weather stays in view while the articles scroll. When the
-   column is taller than the window, NewsOverlay.jsx sets a negative top so it
-   scrolls until its bottom shows, then holds -- nothing is ever out of reach. */
+
 @media (min-width: 1100px) {
     .news-layout.with-weather .news-weather-slot {
         position: sticky;
@@ -1882,13 +1830,13 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     }
 }
 
-/* Desktop: the weather fills the right column (taller, roomier). */
+
 @media (min-width: 1100px) {
     .news-weather { padding: 26px; gap: 20px; }
     .news-weather-tip { margin-top: auto; }
 }
 
-/* Phones: compact header, one swipeable row of category tabs. */
+
 @media (max-width: 600px) {
     .news-layout { gap: 16px; }
     .news-filters {
@@ -1935,8 +1883,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .news-comment-form .news-reply-cancel:hover:not(:disabled) { background: #e5e7eb; }
 
-/* 7-day forecast: a row of day cards. Swipe it on phones; on computers drag
-   it, use the arrows, or scroll sideways with a trackpad. */
+
 .news-weather-week {
     background: rgba(255, 255, 255, 0.14);
     border-radius: 14px;
@@ -2009,7 +1956,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 .news-weather-days::-webkit-scrollbar-button,
 .news-weather-hours::-webkit-scrollbar-button { display: none; }
 
-/* While dragging with a mouse: follow the pointer exactly, snap on release. */
+
 .news-weather-days.dragging,
 .news-weather-hours.dragging {
     cursor: grabbing;
@@ -2018,8 +1965,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     user-select: none;
 }
 
-/* Whole cards only: 4 per view (7 on tablets, where they all fit). Each day
-   is a button: pick one to see it hour by hour below. */
+
 .news-weather-days li {
     flex: 0 0 calc((100% - 3 * 8px) / 4);
     min-width: 0;
@@ -2054,7 +2000,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 .news-weather-day-max { font-size: 0.95rem; font-weight: 800; }
 .news-weather-day-min { font-size: 0.78rem; opacity: 0.8; }
 
-/* Hour by hour for the picked day: time, weather, temperature, rain. */
+
 .news-weather-hourly {
     margin-top: 12px;
     padding-top: 12px;
@@ -2126,7 +2072,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 .swipe-archive-bg.right { justify-content: flex-end; }
 .swipe-archive.leaving { pointer-events: none; }
 
-/* "Notification archived · Undo" under the bell's list */
+
 .panel-undo {
     flex-shrink: 0;
     display: flex;
@@ -2218,9 +2164,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     padding: 0 clamp(1rem, 5vw, 4rem) 5rem;
 }
 
-/* Tabs, filters and the toolbar. The page's top padding lives here so it
-   looks the same at first; once scrolled it sticks with only a small gap
-   above, on the page background so the list slides under it. */
+
 .np-sticky {
     position: sticky;
     top: calc(12px - var(--np-pad-top));
@@ -2231,9 +2175,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .np-wrap { max-width: 1000px; margin: 0 auto; }
 
-/* Same layout as the admin Notifications page: Inbox / Archived on the
-   left, All / Unread / Read on the right, then one card -- toolbar on top,
-   the list under it. */
+
 .np-topbar {
     display: flex;
     flex-wrap: wrap;
@@ -2471,8 +2413,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 .np-item-main:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 4px; border-radius: 6px; }
 .np-item-dot { margin-top: 9px; flex-shrink: 0; }
 
-/* An opened notification: its date and what you can do with it, lined up
-   with the text above (checkbox 18 + icon 38 + gaps). */
+
 .np-detail { padding: 0 16px 16px 96px; }
 .np-detail-date { margin: 0 0 10px; font-size: 0.78rem; color: #6b7280; }
 .np-detail-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -2547,8 +2488,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     padding: 2px 4px;
 }
 
-/* Phones: tabs fill the row, the actions get their own row, and an opened
-   notification's buttons use the full width. Swipe a row to archive it. */
+
 @media (max-width: 600px) {
     .np-swipe-hint { display: block; }
     .np-topbar { flex-direction: column; align-items: stretch; gap: 10px; }
@@ -2567,7 +2507,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     .np-snack { bottom: 88px; }
 }
 
-/* Where a notification takes you: the report / article / reply glows. */
+
 @keyframes sc-target-glow {
     0%, 100% { box-shadow: 0 0 0 0 rgba(107, 44, 62, 0); }
     15%, 60% { box-shadow: 0 0 0 4px rgba(107, 44, 62, 0.35), 0 10px 26px rgba(107, 44, 62, 0.18); }

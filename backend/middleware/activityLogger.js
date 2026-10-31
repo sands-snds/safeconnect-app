@@ -1,21 +1,11 @@
 const db = require("../config/db");
 const AdminActivity = require("../models/AdminActivity");
 
-// Route-level admin activity logging. Put after verifyAdmin:
-//
-//   router.patch("/:id/status", verifyToken, verifyAdmin,
-//       logActivity("Updated user status", describeFn), controller.updateStatus);
-//
-// describe(req) may be async and returns the details text. It runs BEFORE
-// the controller (so e.g. a deleted announcement's title can still be read),
-// but the entry is only written once the response is sent, and only if the
-// request succeeded (2xx/3xx and the JSON body didn't say success: false).
 const logActivity = (action, describe) => async (req, res, next) => {
     let details = null;
     try {
         details = describe ? await describe(req) : null;
     } catch {
-        // details are best-effort; still log the action itself
     }
 
     let body;
@@ -36,7 +26,6 @@ const logActivity = (action, describe) => async (req, res, next) => {
     next();
 };
 
-// Reads the report reference (e.g. "ER-2026-0001") for nicer log details.
 const describeStatusChange = (table, label) => async (req) => {
     let ref = `#${req.params.id}`;
     try {

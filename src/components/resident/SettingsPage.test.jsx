@@ -20,7 +20,7 @@ const ROW = {
   email_address: 'juan@example.com', role: 'resident', status: 'Active', created_at: '2026-01-15T00:00:00Z', photoUrl: null
 };
 
-// jsdom can't decode images or draw on canvases; stand-ins for the photo editor.
+
 class FakeImage {
   constructor() { this.naturalWidth = 1200; this.naturalHeight = 800; }
   set src(v) { this._src = v; setTimeout(() => this.onload && this.onload(), 0); }

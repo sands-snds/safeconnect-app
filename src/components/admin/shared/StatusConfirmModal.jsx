@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { tx } from "../../../i18n/adminText";
 
-// Shared confirmation dialog for report status changes (emergency,
-// assistance, petty crime). Also shows the canned reply that will be sent
-// to the reporter, if any, so the admin knows what the resident will see.
-// Dismissing asks for a reason, which is sent to the reporter
-// (backend/utils/statusWorkflow.js: validateDismissalReason, dismissalMessage).
 const STATUS_REPLY_PREVIEW = {
     "In Progress": "Help is on the way. Our responders have received your report and are on their way.",
     "Resolved": "Your report has been marked as resolved. Thank you for helping keep our community safe."

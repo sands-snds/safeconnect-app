@@ -3,15 +3,10 @@ const AdminActivity = require("../models/AdminActivity");
 const adminPresence = require("../services/adminPresence");
 const LogArchive = require("../services/logArchiveService");
 
-// ?archived=1 lists the archived entries instead of the current ones.
 const wantsArchived = (req) => req.query.archived === "1" || req.query.archived === "true";
 
-// Residents only. Each successful sign-in carries `activity`: what that
-// resident did until their next successful sign-in (signing out,
-// submitting / editing / deleting reports), oldest first.
 const ResidentActivity = require("../models/ResidentActivity");
 
-// Splits each resident's activity between their successful sign-ins.
 const withActivity = async (logs) => {
     const successes = logs.filter((l) => l.status === "Success");
     if (!successes.length) return logs.map((l) => ({ ...l, activity: [] }));
@@ -20,7 +15,6 @@ const withActivity = async (logs) => {
     const since = successes.reduce((min, l) => (new Date(l.timestamp) < min ? new Date(l.timestamp) : min), new Date());
     const events = await ResidentActivity.forEmailsSince(emails, since);
 
-    // Sign-in times per email, oldest first, to find where each session ends.
     const starts = {};
     for (const l of successes) (starts[l.email_address] ||= []).push(new Date(l.timestamp).getTime());
     for (const list of Object.values(starts)) list.sort((a, b) => a - b);
@@ -50,8 +44,6 @@ exports.getSigninLogs = async (req, res) => {
     }
 };
 
-// { admins: one row per admin account with online state + latest activity,
-//   activity: the most recent admin actions, newest first }
 exports.getAdminLogs = async (req, res) => {
     try {
         const [summaries, activity] = await Promise.all([
@@ -61,8 +53,7 @@ exports.getAdminLogs = async (req, res) => {
 
         const admins = summaries.map((a) => ({
             ...a,
-            // A logout as the latest action means they've left, even if they
-            // were seen moments ago.
+
             online: a.latest_action !== "Logged out" && adminPresence.isOnline(a.id),
             last_seen: adminPresence.getLastSeen(a.id)
         }));
@@ -77,7 +68,6 @@ exports.getAdminLogs = async (req, res) => {
     }
 };
 
-// GET /logs/archive-settings/:log  (log = signin | admin) -> { days }
 exports.getArchiveSettings = async (req, res) => {
     if (!LogArchive.LOGS[req.params.log]) {
         return res.status(404).json({ success: false, message: "Unknown log." });
@@ -91,7 +81,6 @@ exports.getArchiveSettings = async (req, res) => {
     }
 };
 
-// PUT /logs/archive-settings/:log  body { days: 0 | 30 | 90 | 180 | 365 }
 exports.updateArchiveSettings = async (req, res) => {
     const days = Number(req.body.days);
     if (!LogArchive.LOGS[req.params.log]) {
@@ -102,7 +91,7 @@ exports.updateArchiveSettings = async (req, res) => {
     }
     try {
         await LogArchive.setAutoArchiveDays(req.params.log, days);
-        // Apply the new period right away instead of waiting for the next run.
+
         const archived = await LogArchive.runAutoArchive(req.params.log);
         res.json({ success: true, days, archived });
     } catch (err) {

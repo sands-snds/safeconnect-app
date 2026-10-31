@@ -4,7 +4,7 @@ import LandingPage from './LandingPage';
 import { LanguageProvider } from '../i18n/LanguageContext';
 import { fetchCurrentUser, hasStoredToken } from '../Services/api';
 
-// The page's sections aren't under test (and pull in the map/carousel).
+
 jest.mock('../components/landing/Navbar', () => () => null);
 jest.mock('../components/landing/Hero', () => () => <p>Home page</p>);
 jest.mock('../components/landing/Services', () => () => null);
@@ -31,7 +31,7 @@ beforeEach(() => {
 });
 
 test('right after logging out: shows the home page, checks nothing, goes nowhere', async () => {
-  hasStoredToken.mockReturnValue(true); // e.g. an old admin sign-in still in storage
+  hasStoredToken.mockReturnValue(true); 
   renderAt({ pathname: '/', state: { signedOut: true } });
   expect(await screen.findByText('Home page')).toBeInTheDocument();
   expect(fetchCurrentUser).not.toHaveBeenCalled();

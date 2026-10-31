@@ -28,10 +28,7 @@ import {
     buildAssistanceRequestFromForm
 } from "../shared/formUtils";
 
-// isSuperAdmin: only super admins load System tab data (users, sign-in
-// logs, admin logs) -- the backend refuses it for normal admins.
 export default function useAdminData({ isSuperAdmin = false } = {}) {
-
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [lastUpdate, setLastUpdate] = useState(null);
@@ -87,8 +84,6 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         setUnreadCount(0);
     };
 
-    // Updates local state right away so the badge drops immediately; the
-    // next refresh re-syncs from the backend if the request failed.
     const markOneRead = async (id) => {
         const target = notifications.find(n => n.id === id);
         if (!target || target.isRead) return;
@@ -98,7 +93,6 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         await markNotificationRead(id).catch(() => false);
     };
 
-    // Notifications page: several at once (selected with the checkboxes).
     const markManyRead = async (ids) => {
         const ok = await markNotificationsRead(ids);
         if (ok) await loadNotifications();
@@ -155,8 +149,6 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         }
     };
 
-    // View-specific loaders, used by the header reload button so it only
-    // re-fetches what's actually showing on screen instead of everything.
     const VIEW_LOADERS = {
         "dashboard": [
             loadEmergencyReports, loadAssistanceRequests, ...systemLoaders,
@@ -186,13 +178,10 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
 
     // reason: only for "Dismissed".
     const updateStatus = async (id, newStatus, type, reason) => {
-
         if (!["emergency", "assistance", "pettyCrime", "users"].includes(type)) {
             return false;
         }
 
-        // api.js's updateStatus already knows the right URL + HTTP method
-        // per type (see its own comment) -- no need to look one up here.
         const success = await updateSheetStatus(
             type,
             id,
@@ -228,8 +217,6 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         return true;
     };
 
-    // archived: true to archive a Resolved report, false to restore it.
-    // Returns { success, message }.
     const setReportArchived = async (id, type, archived) => {
         const result = archived ? await archiveReport(type, id) : await restoreReport(type, id);
         if (!result?.success) return result;
@@ -243,9 +230,6 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         return result;
     };
 
-    // Returns { success, message } so the Users table can show the reason
-    // when the backend refuses (e.g. changing your own role).
-    // System > Users: archive a Closed account (or restore it).
     const setUserArchived = async (id, archived) => {
         const ok = await setUserArchivedApi(id, archived);
         if (ok) {
@@ -260,19 +244,17 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         if (!result?.success) return result;
 
         setRegisteredUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
-        // Admin Logs lists admin accounts, so it changes too.
+
         loadAdminLogs();
         return result;
     };
 
     const handleFormSubmit = async (e, type) => {
-
         e.preventDefault();
 
         const formData = new FormData(e.target);
 
         if (type === "emergency") {
-
             const newReport = buildEmergencyReportFromForm(formData);
 
             const result = await createEmergencyReport(newReport);
@@ -282,13 +264,10 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
                 return;
             }
 
-            // Refetch rather than fabricate a local record — the backend
-            // generates the real id, report reference, and timestamp.
             await loadEmergencyReports();
         }
 
         if (type === "assistance") {
-
             const newRequest = buildAssistanceRequestFromForm(formData);
 
             const result = await createAssistanceRequest(newRequest);

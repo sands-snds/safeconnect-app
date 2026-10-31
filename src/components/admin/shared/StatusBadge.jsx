@@ -1,9 +1,6 @@
 import React from 'react';
 import { tx } from "../../../i18n/adminText";
 
-// Colored pill for any status value in the admin tables (sign-in logs,
-// users, reports, etc). Falls back to a neutral gray for anything not
-// listed below, so new statuses never crash this component.
 const STATUS_STYLES = {
   Success: { bg: '#d1fae5', color: '#065f46' },
   Failed: { bg: '#fee2e2', color: '#991b1b' },

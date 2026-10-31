@@ -20,8 +20,8 @@ const getByPath = (dict, key) =>
 export function LanguageProvider({ children }) {
   const [storedLanguage, setStoredLanguage] = useState(readStoredLanguage);
 
-  // A signed-in person's language is also saved to their account, so it
-  // follows them to other devices (useSyncedState loads it there).
+  
+  
   const lastLocalChange = useRef(0);
   const pushedLocal = useRef(false);
 
@@ -33,22 +33,19 @@ export function LanguageProvider({ children }) {
     try {
       localStorage.setItem(STORAGE_KEY, lang);
     } catch {
-      // Storage unavailable (private browsing, etc.) -- the choice just
-      // won't persist across reloads, which is a fine fallback.
     }
   }, []);
 
   const language = storedLanguage || 'en';
 
-  // Apply the account's language when it arrives (or changes on another
-  // device). A change made here in the last few seconds wins, so a refresh
-  // that started before it was saved can't undo it.
+  
+  
+  
   const storedRef = useRef(storedLanguage);
   storedRef.current = storedLanguage;
   useEffect(() => subscribeSyncedState(() => {
     const synced = getSyncedLanguage();
     if (!synced) {
-      // Chosen before languages were synced: save it to the account once.
       if (storedRef.current && !pushedLocal.current) {
         pushedLocal.current = true;
         saveLanguagePreference(storedRef.current);

@@ -14,7 +14,7 @@ const { logActivity } = require("../middleware/activityLogger");
 router.use(verifyToken);
 router.use(verifyAdmin);
 
-// Exports of System tab data are super admin only, like the tabs themselves.
+
 const SYSTEM_EXPORTS = ["users", "signinLogs", "adminLogs"];
 router.use("/:format/:type", (req, res, next) =>
     SYSTEM_EXPORTS.includes(req.params.type) ? verifySuperAdmin(req, res, next) : next()
@@ -34,8 +34,8 @@ const EXPORT_NAMES = {
 const describeExport = (format) => (req) =>
     `${EXPORT_NAMES[req.params.type] || req.params.type} (${format})`;
 
-// :type is one of: reportsOverTime, statusSummary, emergency, assistance, pettyCrime, users, signinLogs, adminLogs
-// (see ExportService.validTypes in exportService.js for the source of truth)
+
+
 router.get(
     "/pdf/:type",
     logActivity("Generated report", describeExport("PDF")),

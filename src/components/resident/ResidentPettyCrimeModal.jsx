@@ -14,8 +14,8 @@ const CRIME_TYPES = [
   { key: 'harassment', value: 'Harassment' },
   { key: 'other', value: 'Other' }
 ];
-// A photo/video is optional for these crime types and required for the rest.
-// Keep in sync with PHOTO_OPTIONAL_CRIME_TYPES in backend/services/pettyCrimeService.js.
+
+
 const PHOTO_OPTIONAL_CRIME_TYPES = ['Theft', 'Suspicious Activity', 'Harassment'];
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
@@ -25,19 +25,19 @@ const SERVICE_AREA = {
   lat: 14.3198,
   lng: 120.9644
 };
-// Anti-spam: minimum time a resident must wait between report submissions.
+
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_pettycrime';
-// TEMPORARILY DISABLED (0 = no wait between reports). Restore with: 60 * 60 * 1000 (1 hour)
+
 const REPORT_COOLDOWN_MS = 0;
 
-// Not everyone in the barangay knows the person they're reporting for by
-// name — these relationships make the name field optional instead of required.
+
+
 const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
 
-// Reads the currently logged-in resident's name/contact, set at sign-in.
-// Tries several common shapes for the id field since different sign-in
-// implementations name it differently (id / user_id / userId), and some
-// store the whole { success, user } response instead of just the user object.
+
+
+
+
 const getCurrentUser = () => {
   let raw = {};
   try {
@@ -45,7 +45,7 @@ const getCurrentUser = () => {
   } catch {
     raw = {};
   }
-  // Unwrap if the whole signin response ({ success, user, ... }) was stored
+  
   const source = raw && raw.user ? raw.user : raw;
   const id =
     source.id ??
@@ -56,10 +56,10 @@ const getCurrentUser = () => {
   return { ...source, id };
 };
 
-// Cooldown is tracked per-account, not per-browser: the localStorage key is
-// suffixed with the currently logged-in user's id (or "guest" when nobody
-// is signed in) so switching accounts on the same device/browser doesn't
-// inherit someone else's cooldown timer.
+
+
+
+
 const getCooldownStorageKey = () => {
   const currentUser = getCurrentUser();
   return `${REPORT_COOLDOWN_KEY}_${currentUser.id ?? 'guest'}`;
@@ -85,7 +85,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     street: '',
     floorUnit: '',
     landmark: '',
-    location: '', // single editable address field, used only when editing
+    location: '', 
     crimeType: '',
     description: '',
     suspectInfo: '',
@@ -95,14 +95,14 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  // Photo rule: none until a crime type is picked, then optional or required
-  // by type. When editing, a photo already on file satisfies it.
+  
+  
   const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
   const isPhotoRequired = Boolean(formData.crimeType) && !PHOTO_OPTIONAL_CRIME_TYPES.includes(formData.crimeType);
   const needsNewMedia = isPhotoRequired && !hasExistingMedia;
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
-  // Map pin, "Use my current location" and the Santa Fe boundary check
-  // (../shared/location/useLocationPin.js). A new pin fills in the address.
+  
+  
   const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
     setFormData((prev) => (isEditing
       ? { ...prev, location: fullAddress }
@@ -136,10 +136,10 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       suspectInfo: editingReport.suspectInfo || '',
       location: editingReport.location || ''
     }));
-    // Only house#/street were ever collected separately at create time — the
-    // backend only stores the merged address string, so on edit we restore
-    // that string as-is into a single "Location" field rather than trying
-    // to (unreliably) split it back into house#/street.
+    
+    
+    
+    
     if (editingReport.latitude != null && editingReport.longitude != null) {
       setGpsCoords({ lat: editingReport.latitude, lng: editingReport.longitude });
     }
@@ -179,7 +179,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         return;
       }
     }
-    // The map already shows why; bring it into view.
+    
     if (isOutsideSantaFe) {
       locationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -226,7 +226,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           longitude: gpsCoords ? gpsCoords.lng : null,
           description: formData.description,
           suspectInfo: formData.suspectInfo || null,
-          // Only replace the saved photo/video if a new one was attached
+          
           ...(photoUrl ? { photoUrl, mediaType: media.type } : {})
         });
         if (!result.success) {
@@ -243,8 +243,8 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       const composedAddress = [formData.houseNumber.trim(), formData.street.trim()]
         .filter(Boolean)
         .join(' ');
-      // A pinned report may have no typed address -- the pin is the exact spot.
-      // The landmark goes in the same text, so admins and exports see it too.
+      
+      
       const landmark = formData.landmark.trim();
       const fullLocation = [
         formData.floorUnit.trim(),
@@ -263,7 +263,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         suspectInfo: formData.suspectInfo || null,
         photoUrl,
         mediaType: photoUrl ? media.type : null,
-        // The backend drops the name/contact for anonymous reports
+        
         isAnonymous,
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
@@ -351,7 +351,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           boxShadow:'0 20px 60px rgba(0,0,0,.3)'
         }}
 >
-{/* The title stays at the top while the form scrolls under it (above the map's layers, which go up to 1000). */}
+
 <div style={{
           padding:'20px 24px',
           borderBottom:'1px solid #e5e7eb',
@@ -532,7 +532,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               onChange={handleChange}
               style={{
                 width:'100%',
-                // Room on the right for the arrow; long choices end in "…".
+                
                 padding:'10px 36px 10px 14px',
                 textOverflow:'ellipsis',
                 borderRadius:'6px',

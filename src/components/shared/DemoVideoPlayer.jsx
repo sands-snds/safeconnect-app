@@ -1,12 +1,6 @@
 import React from 'react';
 import { mediaSrc, hasVideo } from './useSiteContent';
 
-// Plays a demo video from Content > Page Contents: an uploaded MP4/WebM or
-// a YouTube video, in a 16:9 frame, with its title and a short caption.
-//   demo        - { title, caption, video: { source, url } }
-//   showText    - false hides the title/caption (when the parent shows them)
-//   placeholder - what to show when no video is set (null = nothing)
-//   autoPlay    - start playing right away (admin sign-in popup)
 const frameStyle = {
   position: 'relative',
   width: '100%',
@@ -33,8 +27,6 @@ export default function DemoVideoPlayer({ demo, showText = true, placeholder = n
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
           />
         ) : (
-          // No download: hides the player's Download item and the
-          // right-click "Save video as..." menu. (YouTube embeds have no download.)
           <video
             src={mediaSrc(url)}
             controls

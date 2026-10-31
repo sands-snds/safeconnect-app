@@ -1,11 +1,6 @@
-// Emergency Reports model (table: emergency_reports).
-// Field names map to what ResidentEmergencyModal.jsx sends via
-// createEmergencyReport()/updateEmergencyReport() in Services/api.js,
-// via reportService.js's mapping.
 const db = require("../config/db");
 
 class Report {
-
     static async create(report) {
         const [result] = await db.query(
             `
@@ -73,7 +68,6 @@ class Report {
             values.push(filters.status);
         }
 
-        // Date range from the Generate Report form (Date objects; `to` is exclusive).
         if (filters.from) {
             sql += " AND time >= ?";
             values.push(filters.from);
@@ -104,8 +98,6 @@ class Report {
         return rows[0];
     }
 
-    // Status changes only need these columns. findById also pulls the
-    // photo/video (stored as base64 text), which can be several MB.
     static async findStatusById(id) {
         const [rows] = await db.query(
             `SELECT id, status, reporter_id FROM emergency_reports WHERE id = ?`,
@@ -148,11 +140,8 @@ class Report {
         return result.affectedRows;
     }
 
-    // dismissalReason: only for status "Dismissed" (utils/statusWorkflow.js).
     static async updateStatus(id, status, dismissalReason = null) {
         const [result] = await db.query(
-            // resolved_at (the closing time) starts the auto-archive countdown
-            // for Resolved and Dismissed reports (services/archiveService.js).
             `UPDATE emergency_reports
              SET status = ?,
                  resolved_at = IF(? IN ('Resolved', 'Dismissed'), NOW(), resolved_at),

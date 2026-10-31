@@ -3,10 +3,6 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import DemoVideoPlayer from '../shared/DemoVideoPlayer';
 import { useSiteMedia, hasVideo } from '../shared/useSiteContent';
 
-// Landing page: the system demo video, between the carousel and "What you
-// can do". Admins set or hide it under Content > Page Contents; until a
-// video is added it shows a "coming soon" placeholder. Styled like the
-// Services / Contact / About sections (badge, heading, soft blobs, card).
 export default function DemoVideoSection() {
   const { t } = useLanguage();
   const { systemDemo } = useSiteMedia();
@@ -24,8 +20,6 @@ export default function DemoVideoSection() {
   );
 
   return (
-    // Padding lives on .dm-outer: styles/App.css zeroes every <section>'s
-    // margin and padding with !important.
     <section id="demo" style={{ margin: 0, padding: 0 }}>
       <style>{`
         .dm-outer { position: relative; padding: 110px 0; background: linear-gradient(180deg, #ffffff 0%, #fff6f8 100%); overflow: hidden; }

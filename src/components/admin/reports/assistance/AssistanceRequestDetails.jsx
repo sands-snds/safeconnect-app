@@ -53,7 +53,6 @@ const AssistanceRequestDetails = ({ request }) => {
           value={tx(request.victimOfEmergency)}
         />
 
-        {/* Only older requests have one: residents no longer choose an urgency. */}
         {request.urgency && (
           <DetailField
             label={tx("Urgency Level")}

@@ -1,11 +1,11 @@
 import React from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-// Page numbers in the My Reports style (same look as MyReportsPage's
-// .mr-pagination): "Showing 1–10 of 34", Previous, 1 … 4 5 6 … 12, Next.
-// Used by the resident Notifications page.
 
-// Page numbers with gaps, e.g. 1 … 4 5 6 … 12.
+
+
+
+
 const pageItems = (page, count) => {
   if (count <= 7) return Array.from({ length: count }, (_, i) => i + 1);
   const items = [1];

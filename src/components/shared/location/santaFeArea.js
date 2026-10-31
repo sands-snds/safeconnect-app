@@ -1,11 +1,11 @@
-// Barangay Santa Fe, Dasmariñas, Cavite: the area residents can report from.
-//
-// Boundary: OpenStreetMap relation 8785711 ("Santa Fe", admin boundary),
-// trimmed at Pablo Campos Avenue (lat 14.32233) to match the barangay's
-// outline on Google Maps -- OSM's version also includes the Burol Avenue /
-// Grace Baptist Church area north of it. West edge: Congressional Avenue;
-// east: the creek; south: Fatima Rd / Tomas Hemrodaro Rd.
-// Points are [latitude, longitude]. To adjust the area, edit this list.
+
+
+
+
+
+
+
+
 export const SANTA_FE_BOUNDARY = [
   [14.32233, 120.963616], [14.322298, 120.963619], [14.322122, 120.96364], [14.321945, 120.96366],
   [14.321748, 120.963683], [14.321726, 120.963685], [14.321546, 120.963706], [14.321369, 120.963726],
@@ -37,12 +37,12 @@ export const SANTA_FE_BOUNDARY = [
 
 export const SANTA_FE_CENTER = { lat: 14.3203, lng: 120.9648 };
 
-// Pins this close to the boundary (in meters) still count as inside: GPS is
-// only accurate to ~10-30 m, and houses facing a boundary road (e.g.
-// Congressional Ave) shouldn't be rejected for a pin dropped on the road.
+
+
+
 export const BOUNDARY_TOLERANCE_M = 25;
 
-// Ray casting: is the point inside the polygon?
+
 const insidePolygon = (lat, lng, poly) => {
   let inside = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -55,8 +55,8 @@ const insidePolygon = (lat, lng, poly) => {
   return inside;
 };
 
-// Shortest distance (meters) from the point to the boundary line. Flat-earth
-// approximation, accurate enough at barangay scale.
+
+
 const distanceToBoundaryM = (lat, lng, poly) => {
   const mPerDegLat = 111320;
   const mPerDegLng = 111320 * Math.cos((lat * Math.PI) / 180);

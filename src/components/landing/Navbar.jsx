@@ -4,13 +4,13 @@ import LanguageToggle from '../shared/LanguageToggle';
 import { MAIN_LOGO } from '../shared/logos';
 // Removed: useNavigate
 
-// Page sections in order; each highlights its nav item while on screen.
-// "home" is the hero at the top.
+
+
 const SECTIONS = ['home', 'services', 'contact', 'about'];
 
-// The section the reader is in: the last one whose top has passed a line a
-// third of the way down the screen (below the sticky navbar). At the very
-// bottom of the page it's the last section, even when that one is short.
+
+
+
 const sectionInView = () => {
   const navHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--landing-navbar-height')) || 76;
   const line = navHeight + (window.innerHeight - navHeight) / 3;
@@ -26,20 +26,20 @@ const sectionInView = () => {
 
 function Navbar() {
   const { t } = useLanguage();
-  // Removed: navigate
-  // Removed: showAdminModal, adminEmail, adminPassword, error, setShowAdminModal, setAdminEmail, setAdminPassword, setError
+  
+  
   
   const [, setIsMobile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   
-  // Removed: showDropdown
-  // Removed: dropdownRef
+  
+  
   const mobileMenuRef = useRef(null);
   const navRef = useRef(null);
 
-  // The highlighted nav item follows the section on screen. A click shows
-  // the chosen section right away and holds it until the smooth scroll
-  // there settles, instead of flickering through the sections in between.
+  
+  
+  
   const [activeSection, setActiveSection] = useState('home');
   const clickedRef = useRef(false);
   const settleRef = useRef(0);
@@ -71,7 +71,7 @@ function Navbar() {
   const showSection = (sectionId) => {
     clickedRef.current = true;
     setActiveSection(sectionId);
-    // Released when the scroll settles, or here if nothing scrolls at all.
+    
     clearTimeout(settleRef.current);
     settleRef.current = setTimeout(() => {
       clickedRef.current = false;
@@ -84,8 +84,8 @@ function Navbar() {
     'aria-current': activeSection === sectionId ? 'true' : undefined,
   });
 
-  // The navbar sticks to the top; section links scroll to just below it
-  // (App.css reads --landing-navbar-height for scroll-margin-top).
+  
+  
   useEffect(() => {
     const navEl = navRef.current;
     if (!navEl || typeof ResizeObserver === 'undefined') return undefined;
@@ -124,20 +124,16 @@ function Navbar() {
     };
   }, []);
 
-  // Removed: handleAdminLogin function
-  // Removed: closeAdminModal function
-  // Removed: toggleDropdown function
+  
+  
+  
 
   const toggleMobileMenu = () => {
     setShowMobileMenu(!showMobileMenu);
   };
 
   // Removed: toggleDropdown (Replaced with a dummy handler)
-  /* const toggleDropdown = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowDropdown(!showDropdown);
-  }; */
+  
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);

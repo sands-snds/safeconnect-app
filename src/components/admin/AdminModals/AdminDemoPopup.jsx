@@ -3,18 +3,10 @@ import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
 import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 import { markSyncedRead, useSyncedReadItems } from "../../shared/useSyncedState";
 
-// Admin demo video, shown once right after someone signs in to the admin
-// panel (Admins and Officials). The sign-in screens set JUST_SIGNED_IN_KEY;
-// this popup consumes it. "Don't show this again" is remembered per account
-// for the account, on every device (useSyncedState). Anyone can watch it again from the account menu
-// (manualOpen). Admins set the video, or turn the popup off, under
-// Content > Page Contents.
-
 export const JUST_SIGNED_IN_KEY = "sf_showAdminDemo";
 const hiddenKey = (userId) => `sf_adminDemoHidden_${userId}`; // older, this browser only
 const SYNCED_HIDDEN_KEY = "admin-demo:hidden";
 
-// Called by the sign-in screens when an Admin or Official signs in.
 export const markAdminJustSignedIn = () => {
   try { sessionStorage.setItem(JUST_SIGNED_IN_KEY, "1"); } catch { /* storage unavailable */ }
 };
@@ -40,7 +32,6 @@ export default function AdminDemoPopup({ userId, manualOpen = false, onManualClo
     }
   }, [userId, adminDemo, hiddenForAccount]);
 
-  // "Don't show again" chosen on another device, loaded after this opened.
   useEffect(() => {
     if (hiddenForAccount && open) setOpen(false);
   }, [hiddenForAccount, open]);

@@ -1,8 +1,8 @@
-// Shared server-side rules for account fields. The forms check the same
-// things (Hero.jsx PASSWORD_REQUIREMENTS, SettingsPage.jsx), but only the
-// server's check counts -- a request can skip the form.
 
-// Same four rules as the Sign Up / Settings password checklist.
+
+
+
+
 const passwordProblem = (password) => {
     if (typeof password !== "string" || password.length < 8) return "Password must be at least 8 characters.";
     if (password.length > 128) return "Password must be 128 characters or fewer.";
@@ -12,8 +12,8 @@ const passwordProblem = (password) => {
     return null;
 };
 
-// Letters from any language (e.g. ñ, é), spaces, periods, apostrophes and
-// hyphens: "Ma. Clara Dela Cruz-Santos", "D'Angelo".
+
+
 const NAME_PATTERN = /^\p{L}[\p{L}\s.'-]*$/u;
 
 const normalizeName = (name) => String(name || "").trim().replace(/\s+/g, " ");

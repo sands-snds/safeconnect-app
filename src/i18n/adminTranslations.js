@@ -1,7 +1,3 @@
-// Tagalog for the admin panel, keyed by the English text shown on screen
-// (see i18n/adminText.js: tx("View details") shows "Tingnan ang detalye" in
-// Tagalog). Text that isn't listed here stays in English. {{name}} marks a
-// value filled in by tx(text, { name }).
 export const ADMIN_TL = {
   // Layout
   'Administration': 'Administrasyon',
@@ -138,8 +134,6 @@ export const ADMIN_TL = {
   'No reason was recorded.': 'Walang naitalang dahilan.',
   '{{n}} people': '{{n}} katao',
 
-  // Report types (the resident forms' stored values; same Tagalog as the
-  // resident translations)
   'Fire Emergency': 'Sunog',
   'Flood Emergency': 'Baha',
   'Earthquake': 'Lindol',
@@ -153,7 +147,7 @@ export const ADMIN_TL = {
   'Trespassing': 'Pagpasok nang Walang Pahintulot',
   'Harassment': 'Panliligalig',
   'Other': 'Iba pa',
-  // Relationship to the person a report was filed for
+
   'For {{name}}': 'Para kay {{name}}',
   'someone else': 'ibang tao',
   'Family Member': 'Miyembro ng Pamilya',

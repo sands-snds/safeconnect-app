@@ -1,15 +1,6 @@
 const db = require("../config/db");
 const { CLOSED_STATUSES } = require("../utils/statusWorkflow");
 
-// Report archiving. A Resolved or Dismissed report can be archived by hand from
-// its card, and the scheduled job below archives them automatically once
-// they have been closed for longer than the configured period
-// (Off / 6 months / 1 year, stored in system_settings). Archived reports stay
-// in their tables with archived_at set -- they're hidden from the admin
-// report lists (shown under "Archived" instead) but still count on the
-// dashboard and in exports, and can be restored.
-
-// type: the key the frontend uses (see api.js's updateStatus).
 const REPORT_TABLES = {
     emergency: { table: "emergency_reports", createdCol: "time", label: "Emergency report" },
     assistance: { table: "assistance_requests", createdCol: "timestamp", label: "Assistance request" },
@@ -20,19 +11,15 @@ const SETTING_KEY = "report_auto_archive_months";
 const ALLOWED_MONTHS = [0, 6, 12];
 const DEFAULT_MONTHS = 12;
 
-// Auto-archive runs on start and then every 6 hours.
 const JOB_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 const ARCHIVE_COLUMNS = {
     resolved_at: "TIMESTAMP NULL DEFAULT NULL",
     archived_at: "TIMESTAMP NULL DEFAULT NULL",
-    // Why an Official/Admin dismissed the report (status "Dismissed").
+
     dismissal_reason: "VARCHAR(500) DEFAULT NULL"
 };
 
-// "Reporting for someone else" fields the report forms send. The models
-// insert all of them, so a missing one (victim_details was never added to
-// existing databases) made every resident report fail to submit.
 const REPORT_FOR_COLUMNS = {
     report_for: "VARCHAR(20) DEFAULT 'self'",
     victim_name: "VARCHAR(255) DEFAULT NULL",
@@ -41,7 +28,6 @@ const REPORT_FOR_COLUMNS = {
     victim_details: "TEXT DEFAULT NULL"
 };
 
-// Photo/video attachment, stored as base64 like emergency_reports.photo_url.
 const MEDIA_COLUMNS = {
     photo_url: "LONGTEXT DEFAULT NULL",
     media_type: "VARCHAR(20) DEFAULT NULL"
@@ -55,9 +41,6 @@ const TABLE_EXTRA_COLUMNS = {
     assistance_requests: { ...MEDIA_COLUMNS, victim_of_emergency: "VARCHAR(255) DEFAULT NULL" }
 };
 
-// Adds the report-for / victim columns and archived_at / resolved_at to the
-// report tables and creates the settings table, so existing databases (local
-// and Azure) don't need a manual migration.
 async function ensureSchema() {
     for (const { table } of Object.values(REPORT_TABLES)) {
         const [existing] = await db.query(
@@ -66,7 +49,7 @@ async function ensureSchema() {
             [table]
         );
         const have = new Set(existing.map((c) => c.name));
-        // "Dismiss" was first called "Reject": rename its column and status.
+
         if (have.has("rejection_reason") && !have.has("dismissal_reason")) {
             await db.query(`ALTER TABLE ${table} RENAME COLUMN rejection_reason TO dismissal_reason`);
             have.add("dismissal_reason");
@@ -82,8 +65,6 @@ async function ensureSchema() {
                 try {
                     await db.query(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
                 } catch (err) {
-                    // Another server instance added it first (e.g. two
-                    // starting at once) -- that's the outcome we wanted.
                     if (err.code !== "ER_DUP_FIELDNAME") throw err;
                 }
             }
@@ -120,8 +101,6 @@ async function setAutoArchiveMonths(months) {
     );
 }
 
-// Archives Resolved/Dismissed reports closed more than `months` ago. Reports
-// closed before resolved_at existed fall back to when they were submitted.
 async function runAutoArchive() {
     const months = await getAutoArchiveMonths();
     if (!months) return 0;
@@ -142,8 +121,6 @@ async function runAutoArchive() {
     return total;
 }
 
-// archived: true to archive, false to restore. Only Resolved and Dismissed
-// reports can be archived. Returns { success, status?, message? }.
 async function setArchived(type, id, archived) {
     const config = REPORT_TABLES[type];
     if (!config) return { success: false, status: 400, message: "Unknown report type." };

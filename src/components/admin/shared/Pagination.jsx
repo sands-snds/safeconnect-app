@@ -3,8 +3,6 @@ import { tx } from "../../../i18n/adminText";
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
-// Page numbers to show: always first/last, the current page and its
-// neighbours, with "…" for gaps. e.g. 1 … 4 5 6 … 12
 const getPageItems = (page, totalPages) => {
   const pages = new Set([1, totalPages, page - 1, page, page + 1]);
   const sorted = [...pages].filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
@@ -39,10 +37,6 @@ const navButtonStyle = (disabled) => ({
   cursor: disabled ? 'not-allowed' : 'pointer'
 });
 
-// Shared footer for every paginated admin list. The page controls only
-// appear when there's more than one page; the "Showing x–y of z" summary
-// and the rows-per-page picker are always there so it's clear the list is
-// paginated.
 const Pagination = ({
   page,
   totalPages,
@@ -83,8 +77,6 @@ const Pagination = ({
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               className="form-select"
               style={{
-                // Keep right padding so the number doesn't sit under
-                // Bootstrap's dropdown arrow (drawn as a background image).
                 padding: '4px 30px 4px 10px',
                 backgroundPosition: 'right 8px center',
                 backgroundSize: '12px 10px',

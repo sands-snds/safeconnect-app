@@ -10,7 +10,7 @@ import {
 } from '../../Services/api';
 import { showPopup, confirmPopup } from '../shared/popup';
 
-// The map needs a real browser; the form logic under test doesn't.
+
 jest.mock('../shared/location/LocationPickerMap', () => () => null);
 jest.mock('../shared/location/useLocationPin', () => {
   const pin = {
@@ -40,7 +40,7 @@ jest.mock('../../Services/api', () => ({
 }));
 jest.mock('../shared/popup', () => ({ showPopup: jest.fn(), confirmPopup: jest.fn() }));
 
-// Shapes match myReportsController's normalize* (raw columns + type/title/...).
+
 const REPORTS = [
   {
     id: 11, type: 'Emergency', title: 'Fire Emergency', description: 'Smoke from a house',
@@ -60,7 +60,7 @@ const REPORTS = [
   }
 ];
 
-// CRA resets mock implementations before each test, so set them here.
+
 beforeEach(() => {
   localStorage.setItem('sf_language', 'en');
   fetchMyReports.mockResolvedValue(REPORTS);
@@ -85,7 +85,7 @@ const renderPage = async () => {
 // Each report is one child of .mr-list.
 const cardFor = (title) => [...document.querySelector('.mr-list').children].find((c) => within(c).queryByText(title));
 
-// Edit and Delete live in each card's three-dot menu.
+
 const openMenu = (title) => fireEvent.click(within(cardFor(title)).getByRole('button', { name: 'More options' }));
 const chooseFromMenu = (title, option) => {
   openMenu(title);
@@ -106,7 +106,7 @@ test.each([
   await renderPage();
   chooseFromMenu(title, 'Edit');
 
-  // The edit form must not be inside the transformed My Reports panel.
+  
   const consent = await waitFor(() => {
     const box = document.querySelector('input[name="consent"]');
     if (!box) throw new Error('edit form not open');

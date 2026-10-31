@@ -200,8 +200,8 @@ const sendAnnouncementEmail = async (toEmail, fullName, announcement) => {
     });
 };
 
-// ── Batch send to many residents (used for announcements) ────────────────────
-// Sends individually so one bad address doesn't block the rest.
+
+
 const sendAnnouncementToAll = async (residents, announcement) => {
     const results = await Promise.allSettled(
         residents.map((r) =>

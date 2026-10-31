@@ -612,8 +612,7 @@ section {
 }
 
 /* Landing Page Container */
-/* clip, not hidden: hidden would make this a scroll box and stop the
-   navbar from sticking to the top (browsers without clip use hidden). */
+
 .landing-page {
   margin: 0;
   padding: 0;
@@ -621,7 +620,7 @@ section {
   overflow-x: clip;
 }
 
-/* Section links land below the sticky navbar, not under it. */
+
 .landing-page [id] {
   scroll-margin-top: var(--landing-navbar-height, 76px);
 }
@@ -735,9 +734,7 @@ section {
     padding: 0;
   }
 }
-/* Carousel indicators as short lines (home + resident heroes). Bootstrap's
-   own ".carousel-indicators [data-bs-target]" rule needs this exact selector
-   to be overridden. */
+
 .carousel-indicators [data-bs-target] {
   box-sizing: content-box;
   width: 28px;
@@ -755,7 +752,7 @@ section {
 .carousel-indicators [data-bs-target].active {
   width: 40px;
   opacity: 1;
-  transform: none; /* the older circle rule scaled the active one */
+  transform: none; 
 }
 
 @media (max-width: 576px) {
@@ -763,9 +760,7 @@ section {
   .carousel-indicators [data-bs-target].active { width: 30px; }
 }
 
-/* Maps (Leaflet) give their layers z-index 400-1000. Keep those inside the
-   map, so a map never covers the sticky admin header, its notification
-   panel or menus. */
+
 .leaflet-container {
   isolation: isolate;
   z-index: 0;

@@ -3,9 +3,6 @@ import { timeAgo } from '../shared/timeUtils';
 import { notificationType } from './notificationTypes';
 import { tx } from "../../../i18n/adminText";
 
-// The admin bell's dropdown, in the same style as the residents' bell
-// (.panel-* / .notification-* classes in components/resident/navbar/NavbarStyle.css).
-// Only recent notifications: everything else is on the Notifications page.
 const RECENT = 8;
 
 export default function AdminNotificationPanel({ notifications, unreadCount, onMarkAllRead, onOpen, onSeeAll, onClose }) {

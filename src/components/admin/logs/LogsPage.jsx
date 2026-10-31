@@ -3,8 +3,8 @@ import React from "react";
 import SignInLogsTable from "./SignInLogsTable";
 import AdminLogsTable from "./AdminLogsTable";
 
-// System > Resident Logs / Admin Logs. Each table filters its own list and
-// loads its own Archived tab.
+
+
 const LogsPage = ({
     activeView,
     signInLogs,
@@ -15,7 +15,6 @@ const LogsPage = ({
     onRefresh
 }) => {
     switch (activeView) {
-
         case "sign-in-logs":
             return (
                 <SignInLogsTable

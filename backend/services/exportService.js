@@ -10,9 +10,6 @@ const db = require("../config/db");
 const PDFService = require("./pdfService");
 const ExcelService = require("./excelService");
 
-// The three report categories, as used by the dashboard charts. `dateColumn`
-// is each table's submission time. Queries below select only the columns
-// they need -- the tables also hold base64 photos/videos.
 const REPORT_TABLES = [
     { key: "emergency", label: "Emergency", table: "emergency_reports", dateColumn: "time" },
     { key: "assistance", label: "Assistance", table: "assistance_requests", dateColumn: "timestamp" },
@@ -21,14 +18,9 @@ const REPORT_TABLES = [
 
 const RANGE_DAYS = [7, 15, 30, 90];
 
-// Analytical report chart colors: the report types' colors (resident page)
-// and the status colors (admin status badges).
 const ANALYTICS_COLORS = { emergency: "#dc2626", assistance: "#ea580c", pettyCrime: "#7c3aed" };
 const STATUS_PIE_COLORS = { Received: "#f59e0b", "In Progress": "#3b82f6", Resolved: "#16a34a", Dismissed: "#9ca3af" };
 
-// YYYY-MM-DD of `date` in the admin's timezone. tzOffset is the browser's
-// getTimezoneOffset() (minutes, e.g. -480 for the Philippines); the server
-// runs in UTC, so without it evening reports land on the next day.
 const localDayKey = (date, tzOffset) =>
     new Date(date.getTime() - tzOffset * 60000).toISOString().slice(0, 10);
 
@@ -37,9 +29,6 @@ const dayKeyLabel = (key) =>
         timeZone: "UTC", month: "short", day: "numeric", year: "numeric"
     });
 
-// Every report type now shares the same forward-only status workflow
-// (see backend/utils/statusWorkflow.js): Received -> In Progress -> Resolved,
-// or Dismissed.
 const REPORT_STATUSES = ["Received", "In Progress", "Resolved", "Dismissed"];
 
 const countByStatus = (rows) => {
@@ -57,8 +46,6 @@ const summaryFromCounts = (total, counts, label = "Reports") => [
     ...REPORT_STATUSES.map((s) => ({ label: s, value: counts[s] || 0 }))
 ];
 
-// Philippine time: the Azure server runs in UTC, which put every exported
-// time 8 hours behind.
 const REPORT_TIMEZONE = "Asia/Manila";
 const fmtDate = (value) =>
     (value ? new Date(value).toLocaleString("en-PH", { timeZone: REPORT_TIMEZONE }) : "");
@@ -70,12 +57,6 @@ const SIGNIN_STATUSES = ["Success", "Failed"];
 
 const isDayKey = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
 
-// Options from the report tabs' Generate Report form:
-//   status   - one of REPORT_STATUSES, or empty for all
-//   from, to - YYYY-MM-DD (inclusive), in the admin's timezone
-//   tzOffset - the browser's getTimezoneOffset(), see localDayKey
-// Returns model filters ({ status, from, to } with Date bounds) plus a
-// human-readable description for the report's subtitle.
 const dateRange = (filters = {}) => {
     const tzOffset = Number.isFinite(Number(filters.tzOffset)) ? Number(filters.tzOffset) : -480;
     const localMidnight = (key) => new Date(new Date(`${key}T00:00:00Z`).getTime() + tzOffset * 60000);
@@ -105,9 +86,6 @@ const reportOptions = (filters = {}) => {
     };
 };
 
-// Options from the System tabs' Generate Report form (Users, Sign-in Logs,
-// Admin Logs): role, status (checked against `statuses`), from / to and
-// archived (the tab the report was generated from).
 const systemOptions = (filters = {}, statuses, { allowUnknownRole = false } = {}) => {
     const role = ALL_ROLES.includes(filters.role) || (allowUnknownRole && filters.role === "unknown")
         ? filters.role
@@ -124,13 +102,7 @@ const systemOptions = (filters = {}, statuses, { allowUnknownRole = false } = {}
     return { role, status, from, to, archived, subtitle: parts.join("  |  ") };
 };
 
-// Each entry describes how to build one exportable dataset: a human title,
-// a PDF-friendly filename prefix, and a build(filters) function returning
-// { summary, columns, rows } consumed by PDFService/ExcelService.
 const EXPORTERS = {
-
-    // Dashboard "Reports Over Time" chart: one row per day in the range.
-    // filters: days (7/15/30/90), tzOffset (see localDayKey)
     reportsOverTime: {
         reportTitle: "Reports Over Time",
         filenamePrefix: "Reports_Over_Time",
@@ -152,7 +124,6 @@ const EXPORTERS = {
                 byKey[key] = bucket;
             }
 
-            // A day of margin either side of the range covers any timezone.
             const since = new Date(`${buckets[0].key}T00:00:00Z`);
             since.setUTCDate(since.getUTCDate() - 1);
 
@@ -194,7 +165,6 @@ const EXPORTERS = {
         }
     },
 
-    // Dashboard pie charts: how many reports of each category are in each status.
     statusSummary: {
         reportTitle: "Reports by Status",
         filenamePrefix: "Reports_By_Status",
@@ -232,10 +202,6 @@ const EXPORTERS = {
         }
     },
 
-    // Dashboard Generate Report: the bar graph (reports per day, or per
-    // month for long periods) and / or the pie chart (reports by status),
-    // each with its table and a Total row. filters: from / to (empty = all
-    // time), tzOffset, bar / pie ("0" leaves that part out), status (pie only).
     analytics: {
         reportTitle: "Analytical Report",
         filenamePrefix: "Analytical_Report",
@@ -247,7 +213,6 @@ const EXPORTERS = {
             const status = REPORT_STATUSES.includes(filters.status) ? filters.status : null;
             const { from, to, period } = dateRange(filters);
 
-            // Every report's category, status and local day in the period.
             const reports = [];
             for (const { key, table, dateColumn } of REPORT_TABLES) {
                 let sql = `SELECT ${dateColumn} AS reported_at, status FROM ${table} WHERE 1=1`;
@@ -264,7 +229,6 @@ const EXPORTERS = {
             const summary = [{ label: "Period", value: period === "All dates" ? "All time" : period }];
 
             if (includeBar) {
-                // Days from the start of the period (or the first report) to its end (or today).
                 const todayKey = localDayKey(new Date(), tzOffset);
                 const firstKey = isDayKey(filters.from) ? filters.from
                     : (reports.map((r) => r.day).sort()[0] || todayKey);
@@ -273,7 +237,7 @@ const EXPORTERS = {
                 for (let d = new Date(`${firstKey}T00:00:00Z`); d.toISOString().slice(0, 10) <= lastKey; d.setUTCDate(d.getUTCDate() + 1)) {
                     days.push(d.toISOString().slice(0, 10));
                 }
-                // More than ~3 months of days would be unreadable: group by month.
+
                 const byMonth = days.length > 92;
                 const bucketOf = (day) => (byMonth ? day.slice(0, 7) : day);
                 const bucketKeys = [...new Set(days.map(bucketOf))];
@@ -329,7 +293,7 @@ const EXPORTERS = {
 
                 sections.push({
                     title: status ? `${status} Reports by Category` : "Reports by Status",
-                    // All statuses: the share of each status. One status: the share of each category.
+
                     chart: {
                         type: "pie",
                         slices: status
@@ -454,7 +418,6 @@ const EXPORTERS = {
         }
     },
 
-    // System > Users. filters: role, status, from / to (date registered).
     users: {
         reportTitle: "Registered Users Report",
         filenamePrefix: "Registered_Users",
@@ -502,8 +465,6 @@ const EXPORTERS = {
         }
     },
 
-    // System > Sign-in Logs. filters: archived, role ("unknown" = no
-    // account), status (Success / Failed), from / to.
     signinLogs: {
         reportTitle: "Resident Logs Report",
         filenamePrefix: "SignIn_Logs",
@@ -542,8 +503,6 @@ const EXPORTERS = {
         }
     },
 
-    // System > Admin Logs. filters: archived, role (official / admin),
-    // from / to, plus the tab's own admin (email) and search.
     adminLogs: {
         reportTitle: "Admin Activity Report",
         filenamePrefix: "Admin_Activity",
@@ -592,8 +551,6 @@ const EXPORTERS = {
     }
 };
 
-// "SafeConnect-SantaFe Emergency Reports_Oct 1, 2026 - Oct 31, 2026", or
-// "..._All time". reportsOverTime counts back `days` from today.
 const fileName = (exporter, filters = {}, built = {}) => {
     let period = built.period || dateRange(filters).period;
     if (exporter === EXPORTERS.reportsOverTime) {
@@ -606,7 +563,6 @@ const fileName = (exporter, filters = {}, built = {}) => {
 };
 
 class ExportService {
-
     static get validTypes() {
         return Object.keys(EXPORTERS);
     }

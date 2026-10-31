@@ -1,10 +1,6 @@
 const db = require("../config/db");
 
 class AnnouncementComment {
-
-    // Created on server start so existing databases (including Azure) pick
-    // it up without a manual migration -- same pattern as AdminActivity.
-    // Also listed in database/safeconnect_db.sql.
     static async ensureTable() {
         await db.query(`
             CREATE TABLE IF NOT EXISTS announcement_comments (
@@ -23,8 +19,8 @@ class AnnouncementComment {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
         `);
 
-        // parent_id (replies) was added after the table first shipped; add it
-        // to databases created before then.
+        
+        
         const [cols] = await db.query(
             `SELECT COLUMN_NAME FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'announcement_comments' AND COLUMN_NAME = 'parent_id'`
@@ -38,7 +34,7 @@ class AnnouncementComment {
         }
     }
 
-    // parentId: the comment this one replies to (null for a top-level comment).
+    
     static async create(announcementId, userId, text, parentId = null) {
         const [result] = await db.query(
             `INSERT INTO announcement_comments (announcement_id, user_id, parent_id, comment_text) VALUES (?, ?, ?, ?)`,
@@ -47,8 +43,8 @@ class AnnouncementComment {
         return result.insertId;
     }
 
-    // Joins the author's name, role and profile photo so the News page and the admin panel
-    // don't need a second round trip per comment to show who posted it.
+    
+    
     static async findByAnnouncement(announcementId) {
         const [rows] = await db.query(
             `
