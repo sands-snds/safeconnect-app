@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { exportReport } from '../../../Services/api';
-import { tx } from "../../../i18n/adminText";
 
 // "Generate Report" form.
 //   Report tabs (emergency, assistance, petty crime): status, a period
@@ -186,17 +185,17 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
           overflowY: 'auto'
         }}
       >
-        <h3 style={{ margin: '0 0 4px', fontSize: 18 }}>{tx("Generate Report")}</h3>
-        <p style={{ margin: '0 0 20px', fontSize: 13, color: '#6b7280' }}>{tx(title)}</p>
+        <h3 style={{ margin: '0 0 4px', fontSize: 18 }}>Generate Report</h3>
+        <p style={{ margin: '0 0 20px', fontSize: 13, color: '#6b7280' }}>{title}</p>
 
         {system && (
           <>
             <div style={{ marginBottom: 18 }}>
-              <span style={sectionLabel}>{tx("Role")}</span>
+              <span style={sectionLabel}>Role</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {system.roles.map((r) => (
                   <button key={r.label} type="button" onClick={() => setRole(r.value)} style={chipStyle(role === r.value)} aria-pressed={role === r.value}>
-                    {tx(r.label)}
+                    {r.label}
                   </button>
                 ))}
               </div>
@@ -204,11 +203,11 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
 
             {system.statuses && (
               <div style={{ marginBottom: 18 }}>
-                <span style={sectionLabel}>{tx("Status")}</span>
+                <span style={sectionLabel}>Status</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {system.statuses.map((s) => (
                     <button key={s.label} type="button" onClick={() => setStatus(s.value)} style={chipStyle(status === s.value)} aria-pressed={status === s.value}>
-                      {tx(s.label)}
+                      {s.label}
                     </button>
                   ))}
                 </div>
@@ -216,15 +215,15 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
             )}
 
             <div style={{ marginBottom: 18 }}>
-              <span style={sectionLabel}>{tx(system.dateLabel)}</span>
-              <p style={{ margin: '-4px 0 8px', fontSize: 12, color: '#6b7280' }}>{tx("Leave both empty to include every date.")}</p>
+              <span style={sectionLabel}>{system.dateLabel}</span>
+              <p style={{ margin: '-4px 0 8px', fontSize: 12, color: '#6b7280' }}>Leave both empty to include every date.</p>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <label style={{ flex: '1 1 150px', fontSize: 13, color: '#374151' }}>
-                  {tx("From")}
+                  From
                   <input type="date" className="form-input" value={from} min={EARLIEST_DATE} max={to || today} onChange={(e) => setFrom(e.target.value)} style={{ marginTop: 4, width: '100%' }} />
                 </label>
                 <label style={{ flex: '1 1 150px', fontSize: 13, color: '#374151' }}>
-                  {tx("To")}
+                  To
                   <input type="date" className="form-input" value={to} min={from || EARLIEST_DATE} max={today} onChange={(e) => setTo(e.target.value)} style={{ marginTop: 4, width: '100%' }} />
                 </label>
               </div>
@@ -234,16 +233,16 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
 
         {analytics && (
           <div style={{ marginBottom: 18 }}>
-            <span style={sectionLabel}>{tx("Include in the report")}</span>
+            <span style={sectionLabel}>Include in the report</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {[['bar', 'Bar graph (reports over time)', includeBar, setIncludeBar, 'bi-bar-chart-fill'], ['pie', 'Pie chart (reports by status)', includePie, setIncludePie, 'bi-pie-chart-fill']].map(([key, label, on, set, icon]) => (
                 <button key={key} type="button" onClick={() => set(!on)} style={chipStyle(on)} aria-pressed={on}>
                   <i className={`bi ${on ? 'bi-check-square-fill' : 'bi-square'}`} style={{ marginRight: 6 }} />
-                  <i className={`bi ${icon}`} style={{ marginRight: 4 }} />{tx(label)}
+                  <i className={`bi ${icon}`} style={{ marginRight: 4 }} />{label}
                 </button>
               ))}
             </div>
-            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#6b7280' }}>{tx("Each comes with its table and a Total row. Charts are drawn in the PDF; Excel has the tables.")}</p>
+            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#6b7280' }}>Each comes with its table and a Total row. Charts are drawn in the PDF; Excel has the tables.</p>
           </div>
         )}
 
@@ -251,7 +250,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
         <>
         {(!analytics || includePie) && (
         <div style={{ marginBottom: 18 }}>
-          <span style={sectionLabel}>{analytics ? tx('Reports to include (pie chart)') : tx('Reports to include')}</span>
+          <span style={sectionLabel}>{analytics ? 'Reports to include (pie chart)' : 'Reports to include'}</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {STATUS_CHOICES.map((s) => (
               <button
@@ -261,7 +260,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
                 style={chipStyle(status === s.value)}
                 aria-pressed={status === s.value}
               >
-                {tx(s.label)}
+                {s.label}
               </button>
             ))}
           </div>
@@ -269,7 +268,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
         )}
 
         <div style={{ marginBottom: 18 }}>
-          <span style={sectionLabel}>{tx("Period")}</span>
+          <span style={sectionLabel}>Period</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {PERIOD_PRESETS.map((p) => (
               <button
@@ -279,7 +278,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
                 style={chipStyle(period === p.key)}
                 aria-pressed={period === p.key}
               >
-                {tx(p.label)}
+                {p.label}
               </button>
             ))}
           </div>
@@ -287,7 +286,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
           {period === 'custom' && (
             <div style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
               <label style={{ flex: '1 1 150px', fontSize: 13, color: '#374151' }}>
-                {tx("From")}
+                From
                 <input
                   type="date"
                   className="form-input"
@@ -299,7 +298,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
                 />
               </label>
               <label style={{ flex: '1 1 150px', fontSize: 13, color: '#374151' }}>
-                {tx("To")}
+                To
                 <input
                   type="date"
                   className="form-input"
@@ -317,7 +316,7 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
         )}
 
         <div style={{ marginBottom: 20 }}>
-          <span style={sectionLabel}>{tx("File type")}</span>
+          <span style={sectionLabel}>File type</span>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {FORMAT_CHOICES.map((f) => (
               <button
@@ -336,8 +335,8 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
               >
                 <i className={`bi ${f.icon}`} style={{ fontSize: 22, color: f.color }} />
                 <span>
-                  <span style={{ display: 'block' }}>{tx(f.label)}</span>
-                  <span style={{ display: 'block', fontSize: 11.5, fontWeight: 400, color: '#6b7280' }}>{tx(f.hint)}</span>
+                  <span style={{ display: 'block' }}>{f.label}</span>
+                  <span style={{ display: 'block', fontSize: 11.5, fontWeight: 400, color: '#6b7280' }}>{f.hint}</span>
                 </span>
               </button>
             ))}
@@ -352,11 +351,11 @@ const GenerateReportModal = ({ type, title, defaultStatus = '', baseFilters = {}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" className="button button-secondary" onClick={onClose} disabled={loading}>
-            {tx("Cancel")}
+            Cancel
           </button>
           <button type="submit" className="button button-primary" disabled={loading}>
             <i className={`bi ${loading ? 'bi-hourglass-split' : 'bi-download'}`} style={{ marginRight: 6 }} />
-            {loading ? tx('Generating…') : tx('Generate')}
+            {loading ? 'Generating…' : 'Generate'}
           </button>
         </div>
       </form>

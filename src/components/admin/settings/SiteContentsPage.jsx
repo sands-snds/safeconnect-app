@@ -3,6 +3,7 @@ import { fetchSiteContent, updateSiteMedia, uploadSiteMedia } from "../../../Ser
 import { showPopup, confirmPopup } from "../../shared/popup";
 import { setSiteMedia, mediaSrc, hasVideo } from "../../shared/useSiteContent";
 import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
+import { tx } from "../../../i18n/adminText";
 
 // Text boxes are up to 40 characters, except the captions (and pasted links).
 const TEXT_MAX = 40;
@@ -55,7 +56,7 @@ function useUploader() {
     const result = await uploadSiteMedia(file, setProgress);
     setProgress(null);
     if (!result?.success) {
-      showPopup({ type: "error", title: "Upload Failed", message: result?.message || "Please try again." });
+      showPopup({ type: "error", title: tx("Upload Failed"), message: result?.message || "Please try again." });
       return;
     }
     onUploaded(result.url);
@@ -77,11 +78,11 @@ function VideoEditor({ demo, onChange, children }) {
     e.target.value = "";
     if (!file) return;
     if (!["video/mp4", "video/webm"].includes(file.type)) {
-      showPopup({ type: "warning", title: "Unsupported Video", message: "Please choose an MP4 or WebM video." });
+      showPopup({ type: "warning", title: tx("Unsupported Video"), message: tx("Please choose an MP4 or WebM video.") });
       return;
     }
     if (file.size > 100 * 1024 * 1024) {
-      showPopup({ type: "warning", title: "Video Too Large", message: "Videos must be 100 MB or smaller. For longer videos, upload them to YouTube and paste the link instead." });
+      showPopup({ type: "warning", title: tx("Video Too Large"), message: tx("Videos must be 100 MB or smaller. For longer videos, upload them to YouTube and paste the link instead.") });
       return;
     }
     upload(file, (url) => setVideo({ source: "upload", url }));
@@ -96,37 +97,37 @@ function VideoEditor({ demo, onChange, children }) {
     <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
       <div style={{ flex: "1 1 320px", display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
-          <span style={label}>Video</span>
+          <span style={label}>{tx("Video")}</span>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
             <button type="button" style={chipStyle(source === "upload")} onClick={() => fileRef.current?.click()} disabled={progress !== null}>
-              <i className="bi bi-upload" /> {source === "upload" ? "Replace uploaded video" : "Upload a video"}
+              <i className="bi bi-upload" /> {source === "upload" ? tx("Replace uploaded video") : tx("Upload a video")}
             </button>
             <button type="button" style={chipStyle(source === "youtube")} onClick={() => setVideo({ source: "youtube", url: demo.video.source === "youtube" ? demo.video.url : "" })}>
-              <i className="bi bi-youtube" /> YouTube link
+              <i className="bi bi-youtube" /> {tx("YouTube link")}
             </button>
             <button type="button" style={chipStyle(source === "none")} onClick={async () => {
               // Taking a video off asks first.
-              if (source !== "none" && !(await confirmPopup({ type: "danger", title: "Remove this video?", message: "The video is taken off the site when you save changes.", confirmLabel: "Remove" }))) return;
+              if (source !== "none" && !(await confirmPopup({ type: "danger", title: tx("Remove this video?"), message: tx("The video is taken off the site when you save changes."), confirmLabel: tx("Remove") }))) return;
               setVideo({ source: "none", url: "" });
             }}>
-              No video
+              {tx("No video")}
             </button>
             <input ref={fileRef} type="file" accept="video/mp4,video/webm" hidden onChange={pickFile} />
           </div>
-          <p style={{ ...hint, margin: "6px 0 0" }}>MP4 or WebM up to 100 MB. Longer videos work better as a YouTube link.</p>
+          <p style={{ ...hint, margin: "6px 0 0" }}>{tx("MP4 or WebM up to 100 MB. Longer videos work better as a YouTube link.")}</p>
           {progress !== null && (
             <div style={{ marginTop: 8 }}>
               <div style={{ height: 8, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" }}>
                 <div style={{ width: `${progress}%`, height: "100%", background: "#6B2C3E", transition: "width .2s" }} />
               </div>
-              <span style={{ fontSize: 12, color: "#6b7280" }}>Uploading… {progress}%</span>
+              <span style={{ fontSize: 12, color: "#6b7280" }}>{tx("Uploading… {{n}}%", { n: progress })}</span>
             </div>
           )}
         </div>
 
         {source === "youtube" && (
           <label style={stackedField}>
-            <span style={label}>YouTube link</span>
+            <span style={label}>{tx("YouTube link")}</span>
             <input
               className="form-input"
               value={youtubeInput}
@@ -141,24 +142,24 @@ function VideoEditor({ demo, onChange, children }) {
         )}
 
         <label style={stackedField}>
-          <span style={label}>Title</span>
+          <span style={label}>{tx("Title")}</span>
           <input className="form-input" value={demo.title} maxLength={TEXT_MAX} onChange={(e) => onChange({ ...demo, title: e.target.value })} />
         </label>
         <label style={stackedField}>
-          <span style={label}>Caption (one or two sentences)</span>
+          <span style={label}>{tx("Caption (one or two sentences)")}</span>
           <textarea className="form-input" rows={2} value={demo.caption} maxLength={300} onChange={(e) => onChange({ ...demo, caption: e.target.value })} style={{ resize: "vertical" }} />
         </label>
         {children}
       </div>
 
       <div style={{ flex: "1 1 320px" }}>
-        <span style={label}>Preview</span>
+        <span style={label}>{tx("Preview")}</span>
         <div style={{ marginTop: 6 }}>
           <DemoVideoPlayer
             demo={demo}
             placeholder={
               <div style={{ aspectRatio: "16 / 9", borderRadius: 12, background: "#f3f4f6", color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, textAlign: "center", padding: 16 }}>
-                {source === "youtube" ? "Paste a valid YouTube link to preview it." : "No video yet."}
+                {source === "youtube" ? tx("Paste a valid YouTube link to preview it.") : tx("No video yet.")}
               </div>
             }
           />
@@ -179,11 +180,11 @@ function CarouselEditor({ icon, title, hint: hintText, slides, onChange }) {
     e.target.value = "";
     if (!file) return;
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      showPopup({ type: "warning", title: "Unsupported Photo", message: "Please choose a JPG, PNG or WebP image." });
+      showPopup({ type: "warning", title: tx("Unsupported Photo"), message: tx("Please choose a JPG, PNG or WebP image.") });
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showPopup({ type: "warning", title: "Photo Too Large", message: "Photos must be 5 MB or smaller." });
+      showPopup({ type: "warning", title: tx("Photo Too Large"), message: tx("Photos must be 5 MB or smaller.") });
       return;
     }
     upload(file, (url) => onChange((list) => [...list, { src: url, alt: "" }]));
@@ -209,15 +210,15 @@ function CarouselEditor({ icon, title, hint: hintText, slides, onChange }) {
                 className="form-input"
                 value={s.alt}
                 maxLength={TEXT_MAX}
-                placeholder="Short description (for screen readers)"
+                placeholder={tx("Short description (for screen readers)")}
                 onChange={(e) => onChange((list) => list.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)))}
                 style={{ fontSize: 13 }}
               />
               <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                <button type="button" style={smallButton()} title="Move earlier" disabled={i === 0} onClick={() => onChange((l) => move(l, i, -1))}><i className="bi bi-arrow-left" /></button>
-                <button type="button" style={smallButton()} title="Move later" disabled={i === slides.length - 1} onClick={() => onChange((l) => move(l, i, 1))}><i className="bi bi-arrow-right" /></button>
-                <button type="button" style={smallButton(true)} title="Remove" disabled={slides.length === 1} onClick={async () => {
-                  if (await confirmPopup({ type: "danger", title: "Remove this photo?", message: "It's taken out of the carousel when you save changes.", confirmLabel: "Remove" })) onChange((l) => l.filter((_, j) => j !== i));
+                <button type="button" style={smallButton()} title={tx("Move earlier")} disabled={i === 0} onClick={() => onChange((l) => move(l, i, -1))}><i className="bi bi-arrow-left" /></button>
+                <button type="button" style={smallButton()} title={tx("Move later")} disabled={i === slides.length - 1} onClick={() => onChange((l) => move(l, i, 1))}><i className="bi bi-arrow-right" /></button>
+                <button type="button" style={smallButton(true)} title={tx("Remove")} disabled={slides.length === 1} onClick={async () => {
+                  if (await confirmPopup({ type: "danger", title: tx("Remove this photo?"), message: tx("It's taken out of the carousel when you save changes."), confirmLabel: tx("Remove") })) onChange((l) => l.filter((_, j) => j !== i));
                 }}><i className="bi bi-trash3" /></button>
               </div>
             </div>
@@ -232,7 +233,7 @@ function CarouselEditor({ icon, title, hint: hintText, slides, onChange }) {
             style={{ border: "2px dashed #d1d5db", borderRadius: 10, background: "#fff", color: "#6b7280", minHeight: 180, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}
           >
             <i className="bi bi-plus-circle" style={{ fontSize: 26 }} />
-            {progress !== null ? `Uploading… ${progress}%` : "Add a photo"}
+            {progress !== null ? tx("Uploading… {{n}}%", { n: progress }) : tx("Add a photo")}
           </button>
         )}
         <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pickPhoto} />
@@ -260,14 +261,14 @@ export default function SiteContentsPage() {
 
   const dirty = useMemo(() => JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
 
-  if (loadError) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>Couldn't load the page contents. Make sure the backend is up to date, then refresh the page.</div>;
-  if (!draft) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>Loading page contents...</div>;
+  if (loadError) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>{tx("Couldn't load the page contents. Make sure the backend is up to date, then refresh the page.")}</div>;
+  if (!draft) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>{tx("Loading page contents...")}</div>;
 
   const handleSave = async () => {
     // A YouTube choice with no valid link would be refused; catch it here.
     for (const [key, name] of [["systemDemo", "Video for Residents"], ["adminDemo", "Admin demo"]]) {
       if (draft[key].video.source === "youtube" && !draft[key].video.url) {
-        showPopup({ type: "warning", title: "Check the YouTube Link", message: `The ${name} video needs a valid YouTube link, or choose "No video".` });
+        showPopup({ type: "warning", title: tx("Check the YouTube Link"), message: `The ${name} video needs a valid YouTube link, or choose "No video".` });
         return;
       }
     }
@@ -275,13 +276,13 @@ export default function SiteContentsPage() {
     try {
       const result = await updateSiteMedia(draft);
       if (!result?.success) {
-        showPopup({ type: "error", title: "Couldn't Save", message: result?.message || "Please check the details and try again." });
+        showPopup({ type: "error", title: tx("Couldn't Save"), message: result?.message || "Please check the details and try again." });
         return;
       }
       setSaved(result.media);
       setDraft(result.media);
       setSiteMedia(result.media);
-      showPopup({ type: "success", title: "Page Contents Saved", message: "The landing page, resident page, News and admin sign-in now use these photos and videos." });
+      showPopup({ type: "success", title: tx("Page Contents Saved"), message: tx("The landing page, resident page, News and admin sign-in now use these photos and videos.") });
     } finally {
       setSaving(false);
     }
@@ -291,16 +292,16 @@ export default function SiteContentsPage() {
     <div style={{ maxWidth: 1000, margin: "0 auto", paddingBottom: 80 }}>
       <CarouselEditor
         icon="bi-images"
-        title="Landing Page Carousel"
-        hint="The background photos that slide behind the landing page's heading, in this order. Wide photos (landscape) look best. JPG, PNG or WebP up to 5 MB."
+        title={tx("Landing Page Carousel")}
+        hint={tx("The background photos that slide behind the landing page's heading, in this order. Wide photos (landscape) look best. JPG, PNG or WebP up to 5 MB.")}
         slides={draft.carousel}
         onChange={(fn) => setDraft((d) => ({ ...d, carousel: fn(d.carousel) }))}
       />
 
       <CarouselEditor
         icon="bi-house-heart"
-        title="Resident Page Carousel"
-        hint="The background photos that slide behind “Stay safe, stay informed” on the resident page after signing in, in this order."
+        title={tx("Resident Page Carousel")}
+        hint={tx("The background photos that slide behind “Stay safe, stay informed” on the resident page after signing in, in this order.")}
         slides={draft.residentCarousel}
         onChange={(fn) => setDraft((d) => ({ ...d, residentCarousel: fn(d.residentCarousel) }))}
       />
@@ -309,16 +310,16 @@ export default function SiteContentsPage() {
       <div style={card}>
         <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>
           <i className="bi bi-play-circle-fill" style={{ color: "#6B2C3E", marginRight: 8 }} />
-          Video for Residents
+          {tx("Video for Residents")}
         </h3>
-        <p style={hint}>Include a video that residents and visitors will see on the landing page (below the carousel, above "What you can do") and in the resident News tab (below the weather), such as a guide to using Safe Connect, an advisory or a barangay update. Choose where it shows below. Until a video is added, the landing page shows a "coming soon" placeholder.</p>
+        <p style={hint}>{tx("Include a video that residents and visitors will see on the landing page (below the carousel, above \"What you can do\") and in the resident News tab (below the weather), such as a guide to using Safe Connect, an advisory or a barangay update. Choose where it shows below. Until a video is added, the landing page shows a \"coming soon\" placeholder.")}</p>
         <VideoEditor demo={draft.systemDemo} onChange={(systemDemo) => setDraft((d) => ({ ...d, systemDemo }))}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
             <Toggle checked={draft.systemDemo.showOnLanding} onChange={(v) => setDraft((d) => ({ ...d, systemDemo: { ...d.systemDemo, showOnLanding: v } }))}>
-              Show on the landing page
+              {tx("Show on the landing page")}
             </Toggle>
             <Toggle checked={draft.systemDemo.showInNews} onChange={(v) => setDraft((d) => ({ ...d, systemDemo: { ...d.systemDemo, showInNews: v } }))}>
-              Show in the resident News tab {hasVideo(draft.systemDemo) ? "" : "(once a video is added)"}
+              {tx("Show in the resident News tab")} {hasVideo(draft.systemDemo) ? "" : tx("(once a video is added)")}
             </Toggle>
           </div>
         </VideoEditor>
@@ -328,13 +329,13 @@ export default function SiteContentsPage() {
       <div style={card}>
         <h3 style={{ margin: "0 0 4px", fontSize: 17 }}>
           <i className="bi bi-person-video3" style={{ color: "#6B2C3E", marginRight: 8 }} />
-          Admin Demo Video
+          {tx("Admin Demo Video")}
         </h3>
-        <p style={hint}>For Admins and Officials: pops up right after they sign in to the admin panel (each person can choose not to see it again). It can always be watched here.</p>
+        <p style={hint}>{tx("For Admins and Officials: pops up right after they sign in to the admin panel (each person can choose not to see it again). It can always be watched here.")}</p>
         <VideoEditor demo={draft.adminDemo} onChange={(adminDemo) => setDraft((d) => ({ ...d, adminDemo }))}>
           <div style={{ paddingTop: 4 }}>
             <Toggle checked={draft.adminDemo.showOnSignIn} onChange={(v) => setDraft((d) => ({ ...d, adminDemo: { ...d.adminDemo, showOnSignIn: v } }))}>
-              Show after signing in to the admin panel
+              {tx("Show after signing in to the admin panel")}
             </Toggle>
           </div>
         </VideoEditor>
@@ -343,18 +344,18 @@ export default function SiteContentsPage() {
       {/* ── Save bar ── */}
       <div style={{ position: "sticky", bottom: 0, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, padding: "12px 16px", background: "rgba(255,255,255,0.95)", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 -4px 16px rgba(0,0,0,0.06)" }}>
         <span style={{ marginRight: "auto", fontSize: 13, color: dirty ? "#92400e" : "#6b7280" }}>
-          {dirty ? "You have unsaved changes. Uploaded files appear on the site only after you save." : "All changes saved."}
+          {dirty ? tx("You have unsaved changes. Uploaded files appear on the site only after you save.") : tx("All changes saved.")}
         </span>
         <button type="button" className="button button-secondary" disabled={!dirty || saving} onClick={() => setDraft(saved)}>
-          Discard changes
+          {tx("Discard changes")}
         </button>
         <button type="button" className="button button-soft" onClick={() => setPreviewing(true)}>
           <i className="bi bi-eye" style={{ marginRight: 6 }} />
-          Preview
+          {tx("Preview")}
         </button>
         <button type="button" className="button button-primary" disabled={!dirty || saving} onClick={handleSave}>
           <i className={`bi ${saving ? "bi-hourglass-split" : "bi-check-lg"}`} style={{ marginRight: 6 }} />
-          {saving ? "Saving…" : "Save changes"}
+          {saving ? tx("Saving…") : tx("Save changes")}
         </button>
       </div>
 
@@ -367,7 +368,7 @@ export default function SiteContentsPage() {
 function MediaPreview({ draft, onClose }) {
   const strip = (title, slides) => (
     <div>
-      <div style={{ ...label, marginBottom: 8 }}>{title}</div>
+      <div style={{ ...label, marginBottom: 8 }}>{tx(title)}</div>
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
         {slides.map((s, i) => (
           <img key={`${s.src}-${i}`} src={mediaSrc(s.src)} alt={s.alt} style={{ width: 200, aspectRatio: "16 / 9", objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
@@ -375,25 +376,25 @@ function MediaPreview({ draft, onClose }) {
       </div>
     </div>
   );
-  const where = (demo, places) => places.filter(([on]) => on).map(([, name]) => name).join(" and ") || "Hidden";
+  const where = (demo, places) => places.filter(([on]) => on).map(([, name]) => tx(name)).join(" and ") || tx("Hidden");
   const video = (title, demo, places) => (
     <div>
-      <div style={{ ...label, marginBottom: 8 }}>{title} <span style={{ fontWeight: 400 }}>({where(demo, places)})</span></div>
+      <div style={{ ...label, marginBottom: 8 }}>{tx(title)} <span style={{ fontWeight: 400 }}>({where(demo, places)})</span></div>
       <div style={{ maxWidth: 560 }}>
-        <DemoVideoPlayer demo={demo} placeholder={<div style={{ padding: 20, background: "#f3f4f6", borderRadius: 8, color: "#6b7280", fontSize: 13 }}>No video.</div>} />
+        <DemoVideoPlayer demo={demo} placeholder={<div style={{ padding: 20, background: "#f3f4f6", borderRadius: 8, color: "#6b7280", fontSize: 13 }}>{tx("No video.")}</div>} />
       </div>
     </div>
   );
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Preview" style={{ background: "#fff", borderRadius: 14, width: "min(900px, 100%)", maxHeight: "90vh", overflowY: "auto" }}>
+      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label={tx("Preview")} style={{ background: "#fff", borderRadius: 14, width: "min(900px, 100%)", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 17 }}>Preview</h3>
-            <p style={{ margin: 0, fontSize: 12.5, color: "#6b7280" }}>Not saved yet. This is how the site will look after you save.</p>
+            <h3 style={{ margin: 0, fontSize: 17 }}>{tx("Preview")}</h3>
+            <p style={{ margin: 0, fontSize: 12.5, color: "#6b7280" }}>{tx("Not saved yet. This is how the site will look after you save.")}</p>
           </div>
-          <button type="button" className="button button-secondary" onClick={onClose}>Close</button>
+          <button type="button" className="button button-secondary" onClick={onClose}>{tx("Close")}</button>
         </div>
         <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 20 }}>
           {strip("Landing page carousel", draft.carousel)}

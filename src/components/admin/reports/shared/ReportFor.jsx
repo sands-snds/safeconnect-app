@@ -95,7 +95,7 @@ export const ReportForFilter = ({ filterType, filters, setFilters }) => (
             className="form-select"
         >
             {REPORT_FOR_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>{tx(opt.label)}</option>
             ))}
         </select>
     </div>

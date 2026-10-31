@@ -1,4 +1,5 @@
 import React from "react";
+import { tx } from "../../../i18n/adminText";
 
 // A Philippine number for Page Contacts: Mobile or Landline, then +63 (fixed)
 // and only digits. Saved as "+63..." with numberType, checked again by
@@ -37,8 +38,8 @@ const PhoneNumberInput = ({ number, numberType = "mobile", onChange, label = "Nu
         aria-label={`${label} type`}
         style={{ width: 108, flexShrink: 0 }}
       >
-        <option value="mobile">Mobile</option>
-        <option value="landline">Landline</option>
+        <option value="mobile">{tx("Mobile")}</option>
+        <option value="landline">{tx("Landline")}</option>
       </select>
       <div style={{ display: "flex", alignItems: "stretch", flex: 1, minWidth: 0 }}>
         <span
