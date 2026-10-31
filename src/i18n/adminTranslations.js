@@ -138,6 +138,30 @@ export const ADMIN_TL = {
   'No reason was recorded.': 'Walang naitalang dahilan.',
   '{{n}} people': '{{n}} katao',
 
+  // Report types (the resident forms' stored values; same Tagalog as the
+  // resident translations)
+  'Fire Emergency': 'Sunog',
+  'Flood Emergency': 'Baha',
+  'Earthquake': 'Lindol',
+  'Food and Water': 'Pagkain at Tubig',
+  'Medical Aid': 'Medikal na Tulong',
+  'Transport Vehicle': 'Sasakyang Pang-transportasyon',
+  'Theft': 'Pagnanakaw',
+  'Vandalism': 'Bandalismo',
+  'Public Disturbance': 'Gulo sa Publiko',
+  'Suspicious Activity': 'Kahina-hinalang Aktibidad',
+  'Trespassing': 'Pagpasok nang Walang Pahintulot',
+  'Harassment': 'Panliligalig',
+  'Other': 'Iba pa',
+  // Relationship to the person a report was filed for
+  'For {{name}}': 'Para kay {{name}}',
+  'someone else': 'ibang tao',
+  'Family Member': 'Miyembro ng Pamilya',
+  'Friend': 'Kaibigan',
+  'Neighbor': 'Kapitbahay',
+  'Colleague': 'Katrabaho',
+  'Stranger': 'Estranghero',
+
   // Report details
   'Filed on behalf of someone else': 'Isinampa para sa ibang tao',
   'Person Affected': 'Taong Apektado',

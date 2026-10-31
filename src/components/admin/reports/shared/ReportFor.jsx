@@ -10,7 +10,7 @@ import { tx } from "../../../../i18n/adminText";
 export const isForOthers = (report) => report?.reportFor === "others";
 
 const relationshipText = (report) =>
-    report.victimRelationship ? ` (${report.victimRelationship})` : "";
+    report.victimRelationship ? ` (${tx(report.victimRelationship)})` : "";
 
 // Small pill for the collapsed report card.
 export const ReportForTag = ({ report }) => {
@@ -33,7 +33,7 @@ export const ReportForTag = ({ report }) => {
             }}
         >
             <i className="bi bi-people-fill" />
-            For {report.victimName || "someone else"}{relationshipText(report)}
+            {tx("For {{name}}", { name: report.victimName || tx("someone else") })}{relationshipText(report)}
         </span>
     );
 };
@@ -70,7 +70,7 @@ export const ReportForDetails = ({ report, personLabel = "Person Affected" }) =>
 
             <DetailField label={personLabel} value={report.victimName} />
             <DetailField label={tx("Their Contact")} value={report.victimContact || "Not provided"} />
-            <DetailField label={tx("Relationship")} value={report.victimRelationship} />
+            <DetailField label={tx("Relationship")} value={tx(report.victimRelationship)} />
             {report.victimDetails && <DetailField label={tx("Additional Details")} value={report.victimDetails} />}
         </div>
     );

@@ -42,7 +42,7 @@ const AssistanceRequestsTable = ({
     <ReportCard
       key={request.id}
       accentColor="#6B2C3E"
-      title={request.victimOfEmergency ? `${request.assistanceType} · ${request.victimOfEmergency}` : request.assistanceType}
+      title={request.victimOfEmergency ? `${tx(request.assistanceType)} · ${tx(request.victimOfEmergency)}` : tx(request.assistanceType)}
       badge={statusBadge(request.status)}
       tag={
         <>

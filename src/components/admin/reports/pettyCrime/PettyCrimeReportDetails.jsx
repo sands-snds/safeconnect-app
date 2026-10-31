@@ -54,7 +54,7 @@ const PettyCrimeReportDetails = ({ report }) => {
 
         <DetailField
           label={tx("Crime Type")}
-          value={report.crimeType}
+          value={tx(report.crimeType)}
         />
 
         <DetailField

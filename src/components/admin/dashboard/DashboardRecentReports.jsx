@@ -130,7 +130,7 @@ export default function DashboardRecentReports({
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                                     <span style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>
-                                        {item.title || tx(type.label)}
+                                        {tx(item.title) || tx(type.label)}
                                     </span>
                                     <span style={{ fontSize: 11, fontWeight: 600, color: type.color }}>
                                         {tx(type.label)}

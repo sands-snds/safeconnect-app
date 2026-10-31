@@ -45,12 +45,12 @@ const AssistanceRequestDetails = ({ request }) => {
 
         <DetailField
           label={tx("Assistance Type")}
-          value={request.assistanceType}
+          value={tx(request.assistanceType)}
         />
 
         <DetailField
           label={tx("Victim of Emergency")}
-          value={request.victimOfEmergency}
+          value={tx(request.victimOfEmergency)}
         />
 
         {/* Only older requests have one: residents no longer choose an urgency. */}

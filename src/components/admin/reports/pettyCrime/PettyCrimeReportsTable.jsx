@@ -42,7 +42,7 @@ const PettyCrimeReportsTable = ({
     <ReportCard
       key={report.id}
       accentColor="#b45309"
-      title={report.crimeType}
+      title={tx(report.crimeType)}
       badge={statusBadge(report.status)}
       tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}

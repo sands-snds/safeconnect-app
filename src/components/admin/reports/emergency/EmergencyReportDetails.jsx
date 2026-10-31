@@ -40,7 +40,7 @@ const EmergencyReportDetails = ({ report }) => {
 
         <DetailField
           label={tx("Emergency Type")}
-          value={report.emergency}
+          value={tx(report.emergency)}
         />
 
         <DetailField

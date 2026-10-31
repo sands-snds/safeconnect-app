@@ -42,7 +42,7 @@ const EmergencyReportsTable = ({
     <ReportCard
       key={report.id}
       accentColor="#dc2626"
-      title={report.emergency}
+      title={tx(report.emergency)}
       badge={statusBadge(report.status)}
       tag={<ReportForTag report={report} />}
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
