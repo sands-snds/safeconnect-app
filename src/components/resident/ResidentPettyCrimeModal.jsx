@@ -351,9 +351,14 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           boxShadow:'0 20px 60px rgba(0,0,0,.3)'
         }}
 >
+{/* The title stays at the top while the form scrolls under it (above the map's layers, which go up to 1000). */}
 <div style={{
           padding:'20px 24px',
           borderBottom:'1px solid #e5e7eb',
+          position:'sticky',
+          top:0,
+          zIndex:1100,
+          background:'#fff',
           display:'flex',
           alignItems:'center',
           gap:'12px'

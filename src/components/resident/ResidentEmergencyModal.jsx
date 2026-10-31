@@ -1021,7 +1021,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       {show && (
         <div className="modal-overlay">
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+            {/* The title stays at the top while the form scrolls under it (above the map's layers, which go up to 1000). */}
+            <div className="modal-header" style={{ position: 'sticky', top: 0, zIndex: 1100, background: '#fff' }}>
               <div className="header-icon">
                 <i className="bi bi-exclamation-triangle-fill"></i>
               </div>

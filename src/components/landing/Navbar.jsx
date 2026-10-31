@@ -4,6 +4,26 @@ import LanguageToggle from '../shared/LanguageToggle';
 import { MAIN_LOGO } from '../shared/logos';
 // Removed: useNavigate
 
+// Page sections in order; each highlights its nav item while on screen.
+// "home" is the hero at the top.
+const SECTIONS = ['home', 'services', 'contact', 'about'];
+
+// The section the reader is in: the last one whose top has passed a line a
+// third of the way down the screen (below the sticky navbar). At the very
+// bottom of the page it's the last section, even when that one is short.
+const sectionInView = () => {
+  const navHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--landing-navbar-height')) || 76;
+  const line = navHeight + (window.innerHeight - navHeight) / 3;
+  const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+  if (atBottom && window.scrollY > 0) return SECTIONS[SECTIONS.length - 1];
+  let current = SECTIONS[0];
+  SECTIONS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= line) current = id;
+  });
+  return current;
+};
+
 function Navbar() {
   const { t } = useLanguage();
   // Removed: navigate
@@ -16,6 +36,53 @@ function Navbar() {
   // Removed: dropdownRef
   const mobileMenuRef = useRef(null);
   const navRef = useRef(null);
+
+  // The highlighted nav item follows the section on screen. A click shows
+  // the chosen section right away and holds it until the smooth scroll
+  // there settles, instead of flickering through the sections in between.
+  const [activeSection, setActiveSection] = useState('home');
+  const clickedRef = useRef(false);
+  const settleRef = useRef(0);
+
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (!clickedRef.current) setActiveSection(sectionInView());
+    };
+    const onScroll = () => {
+      if (clickedRef.current) {
+        clearTimeout(settleRef.current);
+        settleRef.current = setTimeout(() => { clickedRef.current = false; update(); }, 150);
+      }
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      cancelAnimationFrame(frame);
+      clearTimeout(settleRef.current);
+    };
+  }, []);
+
+  const showSection = (sectionId) => {
+    clickedRef.current = true;
+    setActiveSection(sectionId);
+    // Released when the scroll settles, or here if nothing scrolls at all.
+    clearTimeout(settleRef.current);
+    settleRef.current = setTimeout(() => {
+      clickedRef.current = false;
+      setActiveSection(sectionInView());
+    }, 600);
+  };
+
+  const navItemProps = (base, sectionId) => ({
+    className: `${base}${activeSection === sectionId ? ' active' : ''}`,
+    'aria-current': activeSection === sectionId ? 'true' : undefined,
+  });
 
   // The navbar sticks to the top; section links scroll to just below it
   // (App.css reads --landing-navbar-height for scroll-margin-top).
@@ -75,6 +142,7 @@ function Navbar() {
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
+      showSection(sectionId);
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     setShowMobileMenu(false);
@@ -86,8 +154,8 @@ function Navbar() {
   };
 
   const handleHomeClick = () => {
-    console.log('🏠 Home clicked - scrolling to top');
-    
+    showSection('home');
+
     window.scrollTo({
       top: 0,
       left: 0,
@@ -384,22 +452,22 @@ function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="nav-links">
-              <button className="nav-item active" onClick={handleHomeClick}>
+              <button {...navItemProps('nav-item', 'home')} onClick={handleHomeClick}>
                 <i className="bi bi-house-door-fill"></i>
                 <span>{t('nav.home')}</span>
               </button>
 
-              <button className="nav-item" onClick={(e) => handleNavClick(e, 'services')}>
+              <button {...navItemProps('nav-item', 'services')} onClick={(e) => handleNavClick(e, 'services')}>
                 <i className="bi bi-list-check"></i>
                 <span>{t('nav.services')}</span>
               </button>
 
-              <button className="nav-item" onClick={(e) => handleNavClick(e, 'contact')}>
+              <button {...navItemProps('nav-item', 'contact')} onClick={(e) => handleNavClick(e, 'contact')}>
                 <i className="bi bi-telephone-fill"></i>
                 <span>{t('nav.contact')}</span>
               </button>
 
-              <button className="nav-item" onClick={(e) => handleNavClick(e, 'about')}>
+              <button {...navItemProps('nav-item', 'about')} onClick={(e) => handleNavClick(e, 'about')}>
                 <i className="bi bi-info-circle-fill"></i>
                 <span>{t('nav.about')}</span>
               </button>
@@ -434,22 +502,22 @@ function Navbar() {
                 ×
               </button>
               
-              <button className="mobile-nav-item active" onClick={handleHomeClick}>
+              <button {...navItemProps('mobile-nav-item', 'home')} onClick={handleHomeClick}>
                 <i className="bi bi-house-door-fill"></i>
                 <span>{t('nav.home')}</span>
               </button>
 
-              <button className="mobile-nav-item" onClick={(e) => handleNavClick(e, 'services')}>
+              <button {...navItemProps('mobile-nav-item', 'services')} onClick={(e) => handleNavClick(e, 'services')}>
                 <i className="bi bi-list-check"></i>
                 <span>{t('nav.services')}</span>
               </button>
 
-              <button className="mobile-nav-item" onClick={(e) => handleNavClick(e, 'contact')}>
+              <button {...navItemProps('mobile-nav-item', 'contact')} onClick={(e) => handleNavClick(e, 'contact')}>
                 <i className="bi bi-telephone-fill"></i>
                 <span>{t('nav.contact')}</span>
               </button>
 
-              <button className="mobile-nav-item" onClick={(e) => handleNavClick(e, 'about')}>
+              <button {...navItemProps('mobile-nav-item', 'about')} onClick={(e) => handleNavClick(e, 'about')}>
                 <i className="bi bi-info-circle-fill"></i>
                 <span>{t('nav.about')}</span>
               </button>
