@@ -2,7 +2,7 @@ import React from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 const HOTLINES = [
-  { key: 'barangay', phone: '+63 992 947 4309', icon: 'bi-house-fill',       color: '#6B2C3E' },
+  { key: 'barangay', phone: '0935 498 4838',   icon: 'bi-house-fill',       color: '#6B2C3E' },
   { key: 'dasma',     phone: '+63 46 242 0002',  icon: 'bi-shield-fill',      color: '#3b82f6' },
   { key: 'cdrmc',     phone: '+63 46 230 0345',  icon: 'bi-heart-pulse-fill', color: '#10b981' },
 ];

@@ -4,6 +4,7 @@ import { confirmPopup } from "../../shared/popup";
 import SwipeToArchive from "./SwipeToArchive";
 
 const SNACK_MS = 5000;
+const PAGE_SIZE = 20;
 
 // What "View" opens for each kind of notification.
 const openLabelKey = (n) => {
@@ -13,8 +14,11 @@ const openLabelKey = (n) => {
 };
 
 // Full list of the resident's notifications (the bell shows only the
-// latest). Inbox / Archived, All / Unread / Read, select several to archive,
-// restore, mark read or delete; swipe one away on phones.
+// latest), laid out like the admin's Notifications page: Inbox / Archived
+// and All / Unread / Read on one row, then one card with a toolbar (select
+// all, archive or restore, mark read, delete, mark all read) over the list.
+// Click a notification to open it in place -- the whole message, its date,
+// and View / Archive / Delete; swipe one away on phones. 20 per page.
 export default function NotificationsPage({
     isOpen,
     notifications,
@@ -23,6 +27,7 @@ export default function NotificationsPage({
     onArchive,
     onDelete,
     onMarkRead,
+    onMarkAllRead,
     formatRelativeTime,
     getCategoryIcon,
     getCategoryColor
@@ -31,6 +36,8 @@ export default function NotificationsPage({
     const [box, setBox] = useState("inbox");
     const [filter, setFilter] = useState("all");
     const [selected, setSelected] = useState(() => new Set());
+    const [openId, setOpenId] = useState(null);
+    const [page, setPage] = useState(1);
     // { text, undo: { ids, archived } | null }
     const [snack, setSnack] = useState(null);
 
@@ -38,10 +45,16 @@ export default function NotificationsPage({
         if (!isOpen) {
             setSelected(new Set());
             setSnack(null);
+            setOpenId(null);
         }
     }, [isOpen]);
 
-    useEffect(() => { setSelected(new Set()); }, [box, filter]);
+    // A different tab or filter starts with nothing selected, on page 1.
+    useEffect(() => {
+        setSelected(new Set());
+        setOpenId(null);
+        setPage(1);
+    }, [box, filter]);
 
     useEffect(() => {
         if (!snack) return undefined;
@@ -50,22 +63,26 @@ export default function NotificationsPage({
     }, [snack]);
 
     const source = box === "inbox" ? notifications : archivedNotifications;
-    const visible = useMemo(() => source.filter((n) =>
+    const list = useMemo(() => source.filter((n) =>
         filter === "all" || (filter === "unread" ? n.unread : !n.unread)
     ), [source, filter]);
 
-    // Drop selections that are no longer on screen (archived elsewhere, etc).
+    // Drop selections that are no longer listed (archived elsewhere, etc).
     useEffect(() => {
         setSelected((prev) => {
-            const ids = new Set(visible.map((n) => n.id));
+            const ids = new Set(list.map((n) => n.id));
             const next = new Set([...prev].filter((id) => ids.has(id)));
             return next.size === prev.size ? prev : next;
         });
-    }, [visible]);
+    }, [list]);
 
-    const selectedIds = visible.filter((n) => selected.has(n.id)).map((n) => n.id);
-    const allSelected = visible.length > 0 && selectedIds.length === visible.length;
-    const anyUnreadSelected = visible.some((n) => selected.has(n.id) && n.unread);
+    const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+    const current = Math.min(page, totalPages);
+    const visible = list.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+
+    const selectedIds = list.filter((n) => selected.has(n.id)).map((n) => n.id);
+    const allVisibleSelected = visible.length > 0 && visible.every((n) => selected.has(n.id));
+    const anyUnreadSelected = list.some((n) => selected.has(n.id) && n.unread);
     const unreadInbox = notifications.filter((n) => n.unread).length;
 
     const toggle = (id) => setSelected((prev) => {
@@ -74,7 +91,12 @@ export default function NotificationsPage({
         return next;
     });
 
-    const toggleAll = () => setSelected(allSelected ? new Set() : new Set(visible.map((n) => n.id)));
+    // Select all: the notifications on this page.
+    const toggleAll = () => setSelected((prev) => {
+        const next = new Set(prev);
+        visible.forEach((n) => (allVisibleSelected ? next.delete(n.id) : next.add(n.id)));
+        return next;
+    });
 
     const archive = async (ids, archived) => {
         if (!ids.length) return;
@@ -120,6 +142,24 @@ export default function NotificationsPage({
         setSnack(null);
     };
 
+    const markSelectedRead = () => {
+        const ids = list.filter((n) => selected.has(n.id) && n.unread).map((n) => n.id);
+        if (ids.length) onMarkRead(ids);
+        setSelected(new Set());
+    };
+
+    // Opening one shows all of it (and counts as read).
+    const toggleOpen = (n) => {
+        setOpenId((id) => (id === n.id ? null : n.id));
+        if (n.unread && box === "inbox") onMarkRead([n.id]);
+    };
+
+    const goToPage = (p) => {
+        setPage(p);
+        setOpenId(null);
+        document.querySelector(".notifications-fullscreen .np-body")?.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     const fullDate = (date) => {
         const d = new Date(date);
         if (Number.isNaN(d.getTime())) return "";
@@ -131,6 +171,9 @@ export default function NotificationsPage({
     const emptyText = box === "archived"
         ? t("notificationsPage.emptyArchived")
         : filter === "unread" ? t("notificationsPage.emptyUnread") : t("notificationsPage.emptyInbox");
+
+    const archiveLabel = box === "inbox" ? t("notificationsPage.archive") : t("notificationsPage.restore");
+    const archiveIcon = box === "inbox" ? "bi-archive" : "bi-arrow-counterclockwise";
 
     return (
         <div className={`notifications-fullscreen ${isOpen ? "show" : ""}`} aria-hidden={!isOpen}>
@@ -144,129 +187,147 @@ export default function NotificationsPage({
 
             <div className="np-body">
                 <div className="np-wrap">
-                    {/* Tabs, filters and Select all stay at the top while the list scrolls. */}
+                    {/* Tabs, filters and the toolbar stay at the top while the list scrolls. */}
                     <div className="np-sticky">
-                        <div className="np-tabs" role="tablist">
-                            {[["inbox", t("notificationsPage.inbox"), notifications.length], ["archived", t("notificationsPage.archivedTab"), archivedNotifications.length]].map(([key, label, count]) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={box === key}
-                                    className={`np-tab ${box === key ? "active" : ""}`}
-                                    onClick={() => setBox(key)}
-                                >
-                                    <i className={`bi ${key === "inbox" ? "bi-inbox-fill" : "bi-archive-fill"}`} aria-hidden="true"></i>
-                                    {label} <span className="count">{count}</span>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="np-filters" role="group">
-                            {[["all", t("notificationsPage.all")], ["unread", t("notificationsPage.unread")], ["read", t("notificationsPage.read")]].map(([key, label]) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    className={`np-filter ${filter === key ? "active" : ""}`}
-                                    aria-pressed={filter === key}
-                                    onClick={() => setFilter(key)}
-                                >
-                                    {label}
-                                    {key === "unread" && box === "inbox" && unreadInbox > 0 && <span>{unreadInbox}</span>}
-                                </button>
-                            ))}
-                        </div>
-
-                        {visible.length > 0 && (
-                            <div className={`np-bulk ${selectedIds.length ? "has-selection" : ""}`}>
-                                <label className="np-check-all">
-                                    <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label={t("notificationsPage.selectAll")} />
-                                    <span>{selectedIds.length ? t("notificationsPage.selectedCount", { count: selectedIds.length }) : t("notificationsPage.selectAll")}</span>
-                                </label>
-                                <div className="np-bulk-actions">
-                                    {box === "inbox" && anyUnreadSelected && (
-                                        <button type="button" className="np-btn" onClick={() => { onMarkRead(selectedIds); setSelected(new Set()); }}>
-                                            <i className="bi bi-check2-all" aria-hidden="true"></i><span>{t("notificationsPage.markRead")}</span>
-                                        </button>
-                                    )}
-                                    <button type="button" className="np-btn" disabled={!selectedIds.length} onClick={() => archive(selectedIds, box === "inbox")}>
-                                        <i className={`bi ${box === "inbox" ? "bi-archive" : "bi-arrow-counterclockwise"}`} aria-hidden="true"></i>
-                                        <span>{box === "inbox" ? t("notificationsPage.archive") : t("notificationsPage.restore")}</span>
+                        <div className="np-topbar">
+                            <div className="np-tabs" role="tablist">
+                                {[["inbox", t("notificationsPage.inbox"), notifications.length], ["archived", t("notificationsPage.archivedTab"), archivedNotifications.length]].map(([key, label, count]) => (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={box === key}
+                                        className={`np-tab ${box === key ? "active" : ""}`}
+                                        onClick={() => setBox(key)}
+                                    >
+                                        <i className={`bi ${key === "inbox" ? "bi-inbox-fill" : "bi-archive-fill"}`} aria-hidden="true"></i>
+                                        {label} <span className="count">{count}</span>
                                     </button>
-                                    <button type="button" className="np-btn danger" disabled={!selectedIds.length} onClick={() => remove(selectedIds)}>
-                                        <i className="bi bi-trash3" aria-hidden="true"></i><span>{t("notificationsPage.delete")}</span>
-                                    </button>
-                                </div>
+                                ))}
                             </div>
+
+                            <div className="np-filters" role="group">
+                                {[["all", t("notificationsPage.all")], ["unread", t("notificationsPage.unread")], ["read", t("notificationsPage.read")]].map(([key, label]) => (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        className={`np-filter ${filter === key ? "active" : ""}`}
+                                        aria-pressed={filter === key}
+                                        onClick={() => setFilter(key)}
+                                    >
+                                        {label}
+                                        {key === "unread" && box === "inbox" && unreadInbox > 0 && <span>{unreadInbox}</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Toolbar: select all, then actions for the ticked notifications */}
+                        <div className={`np-toolbar ${selectedIds.length ? "has-selection" : ""}`}>
+                            <label className="np-check-all">
+                                <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} disabled={!visible.length} aria-label={t("notificationsPage.selectAll")} />
+                                <span>{selectedIds.length ? t("notificationsPage.selectedCount", { count: selectedIds.length }) : t("notificationsPage.selectAll")}</span>
+                            </label>
+                            <div className="np-toolbar-actions">
+                                <button type="button" className="np-btn" disabled={!selectedIds.length} onClick={() => archive(selectedIds, box === "inbox")}>
+                                    <i className={`bi ${archiveIcon}`} aria-hidden="true"></i><span>{archiveLabel}</span>
+                                </button>
+                                {box === "inbox" && (
+                                    <button type="button" className="np-btn" disabled={!anyUnreadSelected} onClick={markSelectedRead}>
+                                        <i className="bi bi-envelope-open" aria-hidden="true"></i><span>{t("notificationsPage.markRead")}</span>
+                                    </button>
+                                )}
+                                <button type="button" className="np-btn danger" disabled={!selectedIds.length} onClick={() => remove(selectedIds)}>
+                                    <i className="bi bi-trash3" aria-hidden="true"></i><span>{t("notificationsPage.delete")}</span>
+                                </button>
+                            </div>
+                            {box === "inbox" && unreadInbox > 0 && onMarkAllRead && (
+                                <button type="button" className="np-mark-all" onClick={onMarkAllRead}>
+                                    <i className="bi bi-check2-all" aria-hidden="true"></i> {t("notificationPanel.markAllRead")}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="np-card">
+                        {box === "inbox" && visible.length > 0 && <p className="np-swipe-hint">{t("notificationsPage.swipeHint")}</p>}
+
+                        {visible.length === 0 ? (
+                            <div className="np-empty">
+                                <i className={`bi ${box === "archived" ? "bi-archive" : filter === "unread" ? "bi-check2-circle" : "bi-bell-slash"}`} aria-hidden="true"></i>
+                                <p>{emptyText}</p>
+                            </div>
+                        ) : (
+                            <ul className={`np-list ${box}`}>
+                                {visible.map((n) => {
+                                    const color = getCategoryColor ? getCategoryColor(n.category) : "#6B2C3E";
+                                    const isSelected = selected.has(n.id);
+                                    const isOpenItem = openId === n.id;
+                                    return (
+                                        <li key={n.id} className={isOpenItem ? "open" : ""}>
+                                            <SwipeToArchive
+                                                onArchive={box === "inbox" ? () => archive([n.id], true) : null}
+                                                label={t("notificationPanel.archive")}
+                                            >
+                                                <div className={`np-item ${n.unread ? "unread" : ""} ${isSelected ? "selected" : ""} ${isOpenItem ? "open" : ""}`} data-notification-id={n.id}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="np-item-check"
+                                                        checked={isSelected}
+                                                        onChange={() => toggle(n.id)}
+                                                        aria-label={t("notificationsPage.select", { title: n.title })}
+                                                    />
+                                                    <div
+                                                        className="np-item-icon"
+                                                        style={n.unread ? { background: color, color: "#fff" } : { background: `${color}18`, color }}
+                                                    >
+                                                        <i className={`bi ${getCategoryIcon(n.category)}`} aria-hidden="true"></i>
+                                                    </div>
+                                                    <button type="button" className="np-item-main" onClick={() => toggleOpen(n)} aria-expanded={isOpenItem}>
+                                                        <span className="np-item-title-row">
+                                                            <span className="np-item-title">{n.title}</span>
+                                                            {n.isPersonal && <span className="n-tag">{t("notificationPanel.yourReport")}</span>}
+                                                            <span className="np-item-time" title={fullDate(n.date)}>{formatRelativeTime(n.date)}</span>
+                                                        </span>
+                                                        <span className="np-item-message">{n.message}</span>
+                                                    </button>
+                                                    {n.unread && <span className="unread-dot np-item-dot" aria-hidden="true"></span>}
+                                                </div>
+                                            </SwipeToArchive>
+
+                                            {isOpenItem && (
+                                                <div className="np-detail">
+                                                    <p className="np-detail-date">{fullDate(n.date)}</p>
+                                                    <div className="np-detail-actions">
+                                                        <button type="button" className="np-btn primary" onClick={() => onOpen(n.id)}>
+                                                            {t(openLabelKey(n))} <i className="bi bi-arrow-right" aria-hidden="true"></i>
+                                                        </button>
+                                                        <button type="button" className="np-btn" onClick={() => archive([n.id], box === "inbox")}>
+                                                            <i className={`bi ${archiveIcon}`} aria-hidden="true"></i><span>{archiveLabel}</span>
+                                                        </button>
+                                                        <button type="button" className="np-btn danger" onClick={() => remove([n.id])}>
+                                                            <i className="bi bi-trash3" aria-hidden="true"></i><span>{t("notificationsPage.delete")}</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
                         )}
                     </div>
 
-                    {box === "inbox" && visible.length > 0 && <p className="np-swipe-hint">{t("notificationsPage.swipeHint")}</p>}
-
-                    {visible.length === 0 ? (
-                        <div className="np-empty">
-                            <i className={`bi ${box === "archived" ? "bi-archive" : filter === "unread" ? "bi-check2-circle" : "bi-bell-slash"}`} aria-hidden="true"></i>
-                            <p>{emptyText}</p>
-                        </div>
-                    ) : (
-                        <ul className={`np-list ${box}`}>
-                            {visible.map((n) => {
-                                const color = getCategoryColor ? getCategoryColor(n.category) : "#6B2C3E";
-                                const isSelected = selected.has(n.id);
-                                return (
-                                    <li key={n.id}>
-                                        <SwipeToArchive
-                                            onArchive={box === "inbox" ? () => archive([n.id], true) : null}
-                                            label={t("notificationPanel.archive")}
-                                        >
-                                            <div className={`np-item ${n.unread ? "unread" : ""} ${isSelected ? "selected" : ""}`} data-notification-id={n.id}>
-                                                <input
-                                                    type="checkbox"
-                                                    className="np-item-check"
-                                                    checked={isSelected}
-                                                    onChange={() => toggle(n.id)}
-                                                    aria-label={t("notificationsPage.select", { title: n.title })}
-                                                />
-                                                <div
-                                                    className="np-item-icon"
-                                                    style={n.unread ? { background: color, color: "#fff" } : { background: `${color}18`, color }}
-                                                >
-                                                    <i className={`bi ${getCategoryIcon(n.category)}`} aria-hidden="true"></i>
-                                                </div>
-                                                <button type="button" className="np-item-main" onClick={() => onOpen(n.id)}>
-                                                    <span className="np-item-title-row">
-                                                        <span className="np-item-title">{n.title}</span>
-                                                        {n.isPersonal && <span className="n-tag">{t("notificationPanel.yourReport")}</span>}
-                                                        {n.unread && <span className="unread-dot" aria-hidden="true"></span>}
-                                                    </span>
-                                                    <span className="np-item-message">{n.message}</span>
-                                                    <span className="np-item-time" title={fullDate(n.date)}>
-                                                        {fullDate(n.date)} · {formatRelativeTime(n.date)}
-                                                    </span>
-                                                </button>
-                                                <div className="np-item-actions">
-                                                    <button type="button" className="np-icon-btn" onClick={() => onOpen(n.id)} title={t(openLabelKey(n))} aria-label={t(openLabelKey(n))}>
-                                                        <i className="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="np-icon-btn"
-                                                        onClick={() => archive([n.id], box === "inbox")}
-                                                        title={box === "inbox" ? t("notificationsPage.archive") : t("notificationsPage.restore")}
-                                                        aria-label={box === "inbox" ? t("notificationsPage.archive") : t("notificationsPage.restore")}
-                                                    >
-                                                        <i className={`bi ${box === "inbox" ? "bi-archive" : "bi-arrow-counterclockwise"}`} aria-hidden="true"></i>
-                                                    </button>
-                                                    <button type="button" className="np-icon-btn danger" onClick={() => remove([n.id])} title={t("notificationsPage.delete")} aria-label={t("notificationsPage.delete")}>
-                                                        <i className="bi bi-trash3" aria-hidden="true"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </SwipeToArchive>
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                    {totalPages > 1 && (
+                        <nav className="np-pagination" aria-label={t("notificationsPage.pagination")}>
+                            <button type="button" className="np-page-btn" disabled={current === 1} onClick={() => goToPage(current - 1)}>
+                                <i className="bi bi-chevron-left" aria-hidden="true"></i><span>{t("notificationsPage.prevPage")}</span>
+                            </button>
+                            <span className="np-page-info">{t("notificationsPage.pageOf", { page: current, total: totalPages })}</span>
+                            <button type="button" className="np-page-btn" disabled={current === totalPages} onClick={() => goToPage(current + 1)}>
+                                <span>{t("notificationsPage.nextPage")}</span><i className="bi bi-chevron-right" aria-hidden="true"></i>
+                            </button>
+                        </nav>
                     )}
                 </div>
             </div>

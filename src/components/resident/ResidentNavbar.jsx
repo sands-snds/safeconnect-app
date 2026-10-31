@@ -613,6 +613,7 @@ function ResidentNavbar() {
         onArchive={archiveNotifications}
         onDelete={deleteNotifications}
         onMarkRead={markManyAsRead}
+        onMarkAllRead={markEverythingRead}
         formatRelativeTime={formatRelativeTime}
         getCategoryIcon={getCategoryIcon}
         getCategoryColor={getCategoryColor}

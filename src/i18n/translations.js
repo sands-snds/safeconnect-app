@@ -90,6 +90,14 @@ export const translations = {
       otpSendFailed: 'Failed to send verification code.',
       resendFailed: 'Could not resend code.',
       emailRequired: 'Please enter your email address.',
+      emailInvalid: 'Please enter a valid email address, like name@example.com.',
+      passwordRequired: 'Please enter your password.',
+      firstNameRequired: 'Please enter your first name.',
+      lastNameRequired: 'Please enter your last name.',
+      contactRequired: 'Please enter your mobile number (the 10 digits after +63).',
+      usernameRequired: 'Please choose a username.',
+      newPasswordRequired: 'Please enter a new password.',
+      confirmPasswordRequired: 'Please type the password again to confirm it.',
       genericError: 'Something went wrong.',
       fillBothPasswordFields: 'Please fill in both password fields.',
       couldNotResetPassword: 'Could not reset password.'
@@ -627,7 +635,11 @@ export const translations = {
       deleteBodyMany: 'These {{count}} notifications will be deleted for good.',
       deleteConfirm: 'Delete',
       cancel: 'Cancel',
-      failed: "Couldn't update the notifications. Please try again."
+      failed: "Couldn't update the notifications. Please try again.",
+      pagination: 'Notification pages',
+      prevPage: 'Previous',
+      nextPage: 'Next',
+      pageOf: 'Page {{page}} of {{total}}'
     },
     weather: {
       codes: {
@@ -1157,6 +1169,14 @@ export const translations = {
       otpSendFailed: 'Hindi naipadala ang verification code.',
       resendFailed: 'Hindi na-resend ang code.',
       emailRequired: 'Pakilagay ang iyong email address.',
+      emailInvalid: 'Pakilagay ang tamang email address, gaya ng pangalan@example.com.',
+      passwordRequired: 'Pakilagay ang iyong password.',
+      firstNameRequired: 'Pakilagay ang iyong unang pangalan.',
+      lastNameRequired: 'Pakilagay ang iyong apelyido.',
+      contactRequired: 'Pakilagay ang iyong numero ng mobile (ang 10 digit pagkatapos ng +63).',
+      usernameRequired: 'Pumili ng username.',
+      newPasswordRequired: 'Pakilagay ang bagong password.',
+      confirmPasswordRequired: 'Pakiulit ang password para makumpirma ito.',
       genericError: 'May nagkamali.',
       fillBothPasswordFields: 'Pakisagutan ang parehong password field.',
       couldNotResetPassword: 'Hindi na-reset ang password.'
@@ -1694,7 +1714,11 @@ export const translations = {
       deleteBodyMany: 'Tuluyang mabubura ang {{count}} abisong ito.',
       deleteConfirm: 'Burahin',
       cancel: 'Kanselahin',
-      failed: 'Hindi ma-update ang mga abiso. Pakisubukang muli.'
+      failed: 'Hindi ma-update ang mga abiso. Pakisubukang muli.',
+      pagination: 'Mga pahina ng abiso',
+      prevPage: 'Nakaraan',
+      nextPage: 'Susunod',
+      pageOf: 'Pahina {{page}} ng {{total}}'
     },
     weather: {
       codes: {

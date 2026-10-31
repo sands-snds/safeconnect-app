@@ -2218,35 +2218,46 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     padding: 0 clamp(1rem, 5vw, 4rem) 5rem;
 }
 
-/* Tabs, filters and the Select all bar. The page's top padding lives here
-   so it looks the same at first; once scrolled it sticks with only a small
-   gap above, on the page background so the list slides under it. */
+/* Tabs, filters and the toolbar. The page's top padding lives here so it
+   looks the same at first; once scrolled it sticks with only a small gap
+   above, on the page background so the list slides under it. */
 .np-sticky {
     position: sticky;
     top: calc(12px - var(--np-pad-top));
     z-index: 3;
     background: #f5f2f3;
     padding-top: var(--np-pad-top);
-    padding-bottom: 0.1px; /* keeps the last bar's margin inside the background */
 }
 
-.np-wrap { max-width: 880px; margin: 0 auto; }
+.np-wrap { max-width: 1000px; margin: 0 auto; }
+
+/* Same layout as the admin Notifications page: Inbox / Archived on the
+   left, All / Unread / Read on the right, then one card -- toolbar on top,
+   the list under it. */
+.np-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
 
 .np-tabs {
-    display: flex;
-    gap: 1.6rem;
-    border-bottom: 2px solid #ece4e6;
-    margin-bottom: 1rem;
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: #ece4e6;
+    border-radius: 12px;
 }
 
 .np-tab {
     border: none;
-    background: none;
-    padding: 0 0 0.7rem;
-    margin-bottom: -2px;
-    border-bottom: 2px solid transparent;
+    background: transparent;
+    padding: 7px 14px;
+    border-radius: 9px;
     color: #6b7280;
-    font-size: 0.92rem;
+    font-size: 0.86rem;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
@@ -2255,7 +2266,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 .np-tab:hover { color: #6B2C3E; }
-.np-tab.active { color: #6B2C3E; border-bottom-color: #6B2C3E; }
+.np-tab.active { background: #fff; color: #6B2C3E; box-shadow: 0 1px 3px rgba(107, 44, 62, 0.14); }
 
 .np-tab .count {
     font-size: 0.7rem;
@@ -2267,7 +2278,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .np-tab.active .count { background: #fbe4e9; color: #6B2C3E; }
 
-.np-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.np-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 .np-filter {
     border: 1px solid #e5d9dc;
@@ -2294,20 +2305,18 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 .np-filter.active { background: #6B2C3E; border-color: #6B2C3E; color: #fff; }
 .np-filter.active span { background: #fff; color: #6B2C3E; }
 
-.np-bulk {
+.np-toolbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+    gap: 10px 12px;
     flex-wrap: wrap;
-    background: #fff;
+    background: #faf6f7;
     border: 1px solid #efe6e8;
-    border-radius: 14px;
-    padding: 10px 14px;
-    margin-bottom: 0.6rem;
+    border-radius: 16px 16px 0 0;
+    padding: 10px 16px;
 }
 
-.np-bulk.has-selection { border-color: #d9b8c1; box-shadow: 0 6px 18px rgba(107, 44, 62, 0.08); }
+.np-toolbar.has-selection { background: #fbf1f4; }
 
 .np-check-all {
     display: inline-flex;
@@ -2329,7 +2338,26 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     flex-shrink: 0;
 }
 
-.np-bulk-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.np-check-all input:disabled { cursor: not-allowed; }
+
+.np-toolbar-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.np-mark-all {
+    margin-left: auto;
+    border: none;
+    background: none;
+    color: #6B2C3E;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.np-mark-all:hover { text-decoration: underline; }
 
 .np-btn {
     border: 1px solid #e5d9dc;
@@ -2348,18 +2376,31 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 .np-btn:hover:not(:disabled) { background: #faf5f6; border-color: #6B2C3E; }
 .np-btn.danger { color: #dc2626; }
 .np-btn.danger:hover:not(:disabled) { background: #fef2f2; border-color: #dc2626; }
+.np-btn.primary { background: #6B2C3E; border-color: #6B2C3E; color: #fff; }
+.np-btn.primary:hover:not(:disabled) { background: #561f30; border-color: #561f30; }
 .np-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.np-swipe-hint { display: none; font-size: 0.76rem; color: #8a8285; margin: 0 0 0.6rem; }
+.np-card {
+    background: #fff;
+    border: 1px solid #efe6e8;
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+}
+
+.np-swipe-hint {
+    display: none;
+    font-size: 0.76rem;
+    color: #8a8285;
+    margin: 0;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f3eef0;
+}
 
 .np-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    background: #fff;
-    border: 1px solid #efe6e8;
-    border-radius: 16px;
-    overflow: hidden;
 }
 
 .np-list > li + li { border-top: 1px solid #f3eef0; }
@@ -2374,7 +2415,9 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .np-item.unread { background: #fdfaf8; }
 .np-item.selected { background: #fbf1f4; }
-.np-item-check { margin-top: 8px; }
+.np-item.open,
+.np-list > li.open { background: #fdf8f9; }
+.np-item-check { margin-top: 10px; }
 
 .np-item-icon {
     width: 38px;
@@ -2401,49 +2444,81 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     color: inherit;
 }
 
-.np-item-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.np-item-title { font-size: 0.92rem; font-weight: 700; color: #1f2937; }
-.np-item.unread .np-item-title { font-weight: 800; }
-.np-item-title-row .n-tag { margin-bottom: 0; }
-.np-item-title-row .unread-dot { margin-top: 0; }
-.np-item-message { font-size: 0.86rem; color: #4b5563; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
-.np-item-time { font-size: 0.74rem; color: #9ca3af; }
-.np-item-main:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 4px; border-radius: 6px; }
-
-.np-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
-
-.np-icon-btn {
-    width: 34px;
-    height: 34px;
-    border: none;
-    border-radius: 10px;
-    background: transparent;
-    color: #6b7280;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.95rem;
+.np-item-title-row { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.np-item-title {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #1f2937;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+.np-item.unread .np-item-title { font-weight: 800; }
+.np-item.open .np-item-title { white-space: normal; overflow-wrap: anywhere; }
+.np-item-title-row .n-tag { margin-bottom: 0; flex-shrink: 0; align-self: center; }
+.np-item-time { margin-left: auto; padding-left: 4px; font-size: 0.74rem; color: #9ca3af; white-space: nowrap; flex-shrink: 0; }
+.np-item-message {
+    font-size: 0.86rem;
+    color: #4b5563;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.np-item.open .np-item-message { white-space: pre-line; overflow-wrap: anywhere; }
+.np-item-main:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 4px; border-radius: 6px; }
+.np-item-dot { margin-top: 9px; flex-shrink: 0; }
 
-.np-icon-btn:hover { background: #f5eef0; color: #6B2C3E; }
-.np-icon-btn.danger:hover { background: #fef2f2; color: #dc2626; }
-.np-icon-btn:focus-visible,
+/* An opened notification: its date and what you can do with it, lined up
+   with the text above (checkbox 18 + icon 38 + gaps). */
+.np-detail { padding: 0 16px 16px 96px; }
+.np-detail-date { margin: 0 0 10px; font-size: 0.78rem; color: #6b7280; }
+.np-detail-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
 .np-btn:focus-visible,
 .np-tab:focus-visible,
-.np-filter:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; }
+.np-filter:focus-visible,
+.np-mark-all:focus-visible,
+.np-page-btn:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; }
 
 .np-empty {
     text-align: center;
     padding: 3.5rem 1rem;
     color: #9ca3af;
-    background: #fff;
-    border: 1px solid #efe6e8;
-    border-radius: 16px;
 }
 
 .np-empty i { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
 .np-empty p { margin: 0; font-weight: 600; }
+
+.np-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.np-page-info { font-size: 0.82rem; color: #4b5563; font-weight: 600; }
+
+.np-page-btn {
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid #e5d9dc;
+    background: #fff;
+    color: #374151;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.np-page-btn:hover:not(:disabled) { border-color: #6B2C3E; color: #6B2C3E; }
+.np-page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .np-snack {
     position: absolute;
@@ -2472,16 +2547,23 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     padding: 2px 4px;
 }
 
-/* Phones: swipe to archive, so inbox rows keep just View and Delete. */
+/* Phones: tabs fill the row, the actions get their own row, and an opened
+   notification's buttons use the full width. Swipe a row to archive it. */
 @media (max-width: 600px) {
     .np-swipe-hint { display: block; }
+    .np-topbar { flex-direction: column; align-items: stretch; gap: 10px; }
+    .np-tabs { display: flex; }
+    .np-tab { flex: 1; justify-content: center; }
+    .np-toolbar { padding: 10px 12px; }
+    .np-toolbar-actions { order: 3; width: 100%; }
+    .np-toolbar-actions .np-btn { flex: 1; justify-content: center; padding: 7px 6px; gap: 5px; white-space: nowrap; }
     .np-item { padding: 12px; gap: 10px; }
     .np-item-icon { width: 34px; height: 34px; font-size: 0.9rem; }
-    .np-item-actions { flex-direction: column; gap: 2px; }
-    .np-list.inbox .np-item-actions .np-icon-btn:nth-child(2) { display: none; }
-    .np-bulk-actions { width: 100%; }
-    .np-bulk-actions .np-btn { flex: 1; justify-content: center; }
-    .np-tabs { gap: 1.2rem; }
+    .np-item-title-row { flex-wrap: wrap; row-gap: 2px; }
+    .np-detail { padding: 0 12px 14px; }
+    .np-detail-actions .np-btn { flex: 1 1 auto; justify-content: center; }
+    .np-detail-actions .np-btn.primary { flex-basis: 100%; }
+    .np-page-btn span { display: none; }
     .np-snack { bottom: 88px; }
 }
 

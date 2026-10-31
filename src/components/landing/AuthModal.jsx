@@ -82,6 +82,14 @@ const STYLES = `
   .auth-hint { margin-top: 4px; font-size: 0.78rem; font-weight: 600; }
   .auth-hint.ok { color: #16a34a; }
   .auth-hint.bad { color: #dc2626; }
+  /* A field the form couldn't accept: red outline and why, under it. */
+  .auth-field.has-error .auth-input { border-color: #dc2626; background: #fffafa; }
+  .auth-field.has-error .auth-input:focus { border-color: #dc2626; box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.14); }
+  .auth-field.has-error .auth-input-icon, .auth-field.has-error .auth-prefix { color: #dc2626; }
+  .auth-field-error { margin-top: 5px; display: flex; align-items: flex-start; gap: 6px; font-size: 0.78rem; font-weight: 600; line-height: 1.4; color: #dc2626; }
+  .auth-field-error i { margin-top: 1px; flex-shrink: 0; }
+  .auth-check-error { margin: -10px 0 16px 28px; }
+  .auth-check.has-error input { outline: 2px solid #dc2626; outline-offset: 2px; }
 
   .auth-checklist { list-style: none; margin: -4px 0 14px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
   .auth-checklist li { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #6b7280; }
@@ -176,8 +184,11 @@ export const AuthAlert = ({ type = 'error', children }) => {
 
 // Label + input with a leading icon. Pass the input itself as children with
 // className "auth-input" (and the same id as htmlFor).
-export const AuthField = ({ id, label, optional, icon, prefix, toggle, hint, hintTone, children }) => (
-  <div className="auth-field">
+// error: what's wrong with this field (red outline + the message under it,
+// in place of the hint). The input points to it with aria-describedby
+// "<id>-error" (see fieldProps in Hero.jsx).
+export const AuthField = ({ id, label, optional, icon, prefix, toggle, hint, hintTone, error, children }) => (
+  <div className={`auth-field${error ? ' has-error' : ''}`}>
     <label className="auth-label" htmlFor={id}>
       {label} {optional && <span className="optional">{optional}</span>}
     </label>
@@ -187,7 +198,16 @@ export const AuthField = ({ id, label, optional, icon, prefix, toggle, hint, hin
       {children}
       {toggle}
     </div>
-    {hint && <div className={`auth-hint ${hintTone || ''}`}>{hint}</div>}
+    {error
+      ? <AuthFieldError id={id}>{error}</AuthFieldError>
+      : hint && <div className={`auth-hint ${hintTone || ''}`}>{hint}</div>}
+  </div>
+);
+
+export const AuthFieldError = ({ id, className = '', children }) => (
+  <div className={`auth-field-error ${className}`} id={`${id}-error`}>
+    <i className="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+    <span>{children}</span>
   </div>
 );
 

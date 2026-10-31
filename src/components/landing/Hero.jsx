@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { signinUser, setAuthToken, rememberLogin } from '../../Services/api';
-import AuthModal, { AuthAlert, AuthField } from './AuthModal';
+import AuthModal, { AuthAlert, AuthField, AuthFieldError } from './AuthModal';
 import { useLanguage } from '../../i18n/LanguageContext';
 import useSiteContent, { useSiteMedia, mediaSrc } from '../shared/useSiteContent';
 import EmergencyContactList from '../shared/EmergencyContactList';
@@ -22,6 +22,25 @@ const PASSWORD_REQUIREMENTS = [
 ];
 const getMissingRequirements = (pw) =>
     PASSWORD_REQUIREMENTS.filter(r => !r.test(pw)).map(r => r.key);
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// A server answer that is about one field (e.g. "Username is already
+// taken."), so the form can point at that field. [pattern, inputId] pairs,
+// checked in order; null when the message isn't about a field.
+const fieldForMessage = (message, pairs) => {
+    const text = String(message || '');
+    const hit = pairs.find(([re]) => re.test(text));
+    return hit ? hit[1] : null;
+};
+const SIGNUP_SERVER_FIELDS = [
+    [/username/i, 'suUsername'],
+    [/account with this email|email address does not appear/i, 'suEmail'],
+    [/^password|password must/i, 'suPassword'],
+    [/mobile|contact number/i, 'suContact'],
+];
+const RESET_SERVER_FIELDS = [
+    [/^password|password must|new password/i, 'fpNewPw'],
+];
 
 const apiPost = async (path, body) => {
     const res = await fetch(`${API_BASE}/auth/${path}`, {
@@ -184,7 +203,44 @@ function Hero() {
         return () => clearTimeout(t);
     }, [resendCooldown]);
 
-    const clearErr = () => { setError(''); setSuccessMsg(''); };
+    // Fields the form couldn't accept: { [inputId]: message }, in form order.
+    // Each shows a red outline and its message; the first gets the focus
+    // (scrolled into view, which matters on phones where Sign Up scrolls).
+    // Editing a field clears its message.
+    const [fieldErrors,   setFieldErrors]   = useState({});
+
+    const focusField = (id) => requestAnimationFrame(() => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+        el.focus({ preventScroll: true });
+    });
+
+    // Returns true when there was something to fix.
+    const showFieldErrors = (errors) => {
+        setFieldErrors(errors);
+        const first = Object.keys(errors)[0];
+        if (first) focusField(first);
+        return Boolean(first);
+    };
+
+    // A password's confirmation is checked against it, so editing the
+    // password clears both.
+    const LINKED_FIELDS = { suPassword: 'suConfirm', fpNewPw: 'fpConfirmPw' };
+    const clearFieldError = (e) => {
+        const ids = [e.target.id, LINKED_FIELDS[e.target.id]];
+        setFieldErrors((prev) => {
+            if (!ids.some((id) => id && prev[id])) return prev;
+            const next = { ...prev };
+            ids.forEach((id) => { delete next[id]; });
+            return next;
+        });
+    };
+
+    // Props for an input: marks it invalid and links its message.
+    const fieldProps = (id) => (fieldErrors[id] ? { 'aria-invalid': true, 'aria-describedby': `${id}-error` } : {});
+
+    const clearErr = () => { setError(''); setSuccessMsg(''); setFieldErrors({}); };
 
     // ── OTP helpers ───────────────────────────────────────────────────────────
     const handleOtpChange = (i, value) => {
@@ -225,13 +281,17 @@ function Hero() {
         setFpEmail(''); setFpNewPw(''); setFpConfirmPw('');
         setShowFpNewPw(false); setShowFpConfPw(false);
         resetOtp(); setOtpEmail(''); setResendCooldown(0);
-        setError(''); setSuccessMsg(''); setSignInNotice('');
+        setError(''); setSuccessMsg(''); setSignInNotice(''); setFieldErrors({});
     };
 
     // ── Sign in ───────────────────────────────────────────────────────────────
     const handleSignIn = async (e) => {
         e.preventDefault(); clearErr();
-        if (!siEmail.trim() || !siPassword) { setError(t('auth.bothEmailPassword')); return; }
+        const problems = {};
+        if (!siEmail.trim()) problems.siEmail = t('auth.emailRequired');
+        else if (!EMAIL_REGEX.test(siEmail.trim())) problems.siEmail = t('auth.emailInvalid');
+        if (!siPassword) problems.siPassword = t('auth.passwordRequired');
+        if (showFieldErrors(problems)) return;
         setIsSubmitting(true);
         try {
             const result = await signinUser(siEmail.trim(), siPassword);
@@ -240,7 +300,13 @@ function Hero() {
                 closeAll();
                 if (showAccountStatusPopup(result.code, t, siteContent.socials?.email)) return;
             }
-            if (!result.success) { setError(result.message || t('auth.invalidCredentials')); return; }
+            if (!result.success) {
+                // Wrong email or password: we can't tell which, so explain
+                // above and put the cursor back in the password.
+                setError(result.message || t('auth.invalidCredentials'));
+                focusField('siPassword');
+                return;
+            }
             // Admins aren't asked to save the login: the admin panel always
             // uses a sign-in that ends when the browser closes.
             if (result.isAdmin) {
@@ -298,15 +364,23 @@ function Hero() {
     // ── Sign up: step 1 — send OTP ────────────────────────────────────────────
     const handleSignUpSubmit = async (e) => {
         e.preventDefault(); clearErr();
-        if (!suFirst||!suLast||!suUsername||!suContact||!suEmail||!suPassword||!suConfirm) {
-            setError(t('auth.fillRequired')); return;
-        }
-        if (suContact.length !== 10) { setError(t('auth.contactDigits')); return; }
-        if (suPassword !== suConfirm) { setError(t('auth.passwordMismatch')); return; }
+        // Every problem at once, in the order of the form.
+        const problems = {};
+        if (!suFirst.trim()) problems.suFirst = t('auth.firstNameRequired');
+        if (!suLast.trim()) problems.suLast = t('auth.lastNameRequired');
+        if (!suContact) problems.suContact = t('auth.contactRequired');
+        else if (suContact.length !== 10) problems.suContact = t('auth.contactDigits');
+        if (!suEmail.trim()) problems.suEmail = t('auth.emailRequired');
+        else if (!EMAIL_REGEX.test(suEmail.trim())) problems.suEmail = t('auth.emailInvalid');
+        if (!suUsername.trim()) problems.suUsername = t('auth.usernameRequired');
         const missing = getMissingRequirements(suPassword);
-        if (missing.length > 0) { setError(t('auth.passwordMissing', { list: missing.map(k => t(`pwReq.${k}`)).join(', ') })); return; }
-        if (!termsViewed) { setError(t('signUp.viewTermsFirst')); return; }
-        if (!suAgree) { setError(t('signUp.mustAgree')); return; }
+        if (!suPassword) problems.suPassword = t('auth.passwordRequired');
+        else if (missing.length > 0) problems.suPassword = t('auth.passwordMissing', { list: missing.map(k => t(`pwReq.${k}`)).join(', ') });
+        if (!suConfirm) problems.suConfirm = t('auth.confirmPasswordRequired');
+        else if (suPassword !== suConfirm) problems.suConfirm = t('auth.passwordMismatch');
+        if (!termsViewed) problems.suAgree = t('signUp.viewTermsFirst');
+        else if (!suAgree) problems.suAgree = t('signUp.mustAgree');
+        if (showFieldErrors(problems)) return;
 
         const fullName = [suFirst, suMiddle, suLast].filter(Boolean).join(' ');
         setIsSubmitting(true);
@@ -315,7 +389,12 @@ function Hero() {
                 fullName, username: suUsername,
                 contact: `+63${suContact}`, email: suEmail, password: suPassword,
             });
-            if (!result.success) { setError(result.message || t('auth.otpSendFailed')); return; }
+            if (!result.success) {
+                const field = fieldForMessage(result.message, SIGNUP_SERVER_FIELDS);
+                if (field) showFieldErrors({ [field]: result.message });
+                else setError(result.message || t('auth.otpSendFailed'));
+                return;
+            }
             setOtpEmail(suEmail); resetOtp(); setSignUpStep('otp'); setResendCooldown(60);
         } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
@@ -325,7 +404,7 @@ function Hero() {
     const handleVerifySignupOtp = async (e) => {
         e.preventDefault(); clearErr();
         const code = otp.join('');
-        if (code.length < 6) { setError(t('auth.otpIncomplete')); return; }
+        if (code.length < 6) { setError(t('auth.otpIncomplete')); otpRefs.current[Math.max(0, otp.findIndex((d) => !d))]?.focus(); return; }
         setIsSubmitting(true);
         try {
             const result = await apiPost('verify-otp', { email: otpEmail, otp: code });
@@ -354,7 +433,8 @@ function Hero() {
     // ── Forgot password: step 1 — enter email ────────────────────────────────
     const handleForgotEmail = async (e) => {
         e.preventDefault(); clearErr();
-        if (!fpEmail.trim()) { setError(t('auth.emailRequired')); return; }
+        if (!fpEmail.trim()) { showFieldErrors({ fpEmail: t('auth.emailRequired') }); return; }
+        if (!EMAIL_REGEX.test(fpEmail.trim())) { showFieldErrors({ fpEmail: t('auth.emailInvalid') }); return; }
         setIsSubmitting(true);
         try {
             const result = await apiPost('forgot-password', { email: fpEmail.trim() });
@@ -368,7 +448,7 @@ function Hero() {
     const handleVerifyResetOtp = async (e) => {
         e.preventDefault(); clearErr();
         const code = otp.join('');
-        if (code.length < 6) { setError(t('auth.otpIncomplete')); return; }
+        if (code.length < 6) { setError(t('auth.otpIncomplete')); otpRefs.current[Math.max(0, otp.findIndex((d) => !d))]?.focus(); return; }
         setIsSubmitting(true);
         try {
             const result = await apiPost('verify-reset-otp', { email: otpEmail, otp: code });
@@ -392,14 +472,22 @@ function Hero() {
     // ── Forgot password: step 3 — set new password ───────────────────────────
     const handleResetPassword = async (e) => {
         e.preventDefault(); clearErr();
-        if (!fpNewPw || !fpConfirmPw) { setError(t('auth.fillBothPasswordFields')); return; }
-        if (fpNewPw !== fpConfirmPw) { setError(t('auth.passwordMismatchPeriod')); return; }
+        const problems = {};
         const missing = getMissingRequirements(fpNewPw);
-        if (missing.length > 0) { setError(t('auth.passwordMissing', { list: missing.map(k => t(`pwReq.${k}`)).join(', ') })); return; }
+        if (!fpNewPw) problems.fpNewPw = t('auth.newPasswordRequired');
+        else if (missing.length > 0) problems.fpNewPw = t('auth.passwordMissing', { list: missing.map(k => t(`pwReq.${k}`)).join(', ') });
+        if (!fpConfirmPw) problems.fpConfirmPw = t('auth.confirmPasswordRequired');
+        else if (fpNewPw !== fpConfirmPw) problems.fpConfirmPw = t('auth.passwordMismatchPeriod');
+        if (showFieldErrors(problems)) return;
         setIsSubmitting(true);
         try {
             const result = await apiPost('reset-password', { email: otpEmail, newPassword: fpNewPw });
-            if (!result.success) { setError(result.message || t('auth.couldNotResetPassword')); return; }
+            if (!result.success) {
+                const field = fieldForMessage(result.message, RESET_SERVER_FIELDS);
+                if (field) showFieldErrors({ [field]: result.message });
+                else setError(result.message || t('auth.couldNotResetPassword'));
+                return;
+            }
             setForgotStep('done');
         } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
@@ -465,13 +553,13 @@ function Hero() {
                     <AuthAlert type="error">{error}</AuthAlert>
                     <AuthAlert type="success">{successMsg}</AuthAlert>
 
-                    <form onSubmit={handleSignIn} noValidate>
-                        <AuthField id="siEmail" label={t('signIn.email')} icon="bi-envelope">
-                            <input type="email" className="auth-input" id="siEmail" autoComplete="email" placeholder={t('signIn.emailPlaceholder')} value={siEmail} onChange={e => setSiEmail(e.target.value)} />
+                    <form onSubmit={handleSignIn} onChange={clearFieldError} noValidate>
+                        <AuthField id="siEmail" error={fieldErrors.siEmail} label={t('signIn.email')} icon="bi-envelope">
+                            <input type="email" className="auth-input" id="siEmail" {...fieldProps('siEmail')} autoComplete="email" placeholder={t('signIn.emailPlaceholder')} value={siEmail} onChange={e => setSiEmail(e.target.value)} />
                         </AuthField>
-                        <AuthField id="siPassword" label={t('signIn.password')} icon="bi-lock"
+                        <AuthField id="siPassword" error={fieldErrors.siPassword} label={t('signIn.password')} icon="bi-lock"
                             toggle={<PasswordToggleButton visible={showSiPw} onToggle={() => setShowSiPw(v=>!v)} />}>
-                            <input type={showSiPw?'text':'password'} className="auth-input has-toggle" id="siPassword" autoComplete="current-password" placeholder={t('signIn.passwordPlaceholder')} value={siPassword} onChange={e => setSiPassword(e.target.value)} />
+                            <input type={showSiPw?'text':'password'} className="auth-input has-toggle" id="siPassword" {...fieldProps('siPassword')} autoComplete="current-password" placeholder={t('signIn.passwordPlaceholder')} value={siPassword} onChange={e => setSiPassword(e.target.value)} />
                         </AuthField>
 
                         <div className="auth-row" style={{ justifyContent:'flex-end' }}>
@@ -518,44 +606,44 @@ function Hero() {
                 <AuthModal wide title={t('signUp.createTitle')} subtitle={t('signUp.subtitle')} onClose={closeAll} closeLabel={t('auth.close')}>
                     <AuthAlert type="error">{error}</AuthAlert>
 
-                    <form onSubmit={handleSignUpSubmit} noValidate>
+                    <form onSubmit={handleSignUpSubmit} onChange={clearFieldError} noValidate>
                         <h3 className="auth-section">{t('signUp.sectionPersonal')}</h3>
                         <div className="auth-grid cols-3">
-                            <AuthField id="suFirst" label={t('signUp.firstName')} icon="bi-person">
-                                <input type="text" className="auth-input" id="suFirst" autoComplete="given-name" placeholder={t('signUp.firstNamePlaceholder')} value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                            <AuthField id="suFirst" error={fieldErrors.suFirst} label={t('signUp.firstName')} icon="bi-person">
+                                <input type="text" className="auth-input" id="suFirst" {...fieldProps('suFirst')} autoComplete="given-name" placeholder={t('signUp.firstNamePlaceholder')} value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                             </AuthField>
                             <AuthField id="suMiddle" label={t('signUp.middleName')} optional={t('signUp.optional')} icon="bi-person">
                                 <input type="text" className="auth-input" id="suMiddle" autoComplete="additional-name" placeholder={t('signUp.middlePlaceholder')} value={suMiddle} onChange={e => setSuMiddle(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                             </AuthField>
-                            <AuthField id="suLast" label={t('signUp.lastName')} icon="bi-person">
-                                <input type="text" className="auth-input" id="suLast" autoComplete="family-name" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                            <AuthField id="suLast" error={fieldErrors.suLast} label={t('signUp.lastName')} icon="bi-person">
+                                <input type="text" className="auth-input" id="suLast" {...fieldProps('suLast')} autoComplete="family-name" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
                             </AuthField>
                         </div>
 
                         <h3 className="auth-section">{t('signUp.sectionContact')}</h3>
                         <div className="auth-grid cols-2">
-                            <AuthField id="suContact" label={t('signUp.contactNumber')} icon="bi-phone" prefix="+63">
-                                <input type="tel" className="auth-input has-prefix" id="suContact" autoComplete="tel-national" placeholder="9XXXXXXXXX" value={suContact} onChange={e => setSuContact(e.target.value.replace(DIGITS_ONLY_REGEX,'').slice(0,10))} maxLength={10} inputMode="numeric" />
+                            <AuthField id="suContact" error={fieldErrors.suContact} label={t('signUp.contactNumber')} icon="bi-phone" prefix="+63">
+                                <input type="tel" className="auth-input has-prefix" id="suContact" {...fieldProps('suContact')} autoComplete="tel-national" placeholder="9XXXXXXXXX" value={suContact} onChange={e => setSuContact(e.target.value.replace(DIGITS_ONLY_REGEX,'').slice(0,10))} maxLength={10} inputMode="numeric" />
                             </AuthField>
-                            <AuthField id="suEmail" label={t('signUp.email')} icon="bi-envelope">
-                                <input type="email" className="auth-input" id="suEmail" autoComplete="email" placeholder={t('signUp.emailPlaceholder')} value={suEmail} onChange={e => setSuEmail(e.target.value)} />
+                            <AuthField id="suEmail" error={fieldErrors.suEmail} label={t('signUp.email')} icon="bi-envelope">
+                                <input type="email" className="auth-input" id="suEmail" {...fieldProps('suEmail')} autoComplete="email" placeholder={t('signUp.emailPlaceholder')} value={suEmail} onChange={e => setSuEmail(e.target.value)} />
                             </AuthField>
                         </div>
 
                         <h3 className="auth-section">{t('signUp.sectionSecurity')}</h3>
-                        <AuthField id="suUsername" label={t('signUp.username')} icon="bi-at">
-                            <input type="text" className="auth-input" id="suUsername" autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
+                        <AuthField id="suUsername" error={fieldErrors.suUsername} label={t('signUp.username')} icon="bi-at">
+                            <input type="text" className="auth-input" id="suUsername" {...fieldProps('suUsername')} autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
                         </AuthField>
                         <div className="auth-grid cols-2">
-                            <AuthField id="suPassword" label={t('signUp.password')} icon="bi-lock"
+                            <AuthField id="suPassword" error={fieldErrors.suPassword} label={t('signUp.password')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showSuPw} onToggle={() => setShowSuPw(v=>!v)} />}>
-                                <input type={showSuPw?'text':'password'} className="auth-input has-toggle" id="suPassword" autoComplete="new-password" placeholder={t('signUp.passwordPlaceholder')} value={suPassword} onChange={e => setSuPassword(e.target.value)} />
+                                <input type={showSuPw?'text':'password'} className="auth-input has-toggle" id="suPassword" {...fieldProps('suPassword')} autoComplete="new-password" placeholder={t('signUp.passwordPlaceholder')} value={suPassword} onChange={e => setSuPassword(e.target.value)} />
                             </AuthField>
-                            <AuthField id="suConfirm" label={t('signUp.confirmPassword')} icon="bi-lock"
+                            <AuthField id="suConfirm" error={fieldErrors.suConfirm} label={t('signUp.confirmPassword')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showSuConfPw} onToggle={() => setShowSuConfPw(v=>!v)} />}
                                 hint={suConfirm ? (suPassword===suConfirm ? t('signUp.passwordsMatch') : t('signUp.passwordsNoMatch')) : null}
                                 hintTone={suPassword===suConfirm ? 'ok' : 'bad'}>
-                                <input type={showSuConfPw?'text':'password'} id="suConfirm" autoComplete="new-password"
+                                <input type={showSuConfPw?'text':'password'} id="suConfirm" {...fieldProps('suConfirm')} autoComplete="new-password"
                                     className={`auth-input has-toggle${suConfirm ? (suPassword===suConfirm ? ' ok' : ' bad') : ''}`}
                                     placeholder={t('signUp.confirmPasswordPlaceholder')} value={suConfirm} onChange={e => setSuConfirm(e.target.value)} />
                             </AuthField>
@@ -575,14 +663,16 @@ function Hero() {
                             </ul>
                         )}
 
-                        <label className="auth-check" htmlFor="suAgree">
-                            <input type="checkbox" id="suAgree" checked={suAgree} onChange={handleAgreeChange} />
+                        <label className={`auth-check${fieldErrors.suAgree ? ' has-error' : ''}`} htmlFor="suAgree">
+                            <input type="checkbox" id="suAgree" {...fieldProps('suAgree')} checked={suAgree} onChange={handleAgreeChange} />
                             <span>
                                 {t('signUp.agreePrefix')}{' '}
                                 <a href="#terms">{t('signUp.agreeLink')}</a>.
                             </span>
                         </label>
-                        {!termsViewed && <p className="auth-check-hint">{t('signUp.viewTermsHint')}</p>}
+                        {fieldErrors.suAgree
+                            ? <AuthFieldError id="suAgree" className="auth-check-error">{fieldErrors.suAgree}</AuthFieldError>
+                            : !termsViewed && <p className="auth-check-hint">{t('signUp.viewTermsHint')}</p>}
 
                         <button type="submit" className="auth-btn" disabled={isSubmitting}>
                             {isSubmitting ? t('signUp.submitting') : t('signUp.submit')}
@@ -637,9 +727,9 @@ function Hero() {
                     <AuthAlert type="success">{successMsg}</AuthAlert>
 
                     {forgotStep === 'email' && (
-                        <form onSubmit={handleForgotEmail} noValidate>
-                            <AuthField id="fpEmail" label={t('forgotPassword.email')} icon="bi-envelope">
-                                <input type="email" className="auth-input" id="fpEmail" autoComplete="email" placeholder={t('forgotPassword.emailPlaceholder')} value={fpEmail} onChange={e => setFpEmail(e.target.value)} />
+                        <form onSubmit={handleForgotEmail} onChange={clearFieldError} noValidate>
+                            <AuthField id="fpEmail" error={fieldErrors.fpEmail} label={t('forgotPassword.email')} icon="bi-envelope">
+                                <input type="email" className="auth-input" id="fpEmail" {...fieldProps('fpEmail')} autoComplete="email" placeholder={t('forgotPassword.emailPlaceholder')} value={fpEmail} onChange={e => setFpEmail(e.target.value)} />
                             </AuthField>
                             <button type="submit" className="auth-btn" disabled={isSubmitting}>
                                 {isSubmitting ? t('forgotPassword.sendingCode') : t('forgotPassword.sendCode')}
@@ -673,10 +763,10 @@ function Hero() {
                     )}
 
                     {forgotStep === 'reset' && (
-                        <form onSubmit={handleResetPassword} noValidate>
-                            <AuthField id="fpNewPw" label={t('forgotPassword.newPassword')} icon="bi-lock"
+                        <form onSubmit={handleResetPassword} onChange={clearFieldError} noValidate>
+                            <AuthField id="fpNewPw" error={fieldErrors.fpNewPw} label={t('forgotPassword.newPassword')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showFpNewPw} onToggle={() => setShowFpNewPw(v=>!v)} />}>
-                                <input type={showFpNewPw?'text':'password'} className="auth-input has-toggle" id="fpNewPw" autoComplete="new-password" placeholder={t('forgotPassword.newPasswordPlaceholder')} value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} />
+                                <input type={showFpNewPw?'text':'password'} className="auth-input has-toggle" id="fpNewPw" {...fieldProps('fpNewPw')} autoComplete="new-password" placeholder={t('forgotPassword.newPasswordPlaceholder')} value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} />
                             </AuthField>
                             {/* Requirements appear once a password is being typed. */}
                             {fpNewPw && (
@@ -692,11 +782,11 @@ function Hero() {
                                     })}
                                 </ul>
                             )}
-                            <AuthField id="fpConfirmPw" label={t('forgotPassword.confirmNewPassword')} icon="bi-lock"
+                            <AuthField id="fpConfirmPw" error={fieldErrors.fpConfirmPw} label={t('forgotPassword.confirmNewPassword')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showFpConfPw} onToggle={() => setShowFpConfPw(v=>!v)} />}
                                 hint={fpConfirmPw ? (fpNewPw===fpConfirmPw ? t('signUp.passwordsMatch') : t('signUp.passwordsNoMatch')) : null}
                                 hintTone={fpNewPw===fpConfirmPw ? 'ok' : 'bad'}>
-                                <input type={showFpConfPw?'text':'password'} id="fpConfirmPw" autoComplete="new-password"
+                                <input type={showFpConfPw?'text':'password'} id="fpConfirmPw" {...fieldProps('fpConfirmPw')} autoComplete="new-password"
                                     className={`auth-input has-toggle${fpConfirmPw ? (fpNewPw===fpConfirmPw ? ' ok' : ' bad') : ''}`}
                                     placeholder={t('forgotPassword.confirmNewPasswordPlaceholder')} value={fpConfirmPw} onChange={e => setFpConfirmPw(e.target.value)} />
                             </AuthField>
