@@ -1,11 +1,9 @@
 const bcrypt = require("bcrypt");
-const crypto = require("crypto");
-const jwt    = require("jsonwebtoken");
 const dns    = require("dns").promises;
 const User   = require("../models/User");
 const AdminActivity = require("../models/AdminActivity");
 const { generateToken } = require("../utils/jwt");
-const { passwordProblem, fullNameProblem, normalizeName } = require("../utils/validation");
+const { passwordProblem } = require("../utils/validation");
 const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
 const Log = require("../models/Log");
 const { signinContext, lookupLocation } = require("../utils/signinContext");
@@ -458,28 +456,6 @@ const recordSignin = async (req, fullName, email, status) => {
         .catch((err) => console.error("Sign-in location lookup failed:", err.message));
 };
 
-// code: the sign-in screens show a dedicated popup for each (translated on
-// the frontend); message is the English fallback.
-const STATUS_RESPONSES = {
-    Suspended: {
-        code: "ACCOUNT_SUSPENDED",
-        message: "Your account has been suspended, so you can't sign in right now. Please contact the Barangay Sta. Fe administrator to resolve this."
-    },
-    Closed: {
-        code: "ACCOUNT_CLOSED",
-        message: "This account has been permanently closed and can no longer be used to sign in. If you believe this is a mistake, please contact the Barangay Sta. Fe administrator."
-    },
-    // No longer assigned; kept for any older accounts.
-    Pending: {
-        code: "ACCOUNT_PENDING",
-        message: "Your account isn't active yet. Please contact the Barangay Sta. Fe administrator."
-    }
-};
-const statusResponse = (status) => STATUS_RESPONSES[status] || {
-    code: "ACCOUNT_INACTIVE",
-    message: "Your account can't sign in right now. Please contact the Barangay Sta. Fe administrator."
-};
-
 exports.signin = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -506,7 +482,28 @@ exports.signin = async (req, res) => {
 
         if (user.status && user.status !== "Active") {
             await recordSignin(req, user.full_name, email, "Failed");
-            return res.json({ success: false, ...statusResponse(user.status) });
+            // code: the sign-in screens show a dedicated popup for each
+            // (translated on the frontend); message is the English fallback.
+            const STATUS_RESPONSES = {
+                Suspended: {
+                    code: "ACCOUNT_SUSPENDED",
+                    message: "Your account has been suspended, so you can't sign in right now. Please contact the Barangay Sta. Fe administrator to resolve this."
+                },
+                Closed: {
+                    code: "ACCOUNT_CLOSED",
+                    message: "This account has been permanently closed and can no longer be used to sign in. If you believe this is a mistake, please contact the Barangay Sta. Fe administrator."
+                },
+                // No longer assigned; kept for any older accounts.
+                Pending: {
+                    code: "ACCOUNT_PENDING",
+                    message: "Your account isn't active yet. Please contact the Barangay Sta. Fe administrator."
+                }
+            };
+            const response = STATUS_RESPONSES[user.status] || {
+                code: "ACCOUNT_INACTIVE",
+                message: "Your account can't sign in right now. Please contact the Barangay Sta. Fe administrator."
+            };
+            return res.json({ success: false, ...response });
         }
 
         await recordSignin(req, user.full_name, email, "Success");
@@ -531,176 +528,6 @@ exports.signin = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error." });
     }
 };
-/* =========================================================
-   CONTINUE WITH GOOGLE (residents)
-   POST /api/auth/google           { credential }
-   POST /api/auth/google/complete  { signupToken, fullName, username, contact, termsAccepted }
-============================================================*/
-// The Sign In / Sign Up forms get an ID token ("credential") from Google's
-// button; it is verified here against GOOGLE_CLIENT_ID. Google has already
-// confirmed the email address, so there is no email code -- everything else
-// is checked like a normal sign-in / sign-up: account status, sign-in log,
-// sign-in email, and for new accounts the same name, username, contact
-// number and Terms rules as the Sign Up form.
-// Admin accounts keep signing in with their email and password.
-const GOOGLE_SIGNUP_EXPIRY = "15m";
-const PH_CONTACT_REGEX = /^\+63\d{10}$/;
-
-// Kept apart from sign-in tokens: a different secret, so this token can
-// never be used to call the API as a signed-in user.
-const googleSignupSecret = () => `${process.env.JWT_SECRET}:google-signup`;
-
-let googleClient = null;
-const verifyGoogleCredential = async (credential) => {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    if (!clientId) return null;
-    if (!googleClient) {
-        const { OAuth2Client } = require("google-auth-library");
-        googleClient = new OAuth2Client(clientId);
-    }
-    const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: clientId });
-    return ticket.getPayload();
-};
-
-// Tests swap in a fake verifier (no network).
-let verifyGoogleCredentialImpl = verifyGoogleCredential;
-exports.__setGoogleVerifier = (fn) => { verifyGoogleCredentialImpl = fn; };
-
-// Signs in an existing, Active resident (same response as /signin).
-const googleSignIn = async (req, res, user) => {
-    const email = user.email_address;
-    if (isAdminRole(user.role)) {
-        await recordSignin(req, user.full_name, email, "Failed");
-        return res.json({
-            success: false,
-            code: "GOOGLE_ADMIN",
-            message: "Admin accounts sign in with their email and password."
-        });
-    }
-    if (user.status && user.status !== "Active") {
-        await recordSignin(req, user.full_name, email, "Failed");
-        return res.json({ success: false, ...statusResponse(user.status) });
-    }
-
-    await recordSignin(req, user.full_name, email, "Success");
-    sendSigninNotification(email, user.full_name).catch((err) =>
-        console.error("Sign-in notification email failed:", err)
-    );
-    return res.json({
-        success: true,
-        isAdmin: false,
-        isSuperAdmin: false,
-        token: generateToken(user),
-        user: toPublicUser(user),
-        message: "Login successful"
-    });
-};
-
-exports.googleSignin = async (req, res) => {
-    try {
-        if (!process.env.GOOGLE_CLIENT_ID) {
-            return res.status(503).json({ success: false, message: "Google sign-in isn't available right now." });
-        }
-        const credential = String(req.body?.credential || "");
-        if (!credential) return res.status(400).json({ success: false, message: "Missing Google sign-in." });
-
-        let payload;
-        try {
-            payload = await verifyGoogleCredentialImpl(credential);
-        } catch {
-            payload = null;
-        }
-        if (!payload?.email) {
-            return res.status(401).json({ success: false, message: "We couldn't verify your Google sign-in. Please try again." });
-        }
-        if (!payload.email_verified) {
-            return res.json({ success: false, message: "Your Google email address isn't verified yet. Please verify it with Google first." });
-        }
-
-        const email = String(payload.email).toLowerCase();
-        const user = await User.findByEmail(email);
-        if (user) return googleSignIn(req, res, user);
-
-        // New here: the form asks for the rest (username, contact number,
-        // Terms) before the account is created.
-        const signupToken = jwt.sign(
-            { purpose: "google-signup", email, sub: payload.sub },
-            googleSignupSecret(),
-            { expiresIn: GOOGLE_SIGNUP_EXPIRY }
-        );
-        return res.json({
-            success: false,
-            code: "GOOGLE_SIGNUP_REQUIRED",
-            signupToken,
-            profile: {
-                email,
-                firstName: payload.given_name || "",
-                lastName: payload.family_name || "",
-                fullName: payload.name || ""
-            }
-        });
-    } catch (err) {
-        console.error("googleSignin error:", err);
-        return res.status(500).json({ success: false, message: "Internal server error." });
-    }
-};
-
-exports.googleComplete = async (req, res) => {
-    try {
-        const { signupToken, fullName, username, contact, termsAccepted } = req.body || {};
-        let claims;
-        try {
-            claims = jwt.verify(String(signupToken || ""), googleSignupSecret());
-        } catch {
-            claims = null;
-        }
-        if (!claims || claims.purpose !== "google-signup" || !claims.email) {
-            return res.status(401).json({ success: false, code: "GOOGLE_SIGNUP_EXPIRED", message: "Your Google sign-up timed out. Please continue with Google again." });
-        }
-
-        const nameProblem = fullNameProblem(fullName);
-        if (nameProblem) return res.status(400).json({ success: false, message: nameProblem });
-        const cleanUsername = String(username || "").trim();
-        if (!cleanUsername) return res.status(400).json({ success: false, message: "Username is required." });
-        if (cleanUsername.length > 50) return res.status(400).json({ success: false, message: "Username must be 50 characters or fewer." });
-        if (!PH_CONTACT_REGEX.test(String(contact || ""))) {
-            return res.status(400).json({ success: false, message: "Please provide a valid mobile number (+63 followed by 10 digits)." });
-        }
-        if (termsAccepted !== true) {
-            return res.status(400).json({ success: false, message: "You must agree to the Terms and Conditions." });
-        }
-
-        // Someone may have signed up with this email in the meantime.
-        const existing = await User.findByEmail(claims.email);
-        if (existing) return googleSignIn(req, res, existing);
-        if (await User.findByUsername(cleanUsername)) {
-            return res.json({ success: false, message: "Username is already taken." });
-        }
-
-        // No password of their own yet: a random one nobody knows. They can
-        // set one any time with "Forgot password?".
-        const randomPassword = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10);
-        const cleanName = normalizeName(fullName);
-        await User.create({
-            fullName: cleanName,
-            username: cleanUsername,
-            contact,
-            email: claims.email,
-            password: randomPassword,
-            role: "resident"
-        });
-        sendWelcomeEmail(claims.email, cleanName).catch((err) =>
-            console.error("Welcome email failed:", err)
-        );
-
-        const user = await User.findByEmail(claims.email);
-        return googleSignIn(req, res, user);
-    } catch (err) {
-        console.error("googleComplete error:", err);
-        return res.status(500).json({ success: false, message: "Internal server error." });
-    }
-};
-
 // The signed-in user as the frontend stores it (sessionStorage "currentUser").
 // photo_url is resolved to a full URL so the navbar avatar works right away.
 function toPublicUser(user) {

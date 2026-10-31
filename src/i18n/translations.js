@@ -71,11 +71,6 @@ export const translations = {
       hidePassword: 'Hide password',
       close: 'Close',
       fillRequired: 'Please fill in all required fields',
-      or: 'or',
-      googleUnavailable: "Google sign-in couldn't load. Please check your connection or use your email and password.",
-      googleFailed: "We couldn't sign you in with Google. Please try again.",
-      googleAdmin: 'Admin accounts sign in with their email and password.',
-      googleExpired: 'Your Google sign-up timed out. Please continue with Google again.',
       bothEmailPassword: 'Please enter both email and password',
       invalidCredentials: 'Invalid email or password.',
       accountClosedTitle: 'Account Closed',
@@ -169,12 +164,6 @@ export const translations = {
       resendIn: 'Resend code in {{s}}s',
       resend: 'Resend code',
       backToRegistration: '← Back to registration',
-      googleTitle: 'Finish Creating Your Account',
-      googleSubtitle: 'Your Google email is verified. Add a few details so the barangay can reach you.',
-      googleVerified: 'Verified by Google',
-      googlePasswordNote: 'You will sign in with Google. To also sign in with a password later, use "Forgot password?" on the Sign In screen.',
-      googleCreate: 'Create Account',
-      googleCreating: 'Creating account...',
       accountCreated: 'Account created successfully! Please sign in.',
       agreePrefix: 'I have read and agree to the',
       agreeLink: 'Terms and Conditions',
@@ -458,7 +447,6 @@ export const translations = {
           title: "Information We Collect",
           points: [
             "Account information: your first, middle (optional), and last name; username; email address; mobile number; password; and, if you add one, your profile photo. Your password is never stored as readable text; it is stored only in a securely hashed (one-way encrypted) form.",
-            "Sign-in with Google: if you choose \"Continue with Google\", Google shares your name, email address, and confirmation that your email address is verified. We never receive your Google password.",
             "Birthdate: Safe Connect does not currently ask for your birthdate. If the Barangay later asks for it, for example to confirm the minimum age of 15 years stated in the Terms and Conditions, it will be used only to confirm eligibility and will be protected in the same way as the rest of your information.",
             "Emergency reports: the type and severity of the emergency, its details, the number of people affected, the location (address and map pin, including GPS coordinates when you use \"Use my current location\"), and the photos or videos you attach.",
             "Assistance requests: the type of help needed, a description of the situation, the number of people who need help, any special needs, the location, and attached photos or videos. Special needs and situation details may include health information, which the law treats as sensitive personal information.",
@@ -476,7 +464,6 @@ export const translations = {
           points: [
             "Directly from you, when you create an account, fill in a report or request, upload photos or videos, post comments, or update your profile.",
             "Automatically, when you sign in and use the Platform (for example, sign-in records and your device location if you allow it).",
-            "From Google, only if you choose to continue with Google.",
             "From authorized barangay personnel, when they update the status of your report or reply to you."
           ]
         },
@@ -499,7 +486,7 @@ export const translations = {
           points: [
             "Authorized barangay personnel: only barangay officials and staff who have been given an admin account (such as the Punong Barangay, Barangay Secretary, Kagawads, and designated responders) can view reports and requests, and only to the extent needed to perform their duties. They are bound to keep your information confidential.",
             "Government agencies and responders: when needed to respond to an emergency or to protect life, health, or property, the Barangay may share relevant report details with responders such as the Philippine National Police, the Bureau of Fire Protection, the City Disaster Risk Reduction and Management Office, or health workers. We also disclose information when required by law, court order, or a lawful request from a government authority.",
-            "Service providers: we use trusted providers to run the Platform, including cloud hosting and database services (Microsoft Azure and Vercel), an email delivery service, Google (for \"Continue with Google\"), ipapi.co (to estimate a sign-in's approximate location from its IP address), and OpenStreetMap and Esri map tiles (shown when you open the location map). They process information only on our instructions and only for these services.",
+            "Service providers: we use trusted providers to run the Platform, including cloud hosting and database services (Microsoft Azure and Vercel), an email delivery service, ipapi.co (to estimate a sign-in's approximate location from its IP address), and OpenStreetMap and Esri map tiles (shown when you open the location map). They process information only on our instructions and only for these services.",
             "Other residents: only your name, profile photo, and the comments you choose to post on announcements are visible to other signed-in residents. Your reports and contact details are never shown to other residents.",
             "We do not sell, rent, or trade your personal information."
           ]
@@ -550,7 +537,7 @@ export const translations = {
           id: "links",
           title: "Third-Party Services and Links",
           points: [
-            "The Platform may link to or use services run by others, such as Google sign-in, Google Maps directions, map tiles, and the Barangay's Facebook page. Their handling of your information is governed by their own privacy policies."
+            "The Platform may link to or use services run by others, such as Google Maps directions, map tiles, and the Barangay's Facebook page. Their handling of your information is governed by their own privacy policies."
           ]
         },
         {
@@ -1151,11 +1138,6 @@ export const translations = {
       hidePassword: 'Itago ang password',
       close: 'Isara',
       fillRequired: 'Pakisagutan lahat ng kinakailangang field',
-      or: 'o',
-      googleUnavailable: 'Hindi ma-load ang Google sign-in. Pakisuri ang iyong koneksyon o gamitin ang iyong email at password.',
-      googleFailed: 'Hindi ka namin ma-sign in gamit ang Google. Pakisubukang muli.',
-      googleAdmin: 'Ang mga admin account ay nagsa-sign in gamit ang kanilang email at password.',
-      googleExpired: 'Nag-expire ang iyong Google sign-up. Pakipindot muli ang Google.',
       bothEmailPassword: 'Pakilagay ang email at password',
       invalidCredentials: 'Maling email o password.',
       accountClosedTitle: 'Sarado na ang Account',
@@ -1249,12 +1231,6 @@ export const translations = {
       resendIn: 'Ipadala ulit ang code sa loob ng {{s}}s',
       resend: 'Ipadala ulit ang code',
       backToRegistration: '← Bumalik sa pagpaparehistro',
-      googleTitle: 'Tapusin ang Paggawa ng Account',
-      googleSubtitle: 'Verified na ang iyong Google email. Magdagdag ng ilang detalye para makontak ka ng barangay.',
-      googleVerified: 'Verified ng Google',
-      googlePasswordNote: 'Magsa-sign in ka gamit ang Google. Para makapag-sign in din gamit ang password, gamitin ang "Nakalimutan ang password?" sa Sign In.',
-      googleCreate: 'Gumawa ng Account',
-      googleCreating: 'Ginagawa ang account...',
       accountCreated: 'Matagumpay na nagawa ang account! Mangyaring mag-sign in.',
       agreePrefix: 'Nabasa ko at sumasang-ayon ako sa',
       agreeLink: 'Mga Tuntunin at Kundisyon',
@@ -1538,7 +1514,6 @@ export const translations = {
           title: "Impormasyong Kinokolekta Namin",
           points: [
             "Impormasyon ng account: ang iyong unang pangalan, gitnang pangalan (opsyonal), at apelyido; username; email address; numero ng mobile; password; at, kung maglalagay ka, ang iyong profile photo. Hindi kailanman iniimbak ang password bilang nababasang teksto; naka-hash (one-way encrypted) lamang ito.",
-            "Pag-sign in gamit ang Google: kung pipiliin mo ang \"Continue with Google\", ibabahagi ng Google ang iyong pangalan, email address, at kumpirmasyon na verified ang iyong email. Hindi namin natatanggap ang iyong Google password.",
             "Petsa ng kapanganakan: Sa ngayon, hindi hinihingi ng Safe Connect ang iyong petsa ng kapanganakan. Kung hihingin ito ng Barangay sa hinaharap, halimbawa para kumpirmahin ang pinakamababang edad na 15 taon na nakasaad sa Mga Tuntunin at Kundisyon, gagamitin lamang ito para doon at poprotektahan tulad ng iba mong impormasyon.",
             "Mga ulat ng emergency: ang uri at tindi ng emergency, mga detalye nito, bilang ng mga apektado, lokasyon (address at pin sa mapa, kasama ang GPS coordinates kapag ginamit mo ang \"Gamitin ang kasalukuyang lokasyon\"), at ang mga larawan o video na ilalakip mo.",
             "Mga kahilingan ng tulong: ang uri ng tulong na kailangan, paglalarawan ng sitwasyon, bilang ng mga nangangailangan, anumang espesyal na pangangailangan, lokasyon, at mga larawan o video. Ang espesyal na pangangailangan at detalye ng sitwasyon ay maaaring may kinalaman sa kalusugan, na itinuturing ng batas na sensitibong personal na impormasyon.",
@@ -1556,7 +1531,6 @@ export const translations = {
           points: [
             "Direkta mula sa iyo, kapag gumawa ka ng account, nagsumite ng ulat o kahilingan, nag-upload ng larawan o video, nagkomento, o nag-update ng iyong profile.",
             "Awtomatiko, kapag nag-sign in ka at ginamit ang Platform (halimbawa, talaan ng pag-sign in at lokasyon ng iyong device kung papayagan mo).",
-            "Mula sa Google, kung pipiliin mo lamang na magpatuloy gamit ang Google.",
             "Mula sa mga awtorisadong tauhan ng barangay, kapag ina-update nila ang status ng iyong ulat o sumasagot sa iyo."
           ]
         },
@@ -1579,7 +1553,7 @@ export const translations = {
           points: [
             "Mga awtorisadong tauhan ng barangay: tanging mga opisyal at kawani ng barangay na binigyan ng admin account (gaya ng Punong Barangay, Kalihim ng Barangay, mga Kagawad, at mga itinalagang responder) ang makakakita ng mga ulat at kahilingan, at sa lawak lamang na kailangan sa kanilang tungkulin. Obligado silang panatilihing kumpidensyal ang iyong impormasyon.",
             "Mga ahensya ng pamahalaan at responder: kapag kailangan para tumugon sa emergency o protektahan ang buhay, kalusugan, o ari-arian, maaaring ibahagi ng Barangay ang mahahalagang detalye ng ulat sa mga responder gaya ng Philippine National Police, Bureau of Fire Protection, City Disaster Risk Reduction and Management Office, o mga health worker. Ibinabahagi rin namin ang impormasyon kapag iniutos ng batas, ng korte, o ng lehitimong kahilingan ng awtoridad ng pamahalaan.",
-            "Mga service provider: gumagamit kami ng mga mapagkakatiwalaang provider para mapatakbo ang Platform, kabilang ang cloud hosting at database (Microsoft Azure at Vercel), serbisyo sa pagpapadala ng email, Google (para sa \"Continue with Google\"), ipapi.co (para tantiyahin ang lokasyon ng pag-sign in mula sa IP address), at map tiles ng OpenStreetMap at Esri (kapag binuksan mo ang mapa ng lokasyon). Pinoproseso lamang nila ang impormasyon ayon sa aming tagubilin at para sa mga serbisyong ito.",
+            "Mga service provider: gumagamit kami ng mga mapagkakatiwalaang provider para mapatakbo ang Platform, kabilang ang cloud hosting at database (Microsoft Azure at Vercel), serbisyo sa pagpapadala ng email, ipapi.co (para tantiyahin ang lokasyon ng pag-sign in mula sa IP address), at map tiles ng OpenStreetMap at Esri (kapag binuksan mo ang mapa ng lokasyon). Pinoproseso lamang nila ang impormasyon ayon sa aming tagubilin at para sa mga serbisyong ito.",
             "Ibang residente: tanging ang iyong pangalan, profile photo, at mga komentong pinili mong i-post sa mga anunsyo ang nakikita ng ibang naka-sign in na residente. Hindi kailanman ipinapakita sa ibang residente ang iyong mga ulat at contact details.",
             "Hindi namin ibinebenta, pinauupahan, o ipinagpapalit ang iyong personal na impormasyon."
           ]
@@ -1630,7 +1604,7 @@ export const translations = {
           id: "links",
           title: "Mga Serbisyo at Link ng Ibang Partido",
           points: [
-            "Maaaring mag-link o gumamit ang Platform ng mga serbisyong pinapatakbo ng iba, gaya ng Google sign-in, direksyon ng Google Maps, map tiles, at Facebook page ng Barangay. Ang paghawak nila sa iyong impormasyon ay sakop ng sarili nilang patakaran sa privacy."
+            "Maaaring mag-link o gumamit ang Platform ng mga serbisyong pinapatakbo ng iba, gaya ng direksyon ng Google Maps, map tiles, at Facebook page ng Barangay. Ang paghawak nila sa iyong impormasyon ay sakop ng sarili nilang patakaran sa privacy."
           ]
         },
         {

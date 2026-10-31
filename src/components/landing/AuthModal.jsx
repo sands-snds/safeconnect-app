@@ -121,16 +121,6 @@ const STYLES = `
   .auth-note { display: flex; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; font-size: 0.85rem; line-height: 1.45; margin: 0 0 14px; }
   .auth-fineprint { margin: 14px 0 0; text-align: center; font-size: 0.8rem; color: #6b7280; }
 
-  /* "or" + Continue with Google (GoogleAuthButton.jsx) */
-  .auth-google { margin-top: 16px; }
-  .auth-divider { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; color: #9ca3af; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: #ece4e6; }
-  .auth-google-btn { display: flex; justify-content: center; min-height: 44px; }
-  .auth-google-failed { margin: 8px 0 0; text-align: center; font-size: 0.8rem; color: #b91c1c; }
-  .auth-readonly { display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 14px; border-radius: 10px; background: #f9fafb; border: 1.5px solid #e5e7eb; color: #374151; font-size: 0.92rem; overflow: hidden; }
-  .auth-readonly span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .auth-readonly .bi-patch-check-fill { color: #16a34a; margin-left: auto; flex-shrink: 0; }
-
   /* Phones: still a floating card with the page dimmed around it (not a
      full-screen sheet); taller windows like Sign Up scroll inside the overlay. */
   @media (max-width: 576px) {
