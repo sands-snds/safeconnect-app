@@ -4,6 +4,7 @@ const User = require("../models/User");
 const RememberedLogin = require("../models/RememberedLogin");
 const adminPresence = require("../services/adminPresence");
 const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
+const { sendServerError } = require("../utils/dbErrors");
 
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -53,8 +54,7 @@ const verifyToken = (req, res, next) => {
             req.account = account;
             next();
         } catch (dbErr) {
-            console.error("verifyToken error:", dbErr);
-            return res.status(500).json({ success: false, message: "Internal server error." });
+            return sendServerError(res, dbErr, "verifyToken", "Something went wrong on our side. Please try again in a few minutes.");
         }
     });
 };
@@ -102,8 +102,7 @@ const verifyAdmin = async (req, res, next) => {
 
         next();
     } catch (err) {
-        console.error("verifyAdmin error:", err);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return sendServerError(res, err, "verifyAdmin", "Something went wrong on our side. Please try again in a few minutes.");
     }
 };
 
@@ -144,8 +143,7 @@ const verifySelfOrAdmin = async (req, res, next) => {
 
         next();
     } catch (err) {
-        console.error("verifySelfOrAdmin error:", err);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return sendServerError(res, err, "verifySelfOrAdmin", "Something went wrong on our side. Please try again in a few minutes.");
     }
 };
 
@@ -180,8 +178,7 @@ const verifyReportAccess = (table, level) => async (req, res, next) => {
             message: "You can only manage your own reports."
         });
     } catch (err) {
-        console.error("verifyReportAccess error:", err);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return sendServerError(res, err, "verifyReportAccess", "Something went wrong on our side. Please try again in a few minutes.");
     }
 };
 
@@ -192,8 +189,7 @@ const verifySelfOrAnyAdmin = async (req, res, next) => {
         if (await hasActiveRole(req.user.id, "admin")) return next();
         return res.status(403).json({ success: false, message: "You can only view your own reports." });
     } catch (err) {
-        console.error("verifySelfOrAnyAdmin error:", err);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return sendServerError(res, err, "verifySelfOrAnyAdmin", "Something went wrong on our side. Please try again in a few minutes.");
     }
 };
 

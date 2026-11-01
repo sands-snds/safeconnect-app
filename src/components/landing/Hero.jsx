@@ -240,6 +240,9 @@ function Hero() {
     
     const fieldProps = (id) => (fieldErrors[id] ? { 'aria-invalid': true, 'aria-describedby': `${id}-error` } : {});
 
+    const serverMessage = (result, fallbackKey) =>
+        result?.code === 'DATABASE_UNAVAILABLE' ? t('auth.databaseUnavailable') : (result?.message || t(fallbackKey));
+
     const clearErr = () => { setError(''); setSuccessMsg(''); setFieldErrors({}); };
 
     // ── OTP helpers ───────────────────────────────────────────────────────────
@@ -296,13 +299,13 @@ function Hero() {
         try {
             const result = await signinUser(siEmail.trim(), siPassword);
             
-            if (!result.success && result.code) {
+            if (!result.success && result.code?.startsWith('ACCOUNT_')) {
                 closeAll();
                 if (showAccountStatusPopup(result.code, t, siteContent.socials?.email)) return;
             }
             if (!result.success) {
-                setError(result.message || t('auth.invalidCredentials'));
-                focusField('siPassword');
+                setError(serverMessage(result, 'auth.invalidCredentials'));
+                if (!result.code) focusField('siPassword');
                 return;
             }
             
@@ -389,7 +392,7 @@ function Hero() {
             if (!result.success) {
                 const field = fieldForMessage(result.message, SIGNUP_SERVER_FIELDS);
                 if (field) showFieldErrors({ [field]: result.message });
-                else setError(result.message || t('auth.otpSendFailed'));
+                else setError(serverMessage(result, 'auth.otpSendFailed'));
                 return;
             }
             setOtpEmail(suEmail); resetOtp(); setSignUpStep('otp'); setResendCooldown(60);
@@ -405,7 +408,7 @@ function Hero() {
         setIsSubmitting(true);
         try {
             const result = await apiPost('verify-otp', { email: otpEmail, otp: code });
-            if (!result.success) { setError(result.message || t('auth.otpInvalid')); return; }
+            if (!result.success) { setError(serverMessage(result, 'auth.otpInvalid')); return; }
             setSuFirst(''); setSuMiddle(''); setSuLast('');
             setSuUsername(''); setSuContact(''); setSuEmail('');
             setSuPassword(''); setSuConfirm('');
@@ -421,7 +424,7 @@ function Hero() {
         clearErr(); setIsSubmitting(true);
         try {
             const result = await apiPost('resend-otp', { email: otpEmail });
-            if (!result.success) { setError(result.message || t('auth.resendFailed')); return; }
+            if (!result.success) { setError(serverMessage(result, 'auth.resendFailed')); return; }
             resetOtp(); setResendCooldown(60);
         } catch { setError(t('auth.serverErrorShort')); }
         finally { setIsSubmitting(false); }
@@ -435,7 +438,7 @@ function Hero() {
         setIsSubmitting(true);
         try {
             const result = await apiPost('forgot-password', { email: fpEmail.trim() });
-            if (!result.success) { setError(result.message || t('auth.genericError')); return; }
+            if (!result.success) { setError(serverMessage(result, 'auth.genericError')); return; }
             setOtpEmail(fpEmail.trim()); resetOtp(); setForgotStep('otp'); setResendCooldown(60);
         } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
@@ -449,7 +452,7 @@ function Hero() {
         setIsSubmitting(true);
         try {
             const result = await apiPost('verify-reset-otp', { email: otpEmail, otp: code });
-            if (!result.success) { setError(result.message || t('auth.otpInvalid')); return; }
+            if (!result.success) { setError(serverMessage(result, 'auth.otpInvalid')); return; }
             resetOtp(); setForgotStep('reset');
         } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
@@ -460,7 +463,7 @@ function Hero() {
         clearErr(); setIsSubmitting(true);
         try {
             const result = await apiPost('resend-reset-otp', { email: otpEmail });
-            if (!result.success) { setError(result.message || t('auth.resendFailed')); return; }
+            if (!result.success) { setError(serverMessage(result, 'auth.resendFailed')); return; }
             resetOtp(); setResendCooldown(60);
         } catch { setError(t('auth.serverErrorShort')); }
         finally { setIsSubmitting(false); }
@@ -482,7 +485,7 @@ function Hero() {
             if (!result.success) {
                 const field = fieldForMessage(result.message, RESET_SERVER_FIELDS);
                 if (field) showFieldErrors({ [field]: result.message });
-                else setError(result.message || t('auth.couldNotResetPassword'));
+                else setError(serverMessage(result, 'auth.couldNotResetPassword'));
                 return;
             }
             setForgotStep('done');

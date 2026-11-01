@@ -149,3 +149,34 @@ describe('Sign Up', () => {
     await waitFor(() => expect(errorOf('suEmail')).toBe('An account with this email already exists.'));
   });
 });
+
+describe('Server can\'t reach the database', () => {
+  const DB_DOWN = { success: false, code: 'DATABASE_UNAVAILABLE', message: "SafeConnect can't reach its database right now." };
+
+  test('Sign In stays open and explains it, in the chosen language', async () => {
+    localStorage.setItem('sf_language', 'tl');
+    signinUser.mockResolvedValue(DB_DOWN);
+    renderHero();
+    fireEvent.click(screen.getAllByRole('button', { name: /Mag-sign In/i })[0]);
+    fireEvent.change(field('siEmail'), { target: { value: 'juan@example.com' } });
+    fireEvent.change(field('siPassword'), { target: { value: 'Secret123!' } });
+    submit();
+    expect(await screen.findByText(/Hindi makakonekta ang SafeConnect sa database/)).toBeInTheDocument();
+    expect(field('siEmail')).toBeInTheDocument();
+    expect(screen.queryByText(/Internal server error/i)).not.toBeInTheDocument();
+  });
+
+  test('Sign Up explains it instead of a generic error', async () => {
+    global.fetch = jest.fn(() => Promise.resolve({ json: () => Promise.resolve(DB_DOWN) }));
+    localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
+    renderHero();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
+    const type = (id, value) => fireEvent.change(field(id), { target: { value } });
+    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
+    type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
+    type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    fireEvent.click(field('suAgree'));
+    submit();
+    expect(await screen.findByText(/can't reach its database right now, so this can't be completed/)).toBeInTheDocument();
+  });
+});

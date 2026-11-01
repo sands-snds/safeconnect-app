@@ -7,6 +7,7 @@ const { passwordProblem } = require("../utils/validation");
 const { isAdminRole, isSuperAdminRole } = require("../utils/roles");
 const Log = require("../models/Log");
 const { signinContext, lookupLocation } = require("../utils/signinContext");
+const { sendServerError } = require("../utils/dbErrors");
 const {
     sendOtpEmail,
     sendWelcomeEmail,
@@ -94,11 +95,7 @@ exports.requestOtp = async (req, res) => {
 
         return res.json({ success: true, message: "Verification code sent to your email." });
     } catch (error) {
-        console.error("requestOtp error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Could not send verification email. Please try again.",
-        });
+        return sendServerError(res, error, "requestOtp", "Could not send verification email. Please try again.");
     }
 };
 
@@ -152,8 +149,7 @@ exports.verifyOtp = async (req, res) => {
 
         return res.json({ success: true, message: "Account created successfully." });
     } catch (error) {
-        console.error("verifyOtp error:", error);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return sendServerError(res, error, "verifyOtp", "Something went wrong while creating your account. Please try again.");
     }
 };
 
@@ -179,11 +175,7 @@ exports.resendOtp = async (req, res) => {
 
         return res.json({ success: true, message: "A new verification code has been sent." });
     } catch (error) {
-        console.error("resendOtp error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Could not resend verification email.",
-        });
+        return sendServerError(res, error, "resendOtp", "Could not resend verification email.");
     }
 };
 
@@ -228,11 +220,7 @@ exports.forgotPassword = async (req, res) => {
             message: "If an account with that email exists, a reset code has been sent.",
         });
     } catch (error) {
-        console.error("forgotPassword error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Could not send reset email. Please try again.",
-        });
+        return sendServerError(res, error, "forgotPassword", "Could not send reset email. Please try again.");
     }
 };
 
@@ -274,8 +262,7 @@ exports.verifyResetOtp = async (req, res) => {
 
         return res.json({ success: true, message: "Code verified. You can now set a new password." });
     } catch (error) {
-        console.error("verifyResetOtp error:", error);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return sendServerError(res, error, "verifyResetOtp", "Something went wrong while checking the code. Please try again.");
     }
 };
 
@@ -340,8 +327,7 @@ exports.resetPassword = async (req, res) => {
 
         return res.json({ success: true, message: "Password updated successfully." });
     } catch (error) {
-        console.error("resetPassword error:", error);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return sendServerError(res, error, "resetPassword", "Something went wrong while changing your password. Please try again.");
     }
 };
 
@@ -372,11 +358,7 @@ exports.resendResetOtp = async (req, res) => {
             message: "A new reset code has been sent to your email.",
         });
     } catch (error) {
-        console.error("resendResetOtp error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Could not resend reset email.",
-        });
+        return sendServerError(res, error, "resendResetOtp", "Could not resend reset email.");
     }
 };
 
@@ -411,8 +393,7 @@ exports.signup = async (req, res) => {
 
         return res.json({ success: true, message: "Account created successfully." });
     } catch (error) {
-        console.error("Signup Error:", error);
-        return res.status(500).json({ success: false, message: error.message });
+        return sendServerError(res, error, "signup", "Something went wrong while creating your account. Please try again.");
     }
 };
 
@@ -495,8 +476,7 @@ exports.signin = async (req, res) => {
             message: "Login successful",
         });
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return sendServerError(res, err, "signin", "Something went wrong on our side while signing you in. Please try again in a few minutes.");
     }
 };
 
@@ -544,8 +524,7 @@ exports.remember = async (req, res) => {
             days: RememberedLogin.REMEMBER_DAYS
         });
     } catch (err) {
-        console.error("remember error:", err);
-        res.status(500).json({ success: false, message: "Could not save your login." });
+        sendServerError(res, err, "remember", "Could not save your login.");
     }
 };
 
