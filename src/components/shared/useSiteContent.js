@@ -51,8 +51,8 @@ export const DEFAULT_SITE_MEDIA = {
     { src: '/images/resident-background3.jpg', alt: 'Barangay Sta. Fe' }
   ],
   systemDemo: {
-    title: 'See SafeConnect in action',
-    caption: 'A quick tour of how to report an emergency, request help and follow your report.',
+    title: 'Videos from the Barangay',
+    caption: 'Watch the latest videos and updates from Barangay Santa Fe.',
     video: { source: 'none', url: '' },
     showOnLanding: true,
     showInNews: false

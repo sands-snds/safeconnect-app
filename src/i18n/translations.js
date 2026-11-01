@@ -1,9 +1,3 @@
-
-
-
-
-
-
 export const translations = {
   en: {
     popup: {
@@ -237,12 +231,12 @@ export const translations = {
       }
     },
     demoVideo: {
-      eyebrow: 'Watch the demo',
-      defaultTitle: 'See SafeConnect in action',
-      subtitle: 'A quick walkthrough of how to report an emergency, request help, and follow your reports.',
-      comingSoonTitle: 'Demo video coming soon',
-      comingSoonText: 'A short video showing how to use SafeConnect will be available here.',
-      newsBadge: 'Video guide'
+      eyebrow: 'Barangay Videos',
+      defaultTitle: 'Videos from the Barangay',
+      subtitle: 'Watch the latest videos and updates from Barangay Santa Fe.',
+      comingSoonTitle: 'No video yet',
+      comingSoonText: 'Videos from the barangay will be shown here.',
+      newsBadge: 'Barangay video'
     },
     services: {
       badge: 'What You Can Do',
@@ -1317,12 +1311,12 @@ export const translations = {
       }
     },
     demoVideo: {
-      eyebrow: 'Panoorin ang demo',
-      defaultTitle: 'Tingnan kung paano gumagana ang SafeConnect',
-      subtitle: 'Maikling gabay kung paano mag-report ng emergency, humingi ng tulong, at subaybayan ang iyong mga report.',
-      comingSoonTitle: 'Malapit nang ilabas ang demo video',
-      comingSoonText: 'Dito ilalagay ang maikling video kung paano gamitin ang SafeConnect.',
-      newsBadge: 'Video gabay'
+      eyebrow: 'Mga Video ng Barangay',
+      defaultTitle: 'Mga Video mula sa Barangay',
+      subtitle: 'Panoorin ang pinakabagong mga video at balita mula sa Barangay Santa Fe.',
+      comingSoonTitle: 'Wala pang video',
+      comingSoonText: 'Dito ipapakita ang mga video mula sa barangay.',
+      newsBadge: 'Video ng barangay'
     },
     services: {
       badge: 'Ano ang Magagawa Mo',
