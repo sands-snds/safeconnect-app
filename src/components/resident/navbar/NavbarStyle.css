@@ -2077,24 +2077,33 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 .panel-undo {
     flex-shrink: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 9px 16px;
+    gap: 6px;
+    padding: 10px 16px;
     background: #2b1b20;
     color: #fff;
     font-size: 0.8rem;
+    text-align: center;
 }
 
-.panel-undo button {
-    border: none;
+.panel-undo button,
+.np-snack button {
+    border: 1px solid rgba(251, 196, 208, 0.55);
+    border-radius: 999px;
     background: none;
     color: #fbc4d0;
     font-weight: 800;
     font-size: 0.8rem;
     cursor: pointer;
-    padding: 2px 4px;
+    min-height: 32px;
+    padding: 4px 20px;
 }
+
+.panel-undo button:hover,
+.np-snack button:hover { background: rgba(251, 196, 208, 0.12); }
+.panel-undo button:focus-visible,
+.np-snack button:focus-visible { outline: 2px solid #fbc4d0; outline-offset: 2px; }
 
 /* ── Notifications page (same frame as My Reports) ── */
 .notifications-fullscreen {
@@ -2468,11 +2477,13 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     bottom: 22px;
     transform: translateX(-50%);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
+    text-align: center;
     background: #2b1b20;
     color: #fff;
-    padding: 11px 18px;
+    padding: 12px 20px;
     border-radius: 12px;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
     font-size: 0.85rem;
@@ -2480,14 +2491,6 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     z-index: 5;
 }
 
-.np-snack button {
-    border: none;
-    background: none;
-    color: #fbc4d0;
-    font-weight: 800;
-    cursor: pointer;
-    padding: 2px 4px;
-}
 
 
 @media (max-width: 600px) {

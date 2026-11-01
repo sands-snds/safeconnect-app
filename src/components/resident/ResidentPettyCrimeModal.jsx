@@ -320,7 +320,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 `}</style>
 {show && (
 <div
-      className="modal-overlay"
+      className="modal-overlay report-modal-overlay"
       style={{
         position:'fixed',
         top:0,
@@ -328,7 +328,6 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         right:0,
         bottom:0,
         width:'100vw',
-        height:'100vh',
         backgroundColor:'rgba(0,0,0,.75)',
         display:'flex',
         justifyContent:'center',
@@ -339,13 +338,13 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       }}
 >
 <div
+        className="report-modal-card"
         onClick={(e)=>e.stopPropagation()}
         style={{
           backgroundColor:'white',
           borderRadius:'12px',
           maxWidth:'800px',
           width:'100%',
-          maxHeight:'90vh',
           overflowY:'auto',
           position:'relative',
           boxShadow:'0 20px 60px rgba(0,0,0,.3)'
@@ -883,7 +882,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 
 {showSuccessPopup && (
   <div
-    className="modal-overlay"
+    className="modal-overlay report-modal-overlay"
     onClick={(e) => { if (e.target === e.currentTarget) closeSuccessPopup(); }}
     style={{
       position: 'fixed',
@@ -892,7 +891,6 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       right: 0,
       bottom: 0,
       width: '100vw',
-      height: '100vh',
       backgroundColor: 'rgba(0,0,0,.75)',
       display: 'flex',
       justifyContent: 'center',

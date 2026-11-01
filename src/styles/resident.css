@@ -2397,6 +2397,19 @@ body {
   }
 }
 
+/* Report forms (Assistance, Petty Crime) and their pop-ups: sized to the
+   visible screen (dvh), so the browser's address/tool bars can't cover the
+   buttons at the bottom; vh is the fallback. */
+.report-modal-overlay {
+    height: 100vh;
+    height: 100dvh;
+}
+
+.report-modal-card {
+    max-height: 90vh;
+    max-height: min(90vh, calc(100dvh - 40px));
+}
+
 #residentHeroCarousel .carousel-control-prev-icon,
 #residentHeroCarousel .carousel-control-next-icon {
     filter: none;
