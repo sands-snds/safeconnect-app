@@ -239,7 +239,7 @@ exports.getLinkPreview = async (req, res) => {
 
 exports.getArchiveSettings = async (req, res) => {
     try {
-        res.json({ success: true, months: await AnnouncementArchive.getAutoArchiveMonths() });
+        res.json({ success: true, days: await AnnouncementArchive.getAutoArchiveDays() });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to load the archive setting." });
@@ -248,14 +248,14 @@ exports.getArchiveSettings = async (req, res) => {
 
 
 exports.updateArchiveSettings = async (req, res) => {
-    const months = Number(req.body?.months);
-    if (!AnnouncementArchive.ALLOWED_MONTHS.includes(months)) {
-        return res.status(400).json({ success: false, message: "Choose Off, 3 months, 6 months or 1 year." });
+    const days = Number(req.body?.days);
+    if (!AnnouncementArchive.ALLOWED_DAYS.includes(days)) {
+        return res.status(400).json({ success: false, message: "Choose Off, 7 days, 3 months, 6 months or 1 year." });
     }
     try {
-        await AnnouncementArchive.setAutoArchiveMonths(months);
+        await AnnouncementArchive.setAutoArchiveDays(days);
         const archived = await AnnouncementArchive.runAutoArchive();
-        res.json({ success: true, months, archived });
+        res.json({ success: true, days, archived });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to update the archive setting." });

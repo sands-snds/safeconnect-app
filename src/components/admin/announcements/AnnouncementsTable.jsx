@@ -19,9 +19,10 @@ const DEFAULT_PAGE_SIZE = 10;
 
 const ANNOUNCEMENT_ARCHIVE_OPTIONS = [
   { value: 0, label: "Off" },
-  { value: 3, label: "After 3 months" },
-  { value: 6, label: "After 6 months" },
-  { value: 12, label: "After 1 year" }
+  { value: 7, label: "After 7 days" },
+  { value: 90, label: "After 3 months" },
+  { value: 180, label: "After 6 months" },
+  { value: 365, label: "After 1 year" }
 ];
 
 const SORT_OPTIONS = [

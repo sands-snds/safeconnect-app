@@ -95,6 +95,7 @@ export const ADMIN_TL = {
   'Archive': 'I-archive',
   'Restore': 'Ibalik',
   'Off': 'Naka-off',
+  'After 7 days': 'Pagkalipas ng 7 araw',
   'After 3 months': 'Pagkalipas ng 3 buwan',
   'After 6 months': 'Pagkalipas ng 6 na buwan',
   'After 1 year': 'Pagkalipas ng 1 taon',

@@ -149,7 +149,7 @@ These run on every start, so local and Azure databases stay in sync without manu
 | `AnnouncementComment.ensureTable()` | Table `announcement_comments` exists, including the `parent_id` column used for replies |
 | `logArchiveService.startScheduler()` | `signin_logs` and `admin_activity_logs` have `archived_at`; the settings `signin_log_auto_archive_days` and `admin_log_auto_archive_days` exist (default `90`). It then archives old log entries immediately and every 6 hours. |
 | `siteContentService.ensureSchema()` | `system_settings.setting_value` is `TEXT`, so the site contacts JSON fits. Then `siteMediaService.hideNewsVideoOnce()` turns the News tab's video off once on sites saved before its switch came back (marker setting `site_media_news_off_v1`). |
-| `announcementArchiveService.startScheduler()` | `announcements.archived_at` exists; the setting `announcement_auto_archive_months` exists (default `0` = Off). It then auto-archives now and every 6 hours. |
+| `announcementArchiveService.startScheduler()` | `announcements.archived_at` and `restored_at` exist; the setting `announcement_auto_archive_days` exists (default `7`, the weekly News reset). It then auto-archives now and every hour. |
 | `Notification.ensureColumns()` | `notifications` has `archived_at` (Notifications page archive) and `comment_id` (the comment to reply to) |
 | `ResidentActivity.ensureTable()` | Table `resident_activity_logs` exists (the Activity column of Resident Logs) |
 | `User.ensureArchiveColumn()` | `registered_users.archived_at` exists (archived Closed accounts) |
@@ -297,7 +297,7 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 | Method | Path | Access | Purpose | Called from |
 |---|---|---|---|---|
 | GET | `/announcements` | public | Announcements that aren't archived, newest first, each with `likeCount`, `commentCount` and `likedByMe`. `attachUserIfPresent` reads the token if one is sent, without requiring it. `?includeArchived=1` (Officials and Admins only) adds the archived ones, with `archived_at`. | `fetchAnnouncements({ includeArchived })`: resident news, admin table |
-| GET, PUT | `/announcements/archive-settings` | admin (PUT: super) | `{ months }`: auto-archive 0 (Off), 3, 6 or 12 months after posting; saving archives right away | `fetchAnnouncementArchiveSettings()`, `updateAnnouncementArchiveSettings()` → `ArchiveToolbar` |
+| GET, PUT | `/announcements/archive-settings` | admin (PUT: super) | `{ days }`: auto-archive 0 (Off), 7, 90, 180 or 365 days after posting (or after being restored); saving archives right away | `fetchAnnouncementArchiveSettings()`, `updateAnnouncementArchiveSettings()` → `ArchiveToolbar` |
 | PATCH | `/announcements/:id/archive`, `/announcements/:id/restore` | admin | Archive or restore one | `archiveAnnouncement(id, archived)` → Edit form |
 | GET | `/announcements/link-preview?url=` | admin | Title, image and site name of a news link | `fetchLinkPreview()` |
 | POST | `/announcements` | admin | Create (multipart: `title, category, message, date, source_*`, optional `image`). Emails all active residents. | `createAnnouncement()` |
@@ -389,7 +389,7 @@ Services hold logic that is shared, has several steps, or talks to outside syste
 | `pdfService.js` | Generic branded table PDF (`pdfkit`): header with logos, summary block, one table or several sections (with vector bar and pie charts drawn by `drawChart`, and bold Total rows), page breaks, and page-number footers. |
 | `excelService.js` | The Excel version (`exceljs`): header rows, summary, one table or several sections (no charts), and column widths. |
 | `archiveService.js` | Report archiving. `ensureSchema()` adds the columns and settings table. `runAutoArchive()` sets `archived_at = NOW()` on Resolved and Dismissed rows whose `COALESCE(resolved_at, submitted time)` is older than the configured number of months (`resolved_at` is the closing time for both). `setArchived(type, id, bool)` archives only Resolved or Dismissed reports. `startScheduler()` runs the setup, then auto-archives now and every 6 hours. |
-| `announcementArchiveService.js` | Announcement archiving: the `announcement_auto_archive_months` setting (0, 3, 6 or 12; default 0 = Off), `runAutoArchive()` (announcements posted longer ago than that), `setArchived(id, bool)`, and a 6-hour scheduler. |
+| `announcementArchiveService.js` | Announcement archiving and the weekly News reset: the `announcement_auto_archive_days` setting (0, 7, 90, 180 or 365; default 7), `runAutoArchive()` (announcements posted, or restored, longer ago than that; tells open pages to reload the news), `setArchived(id, bool)` (restoring sets `restored_at`, so a restored one gets a fresh period), and an hourly scheduler. |
 | `adminPresence.js` | An in-memory map from admin id to "last seen". `verifyAdmin` updates it on every admin request. An admin counts as online if seen in the last **2 minutes**; the admin panel polls every 30 seconds while open. |
 | `logArchiveService.js` | Log archiving for `signin_logs` and `admin_activity_logs`. Same idea as `archiveService`, but in days (0, 30, 90, 180 or 365; default 90) with one setting per log. `runAutoArchive(log?)` sets `archived_at` on entries older than the period; nothing is deleted. Runs on start and every 6 hours. |
 | `siteContentService.js` | The public contact details, stored as JSON under `system_settings.site_contacts`: `emergencyContacts` (the call button), `footerHotlines` (the footer's Emergency Hotline, its own list without the officials), `officials` (`position`, `firstName`, `middleName`, `lastName`, `number`, `numberType`, plus `name` for display) and `socials`. Holds the defaults, the allowed icons and colors, `checkNumber()` (Mobile / Landline), the upgrades for older saved data, and `validate()`. Default contacts keep a `sublabelKey` so their description stays translated until an Admin edits it. |
@@ -431,7 +431,7 @@ Each model is a class of `static async` methods that run parameterized SQL throu
 
 | What | Where | Lost on restart? |
 |---|---|---|
-| Auto-archive (on start, then every 6 hours) | `archiveService`, `announcementArchiveService`, `logArchiveService` | No, all state is in MySQL |
+| Auto-archive (on start, then every 6 hours; announcements every hour) | `archiveService`, `announcementArchiveService`, `logArchiveService` | No, all state is in MySQL |
 | Sign-in location lookup (after the response is sent) | `authController.recordSignin` | No |
 | Emails (welcome, sign-in alert, announcements) sent without waiting | `emailService` | No |
 | Pending sign-up and reset codes | `authController` `otpStore` / `resetStore` (a `Map`) | **Yes**: users would request a new code |
@@ -504,7 +504,7 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 `id`, `admin_id`, `admin_email`, `admin_username`, `action`, `details`, `created_at`, `archived_at`.
 
 **`system_settings`**
-`setting_key` (primary key), `setting_value` (`TEXT`). Holds `report_auto_archive_months` (`0`, `6` or `12`), `announcement_auto_archive_months` (`0`, `3`, `6` or `12`), `signin_log_auto_archive_days` and `admin_log_auto_archive_days` (`0`, `30`, `90`, `180` or `365`), `site_contacts` and `site_media` (JSON, once an Admin has saved changes), and the one-time marker `site_media_news_off_v1`.
+`setting_key` (primary key), `setting_value` (`TEXT`). Holds `report_auto_archive_months` (`0`, `6` or `12`), `announcement_auto_archive_days` (`0`, `7`, `90`, `180` or `365`; default `7`), `signin_log_auto_archive_days` and `admin_log_auto_archive_days` (`0`, `30`, `90`, `180` or `365`), `site_contacts` and `site_media` (JSON, once an Admin has saved changes), and the one-time marker `site_media_news_off_v1`.
 
 ---
 

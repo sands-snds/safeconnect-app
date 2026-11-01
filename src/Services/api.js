@@ -651,14 +651,14 @@ export const archiveAnnouncement = async (id, archived = true) => {
 export const fetchAnnouncementArchiveSettings = async () => {
     const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/archive-settings`, { headers: authHeaders() });
     const data = await res.json().catch(() => null);
-    return data?.success ? data.months : null;
+    return data?.success ? data.days : null;
 };
 
-export const updateAnnouncementArchiveSettings = async (months) => {
+export const updateAnnouncementArchiveSettings = async (days) => {
     const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/archive-settings`, {
         method: "PUT",
         headers: authHeaders(),
-        body: JSON.stringify({ months }),
+        body: JSON.stringify({ days }),
     });
     return res.json().catch(() => ({ success: false }));
 };

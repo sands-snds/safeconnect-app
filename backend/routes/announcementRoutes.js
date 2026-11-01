@@ -27,9 +27,10 @@ router.get("/", attachUserIfPresent, controller.getAnnouncements);
 
 router.get("/link-preview", verifyToken, verifyAdmin, controller.getLinkPreview);
 
+const ARCHIVE_PERIOD_NAMES = { 7: "7 days", 90: "3 months", 180: "6 months", 365: "1 year" };
 const describeArchiveSetting = (req) => {
-    const months = Number(req.body?.months);
-    return months ? `Announcements: auto-archive after ${months === 12 ? "1 year" : `${months} months`}` : "Announcements: auto-archive turned off";
+    const days = Number(req.body?.days);
+    return days ? `Announcements: auto-archive after ${ARCHIVE_PERIOD_NAMES[days] || `${days} days`}` : "Announcements: auto-archive turned off";
 };
 router.get("/archive-settings", verifyToken, verifyAdmin, controller.getArchiveSettings);
 router.put("/archive-settings", verifyToken, verifyAdmin, verifySuperAdmin, announcementsChanged,

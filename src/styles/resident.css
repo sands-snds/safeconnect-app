@@ -2397,6 +2397,11 @@ body {
   }
 }
 
+#residentHeroCarousel .carousel-control-prev-icon,
+#residentHeroCarousel .carousel-control-next-icon {
+    filter: none;
+}
+
 .resident-hero-slide {
     background-size: cover;
     background-position: center;

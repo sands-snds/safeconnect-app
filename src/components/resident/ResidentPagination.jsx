@@ -30,7 +30,9 @@ export default function ResidentPagination({ page, pageSize, total, onPageChange
         .rp-page-range { font-size: 0.82rem; color: #4b5563; }
         .rp-pages { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .rp-page-btn { min-width: 38px; height: 38px; padding: 0 10px; border-radius: 10px; border: 1px solid #e5d9dc; background: #fff; color: #374151; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s, color 0.15s, border-color 0.15s; }
-        .rp-page-btn:hover:not(:disabled) { border-color: #6B2C3E; color: #6B2C3E; }
+        .rp-page-btn { -webkit-tap-highlight-color: transparent; }
+        @media (hover: hover) { .rp-page-btn:not(.active):not(:disabled):hover { border-color: #6B2C3E; color: #6B2C3E; } }
+        .rp-page-btn:not(.active):not(:disabled):active { background: #faf5f6; border-color: #6B2C3E; color: #6B2C3E; }
         .rp-page-btn.active { background: #6B2C3E; border-color: #6B2C3E; color: #fff; }
         .rp-page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
         .rp-page-btn:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; }
