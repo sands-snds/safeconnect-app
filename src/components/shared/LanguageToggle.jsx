@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import LanguageFlag from './LanguageFlag';
 
 
 
@@ -22,11 +23,14 @@ export default function LanguageToggle({ variant = 'light', className = '' }) {
         .lang-toggle-dark { background: #f4f0f1; }
 
         .lang-toggle button {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
           border: none;
           background: transparent;
           font-size: 0.72rem;
           font-weight: 700;
-          padding: 5px 11px;
+          padding: 4px 10px 4px 5px;
           border-radius: 999px;
           cursor: pointer;
           transition: all 0.15s ease;
@@ -43,14 +47,16 @@ export default function LanguageToggle({ variant = 'light', className = '' }) {
         onClick={() => setLanguage('en')}
         aria-label="Switch to English"
       >
+        <LanguageFlag language="en" size={16} />
         EN
       </button>
       <button
         className={language === 'tl' ? 'active' : ''}
         onClick={() => setLanguage('tl')}
-        aria-label="Switch to Tagalog"
+        aria-label="Switch to Filipino"
       >
-        TL
+        <LanguageFlag language="tl" size={16} />
+        FIL
       </button>
     </div>
   );

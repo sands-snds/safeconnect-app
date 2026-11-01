@@ -28,8 +28,8 @@ export const translations = {
       subtitle: 'Piliin ang iyong gustong wika para sa website.',
       english: 'English',
       englishNote: 'Continue in English',
-      tagalog: 'Tagalog',
-      tagalogNote: 'Magpatuloy sa Tagalog',
+      tagalog: 'Filipino',
+      tagalogNote: 'Magpatuloy sa Filipino',
       change: 'You can change this anytime from the menu.'
     },
     languageToggle: {
@@ -1108,8 +1108,8 @@ export const translations = {
       subtitle: 'Choose your preferred language for the website.',
       english: 'English',
       englishNote: 'Continue in English',
-      tagalog: 'Tagalog',
-      tagalogNote: 'Magpatuloy sa Tagalog',
+      tagalog: 'Filipino',
+      tagalogNote: 'Magpatuloy sa Filipino',
       change: 'Maaari mo itong baguhin anumang oras mula sa menu.'
     },
     languageToggle: {
@@ -1330,7 +1330,7 @@ export const translations = {
       subtitle: 'Mula sa pag-report ng emergency hanggang sa pagtingin ng panahon — ito ang naghihintay sa iyo sa sandaling mag-sign in ka.',
       features: {
         emergencyReports: {
-          label: 'Emergency Reports',
+          label: 'Mga Ulat na Emergency',
           desc: 'Mag-report ng sunog, baha, o anumang nagbabantang buhay na sitwasyon ngayon — isang tap lang ang layo ang tulong.'
         },
         assistanceRequests: {
@@ -1338,7 +1338,7 @@ export const translations = {
           desc: 'Humiling ng rescue, relief goods, o suporta sa panahon o pagkatapos ng kalamidad.'
         },
         crimeReports: {
-          label: 'Ulat ng Krimen',
+          label: 'Mga Ulat ng Maliit na Krimen',
           desc: 'Mag-report ng pagnanakaw, bandalismo, o kahina-hinalang aktibidad sa inyong lugar.'
         },
         announcements: {

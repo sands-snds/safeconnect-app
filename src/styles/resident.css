@@ -2599,6 +2599,19 @@ body {
     margin-right: 0;
 }
 
+@media (max-width: 991.98px) {
+    .footer-section .footer-brand {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .footer-section .footer-brand .footer-about {
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
 #residentHeroCarousel .resident-hero-eyebrow {
     margin: 0 0 0.9rem;
     color: #FFC107;

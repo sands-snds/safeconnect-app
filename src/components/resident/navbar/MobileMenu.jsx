@@ -124,7 +124,8 @@ export default function MobileMenu({
 
                 </button>
 
-                <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+                <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>{t('languageToggle.label')}</span>
                     <LanguageToggle variant="light" />
                 </div>
 

@@ -179,8 +179,13 @@
 
 /* Text boxes and dropdowns the same height side by side. */
 .form-input, .form-select {
-  min-height: 38px;
+  height: 40px;
+  box-sizing: border-box;
   line-height: 1.4;
+}
+
+.form-select {
+  padding-right: 28px;
 }
 
 .form-textarea {
@@ -816,10 +821,6 @@
     font-size: 18px;
     line-height: 1.25;
     overflow-wrap: break-word;
-  }
-
-  .admin-header-lang {
-    display: none !important;
   }
 
   .admin-page-body {

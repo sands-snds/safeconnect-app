@@ -6,7 +6,6 @@ import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 import AdminNotificationPanel from "../notifications/AdminNotificationPanel";
 import { notificationTarget } from "../notifications/notificationTypes";
 import { tx } from "../../../i18n/adminText";
-import LanguageToggle from "../../shared/LanguageToggle";
 
 const getInitials = (name) =>
     (name || "A")
@@ -213,8 +212,6 @@ const userMenuRef = useRef(null);
                     gap: "12px"
                 }}
             >
-
-                <LanguageToggle variant="dark" className="admin-header-lang" />
 
                 {lastUpdate && (
                     <span

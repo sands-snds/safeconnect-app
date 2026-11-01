@@ -191,12 +191,13 @@ const AdminSidebar = ({
           </div>
         ))}
 
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, padding: "10px 12px", marginTop: 4 }}>
+          <span style={{ fontSize: 13, opacity: 0.85 }}>{tx("Language")}</span>
+          <LanguageToggle variant="light" />
+        </div>
+
         {showProfile && (
           <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", marginTop: 4 }}>
-              <span style={{ fontSize: 13, opacity: 0.85 }}>{tx("Language")}</span>
-              <LanguageToggle variant="light" />
-            </div>
             {/* Divider */}
             <div
               style={{

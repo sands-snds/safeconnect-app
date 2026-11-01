@@ -31,7 +31,7 @@ const sectionStyle = {
 const rowStyle = {
   display: "flex",
   gap: 10,
-  alignItems: "flex-start",
+  alignItems: "flex-end",
   flexWrap: "wrap",
   padding: "12px 0",
   borderTop: "1px solid #f3f4f6"

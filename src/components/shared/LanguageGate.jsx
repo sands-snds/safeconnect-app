@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import LanguageFlag from './LanguageFlag';
 
 export default function LanguageGate() {
   const { hasChosenLanguage, setLanguage, t } = useLanguage();
@@ -120,7 +121,7 @@ export default function LanguageGate() {
 
         <div className="lg-options">
           <button className="lg-option" onClick={() => setLanguage('en')}>
-            <span className="lg-option-flag" style={{ background: '#6B2C3E' }}>EN</span>
+            <LanguageFlag language="en" size={44} rounded={12} />
             <span className="lg-option-text">
               <strong>{t('languageGate.english')}</strong>
               <span>{t('languageGate.englishNote')}</span>
@@ -129,7 +130,7 @@ export default function LanguageGate() {
           </button>
 
           <button className="lg-option" onClick={() => setLanguage('tl')}>
-            <span className="lg-option-flag" style={{ background: '#0d9488' }}>TL</span>
+            <LanguageFlag language="tl" size={44} rounded={12} />
             <span className="lg-option-text">
               <strong>{t('languageGate.tagalog')}</strong>
               <span>{t('languageGate.tagalogNote')}</span>
