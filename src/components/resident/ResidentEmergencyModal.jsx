@@ -516,6 +516,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           bottom: 0;
           width: 100vw;
           height: 100vh;
+          height: 100dvh;
           background-color: rgba(0, 0, 0, 0.75);
           display: flex;
           justify-content: center;
@@ -525,19 +526,14 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           overflow-y: auto;
         }
  
-        @media (max-width: 480px) {
-          .modal-overlay {
-            padding: 10px;
-            align-items: flex-start;
-          }
-        }
- 
+
         .modal-container {
           background-color: white;
           border-radius: 12px;
           max-width: 820px;
           width: 100%;
           max-height: 90vh;
+          max-height: min(90vh, calc(100dvh - 40px));
           overflow-y: auto;
           position: relative;
           box-shadow: 0 20px 60px rgba(0,0,0,0.3);
@@ -545,7 +541,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
  
         @media (max-width: 480px) {
           .modal-container {
-            max-height: 95vh;
             border-radius: 8px;
           }
         }

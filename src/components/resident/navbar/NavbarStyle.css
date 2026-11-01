@@ -2068,9 +2068,10 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-weight: 700;
 }
 
-.swipe-archive-bg.left { justify-content: flex-start; }
-.swipe-archive-bg.right { justify-content: flex-end; }
+.swipe-archive-bg[data-side="left"] { justify-content: flex-start; }
+.swipe-archive-bg[data-side="right"] { justify-content: flex-end; }
 .swipe-archive.leaving { pointer-events: none; }
+.np-list > li.open .swipe-archive-content { background: #fdf8f9; }
 
 
 .panel-undo {

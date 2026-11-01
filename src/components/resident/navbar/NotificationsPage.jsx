@@ -100,12 +100,12 @@ export default function NotificationsPage({
     });
 
     const archive = async (ids, archived) => {
-        if (!ids.length) return;
+        if (!ids.length) return true;
         setSelected(new Set());
         const ok = await onArchive(ids, archived);
         if (ok === false) {
             setSnack({ text: t("notificationsPage.failed"), undo: null });
-            return;
+            return false;
         }
         const many = ids.length > 1;
         setSnack({
@@ -114,6 +114,7 @@ export default function NotificationsPage({
                 : (many ? t("notificationsPage.restoredMany", { count: ids.length }) : t("notificationsPage.restoredOne")),
             undo: { ids, archived: !archived }
         });
+        return true;
     };
 
     const remove = async (ids) => {
@@ -294,7 +295,6 @@ export default function NotificationsPage({
                                                     </button>
                                                     {n.unread && <span className="unread-dot np-item-dot" aria-hidden="true"></span>}
                                                 </div>
-                                            </SwipeToArchive>
 
                                             {isOpenItem && (
                                                 <div className="np-detail">
@@ -312,6 +312,7 @@ export default function NotificationsPage({
                                                     </div>
                                                 </div>
                                             )}
+                                            </SwipeToArchive>
                                         </li>
                                     );
                                 })}
