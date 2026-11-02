@@ -33,7 +33,7 @@ const CATEGORY_THEME = {
     'Announcement':      { color: '#6B2C3E', icon: 'bi-megaphone-fill' },
     'General':           { color: '#6B2C3E', icon: 'bi-megaphone-fill' }
 };
-const themeFor = (category) => CATEGORY_THEME[category] || { color: '#6B2C3E', icon: 'bi-megaphone-fill' };
+export const themeFor = (category) => CATEGORY_THEME[category] || { color: '#6B2C3E', icon: 'bi-megaphone-fill' };
 
 
 

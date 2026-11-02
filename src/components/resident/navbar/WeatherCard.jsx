@@ -4,11 +4,11 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 const HOT_DAY_C = 34;
 
 
-const NIGHT_ICONS = { "bi-sun-fill": "bi-moon-stars-fill", "bi-cloud-sun-fill": "bi-cloud-moon-fill" };
+export const NIGHT_ICONS = { "bi-sun-fill": "bi-moon-stars-fill", "bi-cloud-sun-fill": "bi-cloud-moon-fill" };
 
 
 
-const manilaHourKey = () => {
+export const manilaHourKey = () => {
     const parts = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23"
     }).formatToParts(new Date());

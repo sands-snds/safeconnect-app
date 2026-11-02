@@ -1930,6 +1930,9 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 .news-weather-days,
 .news-weather-hours {
+    /* Contains the screen-reader-only labels inside, so they scroll with the
+       list instead of widening the page. */
+    position: relative;
     list-style: none;
     margin: 0;
     padding: 0 0 6px;

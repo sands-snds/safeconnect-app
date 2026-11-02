@@ -667,6 +667,21 @@ export const translations = {
       tipHot: 'It will be hot. Drink plenty of water and limit time under the sun.',
       tipFair: 'Good weather for outdoor activities. Stay safe!'
     },
+    widgets: {
+      badge: 'Stay informed',
+      title: 'Today in Barangay Sta. Fe',
+      subtitle: 'The latest barangay news and today\'s weather at a glance.',
+      newsTitle: 'Latest News',
+      weatherTitle: 'Weather today',
+      viewAll: 'View all',
+      rain: 'Rain',
+      tapForNews: 'Tap to read on the News page',
+      tapForForecast: 'Tap for the 7-day forecast',
+      noNews: 'No news this week. Tap to open the News page.',
+      previous: 'Previous',
+      next: 'Next',
+      goTo: 'Go to article {{n}}'
+    },
     news: {
       latestNews: 'Latest News',
       headerSubtitle: 'Barangay alerts, updates, and community news',
@@ -1746,6 +1761,21 @@ export const translations = {
       tipRain: 'Magdala ng payong at umiwas sa mga lugar na madalas bahain.',
       tipHot: 'Mainit ngayon. Uminom ng maraming tubig at umiwas sa matagal na pagbibilad sa araw.',
       tipFair: 'Magandang panahon para sa mga gawain sa labas. Mag-ingat!'
+    },
+    widgets: {
+      badge: 'Manatiling may alam',
+      title: 'Ngayon sa Barangay Sta. Fe',
+      subtitle: 'Ang pinakabagong balita ng barangay at ang panahon ngayong araw, sa isang tingin.',
+      newsTitle: 'Pinakabagong Balita',
+      weatherTitle: 'Panahon ngayon',
+      viewAll: 'Tingnan lahat',
+      rain: 'Ulan',
+      tapForNews: 'Pindutin para basahin sa Balita',
+      tapForForecast: 'Pindutin para sa 7-araw na taya',
+      noNews: 'Walang balita ngayong linggo. Pindutin para buksan ang Balita.',
+      previous: 'Nakaraan',
+      next: 'Susunod',
+      goTo: 'Pumunta sa balita {{n}}'
     },
     news: {
       latestNews: 'Pinakabagong Balita',

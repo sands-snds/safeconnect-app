@@ -5,6 +5,7 @@ import SettingsPage from './SettingsPage';
 import NewsOverlay from "./navbar/NewsOverlay";
 import NotificationsPage from "./navbar/NotificationsPage";
 import { focusNewsItem } from "./navbar/AnnouncementCard";
+import { flashHighlight } from "../shared/highlight";
 import DesktopNavbar from "./navbar/DesktopNavbar";
 import MobileNavbar from "./navbar/MobileNavbar";
 import useAnnouncements from "./navbar/hooks/useAnnouncements";
@@ -32,9 +33,13 @@ const REPORT_TYPE_BY_NOTIFICATION = {
   petty_crime_status: 'Petty Crime'
 };
 
-const RAIN_ALERT_THRESHOLD = 40;
+export const RAIN_ALERT_THRESHOLD = 40;
 
-const describeWeatherCode = (code) => {
+// The resident page's widgets ask to open the News page, at one article
+// ({ announcementId }) or at the weather forecast ({ weather: true }).
+export const OPEN_NEWS_EVENT = "safeconnect:open-news";
+
+export const describeWeatherCode = (code) => {
   if ([0].includes(code)) return { key: 'clear', label: 'Clear sky', icon: 'bi-sun-fill' };
   if ([1, 2, 3].includes(code)) return { key: 'partlyCloudy', label: 'Partly cloudy', icon: 'bi-cloud-sun-fill' };
   if ([45, 48].includes(code)) return { key: 'foggy', label: 'Foggy', icon: 'bi-cloud-fog2-fill' };
@@ -44,7 +49,7 @@ const describeWeatherCode = (code) => {
   return { key: 'update', label: 'Weather update', icon: 'bi-cloud-fill' };
 };
 
-const formatNewsDate = (dateStr) => {
+export const formatNewsDate = (dateStr) => {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
@@ -300,6 +305,17 @@ function ResidentNavbar() {
 
   
   
+  useEffect(() => {
+    const onOpenNews = (e) => {
+      const { announcementId, weather } = e.detail || {};
+      openNewsPageRef.current();
+      if (announcementId != null) setTimeout(() => focusNewsItem({ announcementId }), 300);
+      else if (weather) setTimeout(() => flashHighlight(document.getElementById('news-item-weather')), 350);
+    };
+    window.addEventListener(OPEN_NEWS_EVENT, onOpenNews);
+    return () => window.removeEventListener(OPEN_NEWS_EVENT, onOpenNews);
+  }, []);
+
   const openNewsPage = () => {
     setActiveView('news');
     setShowNewsPage(true);
@@ -311,6 +327,8 @@ function ResidentNavbar() {
     setShowNotifications(false);
     reloadAnnouncements();
   };
+  const openNewsPageRef = useRef(openNewsPage);
+  openNewsPageRef.current = openNewsPage;
 
   const closeNewsPage = () => setShowNewsPage(false);
 
