@@ -278,7 +278,7 @@ function WidgetLoop({ articles, loading, weather }) {
     const track = trackRef.current;
     if (!track) return;
     track.style.transition = dx || !animate ? 'none' : 'transform 0.4s ease';
-    track.style.transform = `translateX(calc(${-pos * 100}% + ${dx}px))`;
+    track.style.transform = `translateX(calc(${-pos} * (var(--rw-slide) + var(--rw-gap)) + (100% - var(--rw-slide)) / 2 + ${dx}px))`;
   };
   useEffect(() => { place(0); });
 
@@ -311,7 +311,6 @@ function WidgetLoop({ articles, loading, weather }) {
   const news = <NewsCard articles={articles} loading={loading} single={article} />;
   const sky = <WeatherCard weather={weather} />;
   const track = [sky, news, sky, news];
-  const showingNews = isNews(pos);
 
   return (
     <div className="rw-mobile" aria-roledescription="carousel" aria-label={t('widgets.title')}>
@@ -322,18 +321,12 @@ function WidgetLoop({ articles, loading, weather }) {
           ))}
         </div>
       </div>
-      <div className="rw-mobile-controls">
-        <button type="button" className="rw-nav" onClick={() => { setPaused(true); go(-1); }} aria-label={t('widgets.previous')}>
-          <i className="bi bi-chevron-left" aria-hidden="true" />
-        </button>
-        <span className="rw-dots">
-          <button type="button" className={`rw-dot ${showingNews ? 'active' : ''}`} onClick={() => { setPaused(true); if (!showingNews) go(1); }} aria-label={t('widgets.newsTitle')} aria-current={showingNews ? 'true' : undefined} />
-          <button type="button" className={`rw-dot weather ${!showingNews ? 'active' : ''}`} onClick={() => { setPaused(true); if (showingNews) go(1); }} aria-label={t('widgets.weatherTitle')} aria-current={!showingNews ? 'true' : undefined} />
-        </span>
-        <button type="button" className="rw-nav" onClick={() => { setPaused(true); go(1); }} aria-label={t('widgets.next')}>
-          <i className="bi bi-chevron-right" aria-hidden="true" />
-        </button>
-      </div>
+      <button type="button" className="rw-sr-nav prev" onClick={() => { setPaused(true); go(-1); }} aria-label={t('widgets.previous')}>
+        <i className="bi bi-chevron-left" aria-hidden="true" />
+      </button>
+      <button type="button" className="rw-sr-nav next" onClick={() => { setPaused(true); go(1); }} aria-label={t('widgets.next')}>
+        <i className="bi bi-chevron-right" aria-hidden="true" />
+      </button>
     </div>
   );
 }
@@ -413,16 +406,26 @@ export default function ResidentWidgets() {
         .rw-dots { display: inline-flex; align-items: center; gap: 6px; }
         .rw-dot { width: 8px; height: 8px; border-radius: 999px; border: none; padding: 0; background: #e5d9dc; cursor: pointer; transition: width 0.25s, background 0.25s; }
         .rw-dot.active { width: 20px; background: #6B2C3E; }
-        .rw-card:focus-visible, .rw-body:focus-visible, .rw-head-link:focus-visible, .rw-dot:focus-visible, .rw-nav:focus-visible { outline: 3px solid #6B2C3E; outline-offset: 2px; }
+        .rw-card:focus-visible, .rw-body:focus-visible, .rw-head-link:focus-visible, .rw-dot:focus-visible, .rw-sr-nav:focus-visible { outline: 3px solid #6B2C3E; outline-offset: 2px; }
         .rw-weather:focus-visible { outline-color: #1d4ed8; }
 
         /* Phones: one carousel, news and weather taking turns. */
-        .rw-mobile .rw-track > * { display: flex; padding: 0 1px; }
-        .rw-mobile .rw-card { box-shadow: none; }
-        .rw-mobile-controls { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 14px; }
-        .rw-nav { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #e5d9dc; background: #fff; color: #6B2C3E; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .rw-mobile-controls .rw-dot.weather { background: #bfdbfe; }
-        .rw-mobile-controls .rw-dot.weather.active { background: #1d4ed8; }
+        .rw-mobile { position: relative; margin: 0 -16px; }
+        .rw-mobile .rw-viewport { padding: 2px 0 6px; }
+        .rw-mobile .rw-track { --rw-slide: 86%; --rw-gap: 10px; gap: var(--rw-gap); }
+        .rw-mobile .rw-track > * { display: flex; flex: 0 0 var(--rw-slide); transition: opacity 0.3s ease; }
+        .rw-mobile .rw-track > [aria-hidden="true"] { opacity: 0.55; }
+        .rw-mobile .rw-card { box-shadow: 0 4px 14px rgba(107, 44, 62, 0.08); }
+        .rw-mobile .rw-weather { box-shadow: 0 4px 14px rgba(29, 78, 216, 0.16); }
+        .rw-mobile .rw-card-head { padding: 12px 14px 6px; }
+        .rw-mobile .rw-head-link, .rw-mobile .rw-card-foot { display: none; }
+        .rw-mobile .rw-body { min-height: 0; padding: 4px 14px 14px; }
+        .rw-mobile .rw-thumb { min-height: 88px; flex-basis: 36%; }
+        .rw-mobile .rw-article-title { -webkit-line-clamp: 2; }
+        .rw-sr-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+        .rw-sr-nav:focus-visible { width: 36px; height: 36px; clip: auto; overflow: visible; border-radius: 50%; background: #fff; color: #6B2C3E; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 2; }
+        .rw-sr-nav.prev { left: 8px; }
+        .rw-sr-nav.next { right: 8px; }
 
         @media (max-width: 767px) {
           .rw-outer { padding: 52px 0 64px; }
