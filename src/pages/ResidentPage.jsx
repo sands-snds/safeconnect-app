@@ -64,6 +64,8 @@ function ResidentPage() {
         />
       </section>
 
+      <ResidentWidgets />
+
       <section id="emergency-report">
         <EmergencyReportSection
             onReportClick={() => setEmergencyOpen(true)}
@@ -71,8 +73,6 @@ function ResidentPage() {
             onPettyCrimeClick={() => setPettyCrimeOpen(true)}
           />
       </section>
-
-      <ResidentWidgets />
 
       <Footer />
 

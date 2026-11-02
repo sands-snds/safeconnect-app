@@ -358,7 +358,8 @@ export default function ResidentWidgets() {
   return (
     <section className="resident-widgets">
       <style>{`
-        .rw-outer { padding: 64px 0 80px; background: #fbf7f8; }
+        /* Fades into the report section below, which starts white. */
+        .rw-outer { padding: 64px 0 72px; background: linear-gradient(180deg, #fbf7f8 0%, #ffffff 100%); }
         .rw-inner { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
         .rw-intro { max-width: 600px; margin: 0 auto 28px; text-align: center; }
         .rw-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 14px; }
