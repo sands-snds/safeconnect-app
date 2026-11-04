@@ -3,7 +3,7 @@ import { createEmergencyReport, updateEmergencyReport } from '../../Services/api
 import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportSubmitted } from './useCallAccess';
  
  
@@ -738,30 +738,31 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           cursor: pointer;
         }
 
-        /* The selects sit inside .form-group, where resident.css's
-           ".form-group select" would otherwise win: it drops the room for
-           the dropdown arrow and shrinks the text on phones. */
+        /* resident.css makes these labels display: block, so .form-label's gap
+           doesn't apply; the icon gets its own space instead. */
+        .modal-form .form-label > .bi:first-child {
+          display: inline-block;
+          margin-right: 8px;
+          vertical-align: -1px;
+        }
+
+        /* The selects take their padding, font and size from resident.css's
+           ".form-group select", like the text inputs beside them, at every
+           screen width; this only keeps room for Bootstrap's dropdown arrow. */
         .modal-form .form-group .form-select {
-          display: block;
-          width: 100%;
-          min-height: 44px;
-          padding: 10px 40px 10px 14px;
-          font-size: 14px;
-          line-height: 1.4;
-          color: #1f2937;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
+          padding-right: 2.25rem;
+          background-position: right 0.75rem center;
+          background-size: 14px 10px;
           background-color: #fff;
-          background-position: right 14px center;
+          color: #1f2937;
           text-overflow: ellipsis;
         }
         .modal-form .form-group .form-select:focus {
-          border-color: #dc3545;
-          box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+          box-shadow: none;
         }
-        .modal-form .form-group .form-select:invalid,
-        .modal-form .form-group .form-select option[value=""] {
-          color: #6b7280;
+        /* The "Select …" choice looks like the other fields' placeholders. */
+        .modal-form .form-group .form-select.is-empty {
+          color: #9ca3af;
         }
         .modal-form .form-group .form-select option {
           color: #1f2937;
@@ -772,14 +773,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         .em-people-media > .form-group {
           margin-bottom: 0;
           min-width: 0;
-        }
-
-        @media (max-width: 480px) {
-          .modal-form .form-group .form-select {
-            font-size: 16px; /* 16px stops iOS from zooming in on focus */
-            padding: 10px 38px 10px 12px;
-            border-radius: 6px;
-          }
         }
 
         .checkbox-grid {
@@ -1191,7 +1184,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   onChange={handleChange}
                   required
                   disabled={isSubmitting}
-                  className="form-select"
+                  className={`form-select${formData.emergencyType ? '' : ' is-empty'}`}
                 >
                   <option value="">{t('emergencyModal.selectType')}</option>
                   <option value="Fire Emergency">{t('emergencyModal.typeFire')}</option>
@@ -1204,7 +1197,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               <div className="form-group">
                 <div className="address-label-row">
                   <label className="form-label" style={{ marginBottom: 0 }}>
-                    <i className="bi bi-geo-alt-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
+                    <i className="bi bi-geo-alt-fill" style={{ color: '#6b7280', fontSize: '14px' }}></i>
                     {t('reportForm.address')} <span className="required">*</span>
                   </label>
                   <button
@@ -1308,7 +1301,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
  
               <div className="form-group">
                 <label className="form-label">
-                  <i className="bi bi-card-text" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
+                  <i className="bi bi-card-text" style={{ color: '#6b7280', fontSize: '14px' }}></i>
                   {t('emergencyModal.incidentDetails')} <span className="required">*</span>
                 </label>
                 <textarea
@@ -1335,7 +1328,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     value={formData.people}
                     onChange={handleChange}
                     disabled={isSubmitting}
-                    className="form-select"
+                    className={`form-select${formData.people ? '' : ' is-empty'}`}
                   >
                     <option value="">{t('reportForm.selectRange')}</option>
                     {PEOPLE_AFFECTED_OPTIONS.map((range) => (
@@ -1345,7 +1338,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                 </div>
                 <div className="form-group">
                   <label className="form-label">
-                    <i className="bi bi-camera-video-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
+                    <i className="bi bi-camera-video-fill" style={{ color: '#6b7280', fontSize: '14px' }}></i>
                     {t('reportForm.photoOrVideo')} {!isEditing && <span className="required">*</span>}
                   </label>
                   <input
@@ -1387,7 +1380,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
 
               <div className="form-group">
                 <label className="form-label">
-                  <i className="bi bi-info-circle-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
+                  <i className="bi bi-info-circle-fill" style={{ color: '#6b7280', fontSize: '14px' }}></i>
                   {t('emergencyModal.specialNeeds')}
                 </label>
                 <div style={{
