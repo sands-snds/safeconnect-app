@@ -749,7 +749,15 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         /* The selects take their padding, font and size from resident.css's
            ".form-group select", like the text inputs beside them, at every
            screen width; this only keeps room for Bootstrap's dropdown arrow. */
+        /* admin.css (loaded on every page) fixes .form-select at 40px tall,
+           the same as the text boxes; with resident.css's 0.75rem top and
+           bottom padding that left 14px for the text and cut it off. The
+           text is centred in the 40px instead. */
         .modal-form .form-group .form-select {
+          height: 40px;
+          padding-top: 0;
+          padding-bottom: 0;
+          line-height: 38px;
           padding-right: 2.25rem;
           background-position: right 0.75rem center;
           background-size: 14px 10px;
