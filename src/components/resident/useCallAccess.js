@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchCallAccess } from '../../Services/api';
 
-// The report forms fire this after a report is saved, so the call button
-// can appear right away (a fire report) or start its wait.
-export const REPORT_SUBMITTED_EVENT = 'safeconnect:report-submitted';
-export const announceReportSubmitted = () => window.dispatchEvent(new Event(REPORT_SUBMITTED_EVENT));
+// Fired whenever the resident's reports may have changed, so the call
+// button is checked again at once: a report submitted, edited or deleted
+// here, and (through ResidentNavbar's refreshReports) the live "reports"
+// event the server sends when the barangay changes a report's status. So
+// the button appears right after a fire report and goes away as soon as
+// the report is resolved or dismissed, without a reload.
+export const REPORTS_CHANGED_EVENT = 'safeconnect:reports-changed';
+export const announceReportsChanged = () => window.dispatchEvent(new Event(REPORTS_CHANGED_EVENT));
 
-// Also checks now and then, so the button goes away once the barangay
-// resolves or dismisses the report.
+// A fallback in case the live connection is down.
 const RECHECK_MS = 60 * 1000;
 
 const currentUserId = () => {
@@ -53,12 +56,12 @@ export default function useCallAccess() {
     check();
     const onVisible = () => { if (document.visibilityState === 'visible') check(); };
     const interval = setInterval(() => { if (document.visibilityState !== 'hidden') check(); }, RECHECK_MS);
-    window.addEventListener(REPORT_SUBMITTED_EVENT, check);
+    window.addEventListener(REPORTS_CHANGED_EVENT, check);
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       clearInterval(interval);
       clearTimeout(timer.current);
-      window.removeEventListener(REPORT_SUBMITTED_EVENT, check);
+      window.removeEventListener(REPORTS_CHANGED_EVENT, check);
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [check]);

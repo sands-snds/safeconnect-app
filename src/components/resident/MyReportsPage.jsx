@@ -12,6 +12,7 @@ import { showPopup, confirmPopup } from '../shared/popup';
 import ResidentEmergencyModal from "./ResidentEmergencyModal";
 import ResidentAssistanceModal from "./ResidentAssistanceModal";
 import ResidentPettyCrimeModal from "./ResidentPettyCrimeModal";
+import { announceReportsChanged } from "./useCallAccess";
 
 const TYPE_LABEL_KEYS = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYPE_LABEL_KEYS[type]}`) : type);
@@ -342,6 +343,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
     }
 
     if (result?.success) {
+      announceReportsChanged();
       await loadReports();
       showPopup({ type: 'success', title: t('myReports.deletedTitle'), message: t('myReports.deletedBody') });
     } else {

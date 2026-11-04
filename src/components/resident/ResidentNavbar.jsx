@@ -17,6 +17,7 @@ import { clearAuthToken, logoutUser } from "../../Services/api";
 import { confirmPopup } from "../shared/popup";
 import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
 import useLiveUpdates from "../shared/useLiveUpdates";
+import { announceReportsChanged } from "./useCallAccess";
 import useTabNotifications, { markNotificationsViewed } from "../shared/useTabNotifications";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { MAIN_LOGO } from "../shared/logos";
@@ -138,7 +139,8 @@ function ResidentNavbar() {
   
   
   const [reportsVersion, setReportsVersion] = useState(0);
-  const refreshReports = () => setReportsVersion((v) => v + 1);
+  // Also re-checks the emergency call button (useCallAccess).
+  const refreshReports = () => { setReportsVersion((v) => v + 1); announceReportsChanged(); };
   const [showSettingsPage, setShowSettingsPage] = useState(false);
   const [showNotificationsPage, setShowNotificationsPage] = useState(false);
   

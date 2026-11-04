@@ -4,7 +4,7 @@ import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { announceReportSubmitted } from './useCallAccess';
+import { announceReportsChanged } from './useCallAccess';
 import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
@@ -260,6 +260,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           throw new Error(result.message || t('assistanceModal.updateFailed'));
         }
         showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('assistanceModal.updateSuccess') });
+        announceReportsChanged();
         onUpdated && onUpdated();
         onClose();
         return;
@@ -304,7 +305,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         throw new Error(result.message || t('assistanceModal.submitFailed'));
       }
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
-      announceReportSubmitted();
+      announceReportsChanged();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
       setFormData({
         assistanceType: '',

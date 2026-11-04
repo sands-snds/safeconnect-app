@@ -4,7 +4,7 @@ import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { announceReportSubmitted } from './useCallAccess';
+import { announceReportsChanged } from './useCallAccess';
  
  
 
@@ -414,6 +414,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           throw new Error(result.message || t('reportForm.updateFailed'));
         }
         showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('emergencyModal.updateSuccess') });
+        announceReportsChanged();
         onUpdated && onUpdated();
         onClose();
         return;
@@ -476,7 +477,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
  
       
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
-      announceReportSubmitted();
+      announceReportsChanged();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
 
       setSubmittedLocation({

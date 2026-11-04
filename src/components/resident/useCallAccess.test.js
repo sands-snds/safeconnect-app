@@ -1,5 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
-import useCallAccess, { announceReportSubmitted } from './useCallAccess';
+import useCallAccess, { announceReportsChanged } from './useCallAccess';
 import { fetchCallAccess } from '../../Services/api';
 
 jest.mock('../../Services/api', () => ({ fetchCallAccess: jest.fn() }));
@@ -31,7 +31,7 @@ test('fire report: the button appears right after it is submitted, without a rel
   await waitFor(() => expect(fetchCallAccess).toHaveBeenCalledTimes(1));
   expect(result.current).toBe(false);
 
-  act(() => announceReportSubmitted());
+  act(() => announceReportsChanged());
   await waitFor(() => expect(result.current).toBe(true));
 });
 
@@ -45,7 +45,7 @@ test.each([
   const { result } = renderHook(() => useCallAccess());
   await waitFor(() => expect(fetchCallAccess).toHaveBeenCalledTimes(1));
 
-  act(() => announceReportSubmitted());
+  act(() => announceReportsChanged());
   await waitFor(() => expect(fetchCallAccess).toHaveBeenCalledTimes(2));
   expect(result.current).toBe(false);
 
@@ -72,11 +72,30 @@ test('the button goes away once the report is resolved', async () => {
   await waitFor(() => expect(result.current).toBe(false));
 });
 
+test('the barangay resolves the report: the live update hides the button at once', async () => {
+  fetchCallAccess.mockResolvedValueOnce(NOW).mockResolvedValue(NONE);
+  const { result } = renderHook(() => useCallAccess());
+  await waitFor(() => expect(result.current).toBe(true));
+  // ResidentNavbar turns the server's live "reports" event into this.
+  act(() => announceReportsChanged());
+  await waitFor(() => expect(result.current).toBe(false));
+  expect(fetchCallAccess).toHaveBeenCalledTimes(2);
+});
+
+test('another report still open and past its wait keeps the button', async () => {
+  fetchCallAccess.mockResolvedValue(NOW);
+  const { result } = renderHook(() => useCallAccess());
+  await waitFor(() => expect(result.current).toBe(true));
+  act(() => announceReportsChanged());
+  await waitFor(() => expect(fetchCallAccess).toHaveBeenCalledTimes(2));
+  expect(result.current).toBe(true);
+});
+
 test('a failed check keeps what is showing', async () => {
   fetchCallAccess.mockResolvedValueOnce(NOW).mockRejectedValue(new Error('offline'));
   const { result } = renderHook(() => useCallAccess());
   await waitFor(() => expect(result.current).toBe(true));
-  act(() => announceReportSubmitted());
+  act(() => announceReportsChanged());
   await waitFor(() => expect(fetchCallAccess).toHaveBeenCalledTimes(2));
   expect(result.current).toBe(true);
 });
