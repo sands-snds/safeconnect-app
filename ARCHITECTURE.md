@@ -578,7 +578,7 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 - **By hand:** a Resolved or Dismissed report's card shows **Archive** (`ArchiveButton`). Clicking it calls `PATCH /reports/emergency/:id/archive`, which sets `archived_at`. `useAdminData.setReportArchived` updates the local list, and the report moves to the **Archived** tab (`ArchiveToolbar`). **Restore** clears `archived_at`.
 - **Automatically:** `archiveService` runs every 6 hours and archives Resolved and Dismissed reports older than the chosen period. A super admin changes the period in `ArchiveToolbar`, which calls `PUT /reports/archive-settings` and archives immediately.
 - **What archiving does:** the API still returns archived reports, with `archived_at` set. `ReportsPage` only chooses **which list** shows them, so the dashboard counts and exports still include them.
-- **Announcements:** archived from their Edit form (`PATCH /announcements/:id/archive`) or by `announcementArchiveService` (Off by default). The public list leaves them out; the admin list asks for `includeArchived=1` and splits Active / Archived.
+- **Announcements:** archived from their Edit form (`PATCH /announcements/:id/archive`) or by `announcementArchiveService` (7 days after posting by default, the weekly News reset). The public list leaves them out; the admin list asks for `includeArchived=1` and splits Active / Archived.
 - **Notifications:** ticked on the Notifications page and archived with `PUT /notifications/archive` (shared by all staff).
 - **Accounts:** a Closed account's **Archive** button on the Users tab (`PATCH /users/:id/archive`).
 
@@ -723,7 +723,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `layout/AdminLayout.jsx` | The page shell: sidebar and header around the current tab. |
-| `layout/AdminSidebar.jsx` | Navigation groups: General (Dashboard, Notifications); Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Page Contacts** and **Page Contents** for Admins only); **System** (Users, Resident Logs, Admin Logs), which only Admins see. On phones it becomes a drawer, opened by the ☰ button, with a Logout at the bottom. |
+| `layout/AdminSidebar.jsx` | Navigation groups: General (Dashboard, Notifications); Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Page Contacts** and **Page Contents** for Admins only); **System** (Users, Resident Logs, Admin Logs), which only Admins see. It also holds the EN / FIL language switch. On phones it becomes a drawer, opened by the ☰ button, with a Logout at the bottom. |
 | `layout/AdminHeader.jsx` | Sticky at the top. On phones a ☰ menu button before the page title; the title; the refresh button (with the last update time); the **notification bell** (`AdminNotificationPanel`); and the account menu (profile picture, on phones too) with Account Settings, the demo video and Logout. |
 | `layout/AdminStats.jsx` | The dashboard counters: the three report types (in the resident page's report colors), the other totals (outlined), Create Announcement and Total Reports. Sized by the card's width (container queries in `admin.css`); `compact` on phones shows only Create Announcement and Total Reports. |
 
@@ -815,7 +815,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `roles.js` | `ROLE_LABELS` / `roleLabel()` (Resident, Official, Admin) and `MAIN_ACCOUNT_EMAIL`. |
 | `accountStatusPopup.js` | `showAccountStatusPopup(code, t, email)`: the popup for a closed, suspended or inactive account at sign-in. |
 | `LanguageGate.jsx` | A full-screen **English / Tagalog** picker, shown until a language is chosen. |
-| `LanguageToggle.jsx` | A small EN/TL switch for the navbars and menus. |
+| `LanguageToggle.jsx` | A small EN / FIL switch with flags (`LanguageFlag.jsx`) for the navbars, menus and the admin sidebar. |
 | `location/LocationPickerMap.jsx` | A Leaflet map of Barangay Santa Fe with its boundary. Tap or drag to pin; Map/Satellite switch (OpenStreetMap / Esri imagery); `readOnly` mode for admin details. |
 | `location/useLocationPin.js` | Shared pin logic for the three report forms: GPS ("Use my current location"), the inside-Santa-Fe check, and **reverse geocoding** with Nominatim (only the newest pin's result is used). |
 | `location/santaFeArea.js` | The barangay **boundary polygon** (from OpenStreetMap, adjusted to match Google Maps), a point-in-polygon test, and a 25 m tolerance near the boundary, because GPS is only accurate to 10–30 m. |
