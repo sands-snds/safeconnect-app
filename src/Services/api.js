@@ -250,6 +250,16 @@ export const updateContact = async (userId, contact) => {
     return res.json();
 };
 
+// address: { houseNumber, street, area } in Barangay Santa Fe
+export const updateAddress = async (userId, address) => {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/address`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ address }),
+    });
+    return res.json();
+};
+
 export const updateEmail = async (userId, email, currentPassword) => {
     const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/email`, {
         method: "PATCH",
@@ -325,6 +335,7 @@ export const fetchVerifications = async (status) => {
         username: u.username || '',
         email: u.email_address || '',
         contact: u.contact_number || '',
+        address: [u.address_house_number, u.address_street, u.address_area].filter(Boolean).join(', '),
         accountStatus: u.status || 'Pending',
         verificationStatus: u.verification_status,
         note: u.verification_note || '',

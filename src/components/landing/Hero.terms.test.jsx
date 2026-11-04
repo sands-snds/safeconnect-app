@@ -50,6 +50,8 @@ const openSignUp = () => {
   type('Enter your email', 'juan@example.com');
   type('Min. 8 characters', 'Secret123!');
   type('Confirm your password', 'Secret123!');
+  fireEvent.change(document.getElementById('suAddrHouse'), { target: { value: 'Blk 5 Lot 12' } });
+  fireEvent.change(document.getElementById('suAddrStreet'), { target: { value: 'Sampaguita St.' } });
   fireEvent.change(document.getElementById('suIdType'), { target: { value: 'Barangay ID' } });
   fireEvent.change(document.getElementById('suIdFile'), {
     target: { files: [new File(['%PDF-1.7 test'], 'barangay-id.pdf', { type: 'application/pdf' })] }

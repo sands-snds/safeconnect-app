@@ -17,6 +17,7 @@ const {
 const ResidentIdDocument = require("../models/ResidentIdDocument");
 const NotificationService = require("../services/notificationService");
 const { parseIdUpload } = require("../utils/idDocument");
+const { parseAddress, addressOf } = require("../utils/address");
 
 
 
@@ -55,6 +56,10 @@ exports.requestOtp = async (req, res) => {
         const weakPassword = passwordProblem(password);
         if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
+        // Home address in Santa Fe: filled in when they report for themselves.
+        const home = parseAddress(req.body.address);
+        if (home.error) return res.json({ success: false, code: "INVALID_ADDRESS", message: home.error });
+
         // The ID the barangay checks before the account can sign in.
         const idDocument = parseIdUpload(validId);
         if (idDocument.error) return res.json({ success: false, code: "INVALID_ID", message: idDocument.error });
@@ -92,7 +97,7 @@ exports.requestOtp = async (req, res) => {
         otpStore.set(email, {
             otp,
             expiresAt: Date.now() + OTP_TTL_MS,
-            userData:  { fullName, username, contact, email, password: hashedPassword },
+            userData:  { fullName, username, contact, email, password: hashedPassword, address: home.address },
             idDocument,
         });
 
@@ -154,6 +159,7 @@ exports.verifyOtp = async (req, res) => {
             role:     "resident",
             status:   "Pending",
             verificationStatus: "Pending",
+            address:  userData.address,
         });
         try {
             await ResidentIdDocument.save(userId, idDocument);
@@ -507,6 +513,7 @@ function toPublicUser(user) {
         email:    user.email_address,
         role:     user.role,
         photoUrl,
+        address:  addressOf(user),
     };
 }
 

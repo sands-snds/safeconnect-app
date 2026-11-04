@@ -5,6 +5,7 @@ import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
+import useRegisteredAddressFill from './useRegisteredAddress';
 import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const CRIME_TYPES = [
   { key: 'theft', value: 'Theft' },
@@ -122,6 +123,8 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   } = useLocationPin({ onAddress: fillAddressFromPin });
   const locationSectionRef = useRef(null);
   const [reportFor, setReportFor] = useState('self');
+  // Reporting for yourself fills in your registered address.
+  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, reportFor, formData, setFormData });
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
@@ -701,6 +704,11 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 <i className="bi bi-exclamation-triangle-fill"></i> {locationError}
 </div>
             )}
+{addressPrefilled && (
+  <div className="registered-address-hint">
+    <i className="bi bi-house-check-fill" aria-hidden="true"></i> {t('reportForm.addressPrefilled')}
+  </div>
+)}
 <div style={{
               marginTop:'6px',
               fontSize:'12px',

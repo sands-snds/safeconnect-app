@@ -3,8 +3,10 @@ import { createAssistanceRequest, updateAssistanceRequest } from '../../Services
 import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
+import useRegisteredAddressFill from './useRegisteredAddress';
+import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
 import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
@@ -14,13 +16,6 @@ const SERVICE_AREA = {
   lat: 14.3198,
   lng: 120.9644
 };
-const SPECIAL_NEEDS_OPTIONS = [
-  { key: 'elderly', value: 'Elderly' },
-  { key: 'children', value: 'Children' },
-  { key: 'pwd', value: 'Persons with disabilities' },
-  { key: 'pregnant', value: 'Pregnant' },
-  { key: 'pets', value: 'Pets' }
-];
 
 
 
@@ -33,6 +28,7 @@ const EMERGENCY_OPTIONS = [
 const OTHER_EMERGENCY = 'Other';
 
 
+const MAX_PEOPLE_NEEDING_HELP = 500;
 const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_assistance';
 
@@ -87,7 +83,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     landmark: '',
     location: '',
     situation: '',
+    people: '',
     special: [],
+    specialCounts: {},
     consent: false
   });
   const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
@@ -117,6 +115,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   } = useLocationPin({ onAddress: fillAddressFromPin });
   const locationSectionRef = useRef(null);
   const [reportFor, setReportFor] = useState('self');
+  // Reporting for yourself fills in your registered address.
+  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, reportFor, formData, setFormData });
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
@@ -136,9 +136,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       assistanceType: editingReport.title || '',
       location: editingReport.location || '',
       situation: editingReport.description || '',
-      special: editingReport.specialNeeds
-        ? editingReport.specialNeeds.split(',').map((s) => s.trim()).filter(Boolean)
-        : []
+      people: editingReport.peopleAffected ? String(editingReport.peopleAffected) : '',
+      special: parseSpecialNeeds(editingReport.specialNeeds).selected,
+      specialCounts: parseSpecialNeeds(editingReport.specialNeeds).counts
     }));
     if (editingReport.latitude != null && editingReport.longitude != null) {
       setGpsCoords({ lat: editingReport.latitude, lng: editingReport.longitude });
@@ -182,6 +182,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       };
     });
   };
+  const [specialInvalid, setSpecialInvalid] = useState(null);
+  const handleSpecialCount = (option, value) => {
+    setSpecialInvalid(null);
+    setFormData((prev) => ({ ...prev, specialCounts: { ...prev.specialCounts, [option]: value } }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isEditing) {
@@ -230,6 +236,19 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       showPopup({ type: 'warning', message: t('assistanceModal.specifyEmergency') });
       return;
     }
+    const peopleNeedingHelp = Number(formData.people);
+    if (!Number.isInteger(peopleNeedingHelp) || peopleNeedingHelp < 1 || peopleNeedingHelp > MAX_PEOPLE_NEEDING_HELP) {
+      showPopup({ type: 'warning', message: t('assistanceModal.peopleRequired', { max: MAX_PEOPLE_NEEDING_HELP }) });
+      document.getElementById('as-people')?.focus();
+      return;
+    }
+    const missingCount = missingSpecialCount(formData.special, formData.specialCounts);
+    if (missingCount) {
+      setSpecialInvalid(missingCount.key);
+      showPopup({ type: 'warning', message: t('reportForm.specialNeedsCountRequired', { category: t(`emergencyModal.specialNeedsOptions.${missingCount.key}`) }) });
+      document.getElementById(`as-special-count-${missingCount.key}`)?.focus();
+      return;
+    }
     const victimOfEmergency = formData.emergency === OTHER_EMERGENCY
       ? formData.emergencyOther.trim()
       : formData.emergency;
@@ -253,7 +272,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
           situation: formData.situation,
-          special: formData.special.join(', ') || null,
+          people: Number(formData.people),
+          special: formatSpecialNeeds(formData.special, formData.specialCounts),
           urgency: null
         });
         if (!result.success) {
@@ -292,7 +312,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         latitude: gpsCoords ? gpsCoords.lat : null,
         longitude: gpsCoords ? gpsCoords.lng : null,
         situation: formData.situation,
-        special: formData.special.join(', ') || null,
+        people: Number(formData.people),
+        special: formatSpecialNeeds(formData.special, formData.specialCounts),
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
         victimContact: reportFor === 'others' ? victimContact.trim() : null,
@@ -317,7 +338,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         landmark: '',
         location: '',
         situation: '',
+        people: '',
         special: [],
+        specialCounts: {},
         consent: false
       });
       setReportFor('self');
@@ -777,6 +800,11 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 <i className="bi bi-exclamation-triangle-fill"></i> {locationError}
 </div>
             )}
+{addressPrefilled && (
+  <div className="registered-address-hint">
+    <i className="bi bi-house-check-fill" aria-hidden="true"></i> {t('reportForm.addressPrefilled')}
+  </div>
+)}
 <div style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
               {t('assistanceModal.serviceAreaNote')}
 </div>
@@ -825,6 +853,48 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 ></textarea>
 </div>
 <div style={{ marginBottom: '16px' }}>
+<label htmlFor="as-people" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '8px',
+              fontWeight: '600',
+              color: '#374151',
+              fontSize: '13px'
+            }}>
+<i className="bi bi-people-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
+              {t('assistanceModal.peopleNeedingHelp')} <span style={{ color: '#dc3545' }}>*</span>
+</label>
+<input
+              id="as-people"
+              type="number"
+              name="people"
+              inputMode="numeric"
+              min={1}
+              max={MAX_PEOPLE_NEEDING_HELP}
+              step={1}
+              value={formData.people}
+              onChange={(e) => setFormData((prev) => ({ ...prev, people: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+              placeholder={t('assistanceModal.peoplePlaceholder')}
+              required
+              disabled={isSubmitting}
+              style={{
+                width: '100%',
+                maxWidth: '220px',
+                height: '40px',
+                padding: '0 14px',
+                borderRadius: '6px',
+                border: '1px solid #d1d5db',
+                fontSize: '14px',
+                outline: 'none',
+                fontFamily: 'inherit'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#dc3545'}
+              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+/>
+<div style={{ marginTop: '4px', fontSize: '12px', color: '#6b7280' }}>{t('assistanceModal.peopleHint')}</div>
+</div>
+<div className="form-group" style={{ marginBottom: '16px' }}>
 <label style={{
               display: 'flex',
               alignItems: 'center',
@@ -837,40 +907,15 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 <i className="bi bi-info-circle-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
               {t('emergencyModal.specialNeeds')}
 </label>
-<div className="rf-2col" style={{
-              gap: '8px'
-            }}>
-              {SPECIAL_NEEDS_OPTIONS.map((option) => (
-<label
-                  key={option.key}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '13px',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '8px 10px'
-                  }}
->
-<input
-                    type="checkbox"
-                    checked={formData.special.includes(option.value)}
-                    onChange={() => handleSpecialToggle(option.value)}
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      accentColor: '#dc3545'
-                    }}
-                  />
-                  {t(`emergencyModal.specialNeedsOptions.${option.key}`)}
-</label>
-              ))}
-</div>
+<SpecialNeedsPicker
+  idPrefix="as-special"
+  selected={formData.special}
+  counts={formData.specialCounts}
+  onToggle={handleSpecialToggle}
+  onCountChange={handleSpecialCount}
+  disabled={isSubmitting}
+  invalidKey={specialInvalid}
+/>
 </div>
 <div style={{ marginBottom: '20px' }}>
 <label style={{

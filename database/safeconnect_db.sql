@@ -27,6 +27,9 @@ CREATE TABLE registered_users (
   verification_note VARCHAR(500) DEFAULT NULL, -- why a registration was rejected
   verified_at TIMESTAMP NULL DEFAULT NULL,
   verified_by INT(11) DEFAULT NULL, -- the Official or Admin who reviewed it
+  address_house_number VARCHAR(60) DEFAULT NULL, -- home address in Barangay Santa Fe (sign-up)
+  address_street VARCHAR(120) DEFAULT NULL,
+  address_area VARCHAR(120) DEFAULT NULL, -- subdivision or purok (optional)
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY email_address (email_address),

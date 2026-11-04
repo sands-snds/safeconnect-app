@@ -175,6 +175,7 @@ function ReviewDialog({ registration, onClose, onDecided }) {
                             <Detail label="Full name">{registration.fullName}</Detail>
                             <Detail label="Username">{registration.username && `@${registration.username}`}</Detail>
                             <Detail label="Email">{registration.email && <a href={`mailto:${registration.email}`}>{registration.email}</a>}</Detail>
+                            <Detail label="Home address">{registration.address && `${registration.address}, Barangay Santa Fe, Dasmariñas, Cavite`}</Detail>
                             <Detail label="Contact number">{registration.contact && <a href={`tel:${registration.contact}`}>{registration.contact}</a>}</Detail>
                             <Detail label="Type of ID">{registration.idType && tx(registration.idType)}</Detail>
                             <Detail label="Account status">{tx(registration.accountStatus)}</Detail>
@@ -188,6 +189,7 @@ function ReviewDialog({ registration, onClose, onDecided }) {
                                 <p><i className="bi bi-list-check" aria-hidden="true" /> {tx("Before approving, check that:")}</p>
                                 <ul>
                                     <li>{tx("the name on the ID matches the account's name;")}</li>
+                                    <li>{tx("the address on the ID matches the home address they entered;")}</li>
                                     <li>{tx("the address on the ID is in Barangay Santa Fe, Dasmariñas, Cavite;")}</li>
                                     <li>{tx("the ID is clear, complete and one of the accepted IDs.")}</li>
                                 </ul>
@@ -430,6 +432,7 @@ export default function AccountVerificationPage({ focusId, onClearFocus, onChang
                             <ul className="av-card-meta">
                                 <li><i className="bi bi-envelope" aria-hidden="true" /><span>{r.email}</span></li>
                                 <li><i className="bi bi-phone" aria-hidden="true" /><span>{r.contact || "—"}</span></li>
+                                <li><i className="bi bi-house-door" aria-hidden="true" /><span>{r.address || tx("No address given")}</span></li>
                                 <li><i className="bi bi-person-vcard" aria-hidden="true" /><span>{r.idType ? tx(r.idType) : tx("No ID")}</span></li>
                                 {r.verificationStatus !== "Pending" && r.verifiedBy && (
                                     <li><i className="bi bi-person-check" aria-hidden="true" /><span>{tx("Reviewed by {{name}}", { name: r.verifiedBy })}</span></li>

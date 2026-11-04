@@ -156,6 +156,10 @@ function Hero() {
     const [suConfirm,     setSuConfirm]     = useState('');
     const [showSuPw,      setShowSuPw]      = useState(false);
     const [showSuConfPw,  setShowSuConfPw]  = useState(false);
+    // Home address in Barangay Santa Fe
+    const [suAddrHouse,   setSuAddrHouse]   = useState('');
+    const [suAddrStreet,  setSuAddrStreet]  = useState('');
+    const [suAddrArea,    setSuAddrArea]    = useState('');
     // Proof of residency
     const [suIdType,      setSuIdType]      = useState('');
     const [suIdFile,      setSuIdFile]      = useState(null);
@@ -306,6 +310,7 @@ function Hero() {
         setSuPassword(''); setSuConfirm(''); setSuAgree(false);
         setShowSuPw(false); setShowSuConfPw(false);
         clearIdFile(); setSuIdType('');
+        setSuAddrHouse(''); setSuAddrStreet(''); setSuAddrArea('');
         setFpEmail(''); setFpNewPw(''); setFpConfirmPw('');
         setShowFpNewPw(false); setShowFpConfPw(false);
         resetOtp(); setOtpEmail(''); setResendCooldown(0);
@@ -381,6 +386,7 @@ function Hero() {
             email:    result.user.email,
             role:     result.user.role,
             photoUrl: result.user.photoUrl || null,
+            address:  result.user.address || null,
         }));
         localStorage.setItem('residentName', result.user.fullName);
         window.location.href = '/resident';
@@ -397,6 +403,8 @@ function Hero() {
         else if (suContact.length !== 10) problems.suContact = t('auth.contactDigits');
         if (!suEmail.trim()) problems.suEmail = t('auth.emailRequired');
         else if (!EMAIL_REGEX.test(suEmail.trim())) problems.suEmail = t('auth.emailInvalid');
+        if (!suAddrHouse.trim()) problems.suAddrHouse = t('signUp.addressHouseRequired');
+        if (!suAddrStreet.trim()) problems.suAddrStreet = t('signUp.addressStreetRequired');
         if (!suIdType) problems.suIdType = t('signUp.idTypeRequired');
         if (!suIdFile) problems.suIdFile = t('signUp.idRequired');
         if (!suUsername.trim()) problems.suUsername = t('auth.usernameRequired');
@@ -422,9 +430,14 @@ function Hero() {
             const result = await apiPost('request-otp', {
                 fullName, username: suUsername,
                 contact: `+63${suContact}`, email: suEmail, password: suPassword,
+                address: { houseNumber: suAddrHouse.trim(), street: suAddrStreet.trim(), area: suAddrArea.trim() },
                 validId: { idType: suIdType, fileName: suIdFile.name, dataUrl },
             });
             if (!result.success) {
+                if (result.code === 'INVALID_ADDRESS') {
+                    showFieldErrors({ [/street/i.test(result.message) ? 'suAddrStreet' : 'suAddrHouse']: result.message });
+                    return;
+                }
                 if (result.code === 'INVALID_ID') {
                     showFieldErrors({ [/type of ID/i.test(result.message) ? 'suIdType' : 'suIdFile']: result.message });
                     return;
@@ -452,6 +465,7 @@ function Hero() {
             setSuUsername(''); setSuContact(''); setSuEmail('');
             setSuPassword(''); setSuConfirm('');
             clearIdFile(); setSuIdType('');
+            setSuAddrHouse(''); setSuAddrStreet(''); setSuAddrArea('');
             resetOtp(); setSignUpStep('form');
             setShowSignUp(false); setShowSignIn(true);
             setSuccessMsg(t(result.pendingVerification ? 'signUp.accountPendingReview' : 'signUp.accountCreated'));
@@ -667,6 +681,26 @@ function Hero() {
                             </AuthField>
                             <AuthField id="suEmail" error={fieldErrors.suEmail} label={t('signUp.email')} icon="bi-envelope">
                                 <input type="email" className="auth-input" id="suEmail" {...fieldProps('suEmail')} autoComplete="email" placeholder={t('signUp.emailPlaceholder')} value={suEmail} onChange={e => setSuEmail(e.target.value)} />
+                            </AuthField>
+                        </div>
+
+                        <h3 className="auth-section">{t('signUp.sectionAddress')}</h3>
+                        <p className="auth-id-intro">{t('signUp.addressIntro')}</p>
+                        <div className="auth-grid cols-2">
+                            <AuthField id="suAddrHouse" error={fieldErrors.suAddrHouse} label={t('signUp.addressHouse')} icon="bi-house-door">
+                                <input type="text" className="auth-input" id="suAddrHouse" {...fieldProps('suAddrHouse')} autoComplete="address-line1" maxLength={60}
+                                    placeholder={t('signUp.addressHousePlaceholder')} value={suAddrHouse} onChange={e => setSuAddrHouse(e.target.value)} />
+                            </AuthField>
+                            <AuthField id="suAddrStreet" error={fieldErrors.suAddrStreet} label={t('signUp.addressStreet')} icon="bi-signpost-2">
+                                <input type="text" className="auth-input" id="suAddrStreet" {...fieldProps('suAddrStreet')} autoComplete="address-line2" maxLength={120}
+                                    placeholder={t('signUp.addressStreetPlaceholder')} value={suAddrStreet} onChange={e => setSuAddrStreet(e.target.value)} />
+                            </AuthField>
+                            <AuthField id="suAddrArea" label={t('signUp.addressArea')} optional={t('signUp.optional')} icon="bi-houses">
+                                <input type="text" className="auth-input" id="suAddrArea" maxLength={120}
+                                    placeholder={t('signUp.addressAreaPlaceholder')} value={suAddrArea} onChange={e => setSuAddrArea(e.target.value)} />
+                            </AuthField>
+                            <AuthField id="suAddrFixed" label={t('signUp.addressBarangay')} icon="bi-geo-alt">
+                                <input type="text" className="auth-input" id="suAddrFixed" value={t('signUp.addressBarangayValue')} readOnly tabIndex={-1} aria-readonly="true" />
                             </AuthField>
                         </div>
 

@@ -28,6 +28,10 @@ const submit = () => fireEvent.click(document.querySelector('form button[type="s
 const field = (id) => document.getElementById(id);
 const errorOf = (id) => document.getElementById(`${id}-error`)?.textContent;
 // The proof-of-residency ID every sign-up now needs.
+const fillAddress = () => {
+  fireEvent.change(document.getElementById('suAddrHouse'), { target: { value: 'Blk 5 Lot 12' } });
+  fireEvent.change(document.getElementById('suAddrStreet'), { target: { value: 'Sampaguita St.' } });
+};
 const attachId = () => {
   fireEvent.change(document.getElementById('suIdType'), { target: { value: 'Barangay ID' } });
   const file = new File(['%PDF-1.7 test'], 'barangay-id.pdf', { type: 'application/pdf' });
@@ -83,6 +87,9 @@ describe('Sign Up', () => {
     expect(errorOf('suLast')).toBe('Please enter your last name.');
     expect(errorOf('suContact')).toMatch(/mobile number/);
     expect(errorOf('suEmail')).toBe('Please enter your email address.');
+    expect(errorOf('suAddrHouse')).toBe('Please enter your house, lot or block number.');
+    expect(errorOf('suAddrStreet')).toBe('Please enter your street.');
+    expect(errorOf('suAddrArea')).toBeUndefined(); // optional
     expect(errorOf('suIdType')).toBe('Please choose the type of ID you are uploading.');
     expect(errorOf('suIdFile')).toMatch(/valid ID/);
     expect(errorOf('suUsername')).toBe('Please choose a username.');
@@ -122,6 +129,7 @@ describe('Sign Up', () => {
     type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
     type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    fillAddress();
     attachId();
     fireEvent.click(field('suAgree'));
   };
@@ -195,6 +203,7 @@ describe('Sign Up: proof of residency', () => {
     type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
     type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    fillAddress();
     attachId();
     expect(screen.getByText('barangay-id.pdf')).toBeInTheDocument();
     fireEvent.click(field('suAgree'));
@@ -202,6 +211,7 @@ describe('Sign Up: proof of residency', () => {
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(expect.stringMatching(/request-otp$/), expect.anything()));
     const [, options] = global.fetch.mock.calls.find(([url]) => String(url).endsWith('/request-otp'));
     const body = JSON.parse(options.body);
+    expect(body.address).toEqual({ houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.', area: '' });
     expect(body.validId.idType).toBe('Barangay ID');
     expect(body.validId.fileName).toBe('barangay-id.pdf');
     expect(body.validId.dataUrl).toMatch(/^data:application\/pdf;base64,/);
@@ -233,6 +243,7 @@ describe('Server can\'t reach the database', () => {
     type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
     type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    fillAddress();
     attachId();
     fireEvent.click(field('suAgree'));
     submit();

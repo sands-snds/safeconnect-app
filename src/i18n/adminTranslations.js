@@ -500,5 +500,8 @@ export const ADMIN_TL = {
   'Postal ID': 'Postal ID',
   'UMID': 'UMID',
   'School ID': 'School ID',
-  'Other government-issued ID': 'Iba pang ID mula sa pamahalaan'
+  'Other government-issued ID': 'Iba pang ID mula sa pamahalaan',
+  'Home address': 'Address ng tirahan',
+  'No address given': 'Walang ibinigay na address',
+  'the address on the ID matches the home address they entered;': 'tugma ang address sa ID sa address na inilagay nila;'
 };

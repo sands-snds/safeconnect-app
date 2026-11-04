@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const { parseAddress } = require("../utils/address");
 const RememberedLogin = require("../models/RememberedLogin");
 const { generateToken } = require("../utils/jwt");
 const { passwordProblem, fullNameProblem, normalizeName } = require("../utils/validation");
@@ -202,6 +203,19 @@ exports.updateContact = async (req, res) => {
     } catch (err) {
         console.error(err);
         return res.status(500).json({ success: false, message: "Failed to update contact number." });
+    }
+};
+
+// PATCH /users/:id/address { address: { houseNumber, street, area } }
+exports.updateAddress = async (req, res) => {
+    try {
+        const home = parseAddress(req.body.address);
+        if (home.error) return res.status(400).json({ success: false, message: home.error });
+        await User.updateAddress(req.params.id, home.address);
+        return res.json({ success: true, address: home.address });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, message: "Failed to update your address." });
     }
 };
 

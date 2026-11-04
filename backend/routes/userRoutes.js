@@ -55,6 +55,7 @@ router.post("/:id/photo", verifyToken, verifySelfOrAdmin, profileChanged, upload
 router.patch("/:id/name", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateFullName);
 router.patch("/:id/username", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateUsername);
 router.patch("/:id/contact", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateContact);
+router.patch("/:id/address", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateAddress);
 router.patch("/:id/email", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateEmail);
 router.patch("/:id/password", verifyToken, verifySelfOrAdmin, userController.changePassword);
 

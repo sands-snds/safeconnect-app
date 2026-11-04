@@ -51,7 +51,8 @@ const REPORTS = [
     id: 22, type: 'Assistance', title: 'Medical Aid', description: 'Need first aid',
     date: '2026-10-16T07:00:00Z', location: '3 Rizal St, Sta. Fe', status: 'Received',
     report_reference: 'SC-2026-000022', urgency: 'High', victim_of_emergency: 'Flood Emergency',
-    photo_url: 'data:image/jpeg;base64,AAA', latitude: '14.3198000', longitude: '120.9644000'
+    photo_url: 'data:image/jpeg;base64,AAA', latitude: '14.3198000', longitude: '120.9644000',
+    peopleAffected: 2
   },
   {
     id: 33, type: 'Petty Crime', title: 'Theft', description: 'Bike stolen',

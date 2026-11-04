@@ -5,6 +5,7 @@ import {
   updateFullName,
   updateUsername,
   updateContact,
+  updateAddress,
   updateEmail,
   changePassword,
   uploadProfilePhoto
@@ -96,6 +97,10 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const [emailInput, setEmailInput] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
   const [contactInput, setContactInput] = useState('');
+  // Home address in Santa Fe (filled into reports made for yourself)
+  const [addrHouse, setAddrHouse] = useState('');
+  const [addrStreet, setAddrStreet] = useState('');
+  const [addrArea, setAddrArea] = useState('');
   const [savingContact, setSavingContact] = useState(false);
   const [contactMessage, setContactMessage] = useState(null);
 
@@ -117,6 +122,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     setEmailInput(p?.email || '');
     setEmailPassword('');
     setContactInput(stripPhonePrefix(p?.contact));
+    setAddrHouse(p?.address?.houseNumber || '');
+    setAddrStreet(p?.address?.street || '');
+    setAddrArea(p?.address?.area || '');
   };
 
   const loadProfile = async () => {
@@ -132,7 +140,10 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         role: result.role,
         status: result.status,
         photoUrl: result.photoUrl || null,
-        createdAt: result.created_at
+        createdAt: result.created_at,
+        address: result.address_house_number || result.address_street
+          ? { houseNumber: result.address_house_number || '', street: result.address_street || '', area: result.address_area || '' }
+          : null
       } : (user || null);
 
       setProfile(mapped);
@@ -141,7 +152,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
       if (mapped?.id) {
         onProfileUpdate?.({
           fullName: mapped.fullName, username: mapped.username, email: mapped.email,
-          contact: mapped.contact, photoUrl: mapped.photoUrl
+          contact: mapped.contact, photoUrl: mapped.photoUrl, address: mapped.address
         });
       }
     } catch {
@@ -239,7 +250,11 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const emailChanged = emailInput.trim() !== (profile?.email || '');
   const fullContact = contactInput ? `+63${contactInput}` : '';
   const contactChanged = fullContact !== (profile?.contact || '') && stripPhonePrefix(profile?.contact) !== contactInput;
-  const contactDirty = emailChanged || contactChanged;
+  const savedAddress = profile?.address || {};
+  const addressChanged = addrHouse.trim() !== (savedAddress.houseNumber || '')
+    || addrStreet.trim() !== (savedAddress.street || '')
+    || addrArea.trim() !== (savedAddress.area || '');
+  const contactDirty = emailChanged || contactChanged || addressChanged;
 
   const handleSaveContact = async (e) => {
     e.preventDefault();
@@ -253,6 +268,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     if (contactChanged && contactInput.length !== 10) {
       setContactMessage({ type: 'error', text: t('settings.contactInvalidError') }); return;
     }
+    if (addressChanged && (!addrHouse.trim() || !addrStreet.trim())) {
+      setContactMessage({ type: 'error', text: t('settings.addressRequired') }); return;
+    }
 
     setSavingContact(true);
     try {
@@ -261,6 +279,19 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         const result = await updateContact(user.id, fullContact);
         if (!result.success) { setContactMessage({ type: 'error', text: result.message || t('settings.contactUpdateError') }); return; }
         updates.contact = fullContact;
+      }
+      if (addressChanged) {
+        const address = { houseNumber: addrHouse.trim(), street: addrStreet.trim(), area: addrArea.trim() };
+        const result = await updateAddress(user.id, address);
+        if (!result.success) {
+          if (Object.keys(updates).length) {
+            setProfile((p) => ({ ...p, ...updates }));
+            onProfileUpdate?.(updates);
+          }
+          setContactMessage({ type: 'error', text: result.message || t('settings.addressUpdateError') });
+          return;
+        }
+        updates.address = result.address || address;
       }
       if (emailChanged) {
         const result = await updateEmail(user.id, email, emailPassword);
@@ -401,6 +432,8 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         .st-panel h3 { margin: 0; font-size: 1.15rem; font-weight: 800; color: #1f2937; }
         .st-panel-sub { margin: 4px 0 1.5rem; font-size: 0.88rem; color: #6b7280; line-height: 1.5; }
         .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+        .st-subhead { margin: 1.25rem 0 0; padding-top: 1.25rem; border-top: 1px solid #f0eaec; font-size: 1rem; font-weight: 700; color: #1f2937; }
+        .st-optional { font-weight: 400; color: #9ca3af; }
         .st-field { margin-bottom: 1.1rem; }
         .st-field label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: #374151; }
         .st-field .st-hint { display: block; margin-top: 6px; font-size: 0.78rem; color: #6b7280; }
@@ -560,6 +593,29 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                           value={contactInput} onChange={(e) => setContactInput(e.target.value.replace(/\D/g, '').slice(0, 10))}
                           placeholder="9XXXXXXXXX" maxLength={10} disabled={loadingProfile} />
                       </div>
+                    </div>
+                  </div>
+                  <h4 className="st-subhead">{t('settings.homeAddress')}</h4>
+                  <p className="st-panel-sub">{t('settings.homeAddressSub')}</p>
+                  <div className="st-grid">
+                    <div className="st-field">
+                      <label htmlFor="settings-addr-house">{t('signUp.addressHouse')}</label>
+                      <input id="settings-addr-house" className="st-input" type="text" autoComplete="address-line1" maxLength={60}
+                        value={addrHouse} onChange={(e) => setAddrHouse(e.target.value)} disabled={loadingProfile} placeholder={t('signUp.addressHousePlaceholder')} />
+                    </div>
+                    <div className="st-field">
+                      <label htmlFor="settings-addr-street">{t('signUp.addressStreet')}</label>
+                      <input id="settings-addr-street" className="st-input" type="text" autoComplete="address-line2" maxLength={120}
+                        value={addrStreet} onChange={(e) => setAddrStreet(e.target.value)} disabled={loadingProfile} placeholder={t('signUp.addressStreetPlaceholder')} />
+                    </div>
+                    <div className="st-field">
+                      <label htmlFor="settings-addr-area">{t('signUp.addressArea')} <span className="st-optional">{t('signUp.optional')}</span></label>
+                      <input id="settings-addr-area" className="st-input" type="text" maxLength={120}
+                        value={addrArea} onChange={(e) => setAddrArea(e.target.value)} disabled={loadingProfile} placeholder={t('signUp.addressAreaPlaceholder')} />
+                    </div>
+                    <div className="st-field">
+                      <label htmlFor="settings-addr-fixed">{t('signUp.addressBarangay')}</label>
+                      <input id="settings-addr-fixed" className="st-input" type="text" value={t('signUp.addressBarangayValue')} readOnly disabled />
                     </div>
                   </div>
                   {emailChanged && (

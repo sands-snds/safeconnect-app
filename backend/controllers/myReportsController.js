@@ -32,6 +32,7 @@ const normalizeAssistance = (r) => ({
     date: r.timestamp,
     location: r.current_location,
     urgency: r.urgency_level,
+    peopleAffected: r.number_of_people_needing_help,
     specialNeeds: r.special_needs,
     latitude: r.latitude,
     longitude: r.longitude

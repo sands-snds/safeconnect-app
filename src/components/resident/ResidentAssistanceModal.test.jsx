@@ -49,6 +49,8 @@ const renderModal = (props = {}) => {
     if (emergency) fireEvent.change($('select[name="emergency"]'), { target: { value: emergency } });
     const situation = $('textarea[name="situation"]');
     if (situation) fireEvent.change(situation, { target: { value: 'We need help' } });
+    const people = $('#as-people');
+    if (people && !people.value) fireEvent.change(people, { target: { value: '3' } });
     const consent = $('input[name="consent"]');
     if (consent && !consent.checked) fireEvent.click(consent);
   };
@@ -131,7 +133,7 @@ test('attached photo is sent as base64', async () => {
 test('editing a request typed under Other restores it into the Other box', async () => {
   const editingReport = {
     id: 5, title: 'Medical Aid', location: 'Somewhere, Sta. Fe', description: 'help', urgency: 'High',
-    victim_of_emergency: 'Landslide', photo_url: 'data:image/jpeg;base64,AAA'
+    victim_of_emergency: 'Landslide', photo_url: 'data:image/jpeg;base64,AAA', peopleAffected: 4
   };
   const { $, form } = renderModal({ editingReport });
   expect($('select[name="emergency"]').value).toBe('Other');
@@ -142,5 +144,110 @@ test('editing a request typed under Other restores it into the Other box', async
   await waitFor(() => expect(updateAssistanceRequest).toHaveBeenCalledTimes(1));
   const sent = updateAssistanceRequest.mock.calls[0][0];
   expect(sent.victimOfEmergency).toBe('Landslide');
+  expect(sent.people).toBe(4);
   expect(sent).not.toHaveProperty('photoUrl'); // keeps the photo on file
+});
+
+test('the number of people needing help is required and sent', async () => {
+  const { $, form, fill, attachPhoto } = renderModal();
+  fill('Flood Emergency');
+  attachPhoto();
+  fireEvent.change($('#as-people'), { target: { value: '' } });
+  fireEvent.submit(form);
+  await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
+    message: 'Please enter how many people need help (1 to 500).'
+  })));
+  expect(createAssistanceRequest).not.toHaveBeenCalled();
+
+  fireEvent.change($('#as-people'), { target: { value: '6' } });
+  fireEvent.submit(form);
+  await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
+  expect(createAssistanceRequest.mock.calls[0][0].people).toBe(6);
+});
+
+test('a ticked special need asks how many, and both are saved', async () => {
+  const { $, form, fill, attachPhoto } = renderModal();
+  fill('Flood Emergency');
+  attachPhoto();
+  expect($('#as-special-count-elderly')).toBeNull();
+  fireEvent.click(screen.getByLabelText('Elderly'));
+  fireEvent.click(screen.getByLabelText('Children'));
+  expect($('#as-special-count-elderly')).not.toBeNull();
+
+  fireEvent.change($('#as-special-count-elderly'), { target: { value: '2' } });
+  fireEvent.submit(form);
+  await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
+    message: 'Please enter how many for "Children" (1 to 999).'
+  })));
+  expect(createAssistanceRequest).not.toHaveBeenCalled();
+
+  fireEvent.change($('#as-special-count-children'), { target: { value: '3' } });
+  fireEvent.submit(form);
+  await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
+  expect(createAssistanceRequest.mock.calls[0][0].special).toBe('Elderly (2), Children (3)');
+});
+
+test('editing restores each special need with its number', () => {
+  const editingReport = {
+    id: 6, title: 'Medical Aid', location: 'Somewhere, Sta. Fe', description: 'help',
+    victim_of_emergency: 'Flood Emergency', photo_url: 'data:image/jpeg;base64,AAA', peopleAffected: 4,
+    specialNeeds: 'Elderly (2), Pets'
+  };
+  const { $ } = renderModal({ editingReport });
+  expect($('#as-people').value).toBe('4');
+  expect(screen.getByLabelText('Elderly')).toBeChecked();
+  expect($('#as-special-count-elderly').value).toBe('2');
+  expect(screen.getByLabelText('Pets')).toBeChecked();
+  expect($('#as-special-count-pets').value).toBe('');
+});
+
+describe('registered address', () => {
+  const ADDRESS = { houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.', area: 'Villa Santa Fe' };
+  const renderWithAddress = (address = ADDRESS) => {
+    sessionStorage.setItem('currentUser', JSON.stringify({ id: 7, fullName: 'Juan Dela Cruz', address }));
+    const utils = render(
+      <LanguageProvider>
+        <ResidentAssistanceModal show onClose={() => {}} />
+      </LanguageProvider>
+    );
+    return { ...utils, $: (sel) => utils.container.querySelector(sel) };
+  };
+  const HINT = 'Filled in from your registered address. You can change it.';
+
+  test('reporting for yourself fills it in, with a note', async () => {
+    const { $ } = renderWithAddress();
+    await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
+    expect($('input[name="street"]').value).toBe('Sampaguita St., Villa Santa Fe');
+    expect(screen.getByText(HINT)).toBeInTheDocument();
+  });
+
+  test('for someone else the boxes are emptied for their address; back to yourself refills them', async () => {
+    const { $ } = renderWithAddress();
+    await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
+    fireEvent.click(screen.getByRole('button', { name: /Someone Else/i }));
+    await waitFor(() => expect($('input[name="houseNumber"]').value).toBe(''));
+    expect($('input[name="street"]').value).toBe('');
+    expect(screen.queryByText(HINT)).not.toBeInTheDocument();
+
+    fireEvent.change($('input[name="houseNumber"]'), { target: { value: '9' } });
+    fireEvent.change($('input[name="street"]'), { target: { value: 'Rizal St.' } });
+    fireEvent.click(screen.getByRole('button', { name: /Myself/i }));
+    // what was typed for the other person isn't replaced
+    expect($('input[name="houseNumber"]').value).toBe('9');
+  });
+
+  test('a changed address is kept when switching to someone else', async () => {
+    const { $ } = renderWithAddress();
+    await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
+    fireEvent.change($('input[name="houseNumber"]'), { target: { value: 'Blk 6 Lot 1' } });
+    expect(screen.queryByText(HINT)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Someone Else/i }));
+    expect($('input[name="houseNumber"]').value).toBe('Blk 6 Lot 1');
+  });
+
+  test('no registered address: the boxes start empty', () => {
+    const { $ } = renderWithAddress(null);
+    expect($('input[name="houseNumber"]').value).toBe('');
+    expect(screen.queryByText(HINT)).not.toBeInTheDocument();
+  });
 });

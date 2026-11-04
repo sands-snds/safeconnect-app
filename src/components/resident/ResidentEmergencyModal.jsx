@@ -5,6 +5,8 @@ import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
+import useRegisteredAddressFill from './useRegisteredAddress';
+import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
  
  
 
@@ -19,13 +21,6 @@ const SERVICE_AREA = {
  
 const PEOPLE_AFFECTED_OPTIONS = ['1-10', '11-20', '21-30', '31-40'];
  
-const SPECIAL_NEEDS_OPTIONS = [
-  { key: 'elderly', value: 'Elderly' },
-  { key: 'children', value: 'Children' },
-  { key: 'pwd', value: 'Persons with disabilities' },
-  { key: 'pregnant', value: 'Pregnant' },
-  { key: 'pets', value: 'Pets' }
-];
 
 
 
@@ -110,6 +105,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     details: '',
     people: '',
     special: [],
+    specialCounts: {},
     media: null,
     mediaPreviewUrl: null,
     mediaType: null,
@@ -121,6 +117,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [submittedLocation, setSubmittedLocation] = useState(null);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [reportFor, setReportFor] = useState('self');
+  // Reporting for yourself fills in your registered address.
+  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, reportFor, formData, setFormData });
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
@@ -159,9 +157,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       location: editingReport.location || '',
       details: editingReport.description || '',
       people: editingReport.peopleAffected || '',
-      special: editingReport.specialNeeds
-        ? editingReport.specialNeeds.split(',').map((s) => s.trim()).filter(Boolean)
-        : [],
+      special: parseSpecialNeeds(editingReport.specialNeeds).selected,
+      specialCounts: parseSpecialNeeds(editingReport.specialNeeds).counts,
       media: null,
       mediaPreviewUrl: null,
       mediaType: null
@@ -310,6 +307,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       details: '',
       people: '',
       special: [],
+      specialCounts: {},
       media: null,
       mediaPreviewUrl: null,
       mediaType: null,
@@ -327,6 +325,12 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
  
+  const [specialInvalid, setSpecialInvalid] = useState(null);
+  const handleSpecialCount = (option, value) => {
+    setSpecialInvalid(null);
+    setFormData((prev) => ({ ...prev, specialCounts: { ...prev.specialCounts, [option]: value } }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
  
@@ -360,6 +364,20 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     if (!isEditing && !formData.media) {
       showPopup({ type: 'warning', message: t('emergencyModal.mediaRequired') });
       return;
+    }
+
+    const missingCount = missingSpecialCount(formData.special, formData.specialCounts);
+
+    if (missingCount) {
+
+      setSpecialInvalid(missingCount.key);
+
+      showPopup({ type: 'warning', message: t('reportForm.specialNeedsCountRequired', { category: t(`emergencyModal.specialNeedsOptions.${missingCount.key}`) }) });
+
+      document.getElementById(`em-special-count-${missingCount.key}`)?.focus();
+
+      return;
+
     }
 
     if (reportFor === 'others' && !victimRelationship) {
@@ -406,7 +424,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           longitude: gpsCoords ? gpsCoords.lng : null,
           details: formData.details,
           people: formData.people || 0,
-          special: formData.special.join(', ') || null,
+          special: formatSpecialNeeds(formData.special, formData.specialCounts),
           
           ...(mediaUrl ? { photoUrl: mediaUrl, mediaType: formData.mediaType || null } : {})
         });
@@ -458,7 +476,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         longitude: gpsCoords ? gpsCoords.lng : null,
         details: formData.details,
         people: formData.people || 0,
-        special: formData.special.join(', ') || null,
+        special: formatSpecialNeeds(formData.special, formData.specialCounts),
         
         photoUrl: mediaUrl || null,
         mediaType: formData.mediaType || null,
@@ -1293,6 +1311,11 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   </div>
                 )}
 
+                {addressPrefilled && (
+                  <div className="registered-address-hint">
+                    <i className="bi bi-house-check-fill" aria-hidden="true"></i> {t('reportForm.addressPrefilled')}
+                  </div>
+                )}
                 <div className="location-fixed-area">
                   {t('reportForm.serviceAreaNote')}
                 </div>
@@ -1392,42 +1415,15 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   <i className="bi bi-info-circle-fill" style={{ color: '#6b7280', fontSize: '14px' }}></i>
                   {t('emergencyModal.specialNeeds')}
                 </label>
-                <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '8px'
-            }}>
-              {SPECIAL_NEEDS_OPTIONS.map((option) => (
-                <label
-                  key={option.key}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '13px',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '8px 10px'
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={formData.special.includes(option.value)}
-                    onChange={() => handleSpecialToggle(option.value)}
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      accentColor: '#dc3545'
-                    }}
-                  />
-                  {t(`emergencyModal.specialNeedsOptions.${option.key}`)}
-                </label>
-              ))}
-            </div>
+                <SpecialNeedsPicker
+                  idPrefix="em-special"
+                  selected={formData.special}
+                  counts={formData.specialCounts}
+                  onToggle={handleSpecialToggle}
+                  onCountChange={handleSpecialCount}
+                  disabled={isSubmitting}
+                  invalidKey={specialInvalid}
+                />
               </div>
 
               <div style={{ marginBottom: '20px' }}>

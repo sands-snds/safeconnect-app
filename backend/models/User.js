@@ -22,8 +22,9 @@ class User {
     static async create(user) {
         const [result] = await db.query(
             `INSERT INTO registered_users
-            (full_name, username, contact_number, email_address, password, role, status, verification_status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            (full_name, username, contact_number, email_address, password, role, status, verification_status,
+             address_house_number, address_street, address_area)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 user.fullName,
                 user.username || null,
@@ -32,7 +33,10 @@ class User {
                 user.password,
                 user.role || "resident",
                 user.status || "Active",
-                user.verificationStatus || null
+                user.verificationStatus || null,
+                user.address?.houseNumber || null,
+                user.address?.street || null,
+                user.address?.area || null
             ]
         );
 
@@ -52,7 +56,11 @@ class User {
             ["verification_status", "VARCHAR(20) DEFAULT NULL"],
             ["verification_note", "VARCHAR(500) DEFAULT NULL"],
             ["verified_at", "TIMESTAMP NULL DEFAULT NULL"],
-            ["verified_by", "INT(11) DEFAULT NULL"]
+            ["verified_by", "INT(11) DEFAULT NULL"],
+            // The home address given at sign-up (Barangay Santa Fe).
+            ["address_house_number", "VARCHAR(60) DEFAULT NULL"],
+            ["address_street", "VARCHAR(120) DEFAULT NULL"],
+            ["address_area", "VARCHAR(120) DEFAULT NULL"]
         ]) {
             if (have.has(name)) continue;
             try {
@@ -68,6 +76,7 @@ class User {
     static async getVerifications(status) {
         const [rows] = await db.query(
             `SELECT u.id, u.full_name, u.username, u.contact_number, u.email_address,
+                    u.address_house_number, u.address_street, u.address_area,
                     u.status, u.verification_status, u.verification_note, u.verified_at, u.created_at,
                     r.full_name AS verified_by_name,
                     d.id_type, d.file_name, d.mime_type, d.file_size, d.uploaded_at
@@ -115,7 +124,8 @@ class User {
             `
             SELECT
                 id, full_name, username, contact_number,
-                email_address, role, status, photo_url, created_at
+                email_address, role, status, photo_url, created_at,
+                address_house_number, address_street, address_area
             FROM registered_users
             WHERE id = ?
             `,
@@ -169,6 +179,14 @@ class User {
         const [result] = await db.query(
             `UPDATE registered_users SET contact_number = ? WHERE id = ?`,
             [contact, id]
+        );
+        return result.affectedRows;
+    }
+
+    static async updateAddress(id, address) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET address_house_number = ?, address_street = ?, address_area = ? WHERE id = ?`,
+            [address.houseNumber, address.street, address.area || null, id]
         );
         return result.affectedRows;
     }
