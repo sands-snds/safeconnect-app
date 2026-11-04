@@ -90,7 +90,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   });
   const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
   
-  const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
+  const hasExistingMedia = isEditing && Boolean(editingReport.has_media);
   const needsNewMedia = !hasExistingMedia;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);

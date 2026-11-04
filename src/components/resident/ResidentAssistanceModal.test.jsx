@@ -133,7 +133,7 @@ test('attached photo is sent as base64', async () => {
 test('editing a request typed under Other restores it into the Other box', async () => {
   const editingReport = {
     id: 5, title: 'Medical Aid', location: 'Somewhere, Sta. Fe', description: 'help', urgency: 'High',
-    victim_of_emergency: 'Landslide', photo_url: 'data:image/jpeg;base64,AAA', peopleAffected: 4
+    victim_of_emergency: 'Landslide', has_media: 1, peopleAffected: 4
   };
   const { $, form } = renderModal({ editingReport });
   expect($('select[name="emergency"]').value).toBe('Other');
@@ -190,7 +190,7 @@ test('a ticked special need asks how many, and both are saved', async () => {
 test('editing restores each special need with its number', () => {
   const editingReport = {
     id: 6, title: 'Medical Aid', location: 'Somewhere, Sta. Fe', description: 'help',
-    victim_of_emergency: 'Flood Emergency', photo_url: 'data:image/jpeg;base64,AAA', peopleAffected: 4,
+    victim_of_emergency: 'Flood Emergency', has_media: 1, peopleAffected: 4,
     specialNeeds: 'Elderly (2), Pets'
   };
   const { $ } = renderModal({ editingReport });

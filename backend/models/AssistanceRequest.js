@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { listColumns } = require("../utils/reportColumns");
 
 class AssistanceRequest {
     static async create(request) {
@@ -60,7 +61,7 @@ class AssistanceRequest {
     }
 
     static async findAll(filters = {}) {
-        let sql = `SELECT * FROM assistance_requests WHERE 1=1`;
+        let sql = `SELECT ${await listColumns("assistance_requests")} FROM assistance_requests WHERE 1=1`;
         const values = [];
 
         if (filters.status) {
@@ -84,7 +85,7 @@ class AssistanceRequest {
 
     static async findByReporter(reporterId) {
         const [rows] = await db.query(
-            `SELECT * FROM assistance_requests WHERE reporter_id = ? ORDER BY timestamp DESC`,
+            `SELECT ${await listColumns("assistance_requests")} FROM assistance_requests WHERE reporter_id = ? ORDER BY timestamp DESC`,
             [reporterId]
         );
         return rows;

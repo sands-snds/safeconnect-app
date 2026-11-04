@@ -409,7 +409,7 @@ Each model is a class of `static async` methods that run parameterized SQL throu
 | Model | Table | Notable methods |
 |---|---|---|
 | `User.js` | `registered_users` | `findByEmail`, `findByUsername`, `findById` (no password), `findByIdWithPassword` (internal use only), `create`, `getAll` (with `archived_at`), `updateStatus` (reopening clears `archived_at`), `updateRole`, `ensureArchiveColumn`, `setArchived`, `updatePhoto`/`Username`/`Contact`/`Email`/`Password` |
-| `Report.js` | `emergency_reports` | `create`, `findAll(filters)` (status and date range; used by lists and exports), `findByReporter`, `findById`, `findStatusById` (a light query that skips the media column), `update`, `updateStatus(id, status, dismissalReason)` (sets `resolved_at` when the status becomes Resolved or Dismissed, and `dismissal_reason` when Dismissed), `delete`, `getStatistics`, `getLatestReference` |
+| `Report.js` | `emergency_reports` | `create`, `findAll(filters)` (status and date range; used by lists and exports), `findByReporter`, `findById` (the only one that returns the media). `findAll` and `findByReporter` leave out `photo_url` and return `has_media` instead (`utils/reportColumns.js`), so lists stay small. Also `findStatusById` (a light query that skips the media column), `update`, `updateStatus(id, status, dismissalReason)` (sets `resolved_at` when the status becomes Resolved or Dismissed, and `dismissal_reason` when Dismissed), `delete`, `getStatistics`, `getLatestReference` |
 | `AssistanceRequest.js` | `assistance_requests` | The same set |
 | `PettyCrime.js` | `petty_crimes` | The same set |
 | `Announcement.js` | `announcements` | `create`, `findAll({ includeArchived })`, `findById`, `update` (keeps the old image if no new one is given), `clearImage`, `delete` |
@@ -647,7 +647,7 @@ This is the **only** place that calls the SafeConnect API. It groups:
 - **Announcements:** `fetchAnnouncements({ includeArchived })`, `createAnnouncement`, `updateAnnouncement`, `deleteAnnouncement`, `fetchLinkPreview`, `archiveAnnouncement`, `fetchAnnouncementArchiveSettings`, `updateAnnouncementArchiveSettings`.
 - **Logs:** `fetchSignInLogs`, `fetchAdminLogs`, `logoutAdmin`.
 - **Notifications:** admin: `fetchNotifications({ archived })`, `markNotificationRead`, `markAllNotificationsRead`, `markNotificationsRead(ids)`, `archiveNotifications(ids, archived)`; resident: `fetchMyNotifications`, `markMyNotificationRead`, `markAllMyNotificationsRead`.
-- **Other:** `fetchMyReports`, `exportReport` (blob download), and `updateStatus(type, id, status, reason)`, a generic helper that knows each type's URL and HTTP method (`reason` for a dismissal).
+- **Other:** `fetchMyReports`, `fetchReportMedia(type, id)` (one report's photo or video, via `GET /:id`; the lists only carry `hasMedia`), `exportReport` (blob download), and `updateStatus(type, id, status, reason)`, a generic helper that knows each type's URL and HTTP method (`reason` for a dismissal).
 
 The only calls that bypass `api.js` are to **other** services (Nominatim, Open-Meteo), plus `Hero.jsx`'s small `apiPost()` helper for the code and reset endpoints.
 
@@ -746,7 +746,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `shared/ArchiveButton.jsx` | **Archive** on Resolved and Dismissed reports and **Restore** on archived ones. |
 | `shared/DismissalNote.jsx` | The reason, at the top of a dismissed report's details. |
 | `shared/ReportFor.jsx` | The "For <name>" pill, the person-affected details block and the "Filed for" filter, used when a report was filed for someone else. |
-| `shared/ReportImage.jsx` | Shows the attached photo or video. |
+| `shared/ReportImage.jsx` | Shows the attached photo or video. It renders only inside the opened details, and loads the media then (`shared/useReportMedia.js`, also used by My Reports). |
 | `shared/ReportLocationMap.jsx` | A read-only `LocationPickerMap` of the pinned spot (hidden if there's no pin). |
 
 #### Announcements (`announcements/`)

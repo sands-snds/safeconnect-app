@@ -3,7 +3,7 @@ import { createPettyCrimeReport, updatePettyCrimeReport } from '../../Services/a
 import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
 import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
@@ -99,7 +99,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [isAnonymous, setIsAnonymous] = useState(false);
   
   
-  const hasExistingMedia = isEditing && Boolean(editingReport.photo_url);
+  const hasExistingMedia = isEditing && Boolean(editingReport.has_media);
   const isPhotoRequired = Boolean(formData.crimeType) && !PHOTO_OPTIONAL_CRIME_TYPES.includes(formData.crimeType);
   const needsNewMedia = isPhotoRequired && !hasExistingMedia;
   const [cooldownRemaining, setCooldownRemaining] = useState(0);

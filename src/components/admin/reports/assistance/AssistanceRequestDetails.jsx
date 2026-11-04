@@ -7,11 +7,6 @@ import { ReportForDetails, isForOthers } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
 const AssistanceRequestDetails = ({ request }) => {
-  const photo =
-    request.photoUrl ||
-    request.photo_url ||
-    request.imageUrl;
-
   return (
     <div
       style={{
@@ -86,7 +81,7 @@ const AssistanceRequestDetails = ({ request }) => {
         />
       </div>
 
-      <ReportImage photo={photo} mediaType={request.mediaType || request.media_type} />
+      <ReportImage type="assistance" id={request.id} hasMedia={request.hasMedia} mediaType={request.mediaType} />
 
       <ReportLocationMap latitude={request.latitude} longitude={request.longitude} />
     </div>

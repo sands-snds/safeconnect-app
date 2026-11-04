@@ -7,11 +7,6 @@ import { ReportForDetails, isForOthers } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
 const EmergencyReportDetails = ({ report }) => {
-  const photo =
-    report.photoUrl ||
-    report.photo_url ||
-    report.imageUrl;
-
   return (
     <div
       style={{
@@ -64,7 +59,7 @@ const EmergencyReportDetails = ({ report }) => {
         />
       </div>
 
-      <ReportImage photo={photo} mediaType={report.mediaType || report.media_type} />
+      <ReportImage type="emergency" id={report.id} hasMedia={report.hasMedia} mediaType={report.mediaType} />
 
       <ReportLocationMap latitude={report.latitude} longitude={report.longitude} />
     </div>

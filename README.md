@@ -301,7 +301,7 @@ The backend checks the role **against the database on every admin request**, not
 
 - **The seed admin account cannot sign in** (its password is not hashed). See [Step 6](#step-6-sign-in-as-the-barangays-main-admin).
 - **`backend/.env` is committed to git** even though `.gitignore` lists it. It holds real passwords, and each teammate's local database password overwrites the others' when they pull. Stop tracking it with `git rm --cached backend/.env`, and change the passwords that are already in the history.
-- **Report photos and videos are stored as base64 text** in the report tables (`photo_url`, `LONGTEXT`). This works, but makes those rows large, and the admin report lists download every report's media on each refresh.
+- **Report photos and videos are stored as base64 text** in the report tables (`photo_url`, `LONGTEXT`), which makes the database large. The report lists (admin tabs, My Reports, exports) leave the media out, and a photo or video is loaded only when someone opens that report's details, so the lists stay fast.
 
 ## Logos
 

@@ -438,7 +438,7 @@ export const fetchEmergencyReports = async () => {
         description: r.incident_details || '',
         peopleAffected: r.number_of_people_affected || '0',
         specialNeeds: r.special_needs || '',
-        photoUrl: resolveAssetUrl(r.photo_url) || r.photo_url || '',
+        hasMedia: Boolean(r.has_media),
         mediaType: r.media_type || '',
         reportFor: r.report_for || 'self',
         victimName: r.victim_name || '',
@@ -502,7 +502,7 @@ export const fetchAssistanceRequests = async () => {
         email: r.email_address || '',
         assistanceType: r.request_assistance_type || '',
         victimOfEmergency: r.victim_of_emergency || '',
-        photoUrl: resolveAssetUrl(r.photo_url) || '',
+        hasMedia: Boolean(r.has_media),
         mediaType: r.media_type || '',
         peopleAffected: r.number_of_people_needing_help || '0',
         location: r.current_location || '',
@@ -579,7 +579,7 @@ export const fetchPettyCrimes = async () => {
         longitude: r.longitude,
         description: r.description || '',
         suspectInfo: r.suspect_info || '',
-        photoUrl: resolveAssetUrl(r.photo_url) || '',
+        hasMedia: Boolean(r.has_media),
         mediaType: r.media_type || '',
         isAnonymous: Boolean(r.is_anonymous),
         date: r.timestamp ? new Date(r.timestamp).toLocaleString() : '',
@@ -1138,6 +1138,24 @@ export const markAllMyNotificationsRead = async () => {
 export const fetchMyReports = async (userId) => {
     const res = await apiFetch(`${API_ENDPOINTS.REPORTS}/user/${userId}`, { headers: authHeaders() });
     return res.json();
+};
+
+// One report's photo or video. The report lists leave it out (they only say
+// hasMedia), so it is loaded when someone opens that report's details.
+// type: emergency, assistance or pettyCrime.
+export const fetchReportMedia = async (type, id) => {
+    const base = {
+        emergency: API_ENDPOINTS.EMERGENCY_REPORTS,
+        assistance: API_ENDPOINTS.ASSISTANCE,
+        pettyCrime: API_ENDPOINTS.PETTY_CRIMES,
+    }[type];
+    const res = await apiFetch(`${base}/${id}`, { headers: authHeaders() });
+    if (!res.ok) throw new Error(`Media load failed (${res.status})`);
+    const data = await res.json();
+    return {
+        photoUrl: resolveAssetUrl(data?.photo_url) || data?.photo_url || '',
+        mediaType: data?.media_type || '',
+    };
 };
 
 // { available, secondsUntilAvailable }: whether the resident page shows the

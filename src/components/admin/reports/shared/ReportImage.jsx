@@ -1,19 +1,33 @@
 import React from "react";
+import useReportMedia from "../../../shared/useReportMedia";
+import { tx } from "../../../../i18n/adminText";
 
+// The report's photo or video, loaded only when its details are open
+// (the report lists leave the media out and only say hasMedia).
+const ReportImage = ({ type, id, hasMedia, mediaType }) => {
+  const { media, loading, failed } = useReportMedia(type, id, hasMedia);
+  if (!hasMedia) return null;
 
-
-
-
-const ReportImage = ({ photo, mediaType }) => {
-  if (!photo) return null;
-
-  const isVideo = mediaType === "video" || photo.startsWith("data:video/");
+  const kind = media?.mediaType || mediaType;
+  const isVideo = kind === "video" || Boolean(media?.photoUrl.startsWith("data:video/"));
   const mediaStyle = {
     width: "220px",
     maxHeight: "220px",
     objectFit: "cover",
     borderRadius: "6px",
     border: "1px solid #e5e7eb"
+  };
+  const placeholderStyle = {
+    ...mediaStyle,
+    height: "140px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#f3f4f6",
+    color: "#6b7280",
+    fontSize: ".8rem",
+    textAlign: "center",
+    padding: "8px"
   };
 
   return (
@@ -30,19 +44,23 @@ const ReportImage = ({ photo, mediaType }) => {
           color: "#374151"
         }}
       >
-        {isVideo ? "Uploaded Video" : "Uploaded Photo"}
+        {isVideo ? tx("Uploaded Video") : tx("Uploaded Photo")}
       </div>
 
-      {isVideo ? (
-        <video src={photo} controls style={{ ...mediaStyle, background: "#000" }} />
+      {loading ? (
+        <div style={placeholderStyle}>{isVideo ? tx("Loading video…") : tx("Loading photo…")}</div>
+      ) : failed || !media ? (
+        <div style={placeholderStyle}>{tx("The attachment couldn't be loaded. Try refreshing.")}</div>
+      ) : isVideo ? (
+        <video src={media.photoUrl} controls style={{ ...mediaStyle, background: "#000" }} />
       ) : (
         <a
-          href={photo}
+          href={media.photoUrl}
           target="_blank"
           rel="noopener noreferrer"
         >
           <img
-            src={photo}
+            src={media.photoUrl}
             alt="Attachment"
             style={mediaStyle}
           />

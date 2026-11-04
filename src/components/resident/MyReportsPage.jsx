@@ -13,6 +13,7 @@ import ResidentEmergencyModal from "./ResidentEmergencyModal";
 import ResidentAssistanceModal from "./ResidentAssistanceModal";
 import ResidentPettyCrimeModal from "./ResidentPettyCrimeModal";
 import { announceReportsChanged } from "./useCallAccess";
+import useReportMedia from "../shared/useReportMedia";
 
 const TYPE_LABEL_KEYS = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYPE_LABEL_KEYS[type]}`) : type);
@@ -121,6 +122,28 @@ const getRelativeTime = (dateStr) => {
   if (diffMonth < 12) return `${diffMonth}mo ago`;
   return `${Math.floor(diffDay / 365)}y ago`;
 };
+
+// The attached photo or video, loaded when the report's details are opened
+// (the My Reports list only says has_media).
+function ReportMediaPreview({ report, t }) {
+  const { media, loading, failed } = useReportMedia(TYPE_LABEL_KEYS[report.type], report.id, true);
+  if (loading || failed || !media) {
+    return (
+      <div className="mr-media-preview mr-media-placeholder">
+        {loading ? t('myReports.loadingMedia') : t('myReports.mediaFailed')}
+      </div>
+    );
+  }
+  return (
+    <div className="mr-media-preview">
+      {(media.mediaType || report.media_type) === 'video' ? (
+        <video src={media.photoUrl} controls />
+      ) : (
+        <img src={media.photoUrl} alt="Attached evidence" />
+      )}
+    </div>
+  );
+}
 
 const FILTERS = ['All', 'Emergency', 'Assistance', 'Petty Crime'];
 const FILTER_LABEL_KEYS = { All: 'all', Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
@@ -929,6 +952,14 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
           object-fit: cover;
         }
 
+        .mr-media-placeholder {
+          padding: 28px 12px;
+          background: #f3f4f6;
+          color: #6b7280;
+          font-size: 0.8rem;
+          text-align: center;
+        }
+
         .skeleton-card {
           background: white;
           border-radius: 16px;
@@ -1102,7 +1133,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                 if (r.report_for === 'others' && r.victim_contact) detailItems.push({ label: t('reportForm.theirContact'), value: r.victim_contact });
                 if (r.report_for === 'others' && r.victim_details) detailItems.push({ label: t('reportForm.additionalDetails'), value: r.victim_details });
 
-                const hasMoreDetails = !!description || detailItems.length > 0 || hasCoords || !!r.photo_url;
+                const hasMoreDetails = !!description || detailItems.length > 0 || hasCoords || !!r.has_media;
 
                 return (
                   <div key={key} data-report-key={key} className="mr-card" style={{ borderLeftColor: theme.accent, '--mr-accent': theme.accent }}>
@@ -1191,7 +1222,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                     {isExpanded && hasMoreDetails && (
                       <div className="mr-details">
                         {description && <p className="mr-details-desc">{description}</p>}
-                        {(detailItems.length > 0 || hasCoords || r.photo_url) && (
+                        {(detailItems.length > 0 || hasCoords || r.has_media) && (
                           <div className="mr-detail-grid">
                             {detailItems.map((item) => (
                               <div className="mr-detail-item" key={item.label}>
@@ -1213,15 +1244,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                                 </span>
                               </div>
                             )}
-                            {r.photo_url && (
-                              <div className="mr-media-preview">
-                                {r.media_type === 'video' ? (
-                                  <video src={r.photo_url} controls />
-                                ) : (
-                                  <img src={r.photo_url} alt="Attached evidence" />
-                                )}
-                              </div>
-                            )}
+                            {!!r.has_media && <ReportMediaPreview report={r} t={t} />}
                           </div>
                         )}
                       </div>
