@@ -50,6 +50,10 @@ const openSignUp = () => {
   type('Enter your email', 'juan@example.com');
   type('Min. 8 characters', 'Secret123!');
   type('Confirm your password', 'Secret123!');
+  fireEvent.change(document.getElementById('suIdType'), { target: { value: 'Barangay ID' } });
+  fireEvent.change(document.getElementById('suIdFile'), {
+    target: { files: [new File(['%PDF-1.7 test'], 'barangay-id.pdf', { type: 'application/pdf' })] }
+  });
   return {
     checkbox: screen.getByRole('checkbox', { name: /I have read and agree to the Terms and Conditions/ }),
     

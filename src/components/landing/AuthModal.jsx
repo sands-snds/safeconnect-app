@@ -129,6 +129,34 @@ const STYLES = `
   .auth-note { display: flex; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; font-size: 0.85rem; line-height: 1.45; margin: 0 0 14px; }
   .auth-fineprint { margin: 14px 0 0; text-align: center; font-size: 0.8rem; color: #6b7280; }
 
+  /* Sign Up: proof of residency (valid ID upload). */
+  .auth-id-intro { margin: -4px 0 10px; font-size: 0.85rem; color: #4b5563; line-height: 1.5; }
+  .auth-id-info { margin: 0 0 14px; padding: 12px 14px; border-radius: 10px; background: #fdf7f9; border: 1px solid #f0e2e7; }
+  .auth-id-info-title { margin: 0 0 6px; display: flex; align-items: center; gap: 6px; font-size: 0.84rem; font-weight: 700; color: #6B2C3E; }
+  .auth-id-list { margin: 0 0 8px; padding-left: 1.15rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; font-size: 0.8rem; color: #374151; line-height: 1.45; }
+  .auth-id-info-hint { margin: 0; font-size: 0.78rem; color: #6b7280; line-height: 1.5; }
+  .auth-select { padding-right: 14px; cursor: pointer; text-overflow: ellipsis; }
+  .auth-upload-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+  .auth-upload {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-height: 72px; margin: 0; padding: 12px 14px;
+    border: 1.5px dashed #d8c3ca; border-radius: 10px; background: #fafafa; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  }
+  .auth-upload:hover { border-color: #6B2C3E; background: #fff; }
+  .auth-upload > .bi { font-size: 1.7rem; color: #6B2C3E; flex-shrink: 0; }
+  .auth-upload-input:focus-visible + .auth-upload { border-color: #6B2C3E; box-shadow: 0 0 0 4px rgba(107, 44, 62, 0.12); }
+  .auth-upload.has-file { border-style: solid; border-color: #16a34a; background: #f6fef9; cursor: default; }
+  .auth-upload-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 0.8rem; color: #6b7280; }
+  .auth-upload-text strong { font-size: 0.9rem; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .auth-upload-formats { font-size: 0.75rem; color: #9ca3af; }
+  .auth-upload-thumb { width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px; object-fit: cover; background: #fff; border: 1px solid #e5e7eb; }
+  .auth-upload-thumb.pdf { display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #dc2626; }
+  .auth-upload-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .auth-upload-actions .auth-link { font-size: 0.82rem; cursor: pointer; }
+  .auth-field.has-error .auth-upload { border-color: #dc2626; background: #fffafa; }
+  .auth-upload-privacy { margin: 6px 0 0; display: flex; gap: 6px; align-items: flex-start; font-size: 0.76rem; color: #6b7280; line-height: 1.45; }
+  .auth-upload-privacy i { color: #16a34a; margin-top: 1px; }
+
   /* Phones: still a floating card with the page dimmed around it (not a
      full-screen sheet); taller windows like Sign Up scroll inside the overlay. */
   @media (max-width: 576px) {
@@ -141,6 +169,11 @@ const STYLES = `
     .auth-body { padding: 14px 18px 20px; }
     .auth-grid.cols-2, .auth-grid.cols-3 { grid-template-columns: 1fr; }
     .auth-checklist { grid-template-columns: 1fr; }
+    .auth-id-list { grid-template-columns: 1fr; }
+    .auth-upload.has-file { flex-wrap: wrap; }
+    .auth-upload.has-file .auth-upload-actions { flex-direction: row; gap: 16px; width: 100%; justify-content: flex-end; }
+    /* 16px stops iOS from zooming in when the ID type list is tapped */
+    .auth-select { font-size: 16px; }
   }
 `;
 

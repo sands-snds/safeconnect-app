@@ -135,6 +135,10 @@ require("./models/ResidentActivity").ensureTable().catch((err) =>
   console.error("Could not create resident_activity_logs:", err.message)
 );
 
+// Resident ID verification: the columns first, then the table that points at registered_users.
+require("./models/User").ensureVerificationColumns()
+  .then(() => require("./models/ResidentIdDocument").ensureTable())
+  .catch((err) => console.error("Account verification schema setup failed:", err.message));
 require("./models/User").ensureArchiveColumn().catch((err) =>
   console.error("Could not add registered_users.archived_at:", err.message)
 );

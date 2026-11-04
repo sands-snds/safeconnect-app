@@ -153,6 +153,7 @@ These run on every start, so local and Azure databases stay in sync without manu
 | `Notification.ensureColumns()` | `notifications` has `archived_at` (Notifications page archive) and `comment_id` (the comment to reply to) |
 | `ResidentActivity.ensureTable()` | Table `resident_activity_logs` exists (the Activity column of Resident Logs) |
 | `User.ensureArchiveColumn()` | `registered_users.archived_at` exists (archived Closed accounts) |
+| `User.ensureVerificationColumns()` → `ResidentIdDocument.ensureTable()` | `registered_users` has `verification_status`, `verification_note`, `verified_at`, `verified_by`; table `resident_id_documents` exists (the valid IDs uploaded at sign-up) |
 | `mainAccount.ensureMainAccount()` | The barangay's main account (safeconnect.brgy.santafe@gmail.com) exists and is an Active Admin. A new one gets a random password; the barangay sets theirs with "Forgot password?". |
 | `archiveService.startScheduler()` | The three report tables have `resolved_at`, `archived_at` and `dismissal_reason` (an older `rejection_reason` column is renamed, and "Rejected" reports become "Dismissed"); table `system_settings` exists with `report_auto_archive_months` (default `12`). It then runs auto-archive immediately and every 6 hours. |
 
@@ -244,15 +245,15 @@ The **Called from (frontend)** column names the function in `api.js`, or the com
 #### Auth: `authRoutes.js` → `authController.js`
 | Method | Path | Access | Purpose | Called from (frontend) |
 |---|---|---|---|---|
-| POST | `/auth/request-otp` | public | Validates the sign-up form, checks the email domain has MX records, emails a 6-digit code | `Hero.jsx` (`apiPost`) |
-| POST | `/auth/verify-otp` | public | Checks the code and creates the **resident** account, then sends a welcome email | `Hero.jsx` |
+| POST | `/auth/request-otp` | public | Validates the sign-up form and the **valid ID** (`validId: { idType, fileName, dataUrl }`; JPG/PNG/WebP/PDF up to 5 MB, checked by its first bytes in `utils/idDocument.js`), checks the email domain has MX records, emails a 6-digit code | `Hero.jsx` (`apiPost`) |
+| POST | `/auth/verify-otp` | public | Checks the code and creates the **resident** account as **Pending** (`verification_status = Pending`), saves the ID in `resident_id_documents`, creates an `account_verification` staff notification and emails "registration received". A rejected registration with the same email or username is replaced. | `Hero.jsx` |
 | POST | `/auth/resend-otp` | public | Sends a new sign-up code | `Hero.jsx` |
 | POST | `/auth/signin` | public | Checks the password and account status, logs the attempt, returns the JWT and user | `signinUser()`: `Hero.jsx`, `SignInModal.jsx` |
 | POST | `/auth/forgot-password` | public | Emails a reset code. It always replies "if an account exists…" so it doesn't reveal which emails have accounts. | `Hero.jsx` |
 | POST | `/auth/verify-reset-otp` | public | Checks the reset code | `Hero.jsx` |
 | POST | `/auth/reset-password` | public | Sets the new password (at least 8 characters, different from the old one) | `Hero.jsx` |
 | POST | `/auth/resend-reset-otp` | public | Sends a new reset code | `Hero.jsx` |
-| POST | `/auth/signup` | public | Older direct sign-up without a code | `signupUser()` (no longer used by the UI) |
+| POST | `/auth/signup` | public | Closed (410): every account signs up through the code flow so its ID can be checked | `signupUser()` (not used by the UI) |
 | POST | `/auth/logout` | user | Revokes a saved login; records "Signed out" for residents | `logoutUser()` |
 
 #### Users: `userRoutes.js` → `userController.js`
@@ -262,6 +263,9 @@ The **Called from (frontend)** column names the function in `api.js`, or the com
 | PUT, PATCH | `/users/:id`, `/users/:id/status` | super | Set status (Active / Pending / Suspended / Closed). You can't change your own. | `updateStatus("users")` |
 | PATCH | `/users/:id/role` | super | Set role. You can't change your own, or the main barangay account's. | `updateUserRole()` |
 | PATCH | `/users/:id/archive`, `/users/:id/restore` | super | Move a **Closed** account to the Archived tab, or back (reopening an account also clears it) | `setUserArchived()` |
+| GET | `/users/verifications?status=` | admin | Residents who signed up with an ID (`Pending`, `Approved`, `Rejected`, or all), with the ID's type, name and size and who reviewed it | `fetchVerifications()` → Account Verification |
+| GET | `/users/:id/valid-id` | admin | The uploaded ID file itself (`Cache-Control: no-store`); never under the public `/uploads` | `fetchValidIdBlob()` |
+| PATCH | `/users/:id/verification` | admin | `{ decision: "approve" | "reject", reason }`. Approve: account Active, `account_verified` notification. Reject (reason 5–500 characters): stays Pending, the ID is deleted. Either way the resident is emailed; logged as "Reviewed account registration". | `decideVerification()` |
 | GET | `/users/:id` | owner | Profile (the password is never returned) | `fetchUserProfile()`: `SettingsPage`, `useAdminAuth` |
 | POST | `/users/:id/photo` | owner | Upload a photo (multipart field `photo`) | `uploadProfilePhoto()` |
 | PATCH | `/users/:id/username` | owner | Change username (must be unique) | `updateUsername()` |
@@ -288,6 +292,7 @@ Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetch
 | Method | Path | Access | Purpose | Called from |
 |---|---|---|---|---|
 | GET | `/reports/user/:userId` | owner, or admin | A resident's reports of all three types, merged and sorted (`myReportsController`) | `fetchMyReports()` → `MyReportsPage` |
+| GET | `/reports/user/:userId/call-access` | owner, or admin | `{ available, secondsUntilAvailable }`: whether the resident page shows the emergency call button yet (`services/callAccessService.js`). Worked out from each open report's age by the database clock: Fire right away, Flood and Typhoon 10 min, Earthquake 5 min, Transport Vehicle 5 min, other assistance and petty crime 20 min. | `fetchCallAccess()` → `useCallAccess` |
 | GET | `/reports/archive-settings` | admin | `{ months }`: the auto-archive period (0, 6 or 12) | `fetchArchiveSettings()` → `ArchiveToolbar` |
 | PUT | `/reports/archive-settings` | super | Change the period, then archive right away | `updateArchiveSettings()` |
 | PATCH | `/reports/:type/:id/archive` | admin | Archive a **Resolved** or **Dismissed** report (`type` = emergency, assistance or pettyCrime) | `archiveReport()` → `ArchiveButton` |
@@ -469,7 +474,10 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 ### Tables
 
 **`registered_users`**: accounts
-`id`, `full_name`, `username` (unique), `contact_number`, `email_address` (unique), `password` (bcrypt hash), `role` (`resident` / `admin` / `super_admin`), `photo_url` (`/uploads/…`), `status` (`Active` / `Pending` / `Suspended` / `Closed`), `created_at`, `archived_at` (archived Closed accounts).
+`id`, `full_name`, `username` (unique), `contact_number`, `email_address` (unique), `password` (bcrypt hash), `role` (`resident` / `admin` / `super_admin`), `photo_url` (`/uploads/…`), `status` (`Active` / `Pending` / `Suspended` / `Closed`), `created_at`, `archived_at` (archived Closed accounts), `verification_status` (`Pending` / `Approved` / `Rejected`; NULL for older accounts and staff), `verification_note` (the rejection reason), `verified_at`, `verified_by`.
+
+**`resident_id_documents`**: the valid ID uploaded at sign-up
+`id`, `user_id` (unique, ON DELETE CASCADE), `id_type`, `file_name`, `mime_type`, `file_size`, `data` (`MEDIUMBLOB`), `uploaded_at`. Only sent to Officials and Admins through `GET /users/:id/valid-id`; deleted when a registration is rejected.
 
 **`emergency_reports`**
 `id`, `report_reference` (`SC-YYYY-NNNNNN`), `reporter_id`, `time` (submitted), `emergency_type`, `severity`, `reporter_name`, `contact_number`, `location`, `latitude`, `longitude`, `incident_details`, `number_of_people_affected`, `special_needs`, `photo_url` (base64 data URL, `LONGTEXT`), `media_type` (image / video), `status` (`Received` / `In Progress` / `Resolved` / `Dismissed`), `assigned_to`, `assigned_at`, `resolved_at` (when it was closed), `archived_at`, `dismissal_reason`, plus the report-for-someone-else fields: `report_for` (`self` / `others`), `victim_name`, `victim_contact`, `victim_relationship`, `victim_details`.
@@ -670,7 +678,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 |---|---|---|
 | `ResidentNavbar.jsx` | The resident's top bar and the hub of the resident app. It uses the navbar hooks to load **announcements, notifications, weather and the profile**, polls every minute, switches between desktop and mobile layouts, and opens **NewsOverlay**, **MyReportsPage** and **SettingsPage** as overlays. Clicking a notification marks it read and opens the related news article or My Reports. A `comment_reply` notification opens the announcement the reply is on. Logout clears the resident token and storage. | `clearAuthToken` (the hooks do the fetching) |
 | `ResidentHero.jsx` | A welcome banner at the top of the resident page. | No |
-| `EmergencyReportSection.jsx` | Cards for **Report Emergency**, **Request Assistance** and **Report Petty Crime** that open the matching modal, plus an emergency call button. | No |
+| `EmergencyReportSection.jsx` | Cards for **Report Emergency**, **Request Assistance** and **Report Petty Crime** that open the matching modal, plus the floating emergency call button, shown only once `useCallAccess` says a submitted report's wait is over. The landing page has no call button. | `fetchCallAccess` (through `useCallAccess`) |
 | `ResidentWidgets.jsx` | **Stay informed** under the report cards: a compact **Latest News** widget (the newest 3 announcements, rotating) and a **Weather today** widget (now, high / low, chance of rain). Side by side on wider screens; on phones one endless carousel that alternates the two (each news turn shows the next article). Either one opens the News page, at the article or at the full forecast, through the `OPEN_NEWS_EVENT` window event that `ResidentNavbar` listens for. | No |
 | `ResidentEmergencyModal.jsx` | The emergency report form: type (sets the severity automatically), details, people affected, special needs, **required photo or video** (JPG up to 20 MB, video up to 50 MB, converted to base64), a **map pin inside Santa Fe**, and self or someone-else fields. It applies a 1-hour cooldown per account, runs in **edit mode** when opened from My Reports with `editingReport`, and shows the reference number on success. | `createEmergencyReport`, `updateEmergencyReport` |
 | `ResidentAssistanceModal.jsx` | The assistance request form: type (Food and Water, Medical Aid or Transport Vehicle), situation, people needing help, special needs, the map pin and self or someone-else fields. Same cooldown and edit mode. | `createAssistanceRequest`, `updateAssistanceRequest` |
@@ -697,7 +705,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 |---|---|
 | `useAnnouncements.js` | Loads announcements through `fetchAnnouncements()` into one shared copy for the resident page (the News page and the news widget), so a reload reaches both; it resets when nothing uses it. |
 | `useNotifications.js` | Combines **announcements**, whose read state is kept in `localStorage` per browser, with **personal notifications** from the backend (read state kept on the server). Personal notification ids get a prefix so the two kinds can be told apart. Provides the unread count and mark-read functions. |
-| `useWeather.js` | Gets Santa Fe's daily forecast from **Open-Meteo** and caches it in `localStorage`. |
+| `useWeather.js` | Gets Santa Fe's daily and hourly forecast from **Open-Meteo** (with humidity and wind) and caches it in `localStorage` for 30 minutes. Adds the **heat index** per hour and day, and `storm`: the strongest tropical cyclone wind signal (PAGASA's sustained-wind ranges) expected today or tomorrow (`navbar/weatherAlerts.js`). |
 | `useResidentProfile.js` | Reads and writes the signed-in resident in `sessionStorage.currentUser` (name, photo) so the navbar stays in sync after Settings changes. |
 | `useClickOutside.js` | Closes dropdowns when the user clicks outside them. |
 
@@ -757,6 +765,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 #### Users, Logs, Modals
 | Component | What it does |
 |---|---|
+| `users/AccountVerificationPage.jsx` | General → Account Verification (Officials and Admins): Pending / Approved / Rejected registrations with search; **Review ID** opens the account details beside the uploaded ID (image or PDF, fetched with the token) and Approve / Reject (with quick reasons). Opened from an `account_verification` notification with `focus`. |
 | `users/UsersPage.jsx` | An `ArchiveToolbar` (Active / Archived accounts), then filters users by search and status and splits them into Residents and Admins & Officials. |
 | `users/RegisteredUsersTable.jsx` | Two tables, **Residents** then **Admins & Officials**, under one shared search / status filter / Generate Report row (the second `ListView` uses `showFilters={false}`). Inline `UserRoleSelect` and `UserStatusSelect`; every change is confirmed in `UserChangeConfirmModal`. Your own account and the main barangay account ("Main account" badge) are locked. Closed accounts get **Archive** (archived ones **Restore**). |
 | `logs/LogsPage.jsx` | Switches between Resident Logs and Admin Logs, and filters sign-ins. |

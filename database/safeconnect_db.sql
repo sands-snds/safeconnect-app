@@ -23,10 +23,31 @@ CREATE TABLE registered_users (
   role VARCHAR(20) NOT NULL DEFAULT 'resident', -- 'resident' | 'admin' | 'super_admin'
   photo_url TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Active', -- Active / Pending / Suspended / Closed
+  verification_status VARCHAR(20) DEFAULT NULL, -- Pending / Approved / Rejected (residents who signed up with an ID)
+  verification_note VARCHAR(500) DEFAULT NULL, -- why a registration was rejected
+  verified_at TIMESTAMP NULL DEFAULT NULL,
+  verified_by INT(11) DEFAULT NULL, -- the Official or Admin who reviewed it
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY email_address (email_address),
   UNIQUE KEY username (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- resident_id_documents: the valid ID uploaded at sign-up (staff-only, never public)
+-- --------------------------------------------------------
+CREATE TABLE resident_id_documents (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  user_id INT(11) NOT NULL,
+  id_type VARCHAR(60) DEFAULT NULL,
+  file_name VARCHAR(255) DEFAULT NULL,
+  mime_type VARCHAR(60) NOT NULL,
+  file_size INT(11) NOT NULL,
+  data MEDIUMBLOB NOT NULL,
+  uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_id_document_user (user_id),
+  CONSTRAINT fk_id_document_user FOREIGN KEY (user_id) REFERENCES registered_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

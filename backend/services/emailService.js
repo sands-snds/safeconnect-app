@@ -249,6 +249,84 @@ const sendPasswordResetEmail = async (toEmail, fullName, otp) => {
     });
 };
 
+const escapeHtml = (text) => String(text ?? "").replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+));
+
+// ── Account verification ─────────────────────────────────────────────────────
+// After sign-up: the barangay is checking the uploaded ID.
+const sendRegistrationReceivedEmail = async (toEmail, fullName) => {
+    const html = wrap(`
+        <h2 style="margin:0 0 8px;font-size:20px;color:#111;font-weight:800;">
+            Thanks for signing up, ${escapeHtml(fullName)}!
+        </h2>
+        <p style="margin:0 0 16px;font-size:14px;color:#666;line-height:1.7;">
+            We received your SafeConnect registration and the ID you uploaded.
+            A barangay administrator will check that you are a resident of
+            Barangay Santa Fe.
+        </p>
+        <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:16px 18px;margin-bottom:20px;">
+            <p style="margin:0;font-size:14px;color:#92400e;line-height:1.6;">
+                <strong>What happens next:</strong> you can sign in once your account
+                is approved. We'll email you as soon as it has been reviewed.
+            </p>
+        </div>
+        <p style="margin:0;font-size:13px;color:#aaa;line-height:1.6;">
+            If you didn't sign up for SafeConnect, you can ignore this email.
+        </p>
+    `);
+
+    await transporter.sendMail({
+        from: FROM,
+        to: toEmail,
+        subject: "We received your SafeConnect registration",
+        html,
+    });
+};
+
+// The administrator's decision: approved (sign in now) or rejected (with why).
+const sendVerificationResultEmail = async (toEmail, fullName, { approved, reason }) => {
+    const html = approved
+        ? wrap(`
+            <h2 style="margin:0 0 8px;font-size:20px;color:#111;font-weight:800;">
+                Your account is verified, ${escapeHtml(fullName)}!
+            </h2>
+            <p style="margin:0 0 20px;font-size:14px;color:#666;line-height:1.7;">
+                A barangay administrator confirmed that you are a resident of
+                Barangay Santa Fe. You can now sign in to SafeConnect to report
+                emergencies, request assistance and read barangay news.
+            </p>
+            <p style="margin:0;font-size:13px;color:#aaa;line-height:1.6;">
+                Welcome to the Barangay Santa Fe SafeConnect community.
+            </p>
+        `)
+        : wrap(`
+            <h2 style="margin:0 0 8px;font-size:20px;color:#111;font-weight:800;">
+                We couldn't verify your account
+            </h2>
+            <p style="margin:0 0 16px;font-size:14px;color:#666;line-height:1.7;">
+                Hi <strong>${escapeHtml(fullName)}</strong>, a barangay administrator
+                reviewed your SafeConnect registration but couldn't confirm that you
+                are a resident of Barangay Santa Fe.
+            </p>
+            <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:16px 18px;margin-bottom:20px;">
+                <p style="margin:0 0 4px;font-size:12px;color:#991b1b;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Reason</p>
+                <p style="margin:0;font-size:14px;color:#7f1d1d;line-height:1.6;">${escapeHtml(reason)}</p>
+            </div>
+            <p style="margin:0;font-size:13px;color:#666;line-height:1.6;">
+                You can sign up again with a clear photo of a valid ID that shows
+                your address in Barangay Santa Fe, or visit the barangay hall for help.
+            </p>
+        `);
+
+    await transporter.sendMail({
+        from: FROM,
+        to: toEmail,
+        subject: approved ? "Your SafeConnect account is verified" : "Your SafeConnect registration needs attention",
+        html,
+    });
+};
+
 // Update exports to include the new function
 module.exports = {
     sendOtpEmail,
@@ -256,4 +334,6 @@ module.exports = {
     sendSigninNotification,
     sendAnnouncementToAll,
     sendPasswordResetEmail,
+    sendRegistrationReceivedEmail,
+    sendVerificationResultEmail,
 };

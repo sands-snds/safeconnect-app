@@ -102,7 +102,8 @@ const getCategoryIcon = (category) => {
     'assistance_status': 'bi-hand-index-thumb-fill',
     'petty_crime_status': 'bi-shield-fill-exclamation',
     
-    'comment_reply': 'bi-chat-left-text-fill'
+    'comment_reply': 'bi-chat-left-text-fill',
+    'account_verified': 'bi-patch-check-fill'
   };
   return map[category] || 'bi-megaphone-fill';
 };
@@ -123,7 +124,8 @@ const getCategoryColor = (category) => {
     'emergency_status': '#dc2626',
     'assistance_status': '#0d9488',
     'petty_crime_status': '#7c3aed',
-    'comment_reply': '#6B2C3E'
+    'comment_reply': '#6B2C3E',
+    'account_verified': '#16a34a'
   };
   return map[category] || '#6B2C3E';
 };
@@ -402,6 +404,11 @@ function ResidentNavbar() {
       if (reportType && note.referenceId) {
         openReportsPage();
         setReportFocus({ type: reportType, id: note.referenceId, nonce: Date.now() });
+        return;
+      }
+      // The barangay approved the account: open the account settings.
+      if (note?.category === 'account_verified') {
+        openSettingsPage();
         return;
       }
       if (note?.category !== 'comment_reply' || !note.referenceId) {

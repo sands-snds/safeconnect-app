@@ -27,6 +27,12 @@ const renderHero = () => render(<LanguageProvider><Hero /></LanguageProvider>);
 const submit = () => fireEvent.click(document.querySelector('form button[type="submit"]'));
 const field = (id) => document.getElementById(id);
 const errorOf = (id) => document.getElementById(`${id}-error`)?.textContent;
+// The proof-of-residency ID every sign-up now needs.
+const attachId = () => {
+  fireEvent.change(document.getElementById('suIdType'), { target: { value: 'Barangay ID' } });
+  const file = new File(['%PDF-1.7 test'], 'barangay-id.pdf', { type: 'application/pdf' });
+  fireEvent.change(document.getElementById('suIdFile'), { target: { files: [file] } });
+};
 
 describe('Sign In', () => {
   test('empty form: both fields are marked with a message and the email gets the focus', async () => {
@@ -77,6 +83,8 @@ describe('Sign Up', () => {
     expect(errorOf('suLast')).toBe('Please enter your last name.');
     expect(errorOf('suContact')).toMatch(/mobile number/);
     expect(errorOf('suEmail')).toBe('Please enter your email address.');
+    expect(errorOf('suIdType')).toBe('Please choose the type of ID you are uploading.');
+    expect(errorOf('suIdFile')).toMatch(/valid ID/);
     expect(errorOf('suUsername')).toBe('Please choose a username.');
     expect(errorOf('suPassword')).toBe('Please enter your password.');
     expect(errorOf('suConfirm')).toMatch(/confirm/);
@@ -114,6 +122,7 @@ describe('Sign Up', () => {
     type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
     type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    attachId();
     fireEvent.click(field('suAgree'));
   };
 
@@ -150,6 +159,55 @@ describe('Sign Up', () => {
   });
 });
 
+describe('Sign Up: proof of residency', () => {
+  const openSignUp = () => {
+    renderHero();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
+  };
+
+  test('lists the accepted IDs and the supported file formats', () => {
+    openSignUp();
+    expect(screen.getByText('Accepted IDs')).toBeInTheDocument();
+    expect(screen.getAllByText('Barangay ID (Barangay Santa Fe)').length).toBeGreaterThan(0);
+    expect(screen.getByText('JPG, PNG, WebP or PDF · up to 5 MB')).toBeInTheDocument();
+    expect(field('suIdFile')).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp,application/pdf');
+  });
+
+  test('a file that is not an accepted type is turned away', () => {
+    openSignUp();
+    const file = new File(['MZ'], 'id.exe', { type: 'application/x-msdownload' });
+    fireEvent.change(field('suIdFile'), { target: { files: [file] } });
+    expect(errorOf('suIdFile')).toBe("This file type isn't accepted. Please upload a JPG, PNG, WebP or PDF.");
+  });
+
+  test('a file over 5 MB is turned away', () => {
+    openSignUp();
+    const file = new File(['x'], 'big.jpg', { type: 'image/jpeg' });
+    Object.defineProperty(file, 'size', { value: 6 * 1024 * 1024 });
+    fireEvent.change(field('suIdFile'), { target: { files: [file] } });
+    expect(errorOf('suIdFile')).toMatch(/larger than 5 MB/);
+  });
+
+  test('the chosen ID is shown and sent with the sign-up', async () => {
+    localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
+    openSignUp();
+    const type = (id, value) => fireEvent.change(field(id), { target: { value } });
+    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
+    type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
+    type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    attachId();
+    expect(screen.getByText('barangay-id.pdf')).toBeInTheDocument();
+    fireEvent.click(field('suAgree'));
+    submit();
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(expect.stringMatching(/request-otp$/), expect.anything()));
+    const [, options] = global.fetch.mock.calls.find(([url]) => String(url).endsWith('/request-otp'));
+    const body = JSON.parse(options.body);
+    expect(body.validId.idType).toBe('Barangay ID');
+    expect(body.validId.fileName).toBe('barangay-id.pdf');
+    expect(body.validId.dataUrl).toMatch(/^data:application\/pdf;base64,/);
+  });
+});
+
 describe('Server can\'t reach the database', () => {
   const DB_DOWN = { success: false, code: 'DATABASE_UNAVAILABLE', message: "SafeConnect can't reach its database right now." };
 
@@ -175,6 +233,7 @@ describe('Server can\'t reach the database', () => {
     type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
     type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    attachId();
     fireEvent.click(field('suAgree'));
     submit();
     expect(await screen.findByText(/can't reach its database right now, so this can't be completed/)).toBeInTheDocument();

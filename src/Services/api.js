@@ -312,6 +312,56 @@ export const fetchRegisteredUsers = async () => {
 };
 
 
+// ── Account Verification: residents' uploaded IDs ────────────────────────────
+// status: "Pending" | "Approved" | "Rejected", or nothing for all of them.
+export const fetchVerifications = async (status) => {
+    const query = status ? `?status=${encodeURIComponent(status)}` : "";
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/verifications${query}`, { headers: authHeaders() });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !Array.isArray(data)) throw new Error(data?.message || "Could not load the registrations.");
+    return data.map((u) => ({
+        id: u.id,
+        fullName: u.full_name || '',
+        username: u.username || '',
+        email: u.email_address || '',
+        contact: u.contact_number || '',
+        accountStatus: u.status || 'Pending',
+        verificationStatus: u.verification_status,
+        note: u.verification_note || '',
+        verifiedAt: u.verified_at || null,
+        verifiedBy: u.verified_by_name || '',
+        createdAt: u.created_at || null,
+        idType: u.id_type || '',
+        idFileName: u.file_name || '',
+        idMimeType: u.mime_type || '',
+        idFileSize: u.file_size || 0,
+        hasId: Boolean(u.mime_type)
+    }));
+};
+
+// The uploaded ID as a Blob. It needs the admin's token, so it can't be a
+// plain <img src>; the caller turns it into an object URL.
+export const fetchValidIdBlob = async (userId) => {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/valid-id`, { headers: authHeadersNoContentType() });
+    if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message || "Could not load the uploaded ID.");
+    }
+    return res.blob();
+};
+
+// decision: "approve" | "reject" (reject needs a reason, 5–500 characters).
+export const decideVerification = async (userId, decision, reason) => {
+    const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/verification`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ decision, reason }),
+    });
+    const result = await res.json().catch(() => ({ success: false }));
+    return res.ok && result.success ? { success: true } : { success: false, message: result.message || "Please try again." };
+};
+
+
 export const setUserArchived = async (userId, archived) => {
     const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/${archived ? "archive" : "restore"}`, {
         method: "PATCH",
@@ -1076,6 +1126,14 @@ export const markAllMyNotificationsRead = async () => {
 // ── My reports (resident) ─────────────────────────────────────────────────────
 export const fetchMyReports = async (userId) => {
     const res = await apiFetch(`${API_ENDPOINTS.REPORTS}/user/${userId}`, { headers: authHeaders() });
+    return res.json();
+};
+
+// { available, secondsUntilAvailable }: whether the resident page shows the
+// emergency call button yet (see backend/services/callAccessService.js).
+export const fetchCallAccess = async (userId) => {
+    const res = await apiFetch(`${API_ENDPOINTS.REPORTS}/user/${userId}/call-access`, { headers: authHeaders() });
+    if (!res.ok) throw new Error(`Call access check failed (${res.status})`);
     return res.json();
 };
 

@@ -1805,6 +1805,58 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 .news-weather-bar span { display: block; height: 100%; border-radius: inherit; background: #fde68a; }
 .news-weather-note { margin: 0; font-size: 0.85rem; line-height: 1.5; opacity: 0.95; }
 
+/* Heat index: the same panel as the chance of rain, with PAGASA's level. */
+.news-weather-heat {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.news-weather-heat .news-weather-rain-row strong { font-size: 1.05rem; }
+.news-weather-level {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+/* Tropical cyclone wind signal: white so it stands out on the blue card. */
+.news-weather-storm {
+    background: #fff;
+    color: #1f2937;
+    border-radius: 14px;
+    border-left: 6px solid var(--signal-color, #f97316);
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.news-weather-storm-head { display: flex; align-items: center; gap: 10px; }
+.news-weather-storm-head > .bi { font-size: 1.8rem; color: var(--signal-color, #f97316); line-height: 1; }
+.news-weather-storm-title { margin: 0; font-size: 1rem; font-weight: 800; line-height: 1.3; }
+.news-weather-storm-when { margin: 0; font-size: 0.78rem; font-weight: 700; color: #6b7280; }
+.news-weather-storm p { margin: 0; font-size: 0.85rem; line-height: 1.5; }
+.news-weather-storm-winds { font-weight: 700; }
+.news-weather-storm-note { font-size: 0.75rem !important; color: #6b7280; }
+
+.news-weather-day-signal {
+    font-size: 0.66rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #fff;
+    color: #1f2937;
+    white-space: nowrap;
+}
+
 .news-weather-tip {
     margin: 0;
     display: flex;

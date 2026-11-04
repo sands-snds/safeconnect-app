@@ -4,7 +4,6 @@ import { signinUser, setAuthToken, rememberLogin } from '../../Services/api';
 import AuthModal, { AuthAlert, AuthField, AuthFieldError } from './AuthModal';
 import { useLanguage } from '../../i18n/LanguageContext';
 import useSiteContent, { useSiteMedia, mediaSrc } from '../shared/useSiteContent';
-import EmergencyContactList from '../shared/EmergencyContactList';
 import { Carousel } from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { showAccountStatusPopup } from '../shared/accountStatusPopup';
 import { markAdminJustSignedIn } from '../admin/AdminModals/AdminDemoPopup';
@@ -23,6 +22,31 @@ const PASSWORD_REQUIREMENTS = [
 const getMissingRequirements = (pw) =>
     PASSWORD_REQUIREMENTS.filter(r => !r.test(pw)).map(r => r.key);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// The valid ID asked for at sign-up; the values match ID_TYPES in
+// backend/utils/idDocument.js, which checks the file again.
+const ID_TYPES = [
+    { value: 'Barangay ID', key: 'barangayId' },
+    { value: 'Barangay Certificate of Residency', key: 'residency' },
+    { value: 'PhilSys National ID', key: 'philsys' },
+    { value: "Voter's ID or Certification", key: 'voters' },
+    { value: "Driver's License", key: 'drivers' },
+    { value: 'Postal ID', key: 'postal' },
+    { value: 'UMID', key: 'umid' },
+    { value: 'School ID', key: 'school' },
+    { value: 'Other government-issued ID', key: 'other' },
+];
+const ID_ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
+const ID_EXTENSIONS = /\.(jpe?g|png|webp|pdf)$/i;
+const ID_MAX_BYTES = 5 * 1024 * 1024;
+const isPdfFile = (file) => file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+const formatFileSize = (bytes) => (bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
+const readAsDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+});
 
 
 
@@ -50,37 +74,6 @@ const apiPost = async (path, body) => {
     });
     return res.json();
 };
-
-// ── EmergencyCallButton ───────────────────────────────────────────────────────
-function EmergencyCallButton() {
-    const { t } = useLanguage();
-    
-    const { emergencyContacts } = useSiteContent();
-    const [showContacts, setShowContacts] = useState(false);
-    const handleCall = (n) => { window.location.href = `tel:${n}`; setShowContacts(false); };
-    return (
-        <>
-            {showContacts && <div onClick={() => setShowContacts(false)} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:1050,backdropFilter:'blur(2px)' }} />}
-            {showContacts && (
-                <div style={{ position:'fixed',bottom:'96px',right:'24px',zIndex:1051,background:'#fff',borderRadius:'16px',boxShadow:'0 8px 32px rgba(0,0,0,0.22)',padding:'16px',width:'290px',maxWidth:'calc(100vw - 32px)',maxHeight:'calc(100vh - 120px)',overflowY:'auto',animation:'slideUpFade 0.22s ease' }}>
-                    <p style={{ margin:'0 0 2px',fontWeight:700,fontSize:'14px',color:'#111' }}>{t('emergencyContacts.title')}</p>
-                    <p style={{ margin:'0 0 12px',fontSize:'12px',color:'#6b7280' }}>{t('emergencyContacts.subtitle')}</p>
-                    <EmergencyContactList contacts={emergencyContacts} onCall={handleCall} />
-                </div>
-            )}
-            <button onClick={() => setShowContacts(v => !v)} aria-label="Emergency Contacts"
-                style={{ position:'fixed',bottom:'24px',right:'24px',zIndex:1052,width:'60px',height:'60px',borderRadius:'50%',background:showContacts?'linear-gradient(135deg,#7f1d1d,#dc2626)':'linear-gradient(135deg,#dc2626,#ef4444)',border:'none',boxShadow:showContacts?'0 4px 24px rgba(220,38,38,0.5)':'0 4px 20px rgba(220,38,38,0.45)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s,box-shadow 0.2s,background 0.2s',transform:showContacts?'scale(1.08) rotate(15deg)':'scale(1)',animation:showContacts?'none':'pulse-ring 2s infinite' }}
-                onMouseEnter={e => { if(!showContacts) e.currentTarget.style.transform='scale(1.1)'; }}
-                onMouseLeave={e => { if(!showContacts) e.currentTarget.style.transform='scale(1)'; }}>
-                <i className={showContacts?'bi bi-x-lg':'bi bi-telephone-fill'} style={{ color:'#fff',fontSize:showContacts?'20px':'22px' }} />
-            </button>
-            <style>{`
-                @keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(220,38,38,0.55),0 4px 20px rgba(220,38,38,0.45)}60%{box-shadow:0 0 0 14px rgba(220,38,38,0),0 4px 20px rgba(220,38,38,0.45)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0),0 4px 20px rgba(220,38,38,0.45)}}
-                @keyframes slideUpFade{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-            `}</style>
-        </>
-    );
-}
 
 // ── Shared OTP input box row ──────────────────────────────────────────────────
 function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs }) {
@@ -163,6 +156,12 @@ function Hero() {
     const [suConfirm,     setSuConfirm]     = useState('');
     const [showSuPw,      setShowSuPw]      = useState(false);
     const [showSuConfPw,  setShowSuConfPw]  = useState(false);
+    // Proof of residency
+    const [suIdType,      setSuIdType]      = useState('');
+    const [suIdFile,      setSuIdFile]      = useState(null);
+    const [suIdPreview,   setSuIdPreview]   = useState(null);
+    const idInputRef = useRef(null);
+    useEffect(() => () => { if (suIdPreview) URL.revokeObjectURL(suIdPreview); }, [suIdPreview]);
 
     // Forgot password fields
     const [fpEmail,       setFpEmail]       = useState('');
@@ -271,6 +270,31 @@ function Hero() {
         </button>
     );
 
+    // ── Proof of residency: the uploaded ID ──────────────────────────────────
+    const clearIdFile = () => {
+        setSuIdFile(null);
+        setSuIdPreview(null);
+        if (idInputRef.current) idInputRef.current.value = '';
+    };
+    const setIdError = (message) => setFieldErrors((prev) => ({ ...prev, suIdFile: message }));
+    const handleIdFile = (e) => {
+        // The form's onChange clears field errors; this one sets its own.
+        e.stopPropagation();
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const typeOk = ID_ACCEPT.split(',').includes(file.type) || ID_EXTENSIONS.test(file.name);
+        if (!typeOk) { clearIdFile(); setIdError(t('signUp.idBadType')); return; }
+        if (file.size > ID_MAX_BYTES) { clearIdFile(); setIdError(t('signUp.idTooLarge')); return; }
+        setFieldErrors((prev) => {
+            if (!prev.suIdFile) return prev;
+            const next = { ...prev };
+            delete next.suIdFile;
+            return next;
+        });
+        setSuIdFile(file);
+        setSuIdPreview(!isPdfFile(file) && typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : null);
+    };
+
     // ── Close everything ──────────────────────────────────────────────────────
     const closeAll = () => {
         setShowSignIn(false); setShowSignUp(false); setShowForgot(false);
@@ -281,6 +305,7 @@ function Hero() {
         setSuUsername(''); setSuContact(''); setSuEmail('');
         setSuPassword(''); setSuConfirm(''); setSuAgree(false);
         setShowSuPw(false); setShowSuConfPw(false);
+        clearIdFile(); setSuIdType('');
         setFpEmail(''); setFpNewPw(''); setFpConfirmPw('');
         setShowFpNewPw(false); setShowFpConfPw(false);
         resetOtp(); setOtpEmail(''); setResendCooldown(0);
@@ -301,7 +326,7 @@ function Hero() {
             
             if (!result.success && result.code?.startsWith('ACCOUNT_')) {
                 closeAll();
-                if (showAccountStatusPopup(result.code, t, siteContent.socials?.email)) return;
+                if (showAccountStatusPopup(result.code, t, siteContent.socials?.email, result.reason)) return;
             }
             if (!result.success) {
                 setError(serverMessage(result, 'auth.invalidCredentials'));
@@ -372,6 +397,8 @@ function Hero() {
         else if (suContact.length !== 10) problems.suContact = t('auth.contactDigits');
         if (!suEmail.trim()) problems.suEmail = t('auth.emailRequired');
         else if (!EMAIL_REGEX.test(suEmail.trim())) problems.suEmail = t('auth.emailInvalid');
+        if (!suIdType) problems.suIdType = t('signUp.idTypeRequired');
+        if (!suIdFile) problems.suIdFile = t('signUp.idRequired');
         if (!suUsername.trim()) problems.suUsername = t('auth.usernameRequired');
         const missing = getMissingRequirements(suPassword);
         if (!suPassword) problems.suPassword = t('auth.passwordRequired');
@@ -385,11 +412,23 @@ function Hero() {
         const fullName = [suFirst, suMiddle, suLast].filter(Boolean).join(' ');
         setIsSubmitting(true);
         try {
+            let dataUrl;
+            try {
+                dataUrl = await readAsDataUrl(suIdFile);
+            } catch {
+                clearIdFile(); showFieldErrors({ suIdFile: t('signUp.idReadFailed') });
+                return;
+            }
             const result = await apiPost('request-otp', {
                 fullName, username: suUsername,
                 contact: `+63${suContact}`, email: suEmail, password: suPassword,
+                validId: { idType: suIdType, fileName: suIdFile.name, dataUrl },
             });
             if (!result.success) {
+                if (result.code === 'INVALID_ID') {
+                    showFieldErrors({ [/type of ID/i.test(result.message) ? 'suIdType' : 'suIdFile']: result.message });
+                    return;
+                }
                 const field = fieldForMessage(result.message, SIGNUP_SERVER_FIELDS);
                 if (field) showFieldErrors({ [field]: result.message });
                 else setError(serverMessage(result, 'auth.otpSendFailed'));
@@ -412,9 +451,10 @@ function Hero() {
             setSuFirst(''); setSuMiddle(''); setSuLast('');
             setSuUsername(''); setSuContact(''); setSuEmail('');
             setSuPassword(''); setSuConfirm('');
+            clearIdFile(); setSuIdType('');
             resetOtp(); setSignUpStep('form');
             setShowSignUp(false); setShowSignIn(true);
-            setSuccessMsg(t('signUp.accountCreated'));
+            setSuccessMsg(t(result.pendingVerification ? 'signUp.accountPendingReview' : 'signUp.accountCreated'));
         } catch { setError(t('auth.serverError')); }
         finally { setIsSubmitting(false); }
     };
@@ -630,6 +670,54 @@ function Hero() {
                             </AuthField>
                         </div>
 
+                        <h3 className="auth-section">{t('signUp.sectionResidency')}</h3>
+                        <p className="auth-id-intro">{t('signUp.residencyIntro')}</p>
+                        <div className="auth-id-info">
+                            <p className="auth-id-info-title"><i className="bi bi-patch-check-fill" aria-hidden="true"></i> {t('signUp.acceptedTitle')}</p>
+                            <ul className="auth-id-list">
+                                {ID_TYPES.map((o) => <li key={o.key}>{t(`signUp.idTypes.${o.key}`)}</li>)}
+                            </ul>
+                            <p className="auth-id-info-hint">{t('signUp.acceptedHint')} {t('signUp.tips')}</p>
+                        </div>
+                        <AuthField id="suIdType" error={fieldErrors.suIdType} label={t('signUp.idType')} icon="bi-person-vcard">
+                            <select className="auth-input auth-select" id="suIdType" {...fieldProps('suIdType')} value={suIdType} onChange={e => setSuIdType(e.target.value)}>
+                                <option value="">{t('signUp.idTypePlaceholder')}</option>
+                                {ID_TYPES.map((o) => <option key={o.key} value={o.value}>{t(`signUp.idTypes.${o.key}`)}</option>)}
+                            </select>
+                        </AuthField>
+                        <div className={`auth-field${fieldErrors.suIdFile ? ' has-error' : ''}`}>
+                            <span className="auth-label" id="suIdFile-label">{t('signUp.idUpload')}</span>
+                            <input type="file" id="suIdFile" ref={idInputRef} className="auth-upload-input" accept={ID_ACCEPT}
+                                aria-labelledby="suIdFile-label" {...fieldProps('suIdFile')} onChange={handleIdFile} />
+                            {suIdFile ? (
+                                <div className="auth-upload has-file">
+                                    {suIdPreview
+                                        ? <img className="auth-upload-thumb" src={suIdPreview} alt="" />
+                                        : <span className="auth-upload-thumb pdf" aria-hidden="true"><i className={`bi ${isPdfFile(suIdFile) ? 'bi-file-earmark-pdf-fill' : 'bi-file-earmark-image-fill'}`}></i></span>}
+                                    <span className="auth-upload-text">
+                                        <strong>{suIdFile.name}</strong>
+                                        <span>{isPdfFile(suIdFile) ? `${t('signUp.idPdf')} · ` : ''}{formatFileSize(suIdFile.size)}</span>
+                                    </span>
+                                    <span className="auth-upload-actions">
+                                        <label htmlFor="suIdFile" className="auth-link">{t('signUp.idReplace')}</label>
+                                        <button type="button" className="auth-link muted" onClick={clearIdFile}>{t('signUp.idRemove')}</button>
+                                    </span>
+                                </div>
+                            ) : (
+                                <label htmlFor="suIdFile" className="auth-upload">
+                                    <i className="bi bi-cloud-arrow-up-fill" aria-hidden="true"></i>
+                                    <span className="auth-upload-text">
+                                        <strong>{t('signUp.idChoose')}</strong>
+                                        <span>{t('signUp.idChooseHint')}</span>
+                                        <span className="auth-upload-formats">{t('signUp.idFormats')}</span>
+                                    </span>
+                                </label>
+                            )}
+                            {fieldErrors.suIdFile
+                                ? <AuthFieldError id="suIdFile">{fieldErrors.suIdFile}</AuthFieldError>
+                                : <p className="auth-upload-privacy"><i className="bi bi-shield-lock-fill" aria-hidden="true"></i> {t('signUp.idPrivacy')}</p>}
+                        </div>
+
                         <h3 className="auth-section">{t('signUp.sectionSecurity')}</h3>
                         <AuthField id="suUsername" error={fieldErrors.suUsername} label={t('signUp.username')} icon="bi-at">
                             <input type="text" className="auth-input" id="suUsername" {...fieldProps('suUsername')} autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
@@ -804,8 +892,6 @@ function Hero() {
                     )}
                 </AuthModal>
             )}
-
-            <EmergencyCallButton />
         </>
     );
 }

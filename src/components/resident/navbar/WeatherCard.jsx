@@ -1,7 +1,44 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../../../i18n/LanguageContext";
+import { heatLevel, SIGNAL_COLORS } from "./weatherAlerts";
 
 const HOT_DAY_C = 34;
+
+// The tropical cyclone wind signal, when today's or tomorrow's forecast winds
+// reach one. Used by the News card and the resident page's weather widget.
+export function StormAlert({ storm, compact = false }) {
+    const { t, language } = useLanguage();
+    if (!storm) return null;
+    const locale = language === "tl" ? "fil-PH" : "en-US";
+    const isToday = storm.date === manilaHourKey().slice(0, 10);
+    const when = isToday
+        ? t('weather.storm.today')
+        : t('weather.storm.expected', { day: new Date(`${storm.date}T00:00:00`).toLocaleDateString(locale, { weekday: 'long', month: 'short', day: 'numeric' }) });
+    const title = t('weather.storm.title', { level: storm.level });
+    // Compact sits inside the widget's button, so it uses only spans.
+    const Box = compact ? "span" : "div";
+    const Text = compact ? "span" : "p";
+    return (
+        <Box className={compact ? "rw-storm" : "news-weather-storm"} role={compact ? undefined : "alert"} style={{ "--signal-color": SIGNAL_COLORS[storm.level] }}>
+            <Box className={compact ? "rw-storm-head" : "news-weather-storm-head"}>
+                <i className="bi bi-tropical-storm" aria-hidden="true" />
+                <Box>
+                    <Text className={compact ? "rw-storm-title" : "news-weather-storm-title"}>{title}</Text>
+                    <Text className={compact ? "rw-storm-when" : "news-weather-storm-when"}>
+                        {when} · {t(`weather.storm.intensity${storm.level}`)} ({storm.range} km/h)
+                    </Text>
+                </Box>
+            </Box>
+            {!compact && (
+                <>
+                    <p className="news-weather-storm-winds">{t('weather.storm.winds', { wind: storm.windMax, gust: storm.gustMax })}</p>
+                    <p>{t(`weather.storm.impact${storm.level}`)}</p>
+                    <p className="news-weather-storm-note">{t('weather.storm.note')}</p>
+                </>
+            )}
+        </Box>
+    );
+}
 
 
 export const NIGHT_ICONS = { "bi-sun-fill": "bi-moon-stars-fill", "bi-cloud-sun-fill": "bi-cloud-moon-fill" };
@@ -147,8 +184,16 @@ export default function WeatherCard({
     const weatherInfo = describeWeatherCode(weather.code);
     const rainy = weather.rainChance >= RAIN_ALERT_THRESHOLD;
     const chance = Math.max(0, Math.min(100, Number(weather.rainChance) || 0));
-    // A short safety tip for the day.
-    const tip = rainy
+    const nowHour = (weather.hours || []).find((h) => h.time === manilaHourKey());
+    const heatNow = nowHour && Number.isFinite(nowHour.heatIndex) ? nowHour.heatIndex : null;
+    const heatMax = Number.isFinite(weather.heatIndexMax) ? weather.heatIndexMax : null;
+    const heat = heatLevel(heatMax ?? heatNow);
+    // A short safety tip for the day; a wind signal or a dangerous heat index comes first.
+    const tip = weather.storm
+        ? { icon: "bi-tropical-storm", text: t('weather.tipStorm') }
+        : heat && (heat.key === "danger" || heat.key === "extremeDanger")
+        ? { icon: "bi-thermometer-sun", text: t('weather.tipHeat') }
+        : rainy
         ? { icon: "bi-umbrella-fill", text: t('weather.tipRain') }
         : weather.tMax >= HOT_DAY_C
             ? { icon: "bi-brightness-high-fill", text: t('weather.tipHot') }
@@ -181,6 +226,8 @@ export default function WeatherCard({
                 <span className="news-weather-date">{formatNewsDate(new Date().toISOString())}</span>
             </div>
 
+            <StormAlert storm={weather.storm} />
+
             <div className="news-weather-main">
                 <i className={`bi ${weatherInfo.icon} news-weather-icon`} aria-hidden="true" />
                 <div className="news-weather-now">
@@ -208,6 +255,24 @@ export default function WeatherCard({
                 </p>
             </div>
 
+            {heat && (
+                <div className="news-weather-heat">
+                    <div className="news-weather-rain-row">
+                        <span><i className="bi bi-thermometer-sun" aria-hidden="true" /> {t('weather.heatIndex')}</span>
+                        <strong>{heatNow ?? heatMax}°C</strong>
+                    </div>
+                    <span className="news-weather-level" style={{ color: heat.color }}>
+                        <i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {t(`weather.heat.${heat.key}`)}
+                    </span>
+                    <p className="news-weather-note">
+                        {heatMax !== null && heatNow !== null && heatMax !== heatNow
+                            ? `${t('weather.heatNow', { now: heatNow })} ${t('weather.heatPeak', { max: heatMax })} `
+                            : heatMax !== null ? `${t('weather.heatPeak', { max: heatMax })} ` : ''}
+                        {t(`weather.heatAdvice.${heat.key}`)}
+                    </p>
+                </div>
+            )}
+
             {days.length > 1 && (
                 <div className="news-weather-week">
                     <div className="news-weather-week-head">
@@ -231,6 +296,11 @@ export default function WeatherCard({
                                         <span className="news-weather-day-rain"><i className="bi bi-droplet-fill" aria-hidden="true" />{d.rainChance}%</span>
                                         <span className="news-weather-day-max">{d.tMax}°</span>
                                         <span className="news-weather-day-min">{d.tMin}°</span>
+                                        {d.signal > 0 && (
+                                            <span className="news-weather-day-signal" style={{ color: SIGNAL_COLORS[d.signal] }}>
+                                                {t('weather.storm.short', { level: d.signal })}
+                                            </span>
+                                        )}
                                         <span className="visually-hidden">{t(`weather.codes.${info.key}`)}</span>
                                     </button>
                                 </li>
@@ -249,6 +319,8 @@ export default function WeatherCard({
                             </div>
                             <p className="news-weather-hourly-summary">
                                 {t(`weather.codes.${dayInfo.key}`)} · {t('weather.high')} {day.tMax}° · {t('weather.low')} {day.tMin}° · <i className="bi bi-droplet-fill" aria-hidden="true" /> {day.rainChance}%
+                                {Number.isFinite(day.heatIndexMax) && <> · {t('weather.heatIndex')} {day.heatIndexMax}°</>}
+                                {Number.isFinite(day.windMax) && <> · <i className="bi bi-wind" aria-hidden="true" /> {day.windMax} km/h</>}
                             </p>
                             <ol className="news-weather-hours" ref={hourly.ref} aria-label={`${t('weather.hourlyTitle')}: ${longDay(day, selected)}`} {...hourly.handlers}>
                                 {dayHours.map((h) => {

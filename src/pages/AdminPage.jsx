@@ -4,6 +4,7 @@ import '../styles/admin.css';
 import Dashboard from '../components/admin/dashboard/Dashboard';
 import AdminLayout from "../components/admin/layout/AdminLayout";
 import UsersPage from "../components/admin/users/UsersPage";
+import AccountVerificationPage from "../components/admin/users/AccountVerificationPage";
 import LogsPage from "../components/admin/logs/LogsPage";
 import SiteContactsPage from "../components/admin/settings/SiteContactsPage";
 import SiteContentsPage from "../components/admin/settings/SiteContentsPage";
@@ -105,6 +106,7 @@ const AdminPage = () => {
   const PAGE_TITLES = {
   dashboard: "Dashboard",
   notifications: "Notifications",
+  "account-verification": "Account Verification",
   "emergency-reports": "Emergency Reports",
   "assistance-requests": "Assistance Requests",
   "petty-crime-reports": "Petty Crime Reports",
@@ -289,6 +291,14 @@ useEffect(() => {
                   onArchive={archiveNotifications}
                   onNavigate={handleNavigation}
                   focus={focus && focus.view === "notifications" ? focus : null}
+              />
+          );
+      case "account-verification":
+          return (
+              <AccountVerificationPage
+                  focusId={focus && focus.view === "account-verification" ? focus.id : null}
+                  onClearFocus={clearFocus}
+                  onChanged={refreshAllData}
               />
           );
       case "emergency-reports":

@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import useAnnouncements from './navbar/hooks/useAnnouncements';
 import useWeather from './navbar/hooks/useWeather';
-import { manilaHourKey, NIGHT_ICONS } from './navbar/WeatherCard';
+import { manilaHourKey, NIGHT_ICONS, StormAlert } from './navbar/WeatherCard';
+import { heatLevel } from './navbar/weatherAlerts';
 import { themeFor } from './navbar/AnnouncementCard';
 import { OPEN_NEWS_EVENT, RAIN_ALERT_THRESHOLD, describeWeatherCode } from './ResidentNavbar';
 
@@ -176,7 +177,8 @@ function NewsCard({ articles, loading, index = 0, onGo, onTouch, single = null }
   );
 }
 
-// Today only: now, high / low, rain chance. Tap for the full forecast.
+// Today only: now, high / low, rain chance, heat index, and a wind signal
+// when one is expected. Tap for the full forecast.
 function WeatherCard({ weather }) {
   const { t, language } = useLanguage();
   if (!weather) {
@@ -195,9 +197,11 @@ function WeatherCard({ weather }) {
   const info = describeWeatherCode(now ? now.code : weather.code);
   const icon = now && !now.isDay ? (NIGHT_ICONS[info.icon] || info.icon) : info.icon;
   const rainy = weather.rainChance >= RAIN_ALERT_THRESHOLD;
+  const heatIndex = now && Number.isFinite(now.heatIndex) ? now.heatIndex : weather.heatIndexMax;
+  const heat = Number.isFinite(heatIndex) ? heatLevel(heatIndex) : null;
   const today = new Date().toLocaleDateString(language === 'tl' ? 'fil-PH' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
   return (
-    <button type="button" className={`rw-card rw-weather ${rainy ? 'rainy' : ''}`} onClick={() => openNews({ weather: true })}>
+    <button type="button" className={`rw-card rw-weather ${rainy || weather.storm ? 'rainy' : ''}`} onClick={() => openNews({ weather: true })}>
       <span className="rw-card-head">
         <span className="rw-head-icon"><i className="bi bi-geo-alt-fill" aria-hidden="true" /></span>
         <span className="rw-head-title">{t('widgets.weatherTitle')}</span>
@@ -219,6 +223,18 @@ function WeatherCard({ weather }) {
           <span>{t('widgets.rain')}</span>
         </span>
       </span>
+      {(heat || weather.storm) && (
+        <span className="rw-weather-extra">
+          {weather.storm && <StormAlert storm={weather.storm} compact />}
+          {heat && (
+            <span className="rw-heat">
+              <i className="bi bi-thermometer-sun" aria-hidden="true" />
+              {t('weather.heatIndex')} <strong>{heatIndex}°C</strong>
+              <span className="rw-heat-level" style={{ color: heat.color }}>{t(`weather.heat.${heat.key}`)}</span>
+            </span>
+          )}
+        </span>
+      )}
       <span className="rw-card-foot">
         <span className="rw-foot-hint">{t('widgets.tapForForecast')} <i className="bi bi-arrow-right" aria-hidden="true" /></span>
       </span>
@@ -409,6 +425,18 @@ export default function ResidentWidgets() {
         .rw-rain i { font-size: 1rem; color: #bfdbfe; }
         .rw-rain strong { font-size: 1.1rem; font-weight: 800; }
         .rw-weather:hover { filter: brightness(1.04); }
+        .rw-weather-extra { display: flex; flex-direction: column; gap: 8px; padding: 0 16px 4px; }
+        .rw-heat { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: 0.8rem; font-weight: 600; }
+        .rw-heat i { color: #fde68a; }
+        .rw-heat strong { font-weight: 800; }
+        .rw-heat-level { background: #fff; border-radius: 999px; padding: 2px 9px; font-size: 0.7rem; font-weight: 800; }
+        .rw-storm { display: block; background: #fff; color: #1f2937; border-radius: 12px; border-left: 5px solid var(--signal-color, #f97316); padding: 8px 10px; }
+        .rw-storm-head { display: flex; align-items: center; gap: 8px; }
+        .rw-storm-head > .bi { font-size: 1.4rem; color: var(--signal-color, #f97316); line-height: 1; }
+        .rw-storm-head > span { min-width: 0; }
+        .rw-storm-title, .rw-storm-when { display: block; }
+        .rw-storm-title { margin: 0; font-size: 0.85rem; font-weight: 800; line-height: 1.3; }
+        .rw-storm-when { margin: 0; font-size: 0.72rem; font-weight: 600; color: #6b7280; }
 
         .rw-dots { display: inline-flex; align-items: center; gap: 6px; }
         .rw-dot { width: 8px; height: 8px; border-radius: 999px; border: none; padding: 0; background: #e5d9dc; cursor: pointer; transition: width 0.25s, background 0.25s; }

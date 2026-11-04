@@ -10,10 +10,13 @@ const { signinContext, lookupLocation } = require("../utils/signinContext");
 const { sendServerError } = require("../utils/dbErrors");
 const {
     sendOtpEmail,
-    sendWelcomeEmail,
     sendSigninNotification,
     sendPasswordResetEmail,
+    sendRegistrationReceivedEmail,
 } = require("../services/emailService");
+const ResidentIdDocument = require("../models/ResidentIdDocument");
+const NotificationService = require("../services/notificationService");
+const { parseIdUpload } = require("../utils/idDocument");
 
 
 
@@ -41,7 +44,7 @@ const verifyEmailDomain = async (email) => {
 
 exports.requestOtp = async (req, res) => {
     try {
-        const { fullName, username, contact, email, password } = req.body;
+        const { fullName, username, contact, email, password, validId } = req.body;
 
         if (!fullName || !email || !password) {
             return res.status(400).json({
@@ -52,6 +55,10 @@ exports.requestOtp = async (req, res) => {
         const weakPassword = passwordProblem(password);
         if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
 
+        // The ID the barangay checks before the account can sign in.
+        const idDocument = parseIdUpload(validId);
+        if (idDocument.error) return res.json({ success: false, code: "INVALID_ID", message: idDocument.error });
+
         const domainValid = await verifyEmailDomain(email);
         if (!domainValid) {
             return res.json({
@@ -60,8 +67,9 @@ exports.requestOtp = async (req, res) => {
             });
         }
 
+        // A rejected registration can sign up again with the same details.
         const emailExists = await User.findByEmail(email);
-        if (emailExists) {
+        if (emailExists && emailExists.verification_status !== "Rejected") {
             return res.json({
                 success: false,
                 message: "An account with this email already exists.",
@@ -70,7 +78,7 @@ exports.requestOtp = async (req, res) => {
 
         if (username) {
             const usernameExists = await User.findByUsername(username);
-            if (usernameExists) {
+            if (usernameExists && usernameExists.verification_status !== "Rejected") {
                 return res.json({
                     success: false,
                     message: "Username is already taken.",
@@ -85,6 +93,7 @@ exports.requestOtp = async (req, res) => {
             otp,
             expiresAt: Date.now() + OTP_TTL_MS,
             userData:  { fullName, username, contact, email, password: hashedPassword },
+            idDocument,
         });
 
         for (const [key, val] of otpStore.entries()) {
@@ -131,23 +140,41 @@ exports.verifyOtp = async (req, res) => {
             return res.json({ success: false, message: "Incorrect verification code." });
         }
 
-        const { userData } = entry;
+        const { userData, idDocument } = entry;
         otpStore.delete(email);
 
-        await User.create({
+        // The account waits for an administrator to check the ID.
+        await User.deleteRejected(userData.email, userData.username);
+        const userId = await User.create({
             fullName: userData.fullName,
             username: userData.username,
             contact:  userData.contact,
             email:    userData.email,
             password: userData.password,
             role:     "resident",
+            status:   "Pending",
+            verificationStatus: "Pending",
         });
+        try {
+            await ResidentIdDocument.save(userId, idDocument);
+        } catch (err) {
+            // No account without its ID: the person can simply try again.
+            await User.deleteById(userId).catch(() => {});
+            throw err;
+        }
 
-        sendWelcomeEmail(email, userData.fullName).catch((err) =>
-            console.error("Welcome email failed:", err)
+        NotificationService.create({
+            title: "New account to verify",
+            message: `${userData.fullName} signed up and uploaded a ${idDocument.idType}. Check it on Account Verification.`,
+            notificationType: "account_verification",
+            referenceId: userId,
+        }).catch((err) => console.error("Verification notification failed:", err));
+
+        sendRegistrationReceivedEmail(email, userData.fullName).catch((err) =>
+            console.error("Registration email failed:", err)
         );
 
-        return res.json({ success: true, message: "Account created successfully." });
+        return res.json({ success: true, pendingVerification: true, message: "Account created. It will be reviewed by the barangay." });
     } catch (error) {
         return sendServerError(res, error, "verifyOtp", "Something went wrong while creating your account. Please try again.");
     }
@@ -363,42 +390,14 @@ exports.resendResetOtp = async (req, res) => {
 };
 
 
+// The old sign-up without an email code or ID. Closed: every account now
+// signs up through request-otp / verify-otp so its ID can be checked.
 exports.signup = async (req, res) => {
-    try {
-        const { fullName, username, contact, email, password } = req.body;
-
-        if (!fullName || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "All required fields must be filled.",
-            });
-        }
-        const weakPassword = passwordProblem(password);
-        if (weakPassword) return res.status(400).json({ success: false, message: weakPassword });
-
-        const emailExists = await User.findByEmail(email);
-        if (emailExists) {
-            return res.json({ success: false, message: "An account with this email already exists." });
-        }
-
-        if (username) {
-            const usernameExists = await User.findByUsername(username);
-            if (usernameExists) {
-                return res.json({ success: false, message: "Username is already taken." });
-            }
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({ fullName, username, contact, email, password: hashedPassword, role: "resident" });
-
-        return res.json({ success: true, message: "Account created successfully." });
-    } catch (error) {
-        return sendServerError(res, error, "signup", "Something went wrong while creating your account. Please try again.");
-    }
+    return res.status(410).json({
+        success: false,
+        message: "Please sign up with the form on the SafeConnect site, which asks for a valid ID.",
+    });
 };
-
-
-
 
 const recordSignin = async (req, fullName, email, status) => {
     const ctx = signinContext(req);
@@ -449,9 +448,21 @@ exports.signin = async (req, res) => {
                 Pending: {
                     code: "ACCOUNT_PENDING",
                     message: "Your account isn't active yet. Please contact the Barangay Sta. Fe administrator."
+                },
+                UnderReview: {
+                    code: "ACCOUNT_UNDER_REVIEW",
+                    message: "Your account is still being reviewed. A barangay administrator is checking your ID; we'll email you once it's approved."
+                },
+                Rejected: {
+                    code: "ACCOUNT_REJECTED",
+                    message: "Your registration wasn't approved.",
+                    reason: user.verification_note || null
                 }
             };
-            const response = STATUS_RESPONSES[user.status] || {
+            const key = user.status === "Pending" && user.verification_status === "Pending" ? "UnderReview"
+                : user.status === "Pending" && user.verification_status === "Rejected" ? "Rejected"
+                : user.status;
+            const response = STATUS_RESPONSES[key] || {
                 code: "ACCOUNT_INACTIVE",
                 message: "Your account can't sign in right now. Please contact the Barangay Sta. Fe administrator."
             };

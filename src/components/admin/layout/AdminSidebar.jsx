@@ -22,6 +22,10 @@ const AdminSidebar = ({
         {
           id: "notifications",
           label: "Notifications"
+        },
+        {
+          id: "account-verification",
+          label: "Account Verification"
         }
       ]
     },

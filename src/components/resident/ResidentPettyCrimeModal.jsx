@@ -3,7 +3,8 @@ import { createPettyCrimeReport, updatePettyCrimeReport } from '../../Services/a
 import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { announceReportSubmitted } from './useCallAccess';
 import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const CRIME_TYPES = [
   { key: 'theft', value: 'Theft' },
@@ -277,6 +278,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         throw new Error(result.message || t('reportForm.submitFailed'));
       }
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
+      announceReportSubmitted();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
       setFormData({
         houseNumber: '',

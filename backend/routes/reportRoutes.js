@@ -35,6 +35,7 @@ const describeArchiveSetting = (req) => {
 };
 
 router.get("/user/:userId", verifyToken, verifySelfOrAnyAdmin, myReportsController.getMyReports);
+router.get("/user/:userId/call-access", verifyToken, verifySelfOrAnyAdmin, myReportsController.getCallAccess);
 
 router.get("/archive-settings", verifyToken, verifyAdmin, archiveController.getSettings);
 router.put("/archive-settings", verifyToken, verifyAdmin, verifySuperAdmin,

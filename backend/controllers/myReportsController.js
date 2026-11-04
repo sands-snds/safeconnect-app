@@ -4,6 +4,7 @@
 const Report = require("../models/Report");
 const AssistanceRequest = require("../models/AssistanceRequest");
 const PettyCrime = require("../models/PettyCrime");
+const CallAccessService = require("../services/callAccessService");
 
 
 
@@ -68,5 +69,15 @@ exports.getMyReports = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to load your reports." });
+    }
+};
+
+// Whether the resident page shows the emergency call button yet.
+exports.getCallAccess = async (req, res) => {
+    try {
+        res.json(await CallAccessService.getCallAccess(req.params.userId));
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Failed to check the emergency call button." });
     }
 };

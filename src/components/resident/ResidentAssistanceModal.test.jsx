@@ -72,7 +72,7 @@ test('shows "Victim of What Emergency?" and the photo field beside it, both requ
 test('lists the Report Emergency types plus Other', () => {
   const { $ } = renderModal();
   const values = [...$('select[name="emergency"]').options].map((o) => o.value);
-  expect(values).toEqual(['', 'Fire Emergency', 'Flood Emergency', 'Earthquake', 'Other']);
+  expect(values).toEqual(['', 'Fire Emergency', 'Flood Emergency', 'Earthquake', 'Typhoon', 'Other']);
 });
 
 test('submitting without a photo is blocked', async () => {

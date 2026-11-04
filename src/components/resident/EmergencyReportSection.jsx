@@ -4,6 +4,7 @@ import useSiteContent from '../shared/useSiteContent';
 import EmergencyContactList from '../shared/EmergencyContactList';
 import ResidentAssistanceModal from './ResidentAssistanceModal';
 import ResidentPettyCrimeModal from './ResidentPettyCrimeModal';
+import useCallAccess from './useCallAccess';
 
 function EmergencyCallButton() {
   const { t } = useLanguage();
@@ -125,6 +126,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
   const { t } = useLanguage();
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showPettyCrimeModal, setShowPettyCrimeModal] = useState(false);
+  const callAvailable = useCallAccess();
 
   const emergencies = [
     {
@@ -265,8 +267,9 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
         onClose={() => setShowPettyCrimeModal(false)}
       />
 
-      {/* Fixed Floating Emergency Call Button */}
-      <EmergencyCallButton />
+      {/* The floating call button appears only after a report is submitted
+          and its waiting time has passed (see useCallAccess). */}
+      {callAvailable && <EmergencyCallButton />}
 
     </section>
   );

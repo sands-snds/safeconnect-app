@@ -3,7 +3,8 @@ import { createAssistanceRequest, updateAssistanceRequest } from '../../Services
 import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { announceReportSubmitted } from './useCallAccess';
 import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const SERVICE_AREA = {
   barangay: 'Sta. Fe',
@@ -26,7 +27,8 @@ const SPECIAL_NEEDS_OPTIONS = [
 const EMERGENCY_OPTIONS = [
   { value: 'Fire Emergency', labelKey: 'emergencyModal.typeFire' },
   { value: 'Flood Emergency', labelKey: 'emergencyModal.typeFlood' },
-  { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake' }
+  { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake' },
+  { value: 'Typhoon', labelKey: 'emergencyModal.typeTyphoon' }
 ];
 const OTHER_EMERGENCY = 'Other';
 
@@ -302,6 +304,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         throw new Error(result.message || t('assistanceModal.submitFailed'));
       }
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
+      announceReportSubmitted();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
       setFormData({
         assistanceType: '',

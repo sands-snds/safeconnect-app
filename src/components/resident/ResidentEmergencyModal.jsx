@@ -3,7 +3,8 @@ import { createEmergencyReport, updateEmergencyReport } from '../../Services/api
 import { showPopup } from '../shared/popup';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { announceReportSubmitted } from './useCallAccess';
  
  
 
@@ -288,6 +289,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       'Flood Emergency': 'Critical',
       'Fire Emergency': 'Critical',
       'Earthquake': 'High',
+      'Typhoon': 'Critical',
       'Landslide': 'High',
       'Accident': 'Urgent',
       'Other Emergency': 'Variable'
@@ -474,6 +476,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
  
       
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
+      announceReportSubmitted();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
 
       setSubmittedLocation({
@@ -734,7 +737,51 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         .form-select {
           cursor: pointer;
         }
- 
+
+        /* The selects sit inside .form-group, where resident.css's
+           ".form-group select" would otherwise win: it drops the room for
+           the dropdown arrow and shrinks the text on phones. */
+        .modal-form .form-group .form-select {
+          display: block;
+          width: 100%;
+          min-height: 44px;
+          padding: 10px 40px 10px 14px;
+          font-size: 14px;
+          line-height: 1.4;
+          color: #1f2937;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          background-color: #fff;
+          background-position: right 14px center;
+          text-overflow: ellipsis;
+        }
+        .modal-form .form-group .form-select:focus {
+          border-color: #dc3545;
+          box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+        }
+        .modal-form .form-group .form-select:invalid,
+        .modal-form .form-group .form-select option[value=""] {
+          color: #6b7280;
+        }
+        .modal-form .form-group .form-select option {
+          color: #1f2937;
+        }
+        .em-people-media {
+          align-items: start;
+        }
+        .em-people-media > .form-group {
+          margin-bottom: 0;
+          min-width: 0;
+        }
+
+        @media (max-width: 480px) {
+          .modal-form .form-group .form-select {
+            font-size: 16px; /* 16px stops iOS from zooming in on focus */
+            padding: 10px 38px 10px 12px;
+            border-radius: 6px;
+          }
+        }
+
         .checkbox-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -1133,30 +1180,28 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
               )}
 
               <div className="form-group">
-                <div className="form-group">
-                  <label className="form-label">
-                    <i
-                      className="bi bi-exclamation-circle-fill"
-                      style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}
-                    ></i>
-                    {t('emergencyModal.emergencyType')} <span className="required">*</span>
-                  </label>
+                <label className="form-label" htmlFor="em-emergency-type">
+                  <i className="bi bi-exclamation-circle-fill" style={{ color: '#6b7280', fontSize: '14px' }}></i>
+                  {t('emergencyModal.emergencyType')} <span className="required">*</span>
+                </label>
+                <select
+                  id="em-emergency-type"
+                  name="emergencyType"
+                  value={formData.emergencyType}
+                  onChange={handleChange}
+                  required
+                  disabled={isSubmitting}
+                  className="form-select"
+                >
+                  <option value="">{t('emergencyModal.selectType')}</option>
+                  <option value="Fire Emergency">{t('emergencyModal.typeFire')}</option>
+                  <option value="Flood Emergency">{t('emergencyModal.typeFlood')}</option>
+                  <option value="Earthquake">{t('emergencyModal.typeEarthquake')}</option>
+                  <option value="Typhoon">{t('emergencyModal.typeTyphoon')}</option>
+                </select>
+              </div>
 
-                  <select
-                    name="emergencyType"
-                    value={formData.emergencyType}
-                    onChange={handleChange}
-                    required
-                    disabled={isSubmitting}
-                    className="form-select"
-                  >
-                    <option value="">{t('emergencyModal.selectType')}</option>
-                    <option value="Fire Emergency">{t('emergencyModal.typeFire')}</option>
-                    <option value="Flood Emergency">{t('emergencyModal.typeFlood')}</option>
-                    <option value="Earthquake">{t('emergencyModal.typeEarthquake')}</option>
-                  </select>
-                </div>
-
+              <div className="form-group">
                 <div className="address-label-row">
                   <label className="form-label" style={{ marginBottom: 0 }}>
                     <i className="bi bi-geo-alt-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
@@ -1278,13 +1323,14 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                 ></textarea>
               </div>
 
-              <div className="form-grid">
+              <div className="form-grid em-people-media">
                 <div className="form-group">
-                  <label className="form-label">
-                    <i className="bi bi-people-fill" style={{ color: '#6b7280', fontSize: '14px', marginRight: '6px' }}></i>
+                  <label className="form-label" htmlFor="em-people">
+                    <i className="bi bi-people-fill" style={{ color: '#6b7280', fontSize: '14px' }}></i>
                     {t('reportForm.peopleAffected')}
                   </label>
                   <select
+                    id="em-people"
                     name="people"
                     value={formData.people}
                     onChange={handleChange}

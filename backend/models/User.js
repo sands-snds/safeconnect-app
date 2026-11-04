@@ -22,19 +22,92 @@ class User {
     static async create(user) {
         const [result] = await db.query(
             `INSERT INTO registered_users
-            (full_name, username, contact_number, email_address, password, role)
-            VALUES (?, ?, ?, ?, ?, ?)`,
+            (full_name, username, contact_number, email_address, password, role, status, verification_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 user.fullName,
                 user.username || null,
                 user.contact || null,
                 user.email,
                 user.password,
-                user.role || "resident"
+                user.role || "resident",
+                user.status || "Active",
+                user.verificationStatus || null
             ]
         );
 
         return result.insertId;
+    }
+
+    // Resident ID verification. verification_status is Pending, Approved or
+    // Rejected for accounts that signed up with an ID; NULL for older
+    // accounts and staff, which need no review.
+    static async ensureVerificationColumns() {
+        const [existing] = await db.query(
+            `SELECT COLUMN_NAME AS name FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'registered_users'`
+        );
+        const have = new Set(existing.map((c) => c.name));
+        for (const [name, definition] of [
+            ["verification_status", "VARCHAR(20) DEFAULT NULL"],
+            ["verification_note", "VARCHAR(500) DEFAULT NULL"],
+            ["verified_at", "TIMESTAMP NULL DEFAULT NULL"],
+            ["verified_by", "INT(11) DEFAULT NULL"]
+        ]) {
+            if (have.has(name)) continue;
+            try {
+                await db.query(`ALTER TABLE registered_users ADD COLUMN ${name} ${definition}`);
+            } catch (err) {
+                if (err.code !== "ER_DUP_FIELDNAME") throw err;
+            }
+        }
+    }
+
+    // Registrations for the Account Verification page, newest first, with
+    // their ID's details (not the file itself) and who reviewed them.
+    static async getVerifications(status) {
+        const [rows] = await db.query(
+            `SELECT u.id, u.full_name, u.username, u.contact_number, u.email_address,
+                    u.status, u.verification_status, u.verification_note, u.verified_at, u.created_at,
+                    r.full_name AS verified_by_name,
+                    d.id_type, d.file_name, d.mime_type, d.file_size, d.uploaded_at
+             FROM registered_users u
+             LEFT JOIN resident_id_documents d ON d.user_id = u.id
+             LEFT JOIN registered_users r ON r.id = u.verified_by
+             WHERE u.role = 'resident' AND u.verification_status ${status ? "= ?" : "IS NOT NULL"}
+             ORDER BY u.created_at DESC`,
+            status ? [status] : []
+        );
+        return rows;
+    }
+
+    // Approving activates the account; rejecting keeps it from signing in.
+    // Only a registration still waiting is changed (0 rows: someone else decided).
+    static async setVerification(id, { approved, note, adminId }) {
+        const [result] = await db.query(
+            `UPDATE registered_users
+             SET verification_status = ?, verification_note = ?, verified_at = NOW(), verified_by = ?,
+                 status = ?
+             WHERE id = ? AND role = 'resident' AND verification_status = 'Pending'`,
+            [approved ? "Approved" : "Rejected", note || null, adminId || null, approved ? "Active" : "Pending", id]
+        );
+        return result.affectedRows;
+    }
+
+    // A rejected registration doesn't hold on to its email or username, so
+    // the person can sign up again with a better ID.
+    static async deleteById(id) {
+        await db.query(`DELETE FROM registered_users WHERE id = ?`, [id]);
+    }
+
+    static async deleteRejected(email, username) {
+        const [result] = await db.query(
+            `DELETE FROM registered_users
+             WHERE verification_status = 'Rejected' AND role = 'resident'
+               AND (email_address = ? OR (? IS NOT NULL AND username = ?))`,
+            [email, username || null, username || null]
+        );
+        return result.affectedRows;
     }
 
     static async findById(id) {

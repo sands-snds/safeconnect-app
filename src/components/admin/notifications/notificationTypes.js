@@ -6,7 +6,8 @@ const TYPES = {
   petty_crime:          { icon: 'bi-shield-fill-exclamation',   color: '#7c3aed', view: 'petty-crime-reports', label: 'See report',  focus: 'report' },
   petty_crime_status:   { icon: 'bi-shield-fill-exclamation',   color: '#7c3aed', view: 'petty-crime-reports', label: 'See report',  focus: 'report' },
   announcement:         { icon: 'bi-megaphone-fill',            color: '#6B2C3E', view: 'announcement-page',   label: 'See announcement' },
-  announcement_comment: { icon: 'bi-chat-left-text-fill',       color: '#2563eb', view: 'notifications',       label: 'Reply',       focus: 'notification' }
+  announcement_comment: { icon: 'bi-chat-left-text-fill',       color: '#2563eb', view: 'notifications',       label: 'Reply',       focus: 'notification' },
+  account_verification: { icon: 'bi-person-vcard-fill',         color: '#0d9488', view: 'account-verification', label: 'Review ID',   focus: 'report' }
 };
 
 const FALLBACK = { icon: 'bi-bell-fill', color: '#6B2C3E' };

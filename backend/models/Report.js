@@ -90,6 +90,19 @@ class Report {
         return rows;
     }
 
+    // The reporter's open reports, each with how many seconds ago it was
+    // submitted by the database's own clock (for the emergency call button).
+    static async findOpenWithAge(reporterId) {
+        const [rows] = await db.query(
+            `SELECT id, emergency_type AS kind, TIMESTAMPDIFF(SECOND, time, NOW()) AS age_seconds
+             FROM emergency_reports
+             WHERE reporter_id = ? AND archived_at IS NULL
+               AND (status IS NULL OR status NOT IN ('Resolved', 'Dismissed'))`,
+            [reporterId]
+        );
+        return rows;
+    }
+
     static async findById(id) {
         const [rows] = await db.query(
             `SELECT * FROM emergency_reports WHERE id = ?`,

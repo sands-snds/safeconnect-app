@@ -11,6 +11,7 @@ const PAGE_SIZE = 20;
 const openLabelKey = (n) => {
     if (!n.isPersonal) return "notificationsPage.openArticle";
     if (n.category === "comment_reply") return "notificationsPage.openComment";
+    if (n.category === "account_verified") return "notificationsPage.openAccount";
     return "notificationsPage.openReport";
 };
 

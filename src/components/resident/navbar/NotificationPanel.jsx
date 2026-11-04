@@ -99,13 +99,17 @@ export default function NotificationPanel({
             <div className="panel-list">
                 {hasWeather && (
                     <div className="notification-item unread" onClick={handleWeatherNotificationClick}>
-                        <div className="notification-icon" style={{ background: '#3b82f6', color: '#fff' }}>
-                            <i className={`bi ${describeWeatherCode(weather.code).icon}`} />
+                        <div className="notification-icon" style={{ background: weather.storm ? '#ea580c' : '#3b82f6', color: '#fff' }}>
+                            <i className={`bi ${weather.storm ? 'bi-tropical-storm' : describeWeatherCode(weather.code).icon}`} />
                         </div>
                         <div className="notification-text">
-                            <p className="n-title">{t('notificationPanel.weatherAdvisory')}</p>
+                            <p className="n-title">
+                                {weather.storm ? t('weather.storm.title', { level: weather.storm.level }) : t('notificationPanel.weatherAdvisory')}
+                            </p>
                             <p className="n-message">
-                                {t('notificationPanel.weatherBody', { chance: weather.rainChance, tMax: weather.tMax, tMin: weather.tMin })}
+                                {weather.storm
+                                    ? t('notificationPanel.stormBody', { wind: weather.storm.windMax, intensity: t(`weather.storm.intensity${weather.storm.level}`) })
+                                    : t('notificationPanel.weatherBody', { chance: weather.rainChance, tMax: weather.tMax, tMin: weather.tMin })}
                             </p>
                             <span className="n-time">{t('notificationPanel.today')}</span>
                         </div>

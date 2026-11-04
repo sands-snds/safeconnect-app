@@ -23,7 +23,7 @@ const SignInModal = ({ onSuccess, notice }) => {
 
     setIsSubmitting(false);
 
-    if (!result.success && result.code && showAccountStatusPopup(result.code, t, socials?.email)) {
+    if (!result.success && result.code && showAccountStatusPopup(result.code, t, socials?.email, result.reason)) {
       setPassword('');
       return;
     }

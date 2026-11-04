@@ -99,13 +99,14 @@ export default function LegalDocModal({ hash, doc, idPrefix, onOpen, renderAfter
         .tc-section { margin-bottom: 24px; }
         .tc-section:last-child { margin-bottom: 12px; }
         .tc-section h3 { margin: 0 0 8px; font-size: 1rem; font-weight: 700; color: #6B2C3E; }
-        .tc-section ol { list-style: none; margin: 0; padding: 0; }
+        /* the clauses sit indented under their numbered section title */
+        .tc-section ol { list-style: none; margin: 0; padding: 0 0 0 1.5rem; }
         .tc-section li {
           display: grid; grid-template-columns: 2.5rem 1fr;
           font-size: 0.92rem; line-height: 1.7; margin-bottom: 6px;
         }
         .tc-clause { color: #6b7280; }
-        .tc-extra { margin: 8px 0 0 2.5rem; font-size: 0.92rem; line-height: 1.7; }
+        .tc-extra { margin: 8px 0 0 4rem; font-size: 0.92rem; line-height: 1.7; }
         .tc-extra a { color: #6B2C3E; font-weight: 600; overflow-wrap: anywhere; }
 
         .tc-footer {
@@ -126,8 +127,9 @@ export default function LegalDocModal({ hash, doc, idPrefix, onOpen, renderAfter
           .tc-body { padding: 18px 18px 8px; }
           .tc-footer { padding: 12px 18px; }
           .tc-agree { width: 100%; }
+          .tc-section ol { padding-left: 1rem; }
           .tc-section li { grid-template-columns: 2.25rem 1fr; }
-          .tc-extra { margin-left: 2.25rem; }
+          .tc-extra { margin-left: 3.25rem; }
         }
       `}</style>
 
