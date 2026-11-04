@@ -488,10 +488,8 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 **`petty_crimes`**
 `id`, `report_reference`, `reporter_id`, `timestamp`, `crime_type`, `reporter_name`, `contact_number`, `location`, `latitude`, `longitude`, `description`, `suspect_info`, `status`, `resolved_at`, `archived_at`, `dismissal_reason`, plus the same report-for fields.
 
-> The report-for columns (`report_for`, `victim_*`) are used by the models but are **not yet in `safeconnect_db.sql`**. See README → Known Issues.
-
 **`announcements`**
-`id`, `title`, `category`, `message`, `date_posted`, `image_path`, `source_url`, `source_title`, `source_image`, `source_site` (the link preview), `created_by`, `created_at`, `archived_at`.
+`id`, `title`, `category`, `message`, `date_posted`, `image_path`, `source_url`, `source_title`, `source_image`, `source_site` (the link preview), `created_by`, `created_at`, `archived_at`, `restored_at`.
 
 **`announcement_comments`**
 `id`, `announcement_id`, `user_id`, `parent_id` (the comment this one replies to; NULL for a top-level comment), `comment_text`, `created_at`. Replies are one level deep.

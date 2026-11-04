@@ -31,6 +31,7 @@ CREATE TABLE registered_users (
   address_street VARCHAR(120) DEFAULT NULL,
   address_area VARCHAR(120) DEFAULT NULL, -- subdivision or purok (optional)
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  archived_at TIMESTAMP NULL DEFAULT NULL, -- Closed accounts moved to the Users tab's Archived list
   PRIMARY KEY (id),
   UNIQUE KEY email_address (email_address),
   UNIQUE KEY username (username)
@@ -81,8 +82,9 @@ CREATE TABLE emergency_reports (
   status VARCHAR(50) DEFAULT 'Received',
   assigned_to INT(11) DEFAULT NULL,
   assigned_at TIMESTAMP NULL DEFAULT NULL,
-  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
+  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved or Dismissed
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
+  dismissal_reason VARCHAR(500) DEFAULT NULL, -- why the barangay dismissed it (sent to the reporter)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_emergency_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -115,9 +117,10 @@ CREATE TABLE assistance_requests (
   victim_contact VARCHAR(50) DEFAULT NULL,
   victim_relationship VARCHAR(100) DEFAULT NULL,
   victim_details TEXT DEFAULT NULL,
-  status VARCHAR(50) DEFAULT 'Received', -- Received -> In Progress -> Resolved (forward-only)
-  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
+  status VARCHAR(50) DEFAULT 'Received', -- Received -> In Progress -> Resolved (forward-only), or Dismissed
+  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved or Dismissed
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
+  dismissal_reason VARCHAR(500) DEFAULT NULL, -- why the barangay dismissed it (sent to the reporter)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_assistance_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -148,8 +151,9 @@ CREATE TABLE petty_crimes (
   victim_relationship VARCHAR(100) DEFAULT NULL,
   victim_details TEXT DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'Received',
-  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved
+  resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved or Dismissed
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
+  dismissal_reason VARCHAR(500) DEFAULT NULL, -- why the barangay dismissed it (sent to the reporter)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_pettycrime_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -171,6 +175,8 @@ CREATE TABLE announcements (
   source_site VARCHAR(255) DEFAULT NULL,
   created_by INT(11) DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/announcementArchiveService.js)
+  restored_at TIMESTAMP NULL DEFAULT NULL, -- a restored announcement's auto-archive period starts again from here
   PRIMARY KEY (id),
   KEY created_by (created_by),
   CONSTRAINT fk_announcement_author FOREIGN KEY (created_by) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -186,8 +192,10 @@ CREATE TABLE notifications (
   message TEXT NOT NULL,
   notification_type VARCHAR(100) DEFAULT NULL,
   reference_id INT(11) DEFAULT NULL,
+  comment_id INT(11) DEFAULT NULL, -- the resident comment an announcement_comment notification is about
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  archived_at TIMESTAMP NULL DEFAULT NULL, -- staff notifications archived from the Notifications page
   PRIMARY KEY (id),
   KEY user_id (user_id),
   CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES registered_users (id) ON DELETE CASCADE
@@ -236,7 +244,24 @@ CREATE TABLE signin_logs (
   device VARCHAR(120) DEFAULT NULL,
   location VARCHAR(160) DEFAULT NULL,
   timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
+  archived_at TIMESTAMP NULL DEFAULT NULL, -- set by services/logArchiveService.js
+  PRIMARY KEY (id),
+  KEY archived_at (archived_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- resident_activity_logs: what a resident did after signing in
+-- (the Activity column of Resident Logs). Also auto-created by the backend on start.
+-- --------------------------------------------------------
+CREATE TABLE resident_activity_logs (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  user_id INT(11) NOT NULL,
+  email_address VARCHAR(255) NOT NULL,
+  action VARCHAR(100) NOT NULL,
+  details VARCHAR(255) DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_resident_activity_email (email_address, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -252,21 +277,49 @@ CREATE TABLE admin_activity_logs (
   action VARCHAR(100) NOT NULL,
   details TEXT DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  archived_at TIMESTAMP NULL DEFAULT NULL, -- set by services/logArchiveService.js
   PRIMARY KEY (id),
-  KEY admin_id (admin_id)
+  KEY admin_id (admin_id),
+  KEY archived_at (archived_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 -- system_settings (also auto-created by the backend on start)
 -- report_auto_archive_months: 0 (off), 6 or 12
+-- announcement_auto_archive_days: 0 (off), 7, 90, 180 or 365
+-- signin_log_auto_archive_days / admin_log_auto_archive_days: 0 (off), 30, 90, 180 or 365
+-- site_contacts / site_media: JSON, added once an Admin saves Page Contacts / Page Contents
 -- --------------------------------------------------------
 CREATE TABLE system_settings (
   setting_key VARCHAR(100) NOT NULL,
-  setting_value VARCHAR(255) DEFAULT NULL,
+  setting_value TEXT DEFAULT NULL,
   PRIMARY KEY (setting_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO system_settings (setting_key, setting_value) VALUES ('report_auto_archive_months', '12');
+INSERT INTO system_settings (setting_key, setting_value) VALUES
+  ('report_auto_archive_months', '12'),
+  ('announcement_auto_archive_days', '7'),
+  ('signin_log_auto_archive_days', '90'),
+  ('admin_log_auto_archive_days', '90');
+
+-- --------------------------------------------------------
+-- user_read_items / user_preferences: which notifications and announcements
+-- an account has read, and its language, so both follow the account to
+-- other devices. Also auto-created by the backend on start.
+-- --------------------------------------------------------
+CREATE TABLE user_read_items (
+  user_id INT NOT NULL,
+  item_key VARCHAR(100) NOT NULL,
+  read_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, item_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE user_preferences (
+  user_id INT NOT NULL,
+  language VARCHAR(5) DEFAULT NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 -- admin account

@@ -192,8 +192,6 @@ From **System → Users**, the main Admin can make other accounts Officials or A
 | `SMTP_SECURE` | `false` | `true` for port 465 |
 | `SMTP_USER`, `SMTP_PASS` | … | Email login. `SMTP_USER` is also the "From" address. |
 
-> `backend/.env.example` doesn't list the `SMTP_*` variables yet. Add them by hand.
-
 ### Frontend: `.env.local` in the project root (optional)
 | Variable | Default | Purpose |
 |---|---|---|
@@ -301,9 +299,7 @@ The backend checks the role **against the database on every admin request**, not
 
 ## 10. Known Issues
 
-- **`database/safeconnect_db.sql` is missing some columns the code uses:** `report_for`, `victim_name`, `victim_contact`, `victim_relationship` and `victim_details` on the three report tables. A database created only from this file will fail when a report is submitted. `victim_details` is also missing from the current local database.
 - **The seed admin account cannot sign in** (its password is not hashed). See [Step 6](#step-6-sign-in-as-the-barangays-main-admin).
-- **`backend/.env.example` doesn't list the `SMTP_*` variables.**
 - **`backend/.env` is committed to git** even though `.gitignore` lists it. It holds real passwords, and each teammate's local database password overwrites the others' when they pull. Stop tracking it with `git rm --cached backend/.env`, and change the passwords that are already in the history.
 - **Report photos and videos are stored as base64 text** in the report tables (`photo_url`, `LONGTEXT`). This works, but makes those rows large, and the admin report lists download every report's media on each refresh.
 
