@@ -22,10 +22,6 @@ const AdminSidebar = ({
         {
           id: "notifications",
           label: "Notifications"
-        },
-        {
-          id: "account-verification",
-          label: "Account Verification"
         }
       ]
     },
@@ -72,6 +68,10 @@ const AdminSidebar = ({
         {
           id: "registered-users",
           label: "Users"
+        },
+        {
+          id: "account-verification",
+          label: "Account Verification"
         },
         {
           id: "sign-in-logs",

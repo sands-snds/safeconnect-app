@@ -6,19 +6,11 @@ import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
+import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
  
  
 
-const SERVICE_AREA = {
-  barangay: 'Sta. Fe',
-  city: 'Dasmariñas',
-  province: 'Cavite',
-  country: 'Philippines',
-  lat: 14.3198,
-  lng: 120.9644
-};
- 
 const PEOPLE_AFFECTED_OPTIONS = ['1-10', '11-20', '21-30', '31-40'];
  
 
@@ -97,11 +89,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     emergencyType: '',
-    houseNumber: '',
-    street: '',
-    floorUnit: '',
-    landmark: '',
-    location: '', 
+    ...EMPTY_LOCATION,
+    location: '',
     details: '',
     people: '',
     special: [],
@@ -117,8 +106,10 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [submittedLocation, setSubmittedLocation] = useState(null);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [reportFor, setReportFor] = useState('self');
-  // Reporting for yourself fills in your registered address.
-  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, reportFor, formData, setFormData });
+  // Reporting for yourself fills in your registered address; the map is only
+  // for reporting someone else's emergency.
+  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: reportFor === 'self', formData, setFormData });
+  const showMap = reportFor === 'others';
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
@@ -128,11 +119,12 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
 
   
   
-  const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
+  const fillAddressFromPin = useCallback(({ houseNumber, street, area, fullAddress }) => {
     setFormData((prev) => (isEditing
       ? { ...prev, location: fullAddress }
-      : { ...prev, houseNumber: houseNumber || prev.houseNumber, street: street || prev.street }));
+      : { ...prev, houseNumber: houseNumber || prev.houseNumber, street: street || prev.street, area: area || prev.area }));
   }, [isEditing]);
+  const location = useLocationPin({ onAddress: fillAddressFromPin });
   const {
     gpsCoords,
     setGpsCoords,
@@ -143,8 +135,13 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     outsideMessage,
     handleUseCurrentLocation,
     handlePickOnMap
-  } = useLocationPin({ onAddress: fillAddressFromPin });
+  } = location;
   const locationSectionRef = useRef(null);
+
+  // Back to "Myself": the hidden map's pin no longer applies.
+  useEffect(() => {
+    if (!isEditing && !showMap) setGpsCoords(null);
+  }, [isEditing, showMap, setGpsCoords]);
  
   const fileInputRef = useRef(null);
  
@@ -299,10 +296,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
  
     setFormData({
       emergencyType: '',
-      houseNumber: '',
-      street: '',
-      floorUnit: '',
-      landmark: '',
+      ...EMPTY_LOCATION,
       location: '',
       details: '',
       people: '',
@@ -449,22 +443,9 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         console.warn('Media upload/encoding failed');
       }
  
-      const composedAddress = [formData.houseNumber.trim(), formData.street.trim()]
-        .filter(Boolean)
-        .join(' ');
-      
-      
-      const landmark = formData.landmark.trim();
-      const fullLocation = [
-        formData.floorUnit.trim(),
-        composedAddress || (gpsCoords ? 'Pinned location' : ''),
-        `Barangay ${SERVICE_AREA.barangay}, ${SERVICE_AREA.city}, ${SERVICE_AREA.province}, ${SERVICE_AREA.country}`
-      ].filter(Boolean).join(', ') + (landmark ? ` (Landmark: ${landmark})` : '');
- 
-      console.log({
-      userId: currentUser.id,
-      emergencyType: formData.emergencyType
-    });
+      const fullLocation = composeLocation(formData, gpsCoords);
+      const coords = await coordsForSubmit(formData, gpsCoords, showMap);
+
       const result = await createEmergencyReport({
         emergencyType: formData.emergencyType,
         severity: getSeverity(formData.emergencyType),
@@ -472,12 +453,12 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         name: reporterName,
         contact: reporterContact,
         location: fullLocation,
-        latitude: gpsCoords ? gpsCoords.lat : null,
-        longitude: gpsCoords ? gpsCoords.lng : null,
+        latitude: coords ? coords.lat : null,
+        longitude: coords ? coords.lng : null,
         details: formData.details,
         people: formData.people || 0,
         special: formatSpecialNeeds(formData.special, formData.specialCounts),
-        
+
         photoUrl: mediaUrl || null,
         mediaType: formData.mediaType || null,
         reportFor,
@@ -498,10 +479,18 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       announceReportsChanged();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
 
+      // Handed to the assistance form if they ask for help next.
       setSubmittedLocation({
         location: fullLocation,
-        latitude: gpsCoords ? gpsCoords.lat : null,
-        longitude: gpsCoords ? gpsCoords.lng : null
+        latitude: coords ? coords.lat : null,
+        longitude: coords ? coords.lng : null,
+        reportFor,
+        address: {
+          houseNumber: formData.houseNumber,
+          street: formData.street,
+          area: formData.area,
+          landmark: formData.landmark
+        }
       });
 
       resetForm();
@@ -1221,6 +1210,20 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                 </select>
               </div>
 
+              {!isEditing ? (
+                <div className="form-group">
+                  <ReportLocationFields
+                    t={t}
+                    formData={formData}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    showMap={showMap}
+                    location={location}
+                    sectionRef={locationSectionRef}
+                    addressPrefilled={addressPrefilled}
+                  />
+                </div>
+              ) : (
               <div className="form-group">
                 <div className="address-label-row">
                   <label className="form-label" style={{ marginBottom: 0 }}>
@@ -1245,65 +1248,17 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   </button>
                 </div>
 
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    placeholder={t('reportForm.fullAddress')}
-                    required
-                    disabled={isSubmitting}
-                    className="form-input"
-                    style={{ marginTop: '8px' }}
-                  />
-                ) : (
-                  <>
-                    <div className="form-grid" style={{ marginTop: '8px', marginBottom: 0 }}>
-                      <input
-                        type="text"
-                        name="houseNumber"
-                        value={formData.houseNumber}
-                        onChange={handleChange}
-                        placeholder={t('reportForm.houseNumberPlaceholder')}
-                        required={!gpsCoords}
-                        disabled={isSubmitting}
-                        className="form-input"
-                      />
-                      <input
-                        type="text"
-                        name="street"
-                        value={formData.street}
-                        onChange={handleChange}
-                        placeholder={t('reportForm.streetPlaceholder')}
-                        required={!gpsCoords}
-                        disabled={isSubmitting}
-                        className="form-input"
-                      />
-                    </div>
-
-                    <input
-                      type="text"
-                      name="floorUnit"
-                      value={formData.floorUnit}
-                      onChange={handleChange}
-                      placeholder={t('reportForm.floorUnitPlaceholder')}
-                      disabled={isSubmitting}
-                      className="form-input"
-                      style={{ marginTop: '10px' }}
-                    />
-                    <input
-                      type="text"
-                      name="landmark"
-                      value={formData.landmark}
-                      onChange={handleChange}
-                      placeholder={t('reportForm.landmarkPlaceholder')}
-                      disabled={isSubmitting}
-                      className="form-input"
-                      style={{ marginTop: '10px' }}
-                    />
-                  </>
-                )}
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder={t('reportForm.fullAddress')}
+                  required
+                  disabled={isSubmitting}
+                  className="form-input"
+                  style={{ marginTop: '8px' }}
+                />
 
                 {locationError && (
                   <div className="location-error">
@@ -1311,11 +1266,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   </div>
                 )}
 
-                {addressPrefilled && (
-                  <div className="registered-address-hint">
-                    <i className="bi bi-house-check-fill" aria-hidden="true"></i> {t('reportForm.addressPrefilled')}
-                  </div>
-                )}
                 <div className="location-fixed-area">
                   {t('reportForm.serviceAreaNote')}
                 </div>
@@ -1330,7 +1280,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   />
                 </div>
               </div>
- 
+              )}
+
               <div className="form-group">
                 <label className="form-label">
                   <i className="bi bi-card-text" style={{ color: '#6b7280', fontSize: '14px' }}></i>

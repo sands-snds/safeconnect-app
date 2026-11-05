@@ -872,6 +872,11 @@ export const translations = {
       landmarkPlaceholder: 'Landmark / directions (e.g. beside the covered court, blue gate)',
       serviceAreaNote: 'Reports are limited to Barangay Sta. Fe, Dasmariñas, Cavite, Philippines',
       addressPrefilled: 'Filled in from your registered address. You can change it.',
+      areaPlaceholder: 'Subdivision / Purok (optional)',
+      barangayFixed: 'Barangay Santa Fe, Dasmariñas, Cavite',
+      addressSearching: 'Finding this address on the map…',
+      addressFound: 'Found on the map. Drag the pin if it isn\'t exactly right.',
+      addressNotFound: "We couldn't find this street on the map. Tap the map to pin the place.",
       specialNeedsHowMany: 'How many?',
       specialNeedsCountLabel: 'How many: {{category}}',
       specialNeedsCountRequired: 'Please enter how many for "{{category}}" (1 to 999).',
@@ -980,6 +985,9 @@ export const translations = {
       proofRequired: 'Please attach a photo or video of your situation. It is required so the barangay can verify your request.'
     },
     pettyCrimeModal: {
+      whereHappened: 'Where did the incident happen?',
+      atHome: 'At my home',
+      elsewhere: 'Somewhere else',
       title: 'Report Petty Crime',
       crimeType: 'Crime Type',
       selectType: 'Select Type',
@@ -2072,6 +2080,11 @@ export const translations = {
       landmarkPlaceholder: 'Landmark / direksyon (hal. tabi ng covered court, blue gate)',
       serviceAreaNote: 'Limitado lang ang mga report sa Barangay Sta. Fe, Dasmariñas, Cavite, Philippines',
       addressPrefilled: 'Kinuha mula sa iyong nakarehistrong address. Maaari mo itong palitan.',
+      areaPlaceholder: 'Subdibisyon / Purok (opsyonal)',
+      barangayFixed: 'Barangay Santa Fe, Dasmariñas, Cavite',
+      addressSearching: 'Hinahanap ang address na ito sa mapa…',
+      addressFound: 'Nakita sa mapa. I-drag ang pin kung hindi eksakto.',
+      addressNotFound: 'Hindi namin makita ang kalyeng ito sa mapa. I-tap ang mapa para i-pin ang lugar.',
       specialNeedsHowMany: 'Ilan?',
       specialNeedsCountLabel: 'Ilan: {{category}}',
       specialNeedsCountRequired: 'Mangyaring ilagay kung ilan ang "{{category}}" (1 hanggang 999).',
@@ -2180,6 +2193,9 @@ export const translations = {
       proofRequired: 'Maglagay ng larawan o video ng iyong sitwasyon. Kinakailangan ito para maberipika ng barangay ang iyong kahilingan.'
     },
     pettyCrimeModal: {
+      whereHappened: 'Saan nangyari ang insidente?',
+      atHome: 'Sa aking bahay',
+      elsewhere: 'Sa ibang lugar',
       title: 'Mag-report ng Petty Crime',
       crimeType: 'Uri ng Krimen',
       selectType: 'Piliin ang Uri',

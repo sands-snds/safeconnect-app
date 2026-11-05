@@ -6,16 +6,9 @@ import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
+import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
 import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
-const SERVICE_AREA = {
-  barangay: 'Sta. Fe',
-  city: 'Dasmariñas',
-  province: 'Cavite',
-  country: 'Philippines',
-  lat: 14.3198,
-  lng: 120.9644
-};
 
 
 
@@ -77,10 +70,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     assistanceType: '',
     emergency: '',
     emergencyOther: '',
-    houseNumber: '',
-    street: '',
-    floorUnit: '',
-    landmark: '',
+    ...EMPTY_LOCATION,
     location: '',
     situation: '',
     people: '',
@@ -97,26 +87,32 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   
   
-  const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
+  const fillAddressFromPin = useCallback(({ houseNumber, street, area, fullAddress }) => {
     setFormData((prev) => (isEditing
       ? { ...prev, location: fullAddress }
-      : { ...prev, houseNumber: houseNumber || prev.houseNumber, street: street || prev.street }));
+      : { ...prev, houseNumber: houseNumber || prev.houseNumber, street: street || prev.street, area: area || prev.area }));
   }, [isEditing]);
+  const location = useLocationPin({ onAddress: fillAddressFromPin });
   const {
     gpsCoords,
     setGpsCoords,
-    isLocating,
     locationError,
     setLocationError,
     isOutsideSantaFe,
     outsideMessage,
-    handleUseCurrentLocation,
     handlePickOnMap
-  } = useLocationPin({ onAddress: fillAddressFromPin });
+  } = location;
   const locationSectionRef = useRef(null);
   const [reportFor, setReportFor] = useState('self');
-  // Reporting for yourself fills in your registered address.
-  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, reportFor, formData, setFormData });
+  // Requesting for yourself fills in your registered address; the map is
+  // only for requesting help for someone else.
+  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: reportFor === 'self', formData, setFormData });
+  const showMap = reportFor === 'others';
+
+  // Back to "Myself": the hidden map's pin no longer applies.
+  useEffect(() => {
+    if (!isEditing && !showMap) setGpsCoords(null);
+  }, [isEditing, showMap, setGpsCoords]);
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
@@ -144,10 +140,15 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setGpsCoords({ lat: editingReport.latitude, lng: editingReport.longitude });
     }
   }, [editingReport, setGpsCoords]);
+  // Opened right after an emergency report: the same person and place.
   useEffect(() => {
     if (!show || editingReport || !prefill) return;
+    if (prefill.reportFor !== 'others') return; // their registered address fills in
+    setReportFor('others');
+    if (prefill.address) setFormData((prev) => ({ ...prev, ...prefill.address }));
     if (prefill.latitude != null && prefill.longitude != null) {
-      setGpsCoords({ lat: prefill.latitude, lng: prefill.longitude });
+      // After the "Myself" reset above has run for this render.
+      setTimeout(() => setGpsCoords({ lat: prefill.latitude, lng: prefill.longitude }), 0);
     }
   }, [show, prefill, editingReport, setGpsCoords]);
   useEffect(() => {
@@ -288,17 +289,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       const fullName = currentUser.fullName || currentUser.full_name || 'Anonymous Resident';
       const contact = currentUser.contact || currentUser.contact_number || 'Not provided';
       const email = currentUser.email || currentUser.email_address || '';
-      const composedAddress = [formData.houseNumber.trim(), formData.street.trim()]
-        .filter(Boolean)
-        .join(' ');
-      
-      
-      const landmark = formData.landmark.trim();
-      const fullLocation = [
-        formData.floorUnit.trim(),
-        composedAddress || (gpsCoords ? 'Pinned location' : ''),
-        `Barangay ${SERVICE_AREA.barangay}, ${SERVICE_AREA.city}, ${SERVICE_AREA.province}, ${SERVICE_AREA.country}`
-      ].filter(Boolean).join(', ') + (landmark ? ` (Landmark: ${landmark})` : '');
+      const fullLocation = composeLocation(formData, gpsCoords);
+      const coords = await coordsForSubmit(formData, gpsCoords, showMap);
       const result = await createAssistanceRequest({
         type: formData.assistanceType || 'General Assistance',
         victimOfEmergency,
@@ -309,8 +301,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         contact,
         email,
         location: fullLocation,
-        latitude: gpsCoords ? gpsCoords.lat : null,
-        longitude: gpsCoords ? gpsCoords.lng : null,
+        latitude: coords ? coords.lat : null,
+        longitude: coords ? coords.lng : null,
         situation: formData.situation,
         people: Number(formData.people),
         special: formatSpecialNeeds(formData.special, formData.specialCounts),
@@ -332,10 +324,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         assistanceType: '',
         emergency: '',
         emergencyOther: '',
-        houseNumber: '',
-        street: '',
-        floorUnit: '',
-        landmark: '',
+        ...EMPTY_LOCATION,
         location: '',
         situation: '',
         people: '',
@@ -640,60 +629,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               onRemove={clearMedia}
             />
 </div>
-<div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '8px',
-              marginBottom: '8px'
-            }}>
-<label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontWeight: '600',
-                color: '#374151',
-                fontSize: '13px',
-                margin: 0
-              }}>
+{isEditing ? (
+<>
+<label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', color: '#374151', fontSize: '13px', marginBottom: '8px' }}>
 <i className="bi bi-geo-alt-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
                 {t('assistanceModal.currentAddress')} <span style={{ color: '#dc3545' }}>*</span>
 </label>
-{!isEditing && (
-<button
-                type="button"
-                onClick={handleUseCurrentLocation}
-                disabled={isLocating || isSubmitting}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '20px',
-                  border: '1px solid #dc3545',
-                  background: '#fff',
-                  color: '#dc3545',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: (isLocating || isSubmitting) ? 'not-allowed' : 'pointer',
-                  opacity: (isLocating || isSubmitting) ? 0.6 : 1,
-                  whiteSpace: 'nowrap'
-                }}
->
-                {isLocating ? (
-<>
-<i className="bi bi-arrow-repeat"></i> {t('reportForm.locating')}
-</>
-                ) : (
-<>
-<i className="bi bi-crosshair"></i> {t('reportForm.useCurrentLocation')}
-</>
-                )}
-</button>
-              )}
-</div>
-              {isEditing ? (
 <input
                   type="text"
                   name="location"
@@ -713,98 +654,11 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                   onFocus={(e) => e.target.style.borderColor = '#dc3545'}
                   onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 />
-              ) : (
-<>
-<div className="rf-2col" style={{ gap: '12px' }}>
-<input
-                type="text"
-                name="houseNumber"
-                value={formData.houseNumber}
-                onChange={handleChange}
-                placeholder={t('reportForm.houseNumberPlaceholder')}
-                required={!gpsCoords}
-                disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#dc3545'}
-                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-              />
-<input
-                type="text"
-                name="street"
-                value={formData.street}
-                onChange={handleChange}
-                placeholder={t('reportForm.streetPlaceholder')}
-                required={!gpsCoords}
-                disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#dc3545'}
-                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-              />
-</div>
-<input
-              type="text"
-              name="floorUnit"
-              value={formData.floorUnit}
-              onChange={handleChange}
-              placeholder={t('reportForm.floorUnitPlaceholder')}
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                fontSize: '14px',
-                outline: 'none',
-                marginTop: '10px'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#dc3545'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-            />
-<input
-              type="text"
-              name="landmark"
-              value={formData.landmark}
-              onChange={handleChange}
-              placeholder={t('reportForm.landmarkPlaceholder')}
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                fontSize: '14px',
-                outline: 'none',
-                marginTop: '10px'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#dc3545'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-            />
-</>
-              )}
             {locationError && (
 <div style={{ marginTop: '6px', fontSize: '12px', color: '#dc3545' }}>
 <i className="bi bi-exclamation-triangle-fill"></i> {locationError}
 </div>
             )}
-{addressPrefilled && (
-  <div className="registered-address-hint">
-    <i className="bi bi-house-check-fill" aria-hidden="true"></i> {t('reportForm.addressPrefilled')}
-  </div>
-)}
 <div style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
               {t('assistanceModal.serviceAreaNote')}
 </div>
@@ -817,6 +671,20 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     disabled={isSubmitting}
   />
 </div>
+</>
+) : (
+<ReportLocationFields
+  t={t}
+  formData={formData}
+  onChange={handleChange}
+  disabled={isSubmitting}
+  showMap={showMap}
+  location={location}
+  sectionRef={locationSectionRef}
+  addressPrefilled={addressPrefilled}
+  serviceAreaNote={t('assistanceModal.serviceAreaNote')}
+/>
+)}
 </div>
 <div style={{ marginBottom: '16px' }}>
 <label style={{

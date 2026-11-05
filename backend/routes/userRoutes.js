@@ -28,7 +28,7 @@ const describeUserTarget = async (req) => {
 
 router.get("/", verifyToken, verifyAdmin, verifySuperAdmin, userController.getUsers);
 
-// Account Verification (Officials and Admins): residents' uploaded IDs.
+// Account Verification (Admins only): residents' uploaded IDs.
 const verificationController = require("../controllers/verificationController");
 const describeVerification = async (req) => {
     const user = await User.findById(req.params.id);
@@ -36,9 +36,9 @@ const describeVerification = async (req) => {
     const reason = req.body.decision === "reject" && typeof req.body.reason === "string" ? req.body.reason.trim().slice(0, 200) : "";
     return `${who} → ${req.body.decision === "approve" ? "Approved" : "Rejected"}${reason ? ` (reason: ${reason})` : ""}`;
 };
-router.get("/verifications", verifyToken, verifyAdmin, verificationController.list);
-router.get("/:id/valid-id", verifyToken, verifyAdmin, verificationController.getIdDocument);
-router.patch("/:id/verification", verifyToken, verifyAdmin, logActivity("Reviewed account registration", describeVerification), verificationController.decide);
+router.get("/verifications", verifyToken, verifyAdmin, verifySuperAdmin, verificationController.list);
+router.get("/:id/valid-id", verifyToken, verifyAdmin, verifySuperAdmin, verificationController.getIdDocument);
+router.patch("/:id/verification", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Reviewed account registration", describeVerification), verificationController.decide);
 router.put("/:id", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
 router.patch("/:id/status", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
 router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Changed user role", describeUserChange("role")), userController.updateUserRole);

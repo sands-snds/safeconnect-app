@@ -6,6 +6,7 @@ import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
+import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 const CRIME_TYPES = [
   { key: 'theft', value: 'Theft' },
@@ -19,14 +20,6 @@ const CRIME_TYPES = [
 
 
 const PHOTO_OPTIONAL_CRIME_TYPES = ['Theft', 'Suspicious Activity', 'Harassment'];
-const SERVICE_AREA = {
-  barangay: 'Sta. Fe',
-  city: 'Dasmariñas',
-  province: 'Cavite',
-  country: 'Philippines',
-  lat: 14.3198,
-  lng: 120.9644
-};
 
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_pettycrime';
 
@@ -83,11 +76,8 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const { t } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
-    houseNumber: '',
-    street: '',
-    floorUnit: '',
-    landmark: '',
-    location: '', 
+    ...EMPTY_LOCATION,
+    location: '',
     crimeType: '',
     description: '',
     suspectInfo: '',
@@ -105,26 +95,33 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   
   
-  const fillAddressFromPin = useCallback(({ houseNumber, street, fullAddress }) => {
+  const fillAddressFromPin = useCallback(({ houseNumber, street, area, fullAddress }) => {
     setFormData((prev) => (isEditing
       ? { ...prev, location: fullAddress }
-      : { ...prev, houseNumber: houseNumber || prev.houseNumber, street: street || prev.street }));
+      : { ...prev, houseNumber: houseNumber || prev.houseNumber, street: street || prev.street, area: area || prev.area }));
   }, [isEditing]);
+  const location = useLocationPin({ onAddress: fillAddressFromPin });
   const {
     gpsCoords,
     setGpsCoords,
-    isLocating,
     locationError,
     setLocationError,
     isOutsideSantaFe,
     outsideMessage,
-    handleUseCurrentLocation,
     handlePickOnMap
-  } = useLocationPin({ onAddress: fillAddressFromPin });
+  } = location;
   const locationSectionRef = useRef(null);
   const [reportFor, setReportFor] = useState('self');
-  // Reporting for yourself fills in your registered address.
-  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, reportFor, formData, setFormData });
+  // Where it happened: "At my home" fills in the registered address,
+  // "Somewhere else" shows the map.
+  const [incidentPlace, setIncidentPlace] = useState('home');
+  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: incidentPlace === 'home', formData, setFormData });
+  const showMap = incidentPlace === 'elsewhere';
+
+  // Back to "At my home": the hidden map's pin no longer applies.
+  useEffect(() => {
+    if (!isEditing && !showMap) setGpsCoords(null);
+  }, [isEditing, showMap, setGpsCoords]);
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
@@ -245,25 +242,16 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       const currentUser = getCurrentUser();
       const fullName = currentUser.fullName || currentUser.full_name || 'Anonymous Resident';
       const contact = currentUser.contact || currentUser.contact_number || null;
-      const composedAddress = [formData.houseNumber.trim(), formData.street.trim()]
-        .filter(Boolean)
-        .join(' ');
-      
-      
-      const landmark = formData.landmark.trim();
-      const fullLocation = [
-        formData.floorUnit.trim(),
-        composedAddress || (gpsCoords ? 'Pinned location' : ''),
-        `Barangay ${SERVICE_AREA.barangay}, ${SERVICE_AREA.city}, ${SERVICE_AREA.province}, ${SERVICE_AREA.country}`
-      ].filter(Boolean).join(', ') + (landmark ? ` (Landmark: ${landmark})` : '');
+      const fullLocation = composeLocation(formData, gpsCoords);
+      const coords = await coordsForSubmit(formData, gpsCoords, showMap);
       const result = await createPettyCrimeReport({
         crimeType: formData.crimeType,
         userId: currentUser.id || null,
         fullname: fullName,
         contact,
         location: fullLocation,
-        latitude: gpsCoords ? gpsCoords.lat : null,
-        longitude: gpsCoords ? gpsCoords.lng : null,
+        latitude: coords ? coords.lat : null,
+        longitude: coords ? coords.lng : null,
         description: formData.description,
         suspectInfo: formData.suspectInfo || null,
         photoUrl,
@@ -285,10 +273,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       announceReportsChanged();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
       setFormData({
-        houseNumber: '',
-        street: '',
-        floorUnit: '',
-        landmark: '',
+        ...EMPTY_LOCATION,
         location: '',
         crimeType: '',
         description: '',
@@ -296,6 +281,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         consent: false
       });
       setReportFor('self');
+      setIncidentPlace('home');
       setVictimName('');
       setVictimContact('');
       setVictimRelationship('');
@@ -558,61 +544,13 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 </select>
 </div>
 <div style={{ marginTop:'20px', marginBottom:'16px' }}>
-<div style={{
-              display:'flex',
-              justifyContent:'space-between',
-              alignItems:'center',
-              flexWrap:'wrap',
-              gap:'8px',
-              marginBottom:'8px'
-            }}>
-<label style={{
-                display:'flex',
-                alignItems:'center',
-                gap:'6px',
-                fontWeight:'600',
-                color:'#374151',
-                fontSize:'13px',
-                margin: 0
-              }}>
+{isEditing ? (
+<>
+<label style={{ display:'flex', alignItems:'center', gap:'6px', fontWeight:'600', color:'#374151', fontSize:'13px', marginBottom:'8px' }}>
 <i className="bi bi-geo-alt-fill"></i>
                 {t('assistanceModal.currentAddress')}
 <span style={{color:'#dc3545'}}>*</span>
 </label>
-{!isEditing && (
-<button
-                type="button"
-                onClick={handleUseCurrentLocation}
-                disabled={isLocating || isSubmitting}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '20px',
-                  border: '1px solid #dc3545',
-                  background: '#fff',
-                  color: '#dc3545',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: (isLocating || isSubmitting) ? 'not-allowed' : 'pointer',
-                  opacity: (isLocating || isSubmitting) ? 0.6 : 1,
-                  whiteSpace: 'nowrap'
-                }}
->
-                {isLocating ? (
-<>
-<i className="bi bi-arrow-repeat"></i> {t('reportForm.locating')}
-</>
-                ) : (
-<>
-<i className="bi bi-crosshair"></i> {t('reportForm.useCurrentLocation')}
-</>
-                )}
-</button>
-              )}
-</div>
-              {isEditing ? (
 <input
                   type="text"
                   name="location"
@@ -620,102 +558,15 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
                   value={formData.location}
                   onChange={handleChange}
                   placeholder={t('reportForm.fullAddress')}
-                  style={{
-                    width:'100%',
-                    padding:'10px 14px',
-                    borderRadius:'6px',
-                    border:'1px solid #d1d5db',
-                    fontSize:'14px',
-                    outline:'none'
-                  }}
+                  style={{ width:'100%', padding:'10px 14px', borderRadius:'6px', border:'1px solid #d1d5db', fontSize:'14px', outline:'none' }}
                 />
-              ) : (
-<>
-<div className="rf-2col" style={{ gap:'12px' }}>
-<input
-                type="text"
-                name="houseNumber"
-                required={!gpsCoords}
-                value={formData.houseNumber}
-                onChange={handleChange}
-                placeholder={t('reportForm.houseNumberPlaceholder')}
-                style={{
-                  width:'100%',
-                  padding:'10px 14px',
-                  borderRadius:'6px',
-                  border:'1px solid #d1d5db',
-                  fontSize:'14px',
-                  outline:'none'
-                }}
-              />
-<input
-                type="text"
-                name="street"
-                required={!gpsCoords}
-                value={formData.street}
-                onChange={handleChange}
-                placeholder={t('reportForm.streetPlaceholder')}
-                style={{
-                  width:'100%',
-                  padding:'10px 14px',
-                  borderRadius:'6px',
-                  border:'1px solid #d1d5db',
-                  fontSize:'14px',
-                  outline:'none'
-                }}
-              />
-</div>
-<input
-              type="text"
-              name="floorUnit"
-              value={formData.floorUnit}
-              onChange={handleChange}
-              placeholder={t('reportForm.floorUnitPlaceholder')}
-              style={{
-                width:'100%',
-                padding:'10px 14px',
-                borderRadius:'6px',
-                border:'1px solid #d1d5db',
-                fontSize:'14px',
-                outline:'none',
-                marginTop:'10px'
-              }}
-            />
-<input
-              type="text"
-              name="landmark"
-              value={formData.landmark}
-              onChange={handleChange}
-              placeholder={t('reportForm.landmarkPlaceholder')}
-              style={{
-                width:'100%',
-                padding:'10px 14px',
-                borderRadius:'6px',
-                border:'1px solid #d1d5db',
-                fontSize:'14px',
-                outline:'none',
-                marginTop:'10px'
-              }}
-            />
-</>
-              )}
             {locationError && (
 <div style={{ marginTop:'6px', fontSize:'12px', color:'#dc3545' }}>
 <i className="bi bi-exclamation-triangle-fill"></i> {locationError}
 </div>
             )}
-{addressPrefilled && (
-  <div className="registered-address-hint">
-    <i className="bi bi-house-check-fill" aria-hidden="true"></i> {t('reportForm.addressPrefilled')}
-  </div>
-)}
-<div style={{
-              marginTop:'6px',
-              fontSize:'12px',
-              color:'#6b7280'
-            }}>
+<div style={{ marginTop:'6px', fontSize:'12px', color:'#6b7280' }}>
               {t('reportForm.serviceAreaNote')}
-</div>
 </div>
 <div ref={locationSectionRef}>
   <LocationPickerMap
@@ -725,6 +576,39 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     outsideMessage={outsideMessage}
     disabled={isSubmitting}
   />
+</div>
+</>
+) : (
+<>
+<label style={{ display:'block', fontWeight:'600', color:'#374151', fontSize:'13px', marginBottom:'8px' }}>
+              {t('pettyCrimeModal.whereHappened')}
+</label>
+<div style={{ display:'flex', gap:'10px', marginBottom:'14px' }} role="group" aria-label={t('pettyCrimeModal.whereHappened')}>
+              {[['home', 'bi-house-door-fill', 'pettyCrimeModal.atHome'], ['elsewhere', 'bi-signpost-split-fill', 'pettyCrimeModal.elsewhere']].map(([value, icon, key]) => (
+<button
+                  key={value}
+                  type="button"
+                  aria-pressed={incidentPlace === value}
+                  onClick={() => setIncidentPlace(value)}
+                  disabled={isSubmitting}
+                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${incidentPlace === value ? '#dc3545' : '#d1d5db'}`, background: incidentPlace === value ? '#fef2f2' : '#fff', color: incidentPlace === value ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                >
+<i className={`bi ${icon}`} style={{ marginRight: '6px' }}></i>{t(key)}
+</button>
+              ))}
+</div>
+<ReportLocationFields
+  t={t}
+  formData={formData}
+  onChange={handleChange}
+  disabled={isSubmitting}
+  showMap={showMap}
+  location={location}
+  sectionRef={locationSectionRef}
+  addressPrefilled={addressPrefilled}
+/>
+</>
+)}
 </div>
 <div style={{marginBottom:'16px'}}>
 <label style={{

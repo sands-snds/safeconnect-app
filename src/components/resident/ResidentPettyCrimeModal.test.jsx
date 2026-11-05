@@ -18,7 +18,9 @@ jest.mock('../shared/location/useLocationPin', () => {
     isOutsideSantaFe: false,
     outsideMessage: '',
     handleUseCurrentLocation: () => {},
-    handlePickOnMap: () => {}
+    handlePickOnMap: () => {},
+    pinFromAddress: () => {},
+    addressSearch: 'idle'
   };
   return () => pin;
 });
@@ -111,4 +113,35 @@ test('report anonymously: checkbox sends isAnonymous', async () => {
   await waitFor(() => expect(createPettyCrimeReport).toHaveBeenCalledTimes(1));
   expect(createPettyCrimeReport.mock.calls[0][0].isAnonymous).toBe(true);
   expect(await screen.findByText('Report Submitted')).toBeInTheDocument();
+});
+
+describe('where the incident happened', () => {
+  const ADDRESS = { houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.', area: 'Villa Santa Fe' };
+  const renderWithAddress = () => {
+    sessionStorage.setItem('currentUser', JSON.stringify({ id: 7, fullName: 'Juan Dela Cruz', address: ADDRESS }));
+    const utils = render(
+      <LanguageProvider>
+        <ResidentPettyCrimeModal show onClose={() => {}} />
+      </LanguageProvider>
+    );
+    return { ...utils, $: (sel) => utils.container.querySelector(sel) };
+  };
+
+  test('"At my home" fills in the registered address, without the map', async () => {
+    const { $ } = renderWithAddress();
+    expect(screen.getByRole('button', { name: /At my home/i })).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
+    expect($('input[name="street"]').value).toBe('Sampaguita St.');
+    expect($('input[name="area"]').value).toBe('Villa Santa Fe');
+    expect(screen.queryByRole('button', { name: /Use my current location/i })).not.toBeInTheDocument();
+  });
+
+  test('"Somewhere else" empties the address and shows the map tools', async () => {
+    const { $ } = renderWithAddress();
+    await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
+    fireEvent.click(screen.getByRole('button', { name: /Somewhere else/i }));
+    await waitFor(() => expect($('input[name="houseNumber"]').value).toBe(''));
+    expect($('input[name="area"]').value).toBe('');
+    expect(screen.getByRole('button', { name: /Use my current location/i })).toBeInTheDocument();
+  });
 });

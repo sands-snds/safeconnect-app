@@ -120,7 +120,7 @@ const AdminPage = () => {
   "account-settings": "Account Settings"
 };
 
-const ADMIN_ONLY_VIEWS = ["registered-users", "sign-in-logs", "admin-logs", "site-contacts", "site-contents"];
+const ADMIN_ONLY_VIEWS = ["registered-users", "account-verification", "sign-in-logs", "admin-logs", "site-contacts", "site-contents"];
 
   const alerts = [];
     const emergencyPending =

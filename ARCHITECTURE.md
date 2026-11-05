@@ -263,9 +263,9 @@ The **Called from (frontend)** column names the function in `api.js`, or the com
 | PUT, PATCH | `/users/:id`, `/users/:id/status` | super | Set status (Active / Pending / Suspended / Closed). You can't change your own. | `updateStatus("users")` |
 | PATCH | `/users/:id/role` | super | Set role. You can't change your own, or the main barangay account's. | `updateUserRole()` |
 | PATCH | `/users/:id/archive`, `/users/:id/restore` | super | Move a **Closed** account to the Archived tab, or back (reopening an account also clears it) | `setUserArchived()` |
-| GET | `/users/verifications?status=` | admin | Residents who signed up with an ID (`Pending`, `Approved`, `Rejected`, or all), with the ID's type, name and size and who reviewed it | `fetchVerifications()` → Account Verification |
-| GET | `/users/:id/valid-id` | admin | The uploaded ID file itself (`Cache-Control: no-store`); never under the public `/uploads` | `fetchValidIdBlob()` |
-| PATCH | `/users/:id/verification` | admin | `{ decision: "approve" | "reject", reason }`. Approve: account Active, `account_verified` notification. Reject (reason 5–500 characters): stays Pending, the ID is deleted. Either way the resident is emailed; logged as "Reviewed account registration". | `decideVerification()` |
+| GET | `/users/verifications?status=` | super | Residents who signed up with an ID (`Pending`, `Approved`, `Rejected`, or all), with the ID's type, name and size and who reviewed it | `fetchVerifications()` → Account Verification |
+| GET | `/users/:id/valid-id` | super | The uploaded ID file itself (`Cache-Control: no-store`); never under the public `/uploads` | `fetchValidIdBlob()` |
+| PATCH | `/users/:id/verification` | super | `{ decision: "approve" | "reject", reason }`. Approve: account Active, `account_verified` notification. Reject (reason 5–500 characters): stays Pending, the ID is deleted. Either way the resident is emailed; logged as "Reviewed account registration". | `decideVerification()` |
 | GET | `/users/:id` | owner | Profile (the password is never returned) | `fetchUserProfile()`: `SettingsPage`, `useAdminAuth` |
 | POST | `/users/:id/photo` | owner | Upload a photo (multipart field `photo`) | `uploadProfilePhoto()` |
 | PATCH | `/users/:id/username` | owner | Change username (must be unique) | `updateUsername()` |
@@ -543,7 +543,7 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 
 ### A resident submits an emergency report
 1. **`ResidentEmergencyModal.jsx`**:
-   - The resident picks the type and details, and pins the location on **`LocationPickerMap`**. **`useLocationPin`** checks the pin is inside Santa Fe (`santaFeArea.js`) and fills the address from **OpenStreetMap Nominatim**.
+   - The resident picks the type and details. The address (**`ReportLocationFields`**) has the sign-up address parts. Reporting for yourself fills in the registered address (`useRegisteredAddress.js`) and hides the map; for someone else the resident pins the place on **`LocationPickerMap`**. **`useLocationPin`** checks the pin is inside Santa Fe (`santaFeArea.js`), fills the address from the pin and moves the pin to a typed address (both with **OpenStreetMap Nominatim**, `geocode.js`). A home address is looked up on submit (`coordsForSubmit`) so the report still gets coordinates.
    - The attached photo or video is read into a **base64 data URL** (`FileReader`).
    - The form checks the **1-hour per-account cooldown** kept in `localStorage`.
 2. It calls `createEmergencyReport({...})`, which sends `POST /api/emergency-reports` with the JWT.
@@ -678,9 +678,10 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `ResidentHero.jsx` | A welcome banner at the top of the resident page. | No |
 | `EmergencyReportSection.jsx` | Cards for **Report Emergency**, **Request Assistance** and **Report Petty Crime** that open the matching modal, plus the floating emergency call button, shown only once `useCallAccess` says a submitted report's wait is over. The landing page has no call button. | `fetchCallAccess` (through `useCallAccess`) |
 | `ResidentWidgets.jsx` | **Stay informed** under the report cards: a compact **Latest News** widget (the newest 3 announcements, rotating) and a **Weather today** widget (now, high / low, chance of rain). Side by side on wider screens; on phones one endless carousel that alternates the two (each news turn shows the next article). Either one opens the News page, at the article or at the full forecast, through the `OPEN_NEWS_EVENT` window event that `ResidentNavbar` listens for. | No |
-| `ResidentEmergencyModal.jsx` | The emergency report form: type (sets the severity automatically), details, people affected, special needs, **required photo or video** (JPG up to 20 MB, video up to 50 MB, converted to base64), a **map pin inside Santa Fe**, and self or someone-else fields. It applies a 1-hour cooldown per account, runs in **edit mode** when opened from My Reports with `editingReport`, and shows the reference number on success. | `createEmergencyReport`, `updateEmergencyReport` |
-| `ResidentAssistanceModal.jsx` | The assistance request form: type (Food and Water, Medical Aid or Transport Vehicle), situation, people needing help, special needs, the map pin and self or someone-else fields. Same cooldown and edit mode. | `createAssistanceRequest`, `updateAssistanceRequest` |
-| `ResidentPettyCrimeModal.jsx` | The petty crime form: crime type (with an "Other" option), description, suspect information, the map pin and the victim fields. Same cooldown and edit mode. | `createPettyCrimeReport`, `updatePettyCrimeReport` |
+| `ResidentEmergencyModal.jsx` | The emergency report form: type (sets the severity automatically), details, people affected, special needs, **required photo or video** (JPG up to 20 MB, video up to 50 MB, converted to base64), the address (**`ReportLocationFields`**: the registered address for yourself; a **map pin inside Santa Fe** for someone else), and self or someone-else fields. It applies a 1-hour cooldown per account, runs in **edit mode** when opened from My Reports with `editingReport`, and shows the reference number on success. | `createEmergencyReport`, `updateEmergencyReport` |
+| `ResidentAssistanceModal.jsx` | The assistance request form: type (Food and Water, Medical Aid or Transport Vehicle), situation, people needing help, special needs, the address (as in the emergency form) and self or someone-else fields. Opened from the emergency form's "request assistance" prompt, it takes over that report's person and place. Same cooldown and edit mode. | `createAssistanceRequest`, `updateAssistanceRequest` |
+| `ResidentPettyCrimeModal.jsx` | The petty crime form: crime type (with an "Other" option), description, suspect information, **where it happened** (**At my home**: the registered address, no map; **Somewhere else**: the map pin), the address and the victim fields. Same cooldown and edit mode. | `createPettyCrimeReport`, `updatePettyCrimeReport` |
+| `ReportLocationFields.jsx` + `useRegisteredAddress.js` | The address section of all three forms, in the sign-up address's parts (House / Lot / Block No., Street, Subdivision / Purok, the fixed Barangay line) plus a landmark. `showMap` adds "Use my current location" and the map, kept in step with the boxes both ways. `composeLocation()` builds the report's location text; `coordsForSubmit()` gives the pin, or looks up a home address. `useRegisteredAddressFill({ atHome })` fills in the registered address while the incident is at home. | No (Nominatim only) |
 | `MyReportsPage.jsx` | A full-screen list of **every report the resident has submitted**. It has an overview bar, tabs by type, search and filters (including Dismissed), a status progress stepper and a status message on each card ("Help is on the way…" while In Progress; the reason for a Dismissed report), reference copy-to-clipboard, **edit** (reopens the matching modal with the data filled in) and **delete** (with confirmation). | `fetchMyReports`, `delete…` for each type |
 | `SettingsPage.jsx` | Profile settings: photo (crop, then Save), full name, username, contact (+63 format), email (requires the current password) and password, plus **Install the app** (`shared/installApp.js`: the browser's install prompt, or Add to Home Screen steps on iPhone). Successful changes update the navbar right away (`onProfileUpdate`). | `fetchUserProfile`, `uploadProfilePhoto`, `updateUsername`, `updateContact`, `updateEmail`, `changePassword` |
 
@@ -721,7 +722,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `layout/AdminLayout.jsx` | The page shell: sidebar and header around the current tab. |
-| `layout/AdminSidebar.jsx` | Navigation groups: General (Dashboard, Notifications); Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Page Contacts** and **Page Contents** for Admins only); **System** (Users, Resident Logs, Admin Logs), which only Admins see. It also holds the EN / FIL language switch. On phones it becomes a drawer, opened by the ☰ button, with a Logout at the bottom. |
+| `layout/AdminSidebar.jsx` | Navigation groups: General (Dashboard, Notifications); Reports (Emergency, Assistance, Petty Crime); Content (Announcements, plus **Page Contacts** and **Page Contents** for Admins only); **System** (Users, Account Verification, Resident Logs, Admin Logs), which only Admins see. It also holds the EN / FIL language switch. On phones it becomes a drawer, opened by the ☰ button, with a Logout at the bottom. |
 | `layout/AdminHeader.jsx` | Sticky at the top. On phones a ☰ menu button before the page title; the title; the refresh button (with the last update time); the **notification bell** (`AdminNotificationPanel`); and the account menu (profile picture, on phones too) with Account Settings, the demo video and Logout. |
 | `layout/AdminStats.jsx` | The dashboard counters: the three report types (in the resident page's report colors), the other totals (outlined), Create Announcement and Total Reports. Sized by the card's width (container queries in `admin.css`); `compact` on phones shows only Create Announcement and Total Reports. |
 
@@ -763,7 +764,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 #### Users, Logs, Modals
 | Component | What it does |
 |---|---|
-| `users/AccountVerificationPage.jsx` | General → Account Verification (Officials and Admins): Pending / Approved / Rejected registrations with search; **Review ID** opens the account details beside the uploaded ID (image or PDF, fetched with the token) and Approve / Reject (with quick reasons). Opened from an `account_verification` notification with `focus`. |
+| `users/AccountVerificationPage.jsx` | System → Account Verification (Admins only, below Users; Officials don't get its `account_verification` notifications either): Pending / Approved / Rejected registrations with search; **Review ID** opens the account details beside the uploaded ID (image or PDF, fetched with the token) and Approve / Reject (with quick reasons). Opened from an `account_verification` notification with `focus`. |
 | `users/UsersPage.jsx` | An `ArchiveToolbar` (Active / Archived accounts), then filters users by search and status and splits them into Residents and Admins & Officials. |
 | `users/RegisteredUsersTable.jsx` | Two tables, **Residents** then **Admins & Officials**, under one shared search / status filter / Generate Report row (the second `ListView` uses `showFilters={false}`). Inline `UserRoleSelect` and `UserStatusSelect`; every change is confirmed in `UserChangeConfirmModal`. Your own account and the main barangay account ("Main account" badge) are locked. Closed accounts get **Archive** (archived ones **Restore**). |
 | `logs/LogsPage.jsx` | Switches between Resident Logs and Admin Logs, and filters sign-ins. |
@@ -814,8 +815,9 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | `accountStatusPopup.js` | `showAccountStatusPopup(code, t, email)`: the popup for a closed, suspended or inactive account at sign-in. |
 | `LanguageGate.jsx` | A full-screen **English / Tagalog** picker, shown until a language is chosen. |
 | `LanguageToggle.jsx` | A small EN / FIL switch with flags (`LanguageFlag.jsx`) for the navbars, menus and the admin sidebar. |
-| `location/LocationPickerMap.jsx` | A Leaflet map of Barangay Santa Fe with its boundary. Tap or drag to pin; Map/Satellite switch (OpenStreetMap / Esri imagery); `readOnly` mode for admin details. |
-| `location/useLocationPin.js` | Shared pin logic for the three report forms: GPS ("Use my current location"), the inside-Santa-Fe check, and **reverse geocoding** with Nominatim (only the newest pin's result is used). |
+| `location/LocationPickerMap.jsx` | A Leaflet map of Barangay Santa Fe with its boundary. Tap or drag to pin; Map/Satellite switch (OpenStreetMap / Esri imagery); a **Street View** button that opens Google Street View at the pin in a new tab (`streetViewUrl`, Google Maps URLs, no API key); `readOnly` mode for admin details. |
+| `location/useLocationPin.js` | Shared pin logic for the three report forms: GPS ("Use my current location"), the inside-Santa-Fe check, **reverse geocoding** (pin → address) and `pinFromAddress` (typed address → pin, after typing pauses; `addressSearch` says searching / found / not found). Only the newest lookup's result is used. |
+| `location/geocode.js` | Nominatim calls: `reverseGeocode(lat, lng)` (house number, street, subdivision / purok) and `forwardGeocode({ street, area })` (searched inside Santa Fe's bounding box; null when not found). |
 | `location/santaFeArea.js` | The barangay **boundary polygon** (from OpenStreetMap, adjusted to match Google Maps), a point-in-polygon test, and a 25 m tolerance near the boundary, because GPS is only accurate to 10–30 m. |
 
 ### 6.8 Styles (`src/styles/`)
@@ -860,5 +862,6 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | **News sites** (any URL) | backend `announcementService.js` | Link previews for announcements |
 | **OpenStreetMap tiles** | frontend `LocationPickerMap.jsx` | Street map |
 | **Esri World Imagery** | frontend `LocationPickerMap.jsx` | Satellite view |
-| **OpenStreetMap Nominatim** | frontend `useLocationPin.js` | Turning a pin into an address |
+| **OpenStreetMap Nominatim** | frontend `geocode.js` | Turning a pin into an address, and a typed address into a pin |
+| **Google Maps URLs** | frontend `LocationPickerMap.jsx` | The Street View button (a link, no API key) |
 | **Open-Meteo** | frontend `useWeather.js` | Weather forecast |

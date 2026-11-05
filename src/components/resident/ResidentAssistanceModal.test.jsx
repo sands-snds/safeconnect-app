@@ -18,7 +18,9 @@ jest.mock('../shared/location/useLocationPin', () => {
     isOutsideSantaFe: false,
     outsideMessage: '',
     handleUseCurrentLocation: () => {},
-    handlePickOnMap: () => {}
+    handlePickOnMap: () => {},
+    pinFromAddress: () => {},
+    addressSearch: 'idle'
   };
   return () => pin;
 });
@@ -217,7 +219,8 @@ describe('registered address', () => {
   test('reporting for yourself fills it in, with a note', async () => {
     const { $ } = renderWithAddress();
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
-    expect($('input[name="street"]').value).toBe('Sampaguita St., Villa Santa Fe');
+    expect($('input[name="street"]').value).toBe('Sampaguita St.');
+    expect($('input[name="area"]').value).toBe('Villa Santa Fe');
     expect(screen.getByText(HINT)).toBeInTheDocument();
   });
 

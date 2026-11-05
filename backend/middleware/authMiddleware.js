@@ -204,7 +204,9 @@ const reportAsSignedInUser = (req, res, next) => {
         userId: account.id,
         name: account.full_name,          // emergency_reports.reporter_name
         fullname: account.full_name,      // assistance / petty crime
-        contact: account.contact_number,
+        // The contact number is optional at sign-up, but emergency_reports and
+        // assistance_requests need one (NOT NULL), so those reports failed.
+        contact: account.contact_number || "Not provided",
         email: account.email_address
     };
     next();

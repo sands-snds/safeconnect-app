@@ -1,34 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { isWithinSantaFe, OUTSIDE_SANTA_FE_MESSAGE } from './santaFeArea';
+import { reverseGeocode, forwardGeocode } from './geocode';
 
-
-
-
-
-
-
-
-
-const reverseGeocode = async (lat, lng) => {
-  const res = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-  );
-  const data = await res.json();
-  const addr = data?.address || {};
-  const houseNumber = addr.house_number || '';
-  const street = addr.road || addr.pedestrian || addr.footway || addr.neighbourhood || '';
-  const line = [houseNumber, street].filter(Boolean).join(' ');
-  return {
-    houseNumber,
-    street,
-    fullAddress: `${line ? line + ', ' : ''}Barangay Sta. Fe, Dasmariñas, Cavite, Philippines`
-  };
-};
-
-
-
-
-
+// How long typing has to pause before the typed address is looked up.
+const ADDRESS_SEARCH_DELAY_MS = 900;
 
 const toCoords = (coords) => {
   if (!coords) return null;
@@ -37,22 +12,37 @@ const toCoords = (coords) => {
   return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 };
 
+// The map pin of a report form, kept in step with its address boxes both ways:
+// pinning the map fills the address (onAddress), and typing an address moves
+// the pin there (pinFromAddress). addressSearch is 'idle', 'searching',
+// 'found' or 'notFound'.
 export default function useLocationPin({ onAddress } = {}) {
   const [gpsCoords, setStoredCoords] = useState(null); // { lat, lng } numbers, or null
   const setGpsCoords = useCallback((coords) => setStoredCoords(toCoords(coords)), []);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [addressSearch, setAddressSearch] = useState('idle');
   const lookupId = useRef(0);
+  const searchTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(searchTimer.current), []);
 
   const isOutsideSantaFe = Boolean(gpsCoords) && !isWithinSantaFe(gpsCoords.lat, gpsCoords.lng);
 
-  
+  // Any newer pin or search makes older lookups' answers stale.
+  const nextLookup = useCallback(() => {
+    clearTimeout(searchTimer.current);
+    return ++lookupId.current;
+  }, []);
+
   const pinAt = useCallback(async (lat, lng, { accuracy } = {}) => {
     setGpsCoords({ lat, lng });
+    setAddressSearch('idle');
+    const id = nextLookup();
 
     if (!isWithinSantaFe(lat, lng)) {
       setLocationError('');
-      return; 
+      return;
     }
 
     setLocationError(
@@ -61,15 +51,37 @@ export default function useLocationPin({ onAddress } = {}) {
         : ''
     );
 
-    
-    const id = ++lookupId.current;
     try {
       const address = await reverseGeocode(lat, lng);
       if (id === lookupId.current && onAddress) onAddress(address);
     } catch (err) {
       console.error('Reverse geocoding error:', err);
     }
-  }, [onAddress, setGpsCoords]);
+  }, [onAddress, setGpsCoords, nextLookup]);
+
+  // Typed address → pin, after typing pauses. Doesn't touch the typed text.
+  const pinFromAddress = useCallback((parts) => {
+    const id = nextLookup();
+    if (!parts || (!String(parts.street || '').trim() && !String(parts.area || '').trim())) {
+      setAddressSearch('idle');
+      return;
+    }
+    searchTimer.current = setTimeout(async () => {
+      setAddressSearch('searching');
+      try {
+        const found = await forwardGeocode(parts);
+        if (id !== lookupId.current) return;
+        if (found) {
+          setGpsCoords(found);
+          setLocationError('');
+        }
+        setAddressSearch(found ? 'found' : 'notFound');
+      } catch (err) {
+        console.error('Address search error:', err);
+        if (id === lookupId.current) setAddressSearch('notFound');
+      }
+    }, ADDRESS_SEARCH_DELAY_MS);
+  }, [nextLookup, setGpsCoords]);
 
   const handleUseCurrentLocation = useCallback(() => {
     setLocationError('');
@@ -108,6 +120,8 @@ export default function useLocationPin({ onAddress } = {}) {
     isOutsideSantaFe,
     outsideMessage: OUTSIDE_SANTA_FE_MESSAGE,
     handleUseCurrentLocation,
-    handlePickOnMap
+    handlePickOnMap,
+    pinFromAddress,
+    addressSearch
   };
 }

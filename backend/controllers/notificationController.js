@@ -1,10 +1,16 @@
 const Notification = require("../models/Notification");
+const { isSuperAdminRole } = require("../utils/roles");
+
+// Staff notification types only Admins can act on (Account Verification).
+const ADMIN_ONLY_TYPES = ["account_verification"];
+const hiddenTypesFor = (req) => (isSuperAdminRole(req.admin && req.admin.role) ? [] : ADMIN_ONLY_TYPES);
 
 // ?archived=1: the Notifications page's Archived tab.
 exports.getNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.findAll({ archived: req.query.archived === "1" });
-        const unread = await Notification.unreadCount();
+        const hideTypes = hiddenTypesFor(req);
+        const notifications = await Notification.findAll({ archived: req.query.archived === "1", hideTypes });
+        const unread = await Notification.unreadCount({ hideTypes });
 
         res.json({
             success: true,
@@ -31,7 +37,7 @@ exports.markAsRead = async (req,res)=>{
 
 exports.markAllAsRead = async (req, res) => {
     try {
-        await Notification.markAllAsRead();
+        await Notification.markAllAsRead({ hideTypes: hiddenTypesFor(req) });
         res.json({ success: true });
     } catch (err) {
         console.error(err);

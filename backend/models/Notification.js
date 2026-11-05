@@ -51,14 +51,18 @@ class Notification {
 
     
     
-    static async findAll({ archived = false } = {}) {
+    // hideTypes: notification types this staff member can't open
+    // (Officials don't get Account Verification's "Review ID").
+    static async findAll({ archived = false, hideTypes = [] } = {}) {
         const [rows] = await db.query(
             `
             SELECT *
             FROM notifications
             WHERE user_id IS NULL AND archived_at IS ${archived ? "NOT NULL" : "NULL"}
+              ${hideTypes.length ? "AND (notification_type IS NULL OR notification_type NOT IN (?))" : ""}
             ORDER BY created_at DESC
-            `
+            `,
+            hideTypes.length ? [hideTypes] : []
         );
         return rows;
     }
@@ -138,13 +142,15 @@ class Notification {
         return result.affectedRows;
     }
 
-    static async markAllAsRead() {
+    static async markAllAsRead({ hideTypes = [] } = {}) {
         const [result] = await db.query(
             `
             UPDATE notifications
             SET is_read = TRUE
             WHERE is_read = FALSE AND user_id IS NULL AND archived_at IS NULL
-            `
+              ${hideTypes.length ? "AND (notification_type IS NULL OR notification_type NOT IN (?))" : ""}
+            `,
+            hideTypes.length ? [hideTypes] : []
         );
         changedFor(null);
         return result.affectedRows;
@@ -176,13 +182,15 @@ class Notification {
         return result.affectedRows;
     }
 
-    static async unreadCount() {
+    static async unreadCount({ hideTypes = [] } = {}) {
         const [[row]] = await db.query(
             `
             SELECT COUNT(*) AS total
             FROM notifications
             WHERE is_read = FALSE AND user_id IS NULL AND archived_at IS NULL
-            `
+              ${hideTypes.length ? "AND (notification_type IS NULL OR notification_type NOT IN (?))" : ""}
+            `,
+            hideTypes.length ? [hideTypes] : []
         );
         return row.total;
     }

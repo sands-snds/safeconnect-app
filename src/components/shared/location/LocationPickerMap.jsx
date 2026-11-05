@@ -67,6 +67,12 @@ const FollowPin = ({ pin }) => {
   return null;
 };
 
+// Google Street View at the pin, in a new tab (Google Maps URLs: no API key).
+// Shows the nearest street-level photos; where Google has none it opens the
+// map there instead.
+export const streetViewUrl = ({ lat, lng }) =>
+  `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+
 const switchButton = (active) => ({
   padding: '5px 10px',
   border: 'none',
@@ -177,6 +183,34 @@ const LocationPickerMap = ({
             </button>
           ))}
         </div>
+
+        {pin && !isOutside && (
+          <a
+            href={streetViewUrl(pin)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="See the place in Google Street View (opens a new tab)"
+            style={{
+              position: 'absolute',
+              left: '10px',
+              bottom: '22px',
+              zIndex: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 10px',
+              borderRadius: '6px',
+              background: '#fff',
+              color: '#1f2937',
+              fontSize: '12px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              boxShadow: '0 1px 4px rgba(0,0,0,.3)'
+            }}
+          >
+            <i className="bi bi-person-walking" aria-hidden="true"></i> Street View
+          </a>
+        )}
 
         {!pin && !readOnly && (
           <div
