@@ -189,6 +189,36 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     setFormData((prev) => ({ ...prev, specialCounts: { ...prev.specialCounts, [option]: value } }));
   };
 
+  const resetForm = () => {
+    setFormData({
+      assistanceType: '',
+      emergency: '',
+      emergencyOther: '',
+      ...EMPTY_LOCATION,
+      location: '',
+      situation: '',
+      people: '',
+      special: [],
+      specialCounts: {},
+      consent: false
+    });
+    setReportFor('self');
+    setVictimName(''); setVictimContact(''); setVictimRelationship('');
+    setVictimRelationshipOther(''); setVictimDetails('');
+    clearMedia();
+    setGpsCoords(null);
+    setLocationError('');
+    setSpecialInvalid(null);
+  };
+
+  // Closing the form (Cancel, X or clicking outside) clears it, so it opens
+  // fresh, with the registered address filled in again.
+  const resetRef = useRef(resetForm);
+  resetRef.current = resetForm;
+  useEffect(() => {
+    if (!show) resetRef.current();
+  }, [show]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isEditing) {
@@ -320,24 +350,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
       announceReportsChanged();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
-      setFormData({
-        assistanceType: '',
-        emergency: '',
-        emergencyOther: '',
-        ...EMPTY_LOCATION,
-        location: '',
-        situation: '',
-        people: '',
-        special: [],
-        specialCounts: {},
-        consent: false
-      });
-      setReportFor('self');
-      setVictimName(''); setVictimContact(''); setVictimRelationship('');
-      setVictimRelationshipOther(''); setVictimDetails('');
-      clearMedia();
-      setGpsCoords(null);
-      setLocationError('');
+      resetForm();
       setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);

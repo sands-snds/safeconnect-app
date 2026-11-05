@@ -44,7 +44,16 @@ const EmergencyReportsTable = ({
       accentColor="#dc2626"
       title={tx(report.emergency)}
       badge={statusBadge(report.status)}
-      tag={<ReportForTag report={report} />}
+      tag={
+        <>
+          {report.peopleAffected && report.peopleAffected !== "0" && (
+            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: "#f3f4f6", color: "#374151", fontWeight: 600, whiteSpace: "nowrap" }}>
+              {report.peopleAffected} people
+            </span>
+          )}
+          <ReportForTag report={report} />
+        </>
+      }
       subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
       statusControl={
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

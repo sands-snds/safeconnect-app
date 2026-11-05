@@ -171,6 +171,36 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           : value
     }));
   };
+  const resetForm = () => {
+    setFormData({
+      ...EMPTY_LOCATION,
+      location: '',
+      crimeType: '',
+      description: '',
+      suspectInfo: '',
+      consent: false
+    });
+    setReportFor('self');
+    setIncidentPlace('home');
+    setVictimName('');
+    setVictimContact('');
+    setVictimRelationship('');
+    setVictimRelationshipOther('');
+    setVictimDetails('');
+    clearMedia();
+    setIsAnonymous(false);
+    setGpsCoords(null);
+    setLocationError('');
+  };
+
+  // Closing the form (Cancel, X or clicking outside) clears it, so it opens
+  // fresh, with the registered address filled in again.
+  const resetRef = useRef(resetForm);
+  resetRef.current = resetForm;
+  useEffect(() => {
+    if (!show) resetRef.current();
+  }, [show]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isEditing) {
@@ -272,25 +302,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
       announceReportsChanged();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
-      setFormData({
-        ...EMPTY_LOCATION,
-        location: '',
-        crimeType: '',
-        description: '',
-        suspectInfo: '',
-        consent: false
-      });
-      setReportFor('self');
-      setIncidentPlace('home');
-      setVictimName('');
-      setVictimContact('');
-      setVictimRelationship('');
-      setVictimRelationshipOther('');
-      setVictimDetails('');
-      clearMedia();
-      setIsAnonymous(false);
-      setGpsCoords(null);
-      setLocationError('');
+      resetForm();
       setShowSuccessPopup(true);
     } catch (error) {
       console.log(error);

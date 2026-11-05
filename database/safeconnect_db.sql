@@ -70,8 +70,8 @@ CREATE TABLE emergency_reports (
   latitude DECIMAL(10,7) DEFAULT NULL,
   longitude DECIMAL(10,7) DEFAULT NULL,
   incident_details TEXT NOT NULL,
-  number_of_people_affected VARCHAR(20) DEFAULT NULL,
-  special_needs TEXT DEFAULT NULL,
+  number_of_people_affected VARCHAR(20) DEFAULT NULL, -- a whole number 1-500 (older reports: a range such as '1-10')
+  special_needs TEXT DEFAULT NULL, -- e.g. 'Elderly (2), Children (3)'
   photo_url LONGTEXT DEFAULT NULL,
   media_type VARCHAR(20) DEFAULT NULL,
   report_for VARCHAR(20) DEFAULT 'self', -- 'self' or 'others' (reporting for someone else)

@@ -46,7 +46,7 @@ const REPORTS = [
   {
     id: 11, type: 'Emergency', title: 'Fire Emergency', description: 'Smoke from a house',
     date: '2026-10-16T08:00:00Z', location: '12 Mabini St, Sta. Fe', status: 'Received',
-    report_reference: 'SC-2026-000011', latitude: '14.3198000', longitude: '120.9644000', peopleAffected: '1-10'
+    report_reference: 'SC-2026-000011', latitude: '14.3198000', longitude: '120.9644000', peopleAffected: '6'
   },
   {
     id: 22, type: 'Assistance', title: 'Medical Aid', description: 'Need first aid',

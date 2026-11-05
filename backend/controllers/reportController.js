@@ -6,10 +6,17 @@ const { validateStatusTransition, validateDismissalReason, dismissalMessage, DIS
 
 
 
+// A service result's `status` (e.g. 400 for a bad people count) is the HTTP
+// status, not part of the body.
+const sendResult = (res, result, successStatus = 200) => {
+    const { status, ...body } = result;
+    res.status(result.success === false && status ? status : successStatus).json(body);
+};
+
 exports.createReport = async (req, res) => {
     try {
         const result = await ReportService.create(req.body);
-        res.status(201).json(result);
+        sendResult(res, result, 201);
     } catch (err) {
         console.error(err);
         res.status(500).json({
@@ -53,7 +60,7 @@ exports.getReport = async (req, res) => {
 exports.updateReport = async (req, res) => {
     try {
         const result = await ReportService.update(req.params.id, req.body);
-        res.json(result);
+        sendResult(res, result);
     } catch (err) {
         console.error(err);
         res.status(500).json({

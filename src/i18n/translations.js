@@ -879,6 +879,8 @@ export const translations = {
       addressNotFound: "We couldn't find this street on the map. Tap the map to pin the place.",
       specialNeedsHowMany: 'How many?',
       specialNeedsCountLabel: 'How many: {{category}}',
+      specialNeedsLess: 'One less: {{category}}',
+      specialNeedsMore: 'One more: {{category}}',
       specialNeedsCountRequired: 'Please enter how many for "{{category}}" (1 to 999).',
       peopleAffected: 'Number of People Affected',
       selectRange: 'Select range',
@@ -905,6 +907,8 @@ export const translations = {
       submitFailed: 'Failed to submit report'
     },
     emergencyModal: {
+      peopleHint: 'Count everyone affected, including yourself if you are one of them.',
+      peopleRequired: 'Please enter how many people are affected (1 to {{max}}).',
       editTitle: 'Edit {{type}} Report',
       reportTitle: 'Report {{type}}',
       defaultTypeEdit: 'Emergency',
@@ -2087,6 +2091,8 @@ export const translations = {
       addressNotFound: 'Hindi namin makita ang kalyeng ito sa mapa. I-tap ang mapa para i-pin ang lugar.',
       specialNeedsHowMany: 'Ilan?',
       specialNeedsCountLabel: 'Ilan: {{category}}',
+      specialNeedsLess: 'Bawasan ng isa: {{category}}',
+      specialNeedsMore: 'Dagdagan ng isa: {{category}}',
       specialNeedsCountRequired: 'Mangyaring ilagay kung ilan ang "{{category}}" (1 hanggang 999).',
       peopleAffected: 'Bilang ng mga Apektadong Tao',
       selectRange: 'Piliin ang saklaw',
@@ -2113,6 +2119,8 @@ export const translations = {
       submitFailed: 'Hindi naisumite ang ulat'
     },
     emergencyModal: {
+      peopleHint: 'Bilangin ang lahat ng apektado, kasama ka kung isa ka sa kanila.',
+      peopleRequired: 'Mangyaring ilagay kung ilan ang apektado (1 hanggang {{max}}).',
       editTitle: 'I-edit ang {{type}} Report',
       reportTitle: 'Mag-report ng {{type}}',
       defaultTypeEdit: 'Emergency',

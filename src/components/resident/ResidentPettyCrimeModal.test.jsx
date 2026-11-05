@@ -145,3 +145,27 @@ describe('where the incident happened', () => {
     expect(screen.getByRole('button', { name: /Use my current location/i })).toBeInTheDocument();
   });
 });
+
+test('closing the form clears it; reopening starts fresh with the registered address', async () => {
+  const ADDRESS = { houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.', area: '' };
+  sessionStorage.setItem('currentUser', JSON.stringify({ id: 7, fullName: 'Juan Dela Cruz', address: ADDRESS }));
+  const view = (show) => (
+    <LanguageProvider>
+      <ResidentPettyCrimeModal show={show} onClose={() => {}} />
+    </LanguageProvider>
+  );
+  const { container, rerender } = render(view(true));
+  const $ = (sel) => container.querySelector(sel);
+  await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
+
+  fireEvent.click(screen.getByRole('button', { name: /Somewhere else/i }));
+  fireEvent.change($('input[name="street"]'), { target: { value: 'Rizal St.' } });
+  fireEvent.change($('textarea[name="description"]'), { target: { value: 'Bike stolen' } });
+
+  rerender(view(false));
+  rerender(view(true));
+  await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
+  expect($('input[name="street"]').value).toBe('Sampaguita St.');
+  expect($('textarea[name="description"]').value).toBe('');
+  expect(screen.getByRole('button', { name: /At my home/i })).toHaveAttribute('aria-pressed', 'true');
+});

@@ -167,23 +167,21 @@ test('the number of people needing help is required and sent', async () => {
   expect(createAssistanceRequest.mock.calls[0][0].people).toBe(6);
 });
 
-test('a ticked special need asks how many, and both are saved', async () => {
+test('special needs: + and − set how many, and 0 leaves the category out', async () => {
   const { $, form, fill, attachPhoto } = renderModal();
   fill('Flood Emergency');
   attachPhoto();
-  expect($('#as-special-count-elderly')).toBeNull();
-  fireEvent.click(screen.getByLabelText('Elderly'));
-  fireEvent.click(screen.getByLabelText('Children'));
-  expect($('#as-special-count-elderly')).not.toBeNull();
+  expect($('#as-special-count-elderly').value).toBe('');
 
-  fireEvent.change($('#as-special-count-elderly'), { target: { value: '2' } });
-  fireEvent.submit(form);
-  await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
-    message: 'Please enter how many for "Children" (1 to 999).'
-  })));
-  expect(createAssistanceRequest).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'One more: Elderly' }));
+  fireEvent.click(screen.getByRole('button', { name: 'One more: Elderly' }));
+  expect($('#as-special-count-elderly').value).toBe('2');
 
   fireEvent.change($('#as-special-count-children'), { target: { value: '3' } });
+  fireEvent.click(screen.getByRole('button', { name: 'One more: Pets' }));
+  fireEvent.click(screen.getByRole('button', { name: 'One less: Pets' }));
+  expect($('#as-special-count-pets').value).toBe('');
+
   fireEvent.submit(form);
   await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
   expect(createAssistanceRequest.mock.calls[0][0].special).toBe('Elderly (2), Children (3)');
@@ -197,10 +195,12 @@ test('editing restores each special need with its number', () => {
   };
   const { $ } = renderModal({ editingReport });
   expect($('#as-people').value).toBe('4');
-  expect(screen.getByLabelText('Elderly')).toBeChecked();
   expect($('#as-special-count-elderly').value).toBe('2');
-  expect(screen.getByLabelText('Pets')).toBeChecked();
-  expect($('#as-special-count-pets').value).toBe('');
+  expect($('#as-special-count-elderly').closest('.sn-row')).toHaveClass('checked');
+  // saved without a number (older reports): still selected, asking how many
+  expect($('#as-special-count-pets').closest('.sn-row')).toHaveClass('checked');
+  expect($('#as-special-count-pets').placeholder).toBe('?');
+  expect($('#as-special-count-children').closest('.sn-row')).not.toHaveClass('checked');
 });
 
 describe('registered address', () => {

@@ -4,8 +4,22 @@ const { generateReference } = require("../utils/reference");
 
 
 
+// Number of people affected: a whole number from 1 to 500 (older reports
+// saved a range such as "1-10", which is left as it is).
+const MAX_PEOPLE = 500;
+const peopleCount = (value) => {
+    const n = Number(value);
+    return Number.isInteger(n) && n >= 1 && n <= MAX_PEOPLE ? n : null;
+};
+const PEOPLE_MESSAGE = `Please enter how many people are affected (1 to ${MAX_PEOPLE}).`;
+
 class ReportService {
     static async create(data) {
+        const people = peopleCount(data.people);
+        if (people === null) {
+            return { success: false, status: 400, message: PEOPLE_MESSAGE };
+        }
+
         const reference = await generateReference(Report.getLatestReference);
 
         const report = {
@@ -19,7 +33,7 @@ class ReportService {
             latitude: data.latitude,
             longitude: data.longitude,
             details: data.details,
-            peopleAffected: data.people,
+            peopleAffected: people,
             specialNeeds: data.special,
             photoUrl: data.photoUrl,
             mediaType: data.mediaType,
@@ -48,6 +62,9 @@ class ReportService {
 
     
     static async update(id, data) {
+        if (data.people !== undefined && peopleCount(data.people) === null) {
+            return { success: false, status: 400, message: PEOPLE_MESSAGE };
+        }
         const affected = await Report.update(id, {
             emergencyType: data.emergencyType,
             severity: data.severity,

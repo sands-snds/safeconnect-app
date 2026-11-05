@@ -39,6 +39,16 @@ const EmergencyReportDetails = ({ report }) => {
         />
 
         <DetailField
+          label={tx("People Affected")}
+          value={report.peopleAffected}
+        />
+
+        <DetailField
+          label={tx("Special Needs")}
+          value={report.specialNeeds || "None"}
+        />
+
+        <DetailField
           label={tx("Location")}
           value={report.location}
         />

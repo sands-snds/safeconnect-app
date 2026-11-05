@@ -30,7 +30,9 @@ SafeConnect is a web app that helps a barangay prepare for and respond to emerge
 |---|---|
 | **Sign up with email verification** | A 6-digit code is emailed to the resident. The account is created only after the code is entered. |
 | **Sign in / forgot password** | Signing in sends an email alert. Forgotten passwords are reset with an emailed code. |
-| **Emergency report** | Report a fire, flood, medical emergency or similar, with a required photo or video. Can be filed for yourself (at your registered home address) or for someone else (with a map pin). |
+| **Emergency report** | Report a fire, flood, medical emergency or similar, with a required photo or video and the number of people affected. Can be filed for yourself (at your registered home address) or for someone else (with a map pin). |
+| **Special needs** | On emergency and assistance reports: Elderly, Children, Persons with disabilities, Pregnant and Pets, each with a − / + counter for how many. |
+| **Closing a form** | Cancel, X or clicking outside clears the whole report form, so it opens fresh with the registered address. |
 | **Assistance request** | Ask for food, water, medical supplies, shelter and so on, for yourself (at home) or for someone else (with a map pin). |
 | **Petty crime report** | Report theft, vandalism and similar incidents, with optional suspect details. The resident picks **At my home** (the registered address) or **Somewhere else** (with a map pin). |
 | **Report address** | The same parts as the sign-up home address: House / Lot / Block No., Street, Subdivision / Purok (optional) and the fixed "Barangay Santa Fe, Dasmariñas, Cavite", plus an optional landmark. At home, it's filled in from the registered address. |

@@ -11,7 +11,8 @@ import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpeci
  
  
 
-const PEOPLE_AFFECTED_OPTIONS = ['1-10', '11-20', '21-30', '31-40'];
+// Same limit as the assistance form (and the backend's check).
+const MAX_PEOPLE_AFFECTED = 500;
  
 
 
@@ -153,7 +154,8 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       emergencyType: editingReport.title || '',
       location: editingReport.location || '',
       details: editingReport.description || '',
-      people: editingReport.peopleAffected || '',
+      // Older reports saved a range such as "1-10": the box starts empty.
+      people: /^\d+$/.test(String(editingReport.peopleAffected || '')) ? String(editingReport.peopleAffected) : '',
       special: parseSpecialNeeds(editingReport.specialNeeds).selected,
       specialCounts: parseSpecialNeeds(editingReport.specialNeeds).counts,
       media: null,
@@ -315,10 +317,19 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     setVictimRelationship('');
     setVictimRelationshipOther('');
     setVictimDetails('');
+    setSpecialInvalid(null);
 
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
- 
+
+  // Closing the form (Cancel, X or clicking outside) clears it, so it opens
+  // fresh, with the registered address filled in again.
+  const resetRef = useRef(resetForm);
+  resetRef.current = resetForm;
+  useEffect(() => {
+    if (!show) resetRef.current();
+  }, [show]);
+
   const [specialInvalid, setSpecialInvalid] = useState(null);
   const handleSpecialCount = (option, value) => {
     setSpecialInvalid(null);
@@ -357,6 +368,13 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     
     if (!isEditing && !formData.media) {
       showPopup({ type: 'warning', message: t('emergencyModal.mediaRequired') });
+      return;
+    }
+
+    const peopleAffected = Number(formData.people);
+    if (!Number.isInteger(peopleAffected) || peopleAffected < 1 || peopleAffected > MAX_PEOPLE_AFFECTED) {
+      showPopup({ type: 'warning', message: t('emergencyModal.peopleRequired', { max: MAX_PEOPLE_AFFECTED }) });
+      document.getElementById('em-people')?.focus();
       return;
     }
 
@@ -417,7 +435,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
           details: formData.details,
-          people: formData.people || 0,
+          people: Number(formData.people),
           special: formatSpecialNeeds(formData.special, formData.specialCounts),
           
           ...(mediaUrl ? { photoUrl: mediaUrl, mediaType: formData.mediaType || null } : {})
@@ -456,7 +474,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         latitude: coords ? coords.lat : null,
         longitude: coords ? coords.lng : null,
         details: formData.details,
-        people: formData.people || 0,
+        people: Number(formData.people),
         special: formatSpecialNeeds(formData.special, formData.specialCounts),
 
         photoUrl: mediaUrl || null,
@@ -1303,21 +1321,24 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                 <div className="form-group">
                   <label className="form-label" htmlFor="em-people">
                     <i className="bi bi-people-fill" style={{ color: '#6b7280', fontSize: '14px' }}></i>
-                    {t('reportForm.peopleAffected')}
+                    {t('reportForm.peopleAffected')} <span className="required">*</span>
                   </label>
-                  <select
+                  <input
                     id="em-people"
+                    type="number"
                     name="people"
+                    inputMode="numeric"
+                    min={1}
+                    max={MAX_PEOPLE_AFFECTED}
+                    step={1}
                     value={formData.people}
-                    onChange={handleChange}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, people: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                    placeholder={t('assistanceModal.peoplePlaceholder')}
+                    required
                     disabled={isSubmitting}
-                    className={`form-select${formData.people ? '' : ' is-empty'}`}
-                  >
-                    <option value="">{t('reportForm.selectRange')}</option>
-                    {PEOPLE_AFFECTED_OPTIONS.map((range) => (
-                      <option key={range} value={range}>{range}</option>
-                    ))}
-                  </select>
+                    className="form-input"
+                  />
+                  <div className="media-hint">{t('emergencyModal.peopleHint')}</div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">
