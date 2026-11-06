@@ -52,7 +52,7 @@ export default function SpecialNeedsPicker({ idPrefix, selected, counts, onToggl
 
   // Sets a category's count; 0 (or an empty box) unselects it.
   const setCount = (value, raw) => {
-    const digits = String(raw).replace(/D/g, '').slice(0, 3);
+    const digits = String(raw).replace(/\D/g, '').slice(0, 3);
     const n = Math.min(Number(digits) || 0, MAX_SPECIAL_COUNT);
     const isSelected = selected.includes(value);
     if (n > 0 && !isSelected) onToggle(value);
