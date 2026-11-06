@@ -169,3 +169,16 @@ test('closing the form clears it; reopening starts fresh with the registered add
   expect($('textarea[name="description"]').value).toBe('');
   expect(screen.getByRole('button', { name: /At my home/i })).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('a photo or video too large for the server gets its own message', async () => {
+  createPettyCrimeReport.mockResolvedValueOnce({ success: false, code: 'MEDIA_TOO_LARGE', message: 'too large' });
+  const { form, fill } = renderModal();
+  fill('Theft');
+  fireEvent.submit(form);
+  await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
+    type: 'warning',
+    title: 'Photo or video too large'
+  })));
+  expect(showPopup).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
+  expect(screen.queryByText('Report Submitted')).not.toBeInTheDocument();
+});

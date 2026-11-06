@@ -306,6 +306,7 @@ The backend checks the role **against the database on every admin request**, not
 - **The seed admin account cannot sign in** (its password is not hashed). See [Step 6](#step-6-sign-in-as-the-barangays-main-admin).
 - **`backend/.env` is committed to git** even though `.gitignore` lists it. It holds real passwords, and each teammate's local database password overwrites the others' when they pull. Stop tracking it with `git rm --cached backend/.env`, and change the passwords that are already in the history.
 - **Report photos and videos are stored as base64 text** in the report tables (`photo_url`, `LONGTEXT`), which makes the database large. The report lists (admin tabs, My Reports, exports) leave the media out, and a photo or video is loaded only when someone opens that report's details, so the lists stay fast.
+- **Large photos and videos are limited by the database's `max_allowed_packet`** (16 MB on Azure, so roughly a 12 MB file once base64-encoded), below the forms' own 20 MB photo / 50 MB video limits. A file that's too big gets its own "Photo or video too large" message (code `MEDIA_TOO_LARGE`, HTTP 413), and the rest of the form stays filled in. Raising `max_allowed_packet` (for example to 128 MB) on the Azure database removes the gap.
 
 ## Logos
 

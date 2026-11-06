@@ -85,6 +85,14 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+// A request body over the 75 MB limit (a huge photo or video) is refused
+// before any route runs; answer in JSON so the forms can say why.
+const { isMediaTooLarge, MEDIA_TOO_LARGE } = require("./utils/mediaErrors");
+app.use((err, req, res, next) => {
+  if (isMediaTooLarge(err)) return res.status(413).json(MEDIA_TOO_LARGE);
+  next(err);
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -2,6 +2,7 @@ const AssistanceRequest = require("../models/AssistanceRequest");
 const AssistanceRequestService = require("../services/assistanceRequestService");
 const Notification = require("../models/Notification");
 const live = require("../services/liveUpdates");
+const { sendIfMediaTooLarge } = require("../utils/mediaErrors");
 const { validateStatusTransition, validateDismissalReason, dismissalMessage, DISMISSED } = require("../utils/statusWorkflow");
 
 
@@ -16,6 +17,7 @@ exports.createRequest = async (req, res) => {
         sendResult(res, result, 201);
     } catch (err) {
         console.error(err);
+        if (sendIfMediaTooLarge(res, err)) return;
         res.status(500).json({ success: false, message: "Failed to submit assistance request." });
     }
 };
@@ -46,6 +48,7 @@ exports.updateRequest = async (req, res) => {
         sendResult(res, result);
     } catch (err) {
         console.error(err);
+        if (sendIfMediaTooLarge(res, err)) return;
         res.status(500).json({ success: false, message: "Failed to update assistance request." });
     }
 };

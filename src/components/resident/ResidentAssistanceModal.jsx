@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
 import { showPopup } from '../shared/popup';
+import { resultError, showIfMediaTooLarge } from './reportErrors';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -308,7 +309,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           urgency: null
         });
         if (!result.success) {
-          throw new Error(result.message || t('assistanceModal.updateFailed'));
+          throw resultError(result, t('assistanceModal.updateFailed'));
         }
         showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('assistanceModal.updateSuccess') });
         announceReportsChanged();
@@ -345,7 +346,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         victimDetails: reportFor === 'others' ? victimDetails.trim() || null : null
       });
       if (!result.success) {
-        throw new Error(result.message || t('assistanceModal.submitFailed'));
+        throw resultError(result, t('assistanceModal.submitFailed'));
       }
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
       announceReportsChanged();
@@ -354,6 +355,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);
+      if (showIfMediaTooLarge(error, t)) return;
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('assistanceModal.submitError') });
     } finally {
       setIsSubmitting(false);

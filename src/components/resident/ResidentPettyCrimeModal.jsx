@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPettyCrimeReport, updatePettyCrimeReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
+import { resultError, showIfMediaTooLarge } from './reportErrors';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -261,7 +262,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           ...(photoUrl ? { photoUrl, mediaType: media.type } : {})
         });
         if (!result.success) {
-          throw new Error(result.message || t('reportForm.updateFailed'));
+          throw resultError(result, t('reportForm.updateFailed'));
         }
         showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('pettyCrimeModal.updateSuccess') });
         announceReportsChanged();
@@ -297,7 +298,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         victimDetails: reportFor === 'others' ? victimDetails.trim() || null : null
       });
       if (!result.success) {
-        throw new Error(result.message || t('reportForm.submitFailed'));
+        throw resultError(result, t('reportForm.submitFailed'));
       }
       localStorage.setItem(getCooldownStorageKey(), Date.now().toString());
       announceReportsChanged();
@@ -306,6 +307,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       setShowSuccessPopup(true);
     } catch (error) {
       console.log(error);
+      if (showIfMediaTooLarge(error, t)) return;
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('pettyCrimeModal.submitError') });
     } finally {
       setIsSubmitting(false);

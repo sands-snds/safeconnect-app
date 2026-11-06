@@ -2,6 +2,7 @@ const PettyCrime = require("../models/PettyCrime");
 const PettyCrimeService = require("../services/pettyCrimeService");
 const Notification = require("../models/Notification");
 const live = require("../services/liveUpdates");
+const { sendIfMediaTooLarge } = require("../utils/mediaErrors");
 const { validateStatusTransition, validateDismissalReason, dismissalMessage, DISMISSED } = require("../utils/statusWorkflow");
 
 
@@ -24,6 +25,7 @@ exports.createReport = async (req, res) => {
         sendResult(res, result, 201);
     } catch (err) {
         console.error(err);
+        if (sendIfMediaTooLarge(res, err)) return;
         res.status(500).json({ success: false, message: "Failed to submit petty crime report." });
     }
 };
@@ -54,6 +56,7 @@ exports.updateReport = async (req, res) => {
         sendResult(res, result);
     } catch (err) {
         console.error(err);
+        if (sendIfMediaTooLarge(res, err)) return;
         res.status(500).json({ success: false, message: "Failed to update petty crime report." });
     }
 };

@@ -1,4 +1,5 @@
 const Report = require("../models/Report");
+const { sendIfMediaTooLarge } = require("../utils/mediaErrors");
 const ReportService = require("../services/reportService");
 const Notification = require("../models/Notification");
 const live = require("../services/liveUpdates");
@@ -19,6 +20,7 @@ exports.createReport = async (req, res) => {
         sendResult(res, result, 201);
     } catch (err) {
         console.error(err);
+        if (sendIfMediaTooLarge(res, err)) return;
         res.status(500).json({
             success: false,
             message: "Failed to create report."
@@ -63,6 +65,7 @@ exports.updateReport = async (req, res) => {
         sendResult(res, result);
     } catch (err) {
         console.error(err);
+        if (sendIfMediaTooLarge(res, err)) return;
         res.status(500).json({
             success: false,
             message: "Failed to update report."

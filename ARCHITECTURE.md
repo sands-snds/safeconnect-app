@@ -284,6 +284,8 @@ The **Called from (frontend)** column names the function in `api.js`, or the com
 | GET | `/:id` | owner, or admin | One report |
 | PUT | `/:id` | owner, or super | Edit (from the resident's "My Reports") |
 | PUT / PATCH | `/:id/status` | admin | Move the status forward, or `{ status: "Dismissed", reason }` to dismiss an open report (the reason, 5–500 characters, is saved in `dismissal_reason` and sent to the reporter). Petty crime accepts PATCH only. |
+
+If the photo or video is too big to save (MySQL `ER_NET_PACKET_TOO_LARGE`, or over the 75 MB body limit), `POST /` and `PUT /:id` answer **413** `{ success: false, code: "MEDIA_TOO_LARGE" }` (`utils/mediaErrors.js`, plus an error handler in `server.js`), and the form shows "Photo or video too large" (`resident/reportErrors.js`).
 | DELETE | `/:id` | owner, or super | Delete |
 
 Frontend callers: `fetchEmergencyReports()`, `fetchAssistanceRequests()`, `fetchPettyCrimes()`, the matching `create…`, `update…` and `delete…` functions, and `updateStatus(type, id, status)`.
@@ -429,6 +431,7 @@ Each model is a class of `static async` methods that run parameterized SQL throu
 | `utils/jwt.js` | `generateToken(user)` signs `{ id, role }` with `JWT_SECRET`, valid for **7 days** |
 | `utils/roles.js` | Role constants (`resident`, `admin`, `super_admin`), `ROLE_LABELS` / `roleLabel()` (Resident, Official, Admin), `isAdminRole()` / `isSuperAdminRole()`, and `MAIN_ACCOUNT_EMAIL` / `isMainAccount()` |
 | `utils/statusWorkflow.js` | `STATUS_ORDER = Received → In Progress → Resolved`. `validateStatusTransition(current, next)` only allows moving **one step forward**, or to **Dismissed** from any open status (Dismissed is final, like Resolved). Reports with older statuses (such as "Dispatched") can only move to "Received" first. It returns the reply message sent to the resident. `validateDismissalReason()` and `dismissalMessage()` handle the dismissal reason; `CLOSED_STATUSES` = Resolved, Dismissed. |
+| `utils/mediaErrors.js` | `isMediaTooLarge(err)` (MySQL packet too large, or the body parser's `entity.too.large`) and `sendIfMediaTooLarge(res, err)`, which answers 413 `MEDIA_TOO_LARGE` from the report controllers' catch blocks |
 | `utils/reference.js` | `generateReference(getLatestFn)` returns `SC-<year>-<6-digit number>`, which restarts at 1 each year. Each report table has its own sequence. |
 | `utils/signinContext.js` | Works out the client's IP (Azure's `X-Client-IP` header, then the last `X-Forwarded-For` entry, then the socket address). Turns the User-Agent and optional browser hints into text such as "Phone · Samsung SM-S918B · Android 14 · Chrome". `lookupLocation(ip)` asks ipapi.co for "City, Region, Country · ISP" (skipped for private IPs). |
 

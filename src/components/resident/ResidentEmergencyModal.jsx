@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createEmergencyReport, updateEmergencyReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
+import { resultError, showIfMediaTooLarge } from './reportErrors';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -441,7 +442,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           ...(mediaUrl ? { photoUrl: mediaUrl, mediaType: formData.mediaType || null } : {})
         });
         if (!result.success) {
-          throw new Error(result.message || t('reportForm.updateFailed'));
+          throw resultError(result, t('reportForm.updateFailed'));
         }
         showPopup({ type: 'success', title: t('popup.updatedTitle'), message: t('emergencyModal.updateSuccess') });
         announceReportsChanged();
@@ -489,7 +490,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       });
  
       if (!result.success) {
-        throw new Error(result.message || t('reportForm.submitFailed'));
+        throw resultError(result, t('reportForm.submitFailed'));
       }
  
       
@@ -515,6 +516,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       setShowAssistancePrompt(true);
     } catch (error) {
       console.error('Error submitting report:', error);
+      if (showIfMediaTooLarge(error, t)) return;
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('emergencyModal.submitError') });
     } finally {
       setIsSubmitting(false);
