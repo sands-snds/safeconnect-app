@@ -83,6 +83,7 @@ exports.updateStatus = async (req, res) => {
         const affected = await PettyCrime.updateStatus(req.params.id, req.body.status, dismissalReason);
         
         if (report.reporter_id && affected > 0) live.notifyUser(report.reporter_id, "reports");
+        if (affected > 0) live.notifyAdmins("admin-notifications");
 
         if (report.reporter_id && replyMessage) {
             await Notification.create({

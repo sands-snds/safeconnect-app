@@ -377,3 +377,23 @@
   .sn-list { grid-template-columns: 1fr; }
   .form-group .sn-stepper input { font-size: 16px; }
 }
+
+/* Every dropdown in the report forms (Emergency, Request Assistance, Petty
+   Crime) looks the same: 40px tall like the text boxes, with 14px black text
+   centred in it. admin.css (bundled on every page) fixes .form-select at 40px,
+   and Bootstrap's 16px text with the forms' 10px top and bottom padding left
+   too little room, which cut off the Crime Type text. !important because the
+   forms set padding inline. */
+.modal-overlay select.form-select {
+  height: 40px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-right: 2.25rem !important;
+  line-height: 38px !important;
+  font-size: 14px !important;
+  color: #1f2937 !important;
+  background-color: #fff;
+  background-position: right 0.75rem center;
+  background-size: 14px 10px;
+  text-overflow: ellipsis;
+}

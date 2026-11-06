@@ -7,6 +7,7 @@ import {
 import { timeAgo } from "../shared/timeUtils";
 import { roleLabel } from "../../shared/roles";
 import { confirmPopup } from "../../shared/popup";
+import { COMMENTS_CHANGED_EVENT } from "../../shared/commentsLive";
 import CommentAvatar from "../../shared/CommentAvatar";
 import { tx } from "../../../i18n/adminText";
 
@@ -29,6 +30,24 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
       .catch(() => { if (!cancelled) { setComments([]); setLoadError(true); } });
     return () => { cancelled = true; };
   }, [announcementId]);
+
+  // Someone posted or deleted a comment: reload, and keep the card's count in step.
+  const countRef = React.useRef(null);
+  countRef.current = comments ? comments.length : null;
+  useEffect(() => {
+    const onChanged = () => {
+      fetchAnnouncementComments(announcementId)
+        .then((data) => {
+          if (!Array.isArray(data)) return;
+          const before = countRef.current;
+          setComments(data);
+          if (before !== null && onCountChange && data.length !== before) onCountChange(data.length - before);
+        })
+        .catch(() => {});
+    };
+    window.addEventListener(COMMENTS_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(COMMENTS_CHANGED_EVENT, onChanged);
+  }, [announcementId, onCountChange]);
 
   // [{ ...comment, replies: [...] }], oldest first.
   const threads = useMemo(() => {

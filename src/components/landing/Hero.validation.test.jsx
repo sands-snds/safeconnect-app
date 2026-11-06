@@ -25,6 +25,8 @@ beforeEach(() => {
 
 const renderHero = () => render(<LanguageProvider><Hero /></LanguageProvider>);
 const submit = () => fireEvent.click(document.querySelector('form button[type="submit"]'));
+// Sign Up: Next, Next, Create Account (each click re-finds the button).
+const submitAll = () => { submit(); submit(); submit(); };
 const field = (id) => document.getElementById(id);
 const errorOf = (id) => document.getElementById(`${id}-error`)?.textContent;
 // The proof-of-residency ID every sign-up now needs.
@@ -79,67 +81,139 @@ describe('Sign Up', () => {
     renderHero();
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
   };
+  const type = (id, value) => fireEvent.change(field(id), { target: { value } });
+  const fillStep1 = () => {
+    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
+    type('suEmail', 'juan@example.com');
+  };
+  const fillStep2 = () => { fillAddress(); attachId(); };
+  const fillStep3 = () => {
+    type('suUsername', 'juandc'); type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    fireEvent.click(field('suAgree'));
+  };
+  const fillValid = () => { fillStep1(); fillStep2(); fillStep3(); };
+  const stepShown = () => document.querySelector('.auth-step.current .auth-step-l')?.textContent;
 
-  test('empty form: every required field says what is missing; the first one gets the focus', async () => {
+  test('the form is three steps; it starts on "Your details" with a Next button', () => {
+    openSignUp();
+    expect([...document.querySelectorAll('.auth-step-l')].map((n) => n.textContent)).toEqual(['Your details', 'Address & ID', 'Account']);
+    expect(stepShown()).toBe('Your details');
+    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
+    expect(document.querySelector('form button[type="submit"]').textContent).toMatch(/^Next/);
+    expect(document.querySelector('.auth-part-actions').textContent).not.toMatch(/Back/);
+    expect(field('suFirst').closest('.auth-part')).not.toHaveAttribute('hidden');
+    expect(field('suAddrHouse').closest('.auth-part')).toHaveAttribute('hidden');
+  });
+
+  test('step 1 empty: Next lists only its fields and stays; the first gets the focus', async () => {
     openSignUp();
     submit();
     expect(errorOf('suFirst')).toBe('Please enter your first name.');
     expect(errorOf('suLast')).toBe('Please enter your last name.');
     expect(errorOf('suContact')).toMatch(/mobile number/);
     expect(errorOf('suEmail')).toBe('Please enter your email address.');
+    expect(errorOf('suMiddle')).toBeUndefined(); // optional
+    expect(errorOf('suAddrHouse')).toBeUndefined(); // next step
+    expect(errorOf('suUsername')).toBeUndefined();
+    expect(stepShown()).toBe('Your details');
+    await waitFor(() => expect(document.activeElement).toBe(field('suFirst')));
+    expect(global.fetch).not.toHaveBeenCalledWith(expect.stringMatching(/request-otp$/), expect.anything());
+  });
+
+  test('step 2 empty: the address and ID say what is missing', () => {
+    openSignUp();
+    fillStep1();
+    submit();
+    expect(stepShown()).toBe('Address & ID');
+    submit();
     expect(errorOf('suAddrHouse')).toBe('Please enter your house, lot or block number.');
     expect(errorOf('suAddrStreet')).toBe('Please enter your street.');
     expect(errorOf('suAddrArea')).toBeUndefined(); // optional
     expect(errorOf('suIdType')).toBe('Please choose the type of ID you are uploading.');
     expect(errorOf('suIdFile')).toMatch(/valid ID/);
+    expect(stepShown()).toBe('Address & ID');
+  });
+
+  test('step 3 empty: the account fields say what is missing', () => {
+    openSignUp();
+    fillStep1(); submit();
+    fillStep2(); submit();
+    expect(stepShown()).toBe('Account');
+    submit();
     expect(errorOf('suUsername')).toBe('Please choose a username.');
     expect(errorOf('suPassword')).toBe('Please enter your password.');
     expect(errorOf('suConfirm')).toMatch(/confirm/);
     expect(errorOf('suAgree')).toMatch(/read the Terms/);
-    expect(errorOf('suMiddle')).toBeUndefined(); // optional
-    await waitFor(() => expect(document.activeElement).toBe(field('suFirst')));
-    expect(global.fetch).not.toHaveBeenCalledWith(expect.stringMatching(/request-otp$/), expect.anything());
   });
 
   test('a later field is the only problem: the focus goes straight to it', async () => {
     openSignUp();
-    const type = (id, value) => fireEvent.change(field(id), { target: { value } });
     type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '91712');
-    type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
-    type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123?');
+    type('suEmail', 'juan@example.com');
     submit();
     expect(errorOf('suContact')).toBe('Contact number must be exactly 10 digits');
-    expect(errorOf('suConfirm')).toBe('Passwords do not match');
     expect(errorOf('suFirst')).toBeUndefined();
     await waitFor(() => expect(document.activeElement).toBe(field('suContact')));
-    
-    type('suPassword', 'Secret123?');
-    expect(errorOf('suConfirm')).toBeUndefined();
   });
 
-  test('a weak password lists what it still needs, under the password', () => {
+  test('Back and Next keep everything typed', () => {
     openSignUp();
-    fireEvent.change(field('suPassword'), { target: { value: 'secret' } });
+    fillStep1(); submit();
+    fillAddress(); type('suAddrArea', 'Villa Santa Fe');
+    fireEvent.click(document.querySelector('.auth-part-actions button[type="button"]'));
+    expect(stepShown()).toBe('Your details');
+    expect(field('suFirst').value).toBe('Juan');
+    expect(field('suEmail').value).toBe('juan@example.com');
+    submit();
+    expect(stepShown()).toBe('Address & ID');
+    expect(field('suAddrHouse').value).toBe('Blk 5 Lot 12');
+    expect(field('suAddrArea').value).toBe('Villa Santa Fe');
+    // a finished step can be reopened from the step bar
+    fireEvent.click(screen.getByRole('button', { name: /Your details/ }));
+    expect(stepShown()).toBe('Your details');
+  });
+
+  test('passwords: mismatch and weak passwords are pointed out on step 3', async () => {
+    openSignUp();
+    fillStep1(); submit();
+    fillStep2(); submit();
+    type('suUsername', 'juandc'); type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123?');
+    submit();
+    expect(errorOf('suConfirm')).toBe('Passwords do not match');
+    type('suPassword', 'Secret123?');
+    expect(errorOf('suConfirm')).toBeUndefined();
+    type('suPassword', 'secret');
     submit();
     expect(errorOf('suPassword')).toMatch(/uppercase|number|symbol|8/i);
   });
 
-  const fillValid = () => {
-    const type = (id, value) => fireEvent.change(field(id), { target: { value } });
-    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
-    type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
-    type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
-    fillAddress();
-    attachId();
-    fireEvent.click(field('suAgree'));
-  };
+  test('password boxes refuse paste, copy and drop; typing still works', () => {
+    openSignUp();
+    for (const id of ['suPassword', 'suConfirm']) {
+      const paste = new Event('paste', { bubbles: true, cancelable: true });
+      field(id).dispatchEvent(paste);
+      expect(paste.defaultPrevented).toBe(true);
+      const copy = new Event('copy', { bubbles: true, cancelable: true });
+      field(id).dispatchEvent(copy);
+      expect(copy.defaultPrevented).toBe(true);
+      const drop = new Event('drop', { bubbles: true, cancelable: true });
+      field(id).dispatchEvent(drop);
+      expect(drop.defaultPrevented).toBe(true);
+      type(id, 'Typed123!');
+      expect(field(id).value).toBe('Typed123!');
+    }
+    // other fields still accept a paste
+    const paste = new Event('paste', { bubbles: true, cancelable: true });
+    field('suEmail').dispatchEvent(paste);
+    expect(paste.defaultPrevented).toBe(false);
+  });
 
   test('Terms read but box not ticked: the checkbox is marked and focused', async () => {
     localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
     openSignUp();
     fillValid();
     fireEvent.click(field('suAgree')); // untick
-    submit();
+    submitAll();
     expect(errorOf('suAgree')).toBe('You must agree to the Terms and Conditions to create an account.');
     expect(document.querySelectorAll('[aria-invalid="true"]')).toHaveLength(1);
     await waitFor(() => expect(document.activeElement).toBe(field('suAgree')));
@@ -151,19 +225,21 @@ describe('Sign Up', () => {
     openSignUp();
     fillValid();
     expect(field('suAgree')).toBeChecked();
-    submit();
+    submitAll();
     await waitFor(() => expect(errorOf('suUsername')).toBe('Username is already taken.'));
     await waitFor(() => expect(document.activeElement).toBe(field('suUsername')));
     expect(screen.queryByRole('dialog', { name: 'Verify Your Email' })).not.toBeInTheDocument();
   });
 
-  test('the server says the email is already used: the email field is marked', async () => {
+  test('the server says the email is already used: back to step 1, with the email marked', async () => {
     global.fetch = jest.fn(() => Promise.resolve({ json: () => Promise.resolve({ success: false, message: 'An account with this email already exists.' }) }));
     localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
     openSignUp();
     fillValid();
-    submit();
+    submitAll();
     await waitFor(() => expect(errorOf('suEmail')).toBe('An account with this email already exists.'));
+    expect(stepShown()).toBe('Your details');
+    await waitFor(() => expect(document.activeElement).toBe(field('suEmail')));
   });
 });
 
@@ -207,7 +283,7 @@ describe('Sign Up: proof of residency', () => {
     attachId();
     expect(screen.getByText('barangay-id.pdf')).toBeInTheDocument();
     fireEvent.click(field('suAgree'));
-    submit();
+    submitAll();
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(expect.stringMatching(/request-otp$/), expect.anything()));
     const [, options] = global.fetch.mock.calls.find(([url]) => String(url).endsWith('/request-otp'));
     const body = JSON.parse(options.body);
@@ -246,7 +322,7 @@ describe('Server can\'t reach the database', () => {
     fillAddress();
     attachId();
     fireEvent.click(field('suAgree'));
-    submit();
+    submitAll();
     expect(await screen.findByText(/can't reach its database right now, so this can't be completed/)).toBeInTheDocument();
   });
 });

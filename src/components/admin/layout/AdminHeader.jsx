@@ -63,7 +63,9 @@ const AdminHeader = ({
     onToggleMobileMenu,
     isSuperAdmin = false,
     adminUser,
-    onWatchDemo
+    onWatchDemo,
+    soundOn,
+    onToggleSound
 }) => {
     const { adminDemo } = useSiteMedia();
 
@@ -220,6 +222,20 @@ const userMenuRef = useRef(null);
                     >
                         {isRefreshing ? tx("Refreshing…") : tx("Updated {{time}}", { time: timeAgo(lastUpdate) })}
                     </span>
+                )}
+
+                {onToggleSound && (
+                    <button
+                        type="button"
+                        onClick={onToggleSound}
+                        aria-pressed={Boolean(soundOn)}
+                        title={soundOn ? tx("New report sound is on") : tx("Turn on the new report sound")}
+                        aria-label={tx("New report sound")}
+                        className="admin-header-icon-btn"
+                        style={soundOn ? { background: "#FDECEC" } : undefined}
+                    >
+                        <i className={`bi ${soundOn ? "bi-volume-up-fill" : "bi-volume-mute-fill"}`} />
+                    </button>
                 )}
 
                 <button

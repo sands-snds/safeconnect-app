@@ -26,7 +26,9 @@ const AdminLayout = ({
     onMarkAllRead,
     onMarkOneRead,
     adminUser,
-    onWatchDemo
+    onWatchDemo,
+    soundOn,
+    onToggleSound
 }) => {
     return (
         <div className="admin-container">
@@ -63,6 +65,8 @@ const AdminLayout = ({
                         isSuperAdmin={isSuperAdmin}
                         adminUser={adminUser}
                         onWatchDemo={onWatchDemo}
+                        soundOn={soundOn}
+                        onToggleSound={onToggleSound}
                     />
 
                     <div className="admin-page-body">

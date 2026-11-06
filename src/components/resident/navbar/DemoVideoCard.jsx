@@ -19,7 +19,7 @@ export default function DemoVideoCard() {
           </span>
         </div>
         <h3>{systemDemo.title || t('demoVideo.defaultTitle')}</h3>
-        <DemoVideoPlayer demo={systemDemo} showText={false} />
+        <DemoVideoPlayer demo={systemDemo} showText={false} autoPlay unmuteLabel={t('demoVideo.unmute')} />
         {systemDemo.caption && <p style={{ marginTop: 12 }}>{systemDemo.caption}</p>}
       </div>
     </div>

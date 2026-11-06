@@ -129,6 +129,8 @@ exports.updateStatus = async (req, res) => {
         );
         
         if (report.reporter_id) live.notifyUser(report.reporter_id, "reports");
+        // Other staff (the Incident Map, report lists) see the change at once.
+        live.notifyAdmins("admin-notifications");
 
         if (report.reporter_id && replyMessage) {
             await Notification.create({

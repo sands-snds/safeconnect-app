@@ -60,7 +60,7 @@ export default function DemoVideoSection() {
             <p>{systemDemo.caption || t('demoVideo.subtitle')}</p>
           </div>
           <div className="dm-card">
-            <DemoVideoPlayer demo={systemDemo} showText={false} placeholder={hasVideo(systemDemo) ? null : placeholder} />
+            <DemoVideoPlayer demo={systemDemo} showText={false} placeholder={hasVideo(systemDemo) ? null : placeholder} autoPlay unmuteLabel={t('demoVideo.unmute')} />
           </div>
         </div>
       </div>

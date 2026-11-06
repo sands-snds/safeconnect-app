@@ -50,7 +50,7 @@ export default function EmergencyContactList({ contacts, onCall }) {
           <div key={c.id}>
             <button
               type="button"
-              onClick={() => (choices ? setOpenId(open ? null : c.id) : onCall(c.number))}
+              onClick={() => (choices ? setOpenId(open ? null : c.id) : onCall(c.number, c.label))}
               aria-expanded={choices ? open : undefined}
               style={{
                 display: 'flex',
@@ -102,7 +102,7 @@ export default function EmergencyContactList({ contacts, onCall }) {
                   <button
                     key={`${p.name}-${p.number}`}
                     type="button"
-                    onClick={() => onCall(p.number)}
+                    onClick={() => onCall(p.number, p.name ? `${p.name} (${c.label})` : c.label)}
                     style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '8px', border: 'none', borderRadius: '8px', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = `${c.color}12`; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}

@@ -23,7 +23,7 @@ import { SANTA_FE_BOUNDARY, SANTA_FE_CENTER } from './santaFeArea';
 
 
 
-const BASEMAPS = {
+export const BASEMAPS = {
   map: {
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -73,7 +73,7 @@ const FollowPin = ({ pin }) => {
 export const streetViewUrl = ({ lat, lng }) =>
   `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 
-const switchButton = (active) => ({
+export const switchButton = (active) => ({
   padding: '5px 10px',
   border: 'none',
   background: active ? '#1f2937' : '#fff',

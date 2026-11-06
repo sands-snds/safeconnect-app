@@ -5,6 +5,9 @@ import Dashboard from '../components/admin/dashboard/Dashboard';
 import AdminLayout from "../components/admin/layout/AdminLayout";
 import UsersPage from "../components/admin/users/UsersPage";
 import AccountVerificationPage from "../components/admin/users/AccountVerificationPage";
+import IncidentMapPage from "../components/admin/map/IncidentMapPage";
+import NewReportAlerts from "../components/admin/map/NewReportAlerts";
+import { readReportSound, saveReportSound, playReportChime } from "../components/shared/location/mapReports";
 import LogsPage from "../components/admin/logs/LogsPage";
 import SiteContactsPage from "../components/admin/settings/SiteContactsPage";
 import SiteContentsPage from "../components/admin/settings/SiteContentsPage";
@@ -22,6 +25,7 @@ import useLiveUpdates from '../components/shared/useLiveUpdates';
 import useTabNotifications from '../components/shared/useTabNotifications';
 import { useLanguage } from '../i18n/LanguageContext';
 import { setAdminLanguage } from '../i18n/adminText';
+import { announceCommentsChanged } from '../components/shared/commentsLive';
 
 const AdminPage = () => {
   const { language } = useLanguage();
@@ -88,6 +92,15 @@ const AdminPage = () => {
 
   const [showDemo, setShowDemo] = useState(false);
 
+  // The new report chime (speaker button in the header), remembered per device.
+  const [soundOn, setSoundOn] = useState(readReportSound);
+  const toggleSound = () => {
+    const next = !soundOn;
+    saveReportSound(next);
+    if (next) playReportChime("flood");
+    setSoundOn(next);
+  };
+
   const handleCreateAnnouncementShortcut = () => {
     setPendingCreateAnnouncement(true);
     handleNavigation("announcement-page");
@@ -105,6 +118,7 @@ const AdminPage = () => {
 
   const PAGE_TITLES = {
   dashboard: "Dashboard",
+  "incident-map": "Incident Map",
   notifications: "Notifications",
   "account-verification": "Account Verification",
   "emergency-reports": "Emergency Reports",
@@ -196,6 +210,7 @@ useEffect(() => {
   useLiveUpdates(isAuthenticated, {
     'admin-notifications': () => refreshAllData(),
     announcements: loadAnnouncements,
+    comments: announceCommentsChanged,
     state: refreshSyncedState,
     reconnected: () => { refreshAllData(); refreshSyncedState(); loadNotifications(); }
   });
@@ -291,6 +306,18 @@ useEffect(() => {
                   onArchive={archiveNotifications}
                   onNavigate={handleNavigation}
                   focus={focus && focus.view === "notifications" ? focus : null}
+              />
+          );
+      case "incident-map":
+          return (
+              <IncidentMapPage
+                  emergencyReports={emergencyReports}
+                  assistanceRequests={assistanceRequests}
+                  pettyCrimeReports={pettyCrimeReports}
+                  onUpdateStatus={updateStatus}
+                  onNavigate={handleNavigation}
+                  focusKey={focus && focus.view === "incident-map" ? focus.id : null}
+                  onClearFocus={clearFocus}
               />
           );
       case "account-verification":
@@ -432,11 +459,24 @@ useEffect(() => {
             onMarkOneRead={markOneRead}
             adminUser={adminUser}
             onWatchDemo={() => setShowDemo(true)}
+            soundOn={soundOn}
+            onToggleSound={toggleSound}
           >
               {isAuthenticated
                   ? renderActiveView()
                   : null}
           </AdminLayout>
+
+          {isAuthenticated && (
+              <NewReportAlerts
+                  emergencyReports={emergencyReports}
+                  assistanceRequests={assistanceRequests}
+                  pettyCrimeReports={pettyCrimeReports}
+                  loaded={!isLoading}
+                  soundOn={soundOn}
+                  onOpen={(key) => handleNavigation("incident-map", { focusId: key })}
+              />
+          )}
 
           {isAuthenticated && (
               <AdminDemoPopup

@@ -8,6 +8,7 @@ import { Carousel } from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { showAccountStatusPopup } from '../shared/accountStatusPopup';
 import { markAdminJustSignedIn } from '../admin/AdminModals/AdminDemoPopup';
 import { hasViewedTerms, openTerms, TERMS_VIEWED_EVENT } from '../shared/termsConsent';
+import { NO_CLIPBOARD } from '../shared/noClipboard';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
 
@@ -36,6 +37,14 @@ const ID_TYPES = [
     { value: 'School ID', key: 'school' },
     { value: 'Other government-issued ID', key: 'other' },
 ];
+// Sign Up in three steps; Next checks only the fields on the current one.
+const SIGNUP_PARTS = ['details', 'address', 'account'];
+const SIGNUP_FIELD_PART = {
+    suFirst: 1, suMiddle: 1, suLast: 1, suContact: 1, suEmail: 1,
+    suAddrHouse: 2, suAddrStreet: 2, suAddrArea: 2, suIdType: 2, suIdFile: 2,
+    suUsername: 3, suPassword: 3, suConfirm: 3, suAgree: 3,
+};
+const SIGNUP_PART_FIRST_FIELD = ['suFirst', 'suAddrHouse', 'suUsername'];
 const ID_ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
 const ID_EXTENSIONS = /\.(jpe?g|png|webp|pdf)$/i;
 const ID_MAX_BYTES = 5 * 1024 * 1024;
@@ -122,6 +131,8 @@ function Hero() {
 
     // Sign-up step: 'form' | 'otp'
     const [signUpStep,    setSignUpStep]    = useState('form');
+    // Which of the form's three steps is showing (1-3)
+    const [signUpPart,    setSignUpPart]    = useState(1);
     
     const [forgotStep,    setForgotStep]    = useState('email');
 
@@ -303,7 +314,7 @@ function Hero() {
     const closeAll = () => {
         setShowSignIn(false); setShowSignUp(false); setShowForgot(false);
         setSignInStep('form'); setPendingSignIn(null);
-        setSignUpStep('form'); setForgotStep('email');
+        setSignUpStep('form'); setSignUpPart(1); setForgotStep('email');
         setSiEmail(''); setSiPassword(''); setShowSiPw(false);
         setSuFirst(''); setSuMiddle(''); setSuLast('');
         setSuUsername(''); setSuContact(''); setSuEmail('');
@@ -393,9 +404,21 @@ function Hero() {
     };
 
     // ── Sign up: step 1 — send OTP ────────────────────────────────────────────
-    const handleSignUpSubmit = async (e) => {
-        e.preventDefault(); clearErr();
-        
+    const goToSignUpPart = (part) => {
+        setSignUpPart(part);
+        requestAnimationFrame(() => {
+            document.querySelector('.auth-overlay')?.scrollTo?.({ top: 0 });
+            document.getElementById(SIGNUP_PART_FIRST_FIELD[part - 1])?.focus({ preventScroll: true });
+        });
+    };
+    // Shows the step with the first problem, then the problems.
+    const showSignUpErrors = (errors) => {
+        const first = Object.keys(errors)[0];
+        if (first && SIGNUP_FIELD_PART[first]) setSignUpPart(SIGNUP_FIELD_PART[first]);
+        return showFieldErrors(errors);
+    };
+
+    const signUpProblems = () => {
         const problems = {};
         if (!suFirst.trim()) problems.suFirst = t('auth.firstNameRequired');
         if (!suLast.trim()) problems.suLast = t('auth.lastNameRequired');
@@ -415,7 +438,19 @@ function Hero() {
         else if (suPassword !== suConfirm) problems.suConfirm = t('auth.passwordMismatch');
         if (!termsViewed) problems.suAgree = t('signUp.viewTermsFirst');
         else if (!suAgree) problems.suAgree = t('signUp.mustAgree');
-        if (showFieldErrors(problems)) return;
+        return problems;
+    };
+
+    const handleSignUpSubmit = async (e) => {
+        e.preventDefault(); clearErr();
+        const problems = signUpProblems();
+        if (signUpPart < SIGNUP_PARTS.length) {
+            const here = Object.fromEntries(Object.entries(problems).filter(([field]) => SIGNUP_FIELD_PART[field] === signUpPart));
+            if (showFieldErrors(here)) return;
+            goToSignUpPart(signUpPart + 1);
+            return;
+        }
+        if (showSignUpErrors(problems)) return;
 
         const fullName = [suFirst, suMiddle, suLast].filter(Boolean).join(' ');
         setIsSubmitting(true);
@@ -424,7 +459,7 @@ function Hero() {
             try {
                 dataUrl = await readAsDataUrl(suIdFile);
             } catch {
-                clearIdFile(); showFieldErrors({ suIdFile: t('signUp.idReadFailed') });
+                clearIdFile(); showSignUpErrors({ suIdFile: t('signUp.idReadFailed') });
                 return;
             }
             const result = await apiPost('request-otp', {
@@ -435,15 +470,15 @@ function Hero() {
             });
             if (!result.success) {
                 if (result.code === 'INVALID_ADDRESS') {
-                    showFieldErrors({ [/street/i.test(result.message) ? 'suAddrStreet' : 'suAddrHouse']: result.message });
+                    showSignUpErrors({ [/street/i.test(result.message) ? 'suAddrStreet' : 'suAddrHouse']: result.message });
                     return;
                 }
                 if (result.code === 'INVALID_ID') {
-                    showFieldErrors({ [/type of ID/i.test(result.message) ? 'suIdType' : 'suIdFile']: result.message });
+                    showSignUpErrors({ [/type of ID/i.test(result.message) ? 'suIdType' : 'suIdFile']: result.message });
                     return;
                 }
                 const field = fieldForMessage(result.message, SIGNUP_SERVER_FIELDS);
-                if (field) showFieldErrors({ [field]: result.message });
+                if (field) showSignUpErrors({ [field]: result.message });
                 else setError(serverMessage(result, 'auth.otpSendFailed'));
                 return;
             }
@@ -466,7 +501,7 @@ function Hero() {
             setSuPassword(''); setSuConfirm('');
             clearIdFile(); setSuIdType('');
             setSuAddrHouse(''); setSuAddrStreet(''); setSuAddrArea('');
-            resetOtp(); setSignUpStep('form');
+            resetOtp(); setSignUpStep('form'); setSignUpPart(1);
             setShowSignUp(false); setShowSignIn(true);
             setSuccessMsg(t(result.pendingVerification ? 'signUp.accountPendingReview' : 'signUp.accountCreated'));
         } catch { setError(t('auth.serverError')); }
@@ -613,7 +648,7 @@ function Hero() {
                         </AuthField>
                         <AuthField id="siPassword" error={fieldErrors.siPassword} label={t('signIn.password')} icon="bi-lock"
                             toggle={<PasswordToggleButton visible={showSiPw} onToggle={() => setShowSiPw(v=>!v)} />}>
-                            <input type={showSiPw?'text':'password'} className="auth-input has-toggle" id="siPassword" {...fieldProps('siPassword')} autoComplete="current-password" placeholder={t('signIn.passwordPlaceholder')} value={siPassword} onChange={e => setSiPassword(e.target.value)} />
+                            <input type={showSiPw?'text':'password'} className="auth-input has-toggle" id="siPassword" {...NO_CLIPBOARD} {...fieldProps('siPassword')} autoComplete="current-password" placeholder={t('signIn.passwordPlaceholder')} value={siPassword} onChange={e => setSiPassword(e.target.value)} />
                         </AuthField>
 
                         <div className="auth-row" style={{ justifyContent:'flex-end' }}>
@@ -661,6 +696,23 @@ function Hero() {
                     <AuthAlert type="error">{error}</AuthAlert>
 
                     <form onSubmit={handleSignUpSubmit} onChange={clearFieldError} noValidate>
+                        <ol className="auth-steps" aria-label={t('signUp.stepsLabel')}>
+                            {SIGNUP_PARTS.map((key, i) => {
+                                const n = i + 1;
+                                const state = n === signUpPart ? 'current' : n < signUpPart ? 'done' : 'todo';
+                                return (
+                                    <li key={key} className={`auth-step ${state}`} aria-current={state === 'current' ? 'step' : undefined}>
+                                        <button type="button" disabled={state !== 'done' || isSubmitting} onClick={() => goToSignUpPart(n)}>
+                                            <span className="auth-step-n" aria-hidden="true">{state === 'done' ? <i className="bi bi-check-lg"></i> : n}</span>
+                                            <span className="auth-step-l">{t(`signUp.steps.${key}`)}</span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ol>
+                        <p className="auth-step-count">{t('signUp.stepOf', { n: signUpPart, total: SIGNUP_PARTS.length })}</p>
+
+                        <div className="auth-part" hidden={signUpPart !== 1}>
                         <h3 className="auth-section">{t('signUp.sectionPersonal')}</h3>
                         <div className="auth-grid cols-3">
                             <AuthField id="suFirst" error={fieldErrors.suFirst} label={t('signUp.firstName')} icon="bi-person">
@@ -684,6 +736,9 @@ function Hero() {
                             </AuthField>
                         </div>
 
+                        </div>
+
+                        <div className="auth-part" hidden={signUpPart !== 2}>
                         <h3 className="auth-section">{t('signUp.sectionAddress')}</h3>
                         <p className="auth-id-intro">{t('signUp.addressIntro')}</p>
                         <div className="auth-grid cols-2">
@@ -752,6 +807,9 @@ function Hero() {
                                 : <p className="auth-upload-privacy"><i className="bi bi-shield-lock-fill" aria-hidden="true"></i> {t('signUp.idPrivacy')}</p>}
                         </div>
 
+                        </div>
+
+                        <div className="auth-part" hidden={signUpPart !== 3}>
                         <h3 className="auth-section">{t('signUp.sectionSecurity')}</h3>
                         <AuthField id="suUsername" error={fieldErrors.suUsername} label={t('signUp.username')} icon="bi-at">
                             <input type="text" className="auth-input" id="suUsername" {...fieldProps('suUsername')} autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
@@ -759,13 +817,13 @@ function Hero() {
                         <div className="auth-grid cols-2">
                             <AuthField id="suPassword" error={fieldErrors.suPassword} label={t('signUp.password')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showSuPw} onToggle={() => setShowSuPw(v=>!v)} />}>
-                                <input type={showSuPw?'text':'password'} className="auth-input has-toggle" id="suPassword" {...fieldProps('suPassword')} autoComplete="new-password" placeholder={t('signUp.passwordPlaceholder')} value={suPassword} onChange={e => setSuPassword(e.target.value)} />
+                                <input type={showSuPw?'text':'password'} className="auth-input has-toggle" id="suPassword" {...NO_CLIPBOARD} {...fieldProps('suPassword')} autoComplete="new-password" placeholder={t('signUp.passwordPlaceholder')} value={suPassword} onChange={e => setSuPassword(e.target.value)} />
                             </AuthField>
                             <AuthField id="suConfirm" error={fieldErrors.suConfirm} label={t('signUp.confirmPassword')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showSuConfPw} onToggle={() => setShowSuConfPw(v=>!v)} />}
                                 hint={suConfirm ? (suPassword===suConfirm ? t('signUp.passwordsMatch') : t('signUp.passwordsNoMatch')) : null}
                                 hintTone={suPassword===suConfirm ? 'ok' : 'bad'}>
-                                <input type={showSuConfPw?'text':'password'} id="suConfirm" {...fieldProps('suConfirm')} autoComplete="new-password"
+                                <input type={showSuConfPw?'text':'password'} id="suConfirm" {...NO_CLIPBOARD} {...fieldProps('suConfirm')} autoComplete="new-password"
                                     className={`auth-input has-toggle${suConfirm ? (suPassword===suConfirm ? ' ok' : ' bad') : ''}`}
                                     placeholder={t('signUp.confirmPasswordPlaceholder')} value={suConfirm} onChange={e => setSuConfirm(e.target.value)} />
                             </AuthField>
@@ -795,10 +853,20 @@ function Hero() {
                         {fieldErrors.suAgree
                             ? <AuthFieldError id="suAgree" className="auth-check-error">{fieldErrors.suAgree}</AuthFieldError>
                             : !termsViewed && <p className="auth-check-hint">{t('signUp.viewTermsHint')}</p>}
+                        </div>
 
-                        <button type="submit" className="auth-btn" disabled={isSubmitting}>
-                            {isSubmitting ? t('signUp.submitting') : t('signUp.submit')}
-                        </button>
+                        <div className={`auth-part-actions${signUpPart > 1 ? ' two' : ''}`}>
+                            {signUpPart > 1 && (
+                                <button type="button" className="auth-btn secondary" onClick={() => goToSignUpPart(signUpPart - 1)} disabled={isSubmitting}>
+                                    <i className="bi bi-arrow-left" aria-hidden="true"></i> {t('signUp.back')}
+                                </button>
+                            )}
+                            <button type="submit" className="auth-btn" disabled={isSubmitting}>
+                                {signUpPart < SIGNUP_PARTS.length
+                                    ? <>{t('signUp.next')} <i className="bi bi-arrow-right" aria-hidden="true"></i></>
+                                    : (isSubmitting ? t('signUp.submitting') : t('signUp.submit'))}
+                            </button>
+                        </div>
                         <p className="auth-switch">
                             {t('signUp.haveAccount')}{' '}
                             <button type="button" className="auth-link" onClick={() => { setShowSignUp(false); setShowSignIn(true); clearErr(); setSignUpStep('form'); }}>
@@ -888,7 +956,7 @@ function Hero() {
                         <form onSubmit={handleResetPassword} onChange={clearFieldError} noValidate>
                             <AuthField id="fpNewPw" error={fieldErrors.fpNewPw} label={t('forgotPassword.newPassword')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showFpNewPw} onToggle={() => setShowFpNewPw(v=>!v)} />}>
-                                <input type={showFpNewPw?'text':'password'} className="auth-input has-toggle" id="fpNewPw" {...fieldProps('fpNewPw')} autoComplete="new-password" placeholder={t('forgotPassword.newPasswordPlaceholder')} value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} />
+                                <input type={showFpNewPw?'text':'password'} className="auth-input has-toggle" id="fpNewPw" {...NO_CLIPBOARD} {...fieldProps('fpNewPw')} autoComplete="new-password" placeholder={t('forgotPassword.newPasswordPlaceholder')} value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} />
                             </AuthField>
                             
                             {fpNewPw && (
@@ -908,7 +976,7 @@ function Hero() {
                                 toggle={<PasswordToggleButton visible={showFpConfPw} onToggle={() => setShowFpConfPw(v=>!v)} />}
                                 hint={fpConfirmPw ? (fpNewPw===fpConfirmPw ? t('signUp.passwordsMatch') : t('signUp.passwordsNoMatch')) : null}
                                 hintTone={fpNewPw===fpConfirmPw ? 'ok' : 'bad'}>
-                                <input type={showFpConfPw?'text':'password'} id="fpConfirmPw" {...fieldProps('fpConfirmPw')} autoComplete="new-password"
+                                <input type={showFpConfPw?'text':'password'} id="fpConfirmPw" {...NO_CLIPBOARD} {...fieldProps('fpConfirmPw')} autoComplete="new-password"
                                     className={`auth-input has-toggle${fpConfirmPw ? (fpNewPw===fpConfirmPw ? ' ok' : ' bad') : ''}`}
                                     placeholder={t('forgotPassword.confirmNewPasswordPlaceholder')} value={fpConfirmPw} onChange={e => setFpConfirmPw(e.target.value)} />
                             </AuthField>

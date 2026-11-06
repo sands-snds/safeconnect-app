@@ -20,6 +20,10 @@ const AdminSidebar = ({
           label: "Dashboard"
         },
         {
+          id: "incident-map",
+          label: "Incident Map"
+        },
+        {
           id: "notifications",
           label: "Notifications"
         }

@@ -6,6 +6,7 @@ const User = require("../models/User");
 const Notification = require("../models/Notification");
 const { isAdminRole } = require("../utils/roles");
 const AnnouncementArchive = require("../services/announcementArchiveService");
+const live = require("../services/liveUpdates");
 
 exports.createAnnouncement = async (req, res) => {
     try {
@@ -143,6 +144,8 @@ exports.createComment = async (req, res) => {
             }).catch((err) => console.error("Comment notification failed:", err));
         }
 
+        // Open comment threads reload, for everyone signed in.
+        live.notifyAll("comments");
         res.status(201).json({
             success: true,
             comment: {
@@ -179,6 +182,7 @@ exports.deleteComment = async (req, res) => {
         }
 
         await AnnouncementComment.delete(req.params.commentId);
+        live.notifyAll("comments");
         res.json({ success: true });
     } catch (err) {
         console.error(err);

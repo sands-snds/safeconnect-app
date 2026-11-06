@@ -129,6 +129,20 @@ const STYLES = `
   .auth-note { display: flex; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; font-size: 0.85rem; line-height: 1.45; margin: 0 0 14px; }
   .auth-fineprint { margin: 14px 0 0; text-align: center; font-size: 0.8rem; color: #6b7280; }
 
+  /* Sign Up in steps: the step bar, then Back / Next. */
+  .auth-steps { list-style: none; margin: 0 0 4px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .auth-step button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1.5px solid #f0eaec; border-radius: 10px; background: #fff; font: inherit; color: #6b7280; text-align: left; cursor: default; }
+  .auth-step.done button { cursor: pointer; color: #374151; }
+  .auth-step.done button:hover { border-color: #d8c3ca; }
+  .auth-step.current button { border-color: #6B2C3E; background: #fdf7f9; color: #6B2C3E; }
+  .auth-step-n { width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; background: #f3eef0; color: #6b7280; }
+  .auth-step.current .auth-step-n { background: #6B2C3E; color: #fff; }
+  .auth-step.done .auth-step-n { background: #16a34a; color: #fff; }
+  .auth-step-l { min-width: 0; font-size: 0.8rem; font-weight: 700; line-height: 1.2; }
+  .auth-step-count { margin: 0 0 14px; font-size: 0.78rem; color: #6b7280; }
+  .auth-part-actions { display: grid; gap: 10px; margin-top: 6px; }
+  .auth-part-actions.two { grid-template-columns: 1fr 2fr; }
+
   /* Sign Up: proof of residency (valid ID upload). */
   .auth-id-intro { margin: -4px 0 10px; font-size: 0.85rem; color: #4b5563; line-height: 1.5; }
   .auth-id-info { margin: 0 0 14px; padding: 12px 14px; border-radius: 10px; background: #fdf7f9; border: 1px solid #f0e2e7; }
@@ -170,6 +184,9 @@ const STYLES = `
     .auth-grid.cols-2, .auth-grid.cols-3 { grid-template-columns: 1fr; }
     .auth-checklist { grid-template-columns: 1fr; }
     .auth-id-list { grid-template-columns: 1fr; }
+    .auth-steps { gap: 6px; }
+    .auth-step button { flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 8px 4px; }
+    .auth-step-l { font-size: 0.72rem; }
     .auth-upload.has-file { flex-wrap: wrap; }
     .auth-upload.has-file .auth-upload-actions { flex-direction: row; gap: 16px; width: 100%; justify-content: flex-end; }
     /* 16px stops iOS from zooming in when the ID type list is tapped */

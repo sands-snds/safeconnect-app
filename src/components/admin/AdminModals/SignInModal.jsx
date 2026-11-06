@@ -5,6 +5,7 @@ import useSiteContent from '../../shared/useSiteContent';
 import { showAccountStatusPopup } from '../../shared/accountStatusPopup';
 import { markAdminJustSignedIn } from './AdminDemoPopup';
 import { tx } from "../../../i18n/adminText";
+import { NO_CLIPBOARD } from '../../shared/noClipboard';
 
 const SignInModal = ({ onSuccess, notice }) => {
   const [email, setEmail] = useState('');
@@ -78,6 +79,7 @@ const SignInModal = ({ onSuccess, notice }) => {
             <input
               type="password"
               required
+              {...NO_CLIPBOARD}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="form-input"

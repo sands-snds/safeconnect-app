@@ -46,6 +46,10 @@ export const translations = {
       call: 'Call',
       choose: 'Choose',
       chooseWho: 'Choose who to call',
+      confirmTitle: 'Make an emergency call?',
+      confirmBody: 'Call {{name}} at {{number}} now?',
+      confirmCall: 'Yes, call now',
+      confirmCancel: 'Cancel',
       sublabels: {
         police: 'National Emergency Hotline',
         dasma: 'Dasmariñas City PNP',
@@ -176,6 +180,11 @@ export const translations = {
       accountPendingReview: 'Account created! A barangay administrator will check your ID. We\'ll email you once it\'s approved, and then you can sign in.',
       sectionResidency: 'Proof of Residency',
       sectionAddress: 'Home Address',
+      next: 'Next',
+      back: 'Back',
+      stepsLabel: 'Sign-up steps',
+      stepOf: 'Step {{n}} of {{total}}',
+      steps: { details: 'Your details', address: 'Address & ID', account: 'Account' },
       addressIntro: 'Your complete address in Barangay Santa Fe. It is filled in for you when you report for yourself.',
       addressHouse: 'House / Lot / Block No.',
       addressHousePlaceholder: 'e.g. Blk 5 Lot 12',
@@ -280,6 +289,7 @@ export const translations = {
       }
     },
     demoVideo: {
+      unmute: 'Unmute',
       eyebrow: 'Barangay Videos',
       defaultTitle: 'Videos from the Barangay',
       subtitle: 'Watch the latest videos and updates from Barangay Santa Fe.',
@@ -757,6 +767,33 @@ export const translations = {
         impact5: 'Extreme threat to life and property. Catastrophic damage is possible; follow evacuation orders right away.'
       }
     },
+    reportsMap: {
+      badge: "Live map",
+      title: "Your Reports on the Map",
+      subtitle: "See where each of your reports was pinned in Barangay Santa Fe. A blinking marker means the barangay is still working on it.",
+      mapLabel: "Map of your reports in Barangay Santa Fe",
+      legend: "Legend",
+      resolvedLegend: "Resolved (stops blinking)",
+      openInMyReports: "Open in My Reports",
+      noPin: "no map pin",
+      empty: "Your reports will appear here after you submit one.",
+      privateNote: "Only you can see your reports on this map.",
+      types: {
+        fire: "Fire Emergency",
+        flood: "Flood Emergency",
+        quake: "Earthquake",
+        typhoon: "Typhoon",
+        emergency: "Emergency",
+        assist: "Assistance Request",
+        crime: "Petty Crime"
+      },
+      status: {
+        received: "Received",
+        inProgress: "In Progress",
+        resolved: "Resolved",
+        dismissed: "Dismissed"
+      }
+    },
     widgets: {
       badge: 'Stay informed',
       title: 'Today in Barangay Sta. Fe',
@@ -798,6 +835,12 @@ export const translations = {
       loadingComments: 'Loading comments...',
       commentPlaceholder: 'Write a comment...',
       deleteComment: 'Delete comment',
+      deleteCommentTitle: 'Delete Comment?',
+      deleteCommentBody: 'Your comment will be permanently deleted. This cannot be undone.',
+      deleteCommentRepliesTitle: 'Delete Comment and Replies?',
+      deleteCommentRepliesBody: 'Your comment and its {{n}} replies will be permanently deleted. This cannot be undone.',
+      deleteCommentConfirm: 'Delete',
+      deleteCommentCancel: 'Cancel',
       adminBadge: 'Barangay Admin',
       officialBadge: 'Barangay Official',
       viewOneReply: '1 reply',
@@ -1260,6 +1303,10 @@ export const translations = {
       call: 'Tawagan',
       choose: 'Pumili',
       chooseWho: 'Piliin kung sino ang tatawagan',
+      confirmTitle: 'Tatawag sa emergency?',
+      confirmBody: 'Tawagan na ngayon ang {{name}} sa {{number}}?',
+      confirmCall: 'Oo, tumawag na',
+      confirmCancel: 'Kanselahin',
       sublabels: {
         police: 'Pambansang Emergency Hotline',
         dasma: 'Dasmariñas City PNP',
@@ -1390,6 +1437,11 @@ export const translations = {
       accountPendingReview: 'Nagawa na ang account! Susuriin ng administrator ng barangay ang iyong ID. Mag-e-email kami kapag naaprubahan na ito, at saka ka na makakapag-sign in.',
       sectionResidency: 'Patunay ng Paninirahan',
       sectionAddress: 'Address ng Tirahan',
+      next: 'Susunod',
+      back: 'Bumalik',
+      stepsLabel: 'Mga hakbang sa pag-sign up',
+      stepOf: 'Hakbang {{n}} ng {{total}}',
+      steps: { details: 'Iyong detalye', address: 'Address at ID', account: 'Account' },
       addressIntro: 'Ang kumpleto mong address sa Barangay Santa Fe. Kusa itong ilalagay kapag nag-report ka para sa sarili mo.',
       addressHouse: 'House / Lot / Block No.',
       addressHousePlaceholder: 'hal. Blk 5 Lot 12',
@@ -1494,6 +1546,7 @@ export const translations = {
       }
     },
     demoVideo: {
+      unmute: 'Lagyan ng tunog',
       eyebrow: 'Mga Video ng Barangay',
       defaultTitle: 'Mga Video mula sa Barangay',
       subtitle: 'Panoorin ang pinakabagong mga video at balita mula sa Barangay Santa Fe.',
@@ -1971,6 +2024,33 @@ export const translations = {
         impact5: 'Matinding banta sa buhay at ari-arian. Posible ang malawakang pagkasira; sundin agad ang utos na lumikas.'
       }
     },
+    reportsMap: {
+      badge: "Live na mapa",
+      title: "Ang Iyong mga Report sa Mapa",
+      subtitle: "Tingnan kung saan naka-pin ang bawat report mo sa Barangay Santa Fe. Kapag kumikislap ang marker, inaasikaso pa ito ng barangay.",
+      mapLabel: "Mapa ng iyong mga report sa Barangay Santa Fe",
+      legend: "Gabay",
+      resolvedLegend: "Nalutas (hindi na kumikislap)",
+      openInMyReports: "Buksan sa Aking mga Report",
+      noPin: "walang pin sa mapa",
+      empty: "Lalabas dito ang iyong mga report pagkatapos mong magpadala.",
+      privateNote: "Ikaw lamang ang nakakakita ng iyong mga report sa mapang ito.",
+      types: {
+        fire: "Sunog",
+        flood: "Baha",
+        quake: "Lindol",
+        typhoon: "Bagyo",
+        emergency: "Emergency",
+        assist: "Kahilingan ng Tulong",
+        crime: "Maliit na Krimen"
+      },
+      status: {
+        received: "Natanggap",
+        inProgress: "Inaasikaso",
+        resolved: "Nalutas",
+        dismissed: "Kinansela"
+      }
+    },
     widgets: {
       badge: 'Manatiling may alam',
       title: 'Ngayon sa Barangay Sta. Fe',
@@ -2012,6 +2092,12 @@ export const translations = {
       loadingComments: 'Naglo-load ng mga komento...',
       commentPlaceholder: 'Sumulat ng komento...',
       deleteComment: 'Burahin ang komento',
+      deleteCommentTitle: 'Burahin ang Komento?',
+      deleteCommentBody: 'Permanenteng mabubura ang iyong komento. Hindi na ito maibabalik.',
+      deleteCommentRepliesTitle: 'Burahin ang Komento at mga Sagot?',
+      deleteCommentRepliesBody: 'Permanenteng mabubura ang iyong komento at ang {{n}} sagot dito. Hindi na ito maibabalik.',
+      deleteCommentConfirm: 'Burahin',
+      deleteCommentCancel: 'Kanselahin',
       adminBadge: 'Barangay Admin',
       officialBadge: 'Barangay Official',
       viewOneReply: '1 sagot',

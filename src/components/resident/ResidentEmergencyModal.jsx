@@ -796,10 +796,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         .modal-form .form-group .form-select:focus {
           box-shadow: none;
         }
-        /* The "Select …" choice looks like the other fields' placeholders. */
-        .modal-form .form-group .form-select.is-empty {
-          color: #9ca3af;
-        }
         .modal-form .form-group .form-select option {
           color: #1f2937;
         }

@@ -3,6 +3,7 @@ import ResidentNavbar from '../components/resident/ResidentNavbar';
 import ResidentHero from '../components/resident/ResidentHero';
 import EmergencyReportSection from '../components/resident/EmergencyReportSection';
 import ResidentWidgets from '../components/resident/ResidentWidgets';
+import ResidentReportsMap from '../components/resident/ResidentReportsMap';
 import Footer from '../components/shared/DonationFooter';
 import ResidentEmergencyModal from '../components/resident/ResidentEmergencyModal';
 import ResidentAssistanceModal from '../components/resident/ResidentAssistanceModal';
@@ -73,6 +74,8 @@ function ResidentPage() {
             onPettyCrimeClick={() => setPettyCrimeOpen(true)}
           />
       </section>
+
+      <ResidentReportsMap />
 
       <Footer />
 

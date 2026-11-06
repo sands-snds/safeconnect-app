@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { confirmPopup } from "../../shared/popup";
+import { COMMENTS_CHANGED_EVENT } from "../../shared/commentsLive";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import { flashHighlight } from "../../shared/highlight";
 import CommentAvatar from "../../shared/CommentAvatar";
@@ -115,6 +117,11 @@ export default function AnnouncementCard({
     const [comments, setComments] = useState(null); // null = not loaded yet
     const [commentsLoading, setCommentsLoading] = useState(false);
     const [commentCount, setCommentCount] = useState(announcement.commentCount || 0);
+    // Until the thread is opened, the count follows the reloaded news.
+    const commentsLoaded = useRef(false);
+    useEffect(() => {
+        if (!commentsLoaded.current) setCommentCount(announcement.commentCount || 0);
+    }, [announcement.commentCount]);
     const [commentDraft, setCommentDraft] = useState("");
     const [postingComment, setPostingComment] = useState(false);
     
@@ -154,6 +161,26 @@ export default function AnnouncementCard({
         };
         window.addEventListener(FOCUS_EVENT, onFocus);
         return () => window.removeEventListener(FOCUS_EVENT, onFocus);
+    }, [announcement.id]);
+
+    useEffect(() => { commentsLoaded.current = comments !== null; }, [comments]);
+
+    // Someone posted or deleted a comment: reload an open thread.
+    useEffect(() => {
+        const onChanged = async () => {
+            if (!commentsLoaded.current) return;
+            try {
+                const data = await fetchAnnouncementComments(announcement.id);
+                if (Array.isArray(data)) {
+                    setComments(data);
+                    setCommentCount(data.length);
+                }
+            } catch {
+                // keep what is showing
+            }
+        };
+        window.addEventListener(COMMENTS_CHANGED_EVENT, onChanged);
+        return () => window.removeEventListener(COMMENTS_CHANGED_EVENT, onChanged);
     }, [announcement.id]);
 
     useEffect(() => {
@@ -249,6 +276,15 @@ export default function AnnouncementCard({
     const handleDeleteComment = async (commentId) => {
         const prevComments = comments;
         const removed = (comments || []).filter((c) => c.id === commentId || c.parentId === commentId).length;
+        const replies = removed - 1;
+        const confirmed = await confirmPopup({
+            type: "danger",
+            title: t(replies > 0 ? "news.deleteCommentRepliesTitle" : "news.deleteCommentTitle"),
+            message: t(replies > 0 ? "news.deleteCommentRepliesBody" : "news.deleteCommentBody", { n: replies }),
+            confirmLabel: t("news.deleteCommentConfirm"),
+            cancelLabel: t("news.deleteCommentCancel")
+        });
+        if (!confirmed) return;
         setComments((list) => (list || []).filter((c) => c.id !== commentId && c.parentId !== commentId));
         setCommentCount((c) => Math.max(0, c - removed));
         const result = await deleteAnnouncementComment(commentId);

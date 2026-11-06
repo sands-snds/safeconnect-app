@@ -5,6 +5,8 @@ import EmergencyContactList from '../shared/EmergencyContactList';
 import ResidentAssistanceModal from './ResidentAssistanceModal';
 import ResidentPettyCrimeModal from './ResidentPettyCrimeModal';
 import useCallAccess from './useCallAccess';
+import { confirmPopup } from '../shared/popup';
+import { formatMobile } from '../shared/EmergencyContactList';
 
 function EmergencyCallButton() {
   const { t } = useLanguage();
@@ -12,9 +14,17 @@ function EmergencyCallButton() {
   const { emergencyContacts } = useSiteContent();
   const [open, setOpen] = useState(false);
 
-  const handleCall = (number) => {
-    window.location.href = `tel:${number}`;
+  // Asks first, so a call is never started by a stray tap.
+  const handleCall = async (number, name) => {
     setOpen(false);
+    const ok = await confirmPopup({
+      type: 'warning',
+      title: t('emergencyContacts.confirmTitle'),
+      message: t('emergencyContacts.confirmBody', { name: name || t('emergencyContacts.title'), number: formatMobile(number) }),
+      confirmLabel: t('emergencyContacts.confirmCall'),
+      cancelLabel: t('emergencyContacts.confirmCancel')
+    });
+    if (ok) window.location.href = `tel:${number}`;
   };
 
   return (

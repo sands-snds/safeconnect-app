@@ -6,6 +6,7 @@ jest.mock('../components/resident/ResidentNavbar', () => () => null);
 jest.mock('../components/resident/ResidentHero', () => () => null);
 jest.mock('../components/resident/EmergencyReportSection', () => () => null);
 jest.mock('../components/resident/ResidentWidgets', () => () => null);
+jest.mock('../components/resident/ResidentReportsMap', () => () => null);
 jest.mock('../components/shared/DonationFooter', () => () => null);
 jest.mock('../components/resident/ResidentPettyCrimeModal', () => () => null);
 

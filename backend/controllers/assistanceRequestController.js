@@ -75,6 +75,7 @@ exports.updateStatus = async (req, res) => {
         const affected = await AssistanceRequest.updateStatus(req.params.id, req.body.status, dismissalReason);
         
         if (request.reporter_id && affected > 0) live.notifyUser(request.reporter_id, "reports");
+        if (affected > 0) live.notifyAdmins("admin-notifications");
 
         if (request.reporter_id && replyMessage) {
             await Notification.create({

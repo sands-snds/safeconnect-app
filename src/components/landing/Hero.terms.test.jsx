@@ -56,6 +56,9 @@ const openSignUp = () => {
   fireEvent.change(document.getElementById('suIdFile'), {
     target: { files: [new File(['%PDF-1.7 test'], 'barangay-id.pdf', { type: 'application/pdf' })] }
   });
+  // Next, Next: on to the Account step, where the Terms box is.
+  const next = () => fireEvent.click(document.querySelector('form button[type="submit"]'));
+  next(); next();
   return {
     checkbox: screen.getByRole('checkbox', { name: /I have read and agree to the Terms and Conditions/ }),
     
@@ -135,7 +138,8 @@ describe('Sign Up', () => {
     expect(checkbox).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
-    expect(screen.getByRole('checkbox', { name: /I have read and agree/ })).not.toBeChecked();
+    // reopened at step 1; the box (on step 3) is unticked
+    expect(document.getElementById('suAgree')).not.toBeChecked();
   });
 });
 
@@ -222,18 +226,22 @@ describe('Sign Up layout', () => {
   test('password requirements stay hidden until a password is typed', () => {
     renderHero();
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
-    expect(screen.queryByRole('list', { name: 'Password requirements' })).not.toBeInTheDocument();
+    const rules = () => document.querySelector('ul[aria-label="Password requirements"]');
+    expect(rules()).toBeNull();
     fireEvent.change(screen.getByPlaceholderText('Min. 8 characters'), { target: { value: 'S' } });
-    expect(screen.getByRole('list', { name: 'Password requirements' })).toBeInTheDocument();
+    expect(rules()).not.toBeNull();
     fireEvent.change(screen.getByPlaceholderText('Min. 8 characters'), { target: { value: '' } });
-    expect(screen.queryByRole('list', { name: 'Password requirements' })).not.toBeInTheDocument();
+    expect(rules()).toBeNull();
   });
 
   test('groups the form under bold section headings', () => {
     renderHero();
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
-    for (const heading of ['Personal Information', 'Contact Details', 'Account Security']) {
+    // Step 1, then (all three steps are in the form, each shown in turn)
+    for (const heading of ['Personal Information', 'Contact Details']) {
       expect(screen.getByRole('heading', { name: heading })).toHaveClass('auth-section');
     }
+    const heads = [...document.querySelectorAll('h3.auth-section')].map((h) => h.textContent);
+    expect(heads).toEqual(['Personal Information', 'Contact Details', 'Home Address', 'Proof of Residency', 'Account Security']);
   });
 });

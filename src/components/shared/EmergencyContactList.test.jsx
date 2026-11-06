@@ -28,9 +28,9 @@ test('each person calls their own number', () => {
   renderList(onCall);
   fireEvent.click(screen.getByRole('button', { name: /Barangay Sta\. Fe/ }));
   fireEvent.click(screen.getByRole('button', { name: /Sec Hazel R\. Adriano/ }));
-  expect(onCall).toHaveBeenLastCalledWith('+639456355303');
+  expect(onCall).toHaveBeenLastCalledWith('+639456355303', expect.any(String));
   fireEvent.click(screen.getByRole('button', { name: /PB Emmanuel B\. Noora/ }));
-  expect(onCall).toHaveBeenLastCalledWith('+639354984838');
+  expect(onCall).toHaveBeenLastCalledWith('+639354984838', expect.any(String));
 });
 
 test('the old barangay line is gone; other contacts still call right away', () => {
@@ -38,7 +38,7 @@ test('the old barangay line is gone; other contacts still call right away', () =
   renderList(onCall);
   expect(JSON.stringify(DEFAULT_SITE_CONTENT)).not.toContain('9929474309');
   fireEvent.click(screen.getByRole('button', { name: /911 Emergency/ }));
-  expect(onCall).toHaveBeenCalledWith('911');
+  expect(onCall).toHaveBeenCalledWith('911', expect.any(String));
 });
 
 test('formats mobile numbers', () => {

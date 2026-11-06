@@ -18,6 +18,8 @@ import { confirmPopup } from "../shared/popup";
 import { refreshSyncedState, useSyncOnFocus } from "../shared/useSyncedState";
 import useLiveUpdates from "../shared/useLiveUpdates";
 import { announceReportsChanged } from "./useCallAccess";
+import { OPEN_REPORTS_EVENT } from "./ResidentReportsMap";
+import { announceCommentsChanged } from "../shared/commentsLive";
 import useTabNotifications, { markNotificationsViewed } from "../shared/useTabNotifications";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { MAIN_LOGO } from "../shared/logos";
@@ -261,6 +263,7 @@ function ResidentNavbar() {
     announcements: reloadAnnouncements,
     profile: refreshProfile,
     reports: refreshReports,
+    comments: () => { announceCommentsChanged(); reloadAnnouncements(); },
     reconnected: () => {
       refreshSyncedState();
       focusRefresh.current();
@@ -318,6 +321,18 @@ function ResidentNavbar() {
     };
     window.addEventListener(OPEN_NEWS_EVENT, onOpenNews);
     return () => window.removeEventListener(OPEN_NEWS_EVENT, onOpenNews);
+  }, []);
+
+  // The reports map asks to open My Reports at one report.
+  const openReportsFor = useRef(null);
+  openReportsFor.current = (type, id) => {
+    openReportsPage();
+    if (type && id != null) setReportFocus({ type, id, nonce: Date.now() });
+  };
+  useEffect(() => {
+    const onOpenReports = (e) => openReportsFor.current(e.detail?.type, e.detail?.id);
+    window.addEventListener(OPEN_REPORTS_EVENT, onOpenReports);
+    return () => window.removeEventListener(OPEN_REPORTS_EVENT, onOpenReports);
   }, []);
 
   const openNewsPage = () => {
