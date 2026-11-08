@@ -30,9 +30,11 @@ const waitFor = (type, kind) => {
     return PETTY_CRIME_WAIT;
 };
 
-// { available, secondsUntilAvailable }: available once any open report's
-// wait is over; otherwise how long until the soonest one is (null when the
-// resident has no open report at all).
+// { available, secondsUntilAvailable, availableKeys }: available once any
+// open report's wait is over; otherwise how long until the soonest one is
+// (null when the resident has no open report at all). availableKeys names
+// the reports whose wait is over ("emergency-12"), so the page can tell the
+// resident once per report that the call button is ready.
 exports.getCallAccess = async (reporterId) => {
     const [emergency, assistance, pettyCrime] = await Promise.all([
         Report.findOpenWithAge(reporterId),
@@ -40,13 +42,20 @@ exports.getCallAccess = async (reporterId) => {
         PettyCrime.findOpenWithAge(reporterId)
     ]);
 
-    const remaining = [
+    const open = [
         ...emergency.map((r) => ["emergency", r]),
         ...assistance.map((r) => ["assistance", r]),
         ...pettyCrime.map((r) => ["pettyCrime", r])
-    ].map(([type, r]) => Math.max(0, waitFor(type, r.kind) - Math.max(0, Number(r.age_seconds) || 0)));
+    ].map(([type, r]) => ({
+        key: `${type}-${r.id}`,
+        remaining: Math.max(0, waitFor(type, r.kind) - Math.max(0, Number(r.age_seconds) || 0))
+    }));
 
-    if (remaining.length === 0) return { available: false, secondsUntilAvailable: null };
-    const soonest = Math.min(...remaining);
-    return { available: soonest === 0, secondsUntilAvailable: soonest };
+    if (open.length === 0) return { available: false, secondsUntilAvailable: null, availableKeys: [] };
+    const soonest = Math.min(...open.map((r) => r.remaining));
+    return {
+        available: soonest === 0,
+        secondsUntilAvailable: soonest,
+        availableKeys: open.filter((r) => r.remaining === 0).map((r) => r.key)
+    };
 };

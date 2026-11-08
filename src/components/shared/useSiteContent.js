@@ -6,6 +6,7 @@ const CACHE_KEY = 'sf_siteContent';
 export const DEFAULT_SITE_CONTENT = {
   emergencyContacts: [
     { id: 'police', label: '911 Emergency', description: 'National Emergency Hotline', sublabelKey: 'police', number: '911', icon: 'bi-shield-fill-exclamation', color: '#dc2626' },
+    { id: 'bfp', label: 'Bureau of Fire Protection', description: 'Fire emergencies', sublabelKey: 'bfp', number: '+639953360534', numberType: 'mobile', icon: 'bi-fire', color: '#c2410c' },
     { id: 'dasma', label: 'Dasmariñas Police', description: 'Dasmariñas City PNP', sublabelKey: 'dasma', number: '+63462420002', numberType: 'landline', icon: 'bi-shield-fill', color: '#1d4ed8' },
     { id: 'cdrmc', label: 'CDRMC', description: 'Cavite Disaster Risk Management', sublabelKey: 'cdrmc', number: '+63462300345', numberType: 'landline', icon: 'bi-heart-pulse-fill', color: '#059669' },
     { id: 'dswd', label: 'DSWD', description: 'Social Welfare & Development', sublabelKey: 'dswd', number: '+63464165393', numberType: 'landline', icon: 'bi-people-fill', color: '#ea580c' },
@@ -19,6 +20,7 @@ export const DEFAULT_SITE_CONTENT = {
   ],
   footerHotlines: [
     { label: '911 Emergency', number: '911' },
+    { label: 'Bureau of Fire Protection', number: '+639953360534' },
     { label: 'Dasmariñas Police', number: '+63462420002' },
     { label: 'CDRMC', number: '+63462300345' },
     { label: 'DSWD', number: '+63464165393' }

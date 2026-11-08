@@ -129,6 +129,7 @@ require("./services/logArchiveService").startScheduler();
 
 require("./services/siteContentService").ensureSchema()
   .then(() => require("./services/siteMediaService").hideNewsVideoOnce())
+  .then(() => require("./services/siteContentService").addFireBureauOnce())
   .catch((err) => console.error("Could not prepare site contacts storage:", err.message));
 
 require("./services/userStateService").ensureSchema().catch((err) =>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import useSiteContent from '../shared/useSiteContent';
 import EmergencyContactList from '../shared/EmergencyContactList';
@@ -8,11 +8,12 @@ import useCallAccess from './useCallAccess';
 import { confirmPopup } from '../shared/popup';
 import { formatMobile } from '../shared/EmergencyContactList';
 
-function EmergencyCallButton() {
+// open / setOpen come from the section, so the "call button is ready"
+// notice can open the contact list too.
+function EmergencyCallButton({ open, setOpen }) {
   const { t } = useLanguage();
 
   const { emergencyContacts } = useSiteContent();
-  const [open, setOpen] = useState(false);
 
   // Asks first, so a call is never started by a stray tap.
   const handleCall = async (number, name) => {
@@ -136,7 +137,25 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
   const { t } = useLanguage();
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showPettyCrimeModal, setShowPettyCrimeModal] = useState(false);
-  const callAvailable = useCallAccess();
+  const [callOpen, setCallOpen] = useState(false);
+  // When a report's wait ends: a notice in the middle of the screen.
+  // Call Now opens the emergency contacts (as the red button does).
+  const noticeOpen = useRef(false);
+  const callAvailable = useCallAccess({
+    onReady: async () => {
+      if (noticeOpen.current) return;
+      noticeOpen.current = true;
+      const callNow = await confirmPopup({
+        type: 'warning',
+        title: t('emergencyContacts.readyTitle'),
+        message: t('emergencyContacts.readyBody'),
+        confirmLabel: t('emergencyContacts.readyCall'),
+        cancelLabel: t('emergencyContacts.readyLater')
+      });
+      noticeOpen.current = false;
+      if (callNow) setCallOpen(true);
+    }
+  });
 
   const emergencies = [
     {
@@ -279,7 +298,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
 
       {/* The floating call button appears only after a report is submitted
           and its waiting time has passed (see useCallAccess). */}
-      {callAvailable && <EmergencyCallButton />}
+      {callAvailable && <EmergencyCallButton open={callOpen} setOpen={setCallOpen} />}
 
     </section>
   );

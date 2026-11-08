@@ -99,3 +99,41 @@ test('a failed check keeps what is showing', async () => {
   await waitFor(() => expect(fetchCallAccess).toHaveBeenCalledTimes(2));
   expect(result.current).toBe(true);
 });
+
+describe('"call button is ready" notice', () => {
+  beforeEach(() => localStorage.clear());
+
+  test('announces a report once, when its wait ends', async () => {
+    const onReady = jest.fn();
+    fetchCallAccess.mockResolvedValueOnce({ ...waitFor_(60), availableKeys: [] })
+      .mockResolvedValue({ ...NOW, availableKeys: ['emergency-5'] });
+    renderHook(() => useCallAccess({ onReady }));
+    await waitFor(() => expect(fetchCallAccess).toHaveBeenCalledTimes(1));
+    expect(onReady).not.toHaveBeenCalled();
+    await act(async () => { jest.advanceTimersByTime(61 * 1000); });
+    await waitFor(() => expect(onReady).toHaveBeenCalledWith(['emergency-5']));
+    // later checks don't announce it again
+    act(() => announceReportsChanged());
+    await waitFor(() => expect(fetchCallAccess.mock.calls.length).toBeGreaterThanOrEqual(3));
+    expect(onReady).toHaveBeenCalledTimes(1);
+  });
+
+  test('a reload (or sign-in again) does not repeat it', async () => {
+    fetchCallAccess.mockResolvedValue({ ...NOW, availableKeys: ['emergency-5'] });
+    const first = jest.fn();
+    const { unmount } = renderHook(() => useCallAccess({ onReady: first }));
+    await waitFor(() => expect(first).toHaveBeenCalledTimes(1));
+    unmount();
+    const second = jest.fn();
+    renderHook(() => useCallAccess({ onReady: second }));
+    await waitFor(() => expect(fetchCallAccess).toHaveBeenCalledTimes(2));
+    expect(second).not.toHaveBeenCalled();
+  });
+
+  test('a wait that ended while the page was closed is announced on the next visit', async () => {
+    const onReady = jest.fn();
+    fetchCallAccess.mockResolvedValue({ ...NOW, availableKeys: ['pettyCrime-9'] });
+    renderHook(() => useCallAccess({ onReady }));
+    await waitFor(() => expect(onReady).toHaveBeenCalledWith(['pettyCrime-9']));
+  });
+});

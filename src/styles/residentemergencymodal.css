@@ -288,15 +288,16 @@
 .sn-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px 10px;
+  gap: 8px 12px;
 }
 .form-group .sn-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 44px;
-  padding: 4px 6px 4px 12px;
+  min-height: 48px;
+  /* even room on both sides, so the + doesn't sit on the border */
+  padding: 6px 12px 6px 14px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
@@ -324,7 +325,7 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  gap: 2px;
+  gap: 6px;
 }
 .form-group .sn-step {
   width: 32px;
@@ -375,6 +376,7 @@
 }
 @media (max-width: 560px) {
   .sn-list { grid-template-columns: 1fr; }
+  .form-group .sn-row { padding: 6px 10px 6px 14px; }
   .form-group .sn-stepper input { font-size: 16px; }
 }
 

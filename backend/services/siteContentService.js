@@ -28,6 +28,7 @@ const SETTING_KEY = "site_contacts";
 const DEFAULT_CONTENT = {
     emergencyContacts: [
         { id: "police", label: "911 Emergency", description: "National Emergency Hotline", sublabelKey: "police", number: "911", icon: "bi-shield-fill-exclamation", color: "#dc2626" },
+        { id: "bfp", label: "Bureau of Fire Protection", description: "Fire emergencies", sublabelKey: "bfp", number: "+639953360534", numberType: "mobile", icon: "bi-fire", color: "#c2410c" },
         { id: "dasma", label: "Dasmariñas Police", description: "Dasmariñas City PNP", sublabelKey: "dasma", number: "+63462420002", numberType: "landline", icon: "bi-shield-fill", color: "#1d4ed8" },
         { id: "cdrmc", label: "CDRMC", description: "Cavite Disaster Risk Management", sublabelKey: "cdrmc", number: "+63462300345", numberType: "landline", icon: "bi-heart-pulse-fill", color: "#059669" },
         { id: "dswd", label: "DSWD", description: "Social Welfare & Development", sublabelKey: "dswd", number: "+63464165393", numberType: "landline", icon: "bi-people-fill", color: "#ea580c" },
@@ -44,6 +45,7 @@ const DEFAULT_CONTENT = {
     
     footerHotlines: [
         { label: "911 Emergency", number: "911" },
+        { label: "Bureau of Fire Protection", number: "+639953360534" },
         { label: "Dasmariñas Police", number: "+63462420002" },
         { label: "CDRMC", number: "+63462300345" },
         { label: "DSWD", number: "+63464165393" }
@@ -289,6 +291,37 @@ function validate(input = {}) {
     return { content: { emergencyContacts, footerHotlines, officials, socials: { email, facebookLabel, facebookUrl } } };
 }
 
+// Adds the Bureau of Fire Protection (0995-336-0534) to contacts an Admin
+// saved before it was a default: the call button's list (after 911) and the
+// footer's Emergency Hotline. Runs once (marker setting), so if an Admin
+// removes it later it stays removed.
+const BFP_MARKER = "site_contacts_bfp_v1";
+const BFP_DIGITS = "9953360534";
+async function addFireBureauOnce() {
+    const [[done]] = await db.query(`SELECT 1 AS ok FROM system_settings WHERE setting_key = ?`, [BFP_MARKER]);
+    if (done) return;
+    const [[row]] = await db.query(`SELECT setting_value FROM system_settings WHERE setting_key = ?`, [SETTING_KEY]);
+    if (row?.setting_value) {
+        try {
+            const saved = JSON.parse(row.setting_value);
+            const has = (list) => (list || []).some((c) => String(c.number || "").replace(/\D/g, "").endsWith(BFP_DIGITS));
+            const bfp = DEFAULT_CONTENT.emergencyContacts.find((c) => c.id === "bfp");
+            const hotline = DEFAULT_CONTENT.footerHotlines.find((h) => h.number.endsWith(BFP_DIGITS));
+            const insertAfter911 = (list, item) => {
+                const at = list.findIndex((c) => String(c.number || "").trim() === "911");
+                list.splice(at >= 0 ? at + 1 : 0, 0, item);
+            };
+            let changed = false;
+            if (Array.isArray(saved.emergencyContacts) && !has(saved.emergencyContacts)) { insertAfter911(saved.emergencyContacts, { ...bfp }); changed = true; }
+            if (Array.isArray(saved.footerHotlines) && !has(saved.footerHotlines)) { insertAfter911(saved.footerHotlines, { ...hotline }); changed = true; }
+            if (changed) await saveContent(saved);
+        } catch (err) {
+            console.error("Could not add the Bureau of Fire Protection contact:", err.message);
+        }
+    }
+    await db.query(`INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES (?, '1')`, [BFP_MARKER]);
+}
+
 async function saveContent(content) {
     await db.query(
         `INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)
@@ -298,6 +331,7 @@ async function saveContent(content) {
 }
 
 module.exports = {
+    addFireBureauOnce,
     DEFAULT_CONTENT,
     TEXT_MAX,
     CONTACT_ICONS,
