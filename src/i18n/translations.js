@@ -316,7 +316,7 @@ export const translations = {
           desc: 'Request rescue, relief goods, or support during or after a disaster.'
         },
         crimeReports: {
-          label: 'Crime Reports',
+          label: 'Petty Crime Reports',
           desc: 'Report theft, vandalism, or suspicious activity in your area.'
         },
         announcements: {
