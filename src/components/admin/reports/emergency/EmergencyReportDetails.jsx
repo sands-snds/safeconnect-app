@@ -40,7 +40,7 @@ const EmergencyReportDetails = ({ report }) => {
 
         <DetailField
           label={tx("People Affected")}
-          value={report.peopleAffected}
+          value={report.peopleAffected && report.peopleAffected !== "0" ? report.peopleAffected : null}
         />
 
         <DetailField

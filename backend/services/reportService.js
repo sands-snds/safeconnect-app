@@ -15,8 +15,11 @@ const PEOPLE_MESSAGE = `Please enter how many people are affected (1 to ${MAX_PE
 
 class ReportService {
     static async create(data) {
-        const people = peopleCount(data.people);
-        if (people === null) {
+        // Optional (the quick report leaves it to "Add details"), but a
+        // number that is given must be 1 to 500.
+        const given = data.people !== undefined && data.people !== null && data.people !== "";
+        const people = given ? peopleCount(data.people) : null;
+        if (given && people === null) {
             return { success: false, status: 400, message: PEOPLE_MESSAGE };
         }
 
@@ -32,7 +35,7 @@ class ReportService {
             location: data.location,
             latitude: data.latitude,
             longitude: data.longitude,
-            details: data.details,
+            details: data.details || "",
             peopleAffected: people,
             specialNeeds: data.special,
             photoUrl: data.photoUrl,

@@ -51,7 +51,13 @@ const STYLES = `
   .auth-grid { display: grid; gap: 0 14px; }
   .auth-grid.cols-2 { grid-template-columns: 1fr 1fr; }
   /* align-items: end keeps a wrapped label (e.g. "Gitnang Pangalan (opsyonal)") from pushing its box out of line. */
-  .auth-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; align-items: end; }
+  /* Label, box and message share rows across the three name fields, so the
+     boxes stay in line when one label wraps or one field shows an error. */
+  .auth-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; align-items: start; }
+  @supports (grid-template-rows: subgrid) {
+    .auth-grid.cols-3 > .auth-field { display: grid; grid-row: span 3; grid-template-rows: subgrid; align-content: start; }
+    .auth-grid.cols-3 > .auth-field > .auth-label { align-self: end; }
+  }
 
   .auth-field { margin-bottom: 14px; }
   .auth-label { display: block; margin-bottom: 6px; font-size: 0.84rem; font-weight: 600; color: #374151; }
@@ -153,7 +159,12 @@ const STYLES = `
   .auth-id-info-title { margin: 0 0 6px; display: flex; align-items: center; gap: 6px; font-size: 0.84rem; font-weight: 700; color: #6B2C3E; }
   .auth-id-list { margin: 0 0 8px; padding-left: 1.15rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; font-size: 0.8rem; color: #374151; line-height: 1.45; }
   .auth-id-info-hint { margin: 0; font-size: 0.78rem; color: #6b7280; line-height: 1.5; }
-  .auth-select { padding-right: 14px; cursor: pointer; text-overflow: ellipsis; }
+  .auth-select {
+    -webkit-appearance: none; appearance: none; cursor: pointer; text-overflow: ellipsis;
+    padding-right: 44px;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B2C3E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 16px center; background-size: 14px 10px;
+  }
   .auth-upload-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
   .auth-upload {
     display: flex; align-items: center; gap: 12px; width: 100%; min-height: 72px; margin: 0; padding: 12px 14px;

@@ -11,7 +11,7 @@ jest.mock('../components/shared/DonationFooter', () => () => null);
 jest.mock('../components/resident/ResidentPettyCrimeModal', () => () => null);
 
 
-jest.mock('../components/resident/ResidentEmergencyModal', () => ({ onRequestAssistance }) => (
+jest.mock('../components/resident/QuickEmergencyReport', () => ({ onRequestAssistance }) => (
   <button onClick={() => onRequestAssistance({ location: 'Pinned', latitude: 14.32, longitude: 120.94 })}>
     Request Assistance
   </button>

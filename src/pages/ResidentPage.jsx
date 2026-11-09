@@ -5,7 +5,7 @@ import EmergencyReportSection from '../components/resident/EmergencyReportSectio
 import ResidentWidgets from '../components/resident/ResidentWidgets';
 import ResidentReportsMap from '../components/resident/ResidentReportsMap';
 import Footer from '../components/shared/DonationFooter';
-import ResidentEmergencyModal from '../components/resident/ResidentEmergencyModal';
+import QuickEmergencyReport from '../components/resident/QuickEmergencyReport';
 import ResidentAssistanceModal from '../components/resident/ResidentAssistanceModal';
 import ResidentPettyCrimeModal from '../components/resident/ResidentPettyCrimeModal';
 import "../styles/emergencyreport.css";
@@ -80,12 +80,12 @@ function ResidentPage() {
       <Footer />
 
       {/* ── Modals ── */}
-      <ResidentEmergencyModal
-        isOpen={emergencyOpen}
+      {/* New emergency reports: the quick form. Editing one from My Reports
+          still uses the full ResidentEmergencyModal. */}
+      <QuickEmergencyReport
         show={emergencyOpen}
         onClose={() => setEmergencyOpen(false)}
         onRequestAssistance={(location) => openAssistance(location)}
-        currentUser={currentUser}
       />
 
       <ResidentAssistanceModal
