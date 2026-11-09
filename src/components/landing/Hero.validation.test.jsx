@@ -98,7 +98,8 @@ describe('Sign Up', () => {
     openSignUp();
     expect([...document.querySelectorAll('.auth-step-l')].map((n) => n.textContent)).toEqual(['Your details', 'Address & ID', 'Account']);
     expect(stepShown()).toBe('Your details');
-    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
+    expect([...document.querySelectorAll('.auth-step-n')].map((n) => n.textContent)).toEqual(['1', '2', '3']);
+    expect(document.querySelector('.auth-step-count').textContent).toBe('Step 1 of 3 · Your details');
     expect(document.querySelector('form button[type="submit"]').textContent).toMatch(/^Next/);
     expect(document.querySelector('.auth-part-actions').textContent).not.toMatch(/Back/);
     expect(field('suFirst').closest('.auth-part')).not.toHaveAttribute('hidden');
@@ -128,7 +129,7 @@ describe('Sign Up', () => {
     submit();
     expect(errorOf('suAddrHouse')).toBe('Please enter your house, lot or block number.');
     expect(errorOf('suAddrStreet')).toBe('Please enter your street.');
-    expect(errorOf('suAddrArea')).toBeUndefined(); // optional
+    expect(field('suAddrArea')).toBeNull(); // no Subdivision field at sign-up
     expect(errorOf('suIdType')).toBe('Please choose the type of ID you are uploading.');
     expect(errorOf('suIdFile')).toMatch(/valid ID/);
     expect(stepShown()).toBe('Address & ID');
@@ -159,7 +160,7 @@ describe('Sign Up', () => {
   test('Back and Next keep everything typed', () => {
     openSignUp();
     fillStep1(); submit();
-    fillAddress(); type('suAddrArea', 'Villa Santa Fe');
+    fillAddress();
     fireEvent.click(document.querySelector('.auth-part-actions button[type="button"]'));
     expect(stepShown()).toBe('Your details');
     expect(field('suFirst').value).toBe('Juan');
@@ -167,7 +168,7 @@ describe('Sign Up', () => {
     submit();
     expect(stepShown()).toBe('Address & ID');
     expect(field('suAddrHouse').value).toBe('Blk 5 Lot 12');
-    expect(field('suAddrArea').value).toBe('Villa Santa Fe');
+    expect(field('suAddrStreet').value).toBe('Sampaguita St.');
     // a finished step can be reopened from the step bar
     fireEvent.click(screen.getByRole('button', { name: /Your details/ }));
     expect(stepShown()).toBe('Your details');
@@ -287,7 +288,7 @@ describe('Sign Up: proof of residency', () => {
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(expect.stringMatching(/request-otp$/), expect.anything()));
     const [, options] = global.fetch.mock.calls.find(([url]) => String(url).endsWith('/request-otp'));
     const body = JSON.parse(options.body);
-    expect(body.address).toEqual({ houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.', area: '' });
+    expect(body.address).toEqual({ houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.' });
     expect(body.validId.idType).toBe('Barangay ID');
     expect(body.validId.fileName).toBe('barangay-id.pdf');
     expect(body.validId.dataUrl).toMatch(/^data:application\/pdf;base64,/);

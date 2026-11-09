@@ -87,7 +87,6 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
-  const [isAnonymous, setIsAnonymous] = useState(false);
   
   
   const hasExistingMedia = isEditing && Boolean(editingReport.has_media);
@@ -189,7 +188,6 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     setVictimRelationshipOther('');
     setVictimDetails('');
     clearMedia();
-    setIsAnonymous(false);
     setGpsCoords(null);
     setLocationError('');
   };
@@ -288,7 +286,6 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         photoUrl,
         mediaType: photoUrl ? media.type : null,
         
-        isAnonymous,
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
         victimContact: reportFor === 'others' ? victimContact.trim() : null,
@@ -431,40 +428,11 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               </button>
             </div>
           </div>
-          {isEditing ? (
-            editingReport.is_anonymous ? (
-              <div style={{ marginBottom: '16px', fontSize: '13px', color: '#374151', background: '#f3f4f6', borderRadius: '8px', padding: '10px 14px' }}>
-                <i className="bi bi-incognito" style={{ marginRight: '6px' }}></i>{t('pettyCrimeModal.anonymousOnEdit')}
-              </div>
-            ) : null
-          ) : (
-            <label style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '10px',
-              marginBottom: '16px',
-              padding: '12px 14px',
-              borderRadius: '8px',
-              border: `2px solid ${isAnonymous ? '#dc3545' : '#d1d5db'}`,
-              background: isAnonymous ? '#fef2f2' : '#fff',
-              cursor: 'pointer'
-            }}>
-              <input
-                type="checkbox"
-                checked={isAnonymous}
-                onChange={(e) => setIsAnonymous(e.target.checked)}
-                disabled={isSubmitting}
-                style={{ accentColor: '#dc3545', marginTop: '3px' }}
-              />
-              <span>
-                <span style={{ display: 'block', fontWeight: 600, fontSize: '13px', color: isAnonymous ? '#dc3545' : '#374151' }}>
-                  <i className="bi bi-incognito" style={{ marginRight: '6px' }}></i>{t('pettyCrimeModal.anonymousLabel')}
-                </span>
-                <span style={{ display: 'block', fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
-                  {t('pettyCrimeModal.anonymousHint')}
-                </span>
-              </span>
-            </label>
+          {/* No anonymous option for new reports; one filed anonymously before keeps it. */}
+          {isEditing && editingReport.is_anonymous && (
+            <div style={{ marginBottom: '16px', fontSize: '13px', color: '#374151', background: '#f3f4f6', borderRadius: '8px', padding: '10px 14px' }}>
+              <i className="bi bi-incognito" style={{ marginRight: '6px' }}></i>{t('pettyCrimeModal.anonymousOnEdit')}
+            </div>
           )}
           {reportFor === 'others' && (
             <div style={{ marginBottom: '16px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', padding: '14px' }}>

@@ -41,7 +41,7 @@ const ID_TYPES = [
 const SIGNUP_PARTS = ['details', 'address', 'account'];
 const SIGNUP_FIELD_PART = {
     suFirst: 1, suMiddle: 1, suLast: 1, suContact: 1, suEmail: 1,
-    suAddrHouse: 2, suAddrStreet: 2, suAddrArea: 2, suIdType: 2, suIdFile: 2,
+    suAddrHouse: 2, suAddrStreet: 2, suIdType: 2, suIdFile: 2,
     suUsername: 3, suPassword: 3, suConfirm: 3, suAgree: 3,
 };
 const SIGNUP_PART_FIRST_FIELD = ['suFirst', 'suAddrHouse', 'suUsername'];
@@ -170,7 +170,6 @@ function Hero() {
     // Home address in Barangay Santa Fe
     const [suAddrHouse,   setSuAddrHouse]   = useState('');
     const [suAddrStreet,  setSuAddrStreet]  = useState('');
-    const [suAddrArea,    setSuAddrArea]    = useState('');
     // Proof of residency
     const [suIdType,      setSuIdType]      = useState('');
     const [suIdFile,      setSuIdFile]      = useState(null);
@@ -321,7 +320,7 @@ function Hero() {
         setSuPassword(''); setSuConfirm(''); setSuAgree(false);
         setShowSuPw(false); setShowSuConfPw(false);
         clearIdFile(); setSuIdType('');
-        setSuAddrHouse(''); setSuAddrStreet(''); setSuAddrArea('');
+        setSuAddrHouse(''); setSuAddrStreet('');
         setFpEmail(''); setFpNewPw(''); setFpConfirmPw('');
         setShowFpNewPw(false); setShowFpConfPw(false);
         resetOtp(); setOtpEmail(''); setResendCooldown(0);
@@ -465,7 +464,7 @@ function Hero() {
             const result = await apiPost('request-otp', {
                 fullName, username: suUsername,
                 contact: `+63${suContact}`, email: suEmail, password: suPassword,
-                address: { houseNumber: suAddrHouse.trim(), street: suAddrStreet.trim(), area: suAddrArea.trim() },
+                address: { houseNumber: suAddrHouse.trim(), street: suAddrStreet.trim() },
                 validId: { idType: suIdType, fileName: suIdFile.name, dataUrl },
             });
             if (!result.success) {
@@ -500,7 +499,7 @@ function Hero() {
             setSuUsername(''); setSuContact(''); setSuEmail('');
             setSuPassword(''); setSuConfirm('');
             clearIdFile(); setSuIdType('');
-            setSuAddrHouse(''); setSuAddrStreet(''); setSuAddrArea('');
+            setSuAddrHouse(''); setSuAddrStreet('');
             resetOtp(); setSignUpStep('form'); setSignUpPart(1);
             setShowSignUp(false); setShowSignIn(true);
             setSuccessMsg(t(result.pendingVerification ? 'signUp.accountPendingReview' : 'signUp.accountCreated'));
@@ -703,14 +702,14 @@ function Hero() {
                                 return (
                                     <li key={key} className={`auth-step ${state}`} aria-current={state === 'current' ? 'step' : undefined}>
                                         <button type="button" disabled={state !== 'done' || isSubmitting} onClick={() => goToSignUpPart(n)}>
-                                            <span className="auth-step-n" aria-hidden="true">{state === 'done' ? <i className="bi bi-check-lg"></i> : n}</span>
-                                            <span className="auth-step-l">{t(`signUp.steps.${key}`)}</span>
+                                            <span className="auth-step-n" aria-hidden="true">{n}</span>
+                                            <span className="auth-step-l visually-hidden">{t(`signUp.steps.${key}`)}</span>
                                         </button>
                                     </li>
                                 );
                             })}
                         </ol>
-                        <p className="auth-step-count">{t('signUp.stepOf', { n: signUpPart, total: SIGNUP_PARTS.length })}</p>
+                        <p className="auth-step-count">{t('signUp.stepOf', { n: signUpPart, total: SIGNUP_PARTS.length })} · <b>{t(`signUp.steps.${SIGNUP_PARTS[signUpPart - 1]}`)}</b></p>
 
                         <div className="auth-part" hidden={signUpPart !== 1}>
                         <h3 className="auth-section">{t('signUp.sectionPersonal')}</h3>
@@ -750,14 +749,10 @@ function Hero() {
                                 <input type="text" className="auth-input" id="suAddrStreet" {...fieldProps('suAddrStreet')} autoComplete="address-line2" maxLength={120}
                                     placeholder={t('signUp.addressStreetPlaceholder')} value={suAddrStreet} onChange={e => setSuAddrStreet(e.target.value)} />
                             </AuthField>
-                            <AuthField id="suAddrArea" label={t('signUp.addressArea')} optional={t('signUp.optional')} icon="bi-houses">
-                                <input type="text" className="auth-input" id="suAddrArea" maxLength={120}
-                                    placeholder={t('signUp.addressAreaPlaceholder')} value={suAddrArea} onChange={e => setSuAddrArea(e.target.value)} />
-                            </AuthField>
-                            <AuthField id="suAddrFixed" label={t('signUp.addressBarangay')} icon="bi-geo-alt">
-                                <input type="text" className="auth-input" id="suAddrFixed" value={t('signUp.addressBarangayValue')} readOnly tabIndex={-1} aria-readonly="true" />
-                            </AuthField>
                         </div>
+                        <AuthField id="suAddrFixed" label={t('signUp.addressBarangay')} icon="bi-geo-alt">
+                            <input type="text" className="auth-input" id="suAddrFixed" value={t('signUp.addressBarangayValue')} readOnly tabIndex={-1} aria-readonly="true" />
+                        </AuthField>
 
                         <h3 className="auth-section">{t('signUp.sectionResidency')}</h3>
                         <p className="auth-id-intro">{t('signUp.residencyIntro')}</p>

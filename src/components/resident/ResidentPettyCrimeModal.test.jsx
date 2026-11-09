@@ -59,7 +59,7 @@ test.each(['Theft', 'Suspicious Activity', 'Harassment'])('%s: photo is optional
   expect(screen.getByText(/Optional for this crime type/)).toBeInTheDocument();
   fireEvent.submit(form);
   await waitFor(() => expect(createPettyCrimeReport).toHaveBeenCalledTimes(1));
-  expect(createPettyCrimeReport.mock.calls[0][0]).toMatchObject({ crimeType: type, photoUrl: null, isAnonymous: false });
+  expect(createPettyCrimeReport.mock.calls[0][0]).toMatchObject({ crimeType: type, photoUrl: null });
   expect(await screen.findByText('Report Submitted')).toBeInTheDocument();
 });
 
@@ -105,13 +105,13 @@ test('before a crime type is picked, the hint explains which types need a photo'
   expect(screen.getByText(/Optional for Theft, Suspicious Activity and Harassment; required for all other/)).toBeInTheDocument();
 });
 
-test('report anonymously: checkbox sends isAnonymous', async () => {
+test('there is no anonymous option; new reports carry the reporter', async () => {
   const { form, fill } = renderModal();
+  expect(screen.queryByLabelText(/Report anonymously/)).not.toBeInTheDocument();
   fill('Harassment');
-  fireEvent.click(screen.getByLabelText(/Report anonymously/));
   fireEvent.submit(form);
   await waitFor(() => expect(createPettyCrimeReport).toHaveBeenCalledTimes(1));
-  expect(createPettyCrimeReport.mock.calls[0][0].isAnonymous).toBe(true);
+  expect(createPettyCrimeReport.mock.calls[0][0].isAnonymous).toBeFalsy();
   expect(await screen.findByText('Report Submitted')).toBeInTheDocument();
 });
 
