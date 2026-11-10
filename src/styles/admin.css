@@ -1014,3 +1014,109 @@
     display: flex;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Stacking tables (Table with stack="lg" | "md" | "sm"; Page Contacts) */
+/*   The table fills its space; when that's too narrow for every       */
+/*   column, each row becomes a card with its column names, so there   */
+/*   is never a sideways scrollbar.                                    */
+/* ------------------------------------------------------------------ */
+.stack-table-wrap {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.admin-table.stack-table {
+  min-width: 0 !important;
+}
+
+.stack-table td input,
+.stack-table td select,
+.stack-table td .form-input,
+.stack-table td .form-select {
+  width: 100%;
+  min-width: 0 !important;
+}
+
+
+@container (max-width: 1000px) {
+  .stack-table.stack-lg,
+  .stack-table.stack-lg tbody { display: block; }
+  .stack-table.stack-lg thead { display: none; }
+  .stack-table.stack-lg tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px 14px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+  }
+  .stack-table.stack-lg td { display: block; padding: 0 !important; border: 0 !important; min-width: 0; }
+  .stack-table.stack-lg td[colspan] { grid-column: 1 / -1; }
+  .stack-table.stack-lg td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+}
+
+@container (max-width: 820px) {
+  .stack-table.stack-md,
+  .stack-table.stack-md tbody { display: block; }
+  .stack-table.stack-md thead { display: none; }
+  .stack-table.stack-md tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px 14px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+  }
+  .stack-table.stack-md td { display: block; padding: 0 !important; border: 0 !important; min-width: 0; }
+  .stack-table.stack-md td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+}
+
+@container (max-width: 480px) {
+  .stack-table.stack-sm,
+  .stack-table.stack-sm tbody { display: block; }
+  .stack-table.stack-sm thead { display: none; }
+  .stack-table.stack-sm tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+  }
+  .stack-table.stack-sm td { display: block; padding: 0 !important; border: 0 !important; min-width: 0; }
+  .stack-table.stack-sm td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+}

@@ -799,7 +799,7 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `ListView.jsx` | The standard list page: search, status filter, extra filters, sort, an "Add" button, a **Generate Report** button, and a table or card layout with **pagination**. It resets to page 1 when filters change, but not on a background refresh. Optional `sectionTitle`, `showFilters` and `exportFilters` props. |
-| `Table.jsx`, `Section.jsx` | Table shell (headings translated with `tx`; on phones each row becomes a card, every cell labelled with its column name through `data-label`) and card wrapper. Optional `minWidth` for wide tables, and headers given as `{ label, width }`. |
+| `Table.jsx`, `Section.jsx` | Table shell (headings translated with `tx`; on phones each row becomes a card, every cell labelled with its column name through `data-label`) and card wrapper. Headers can be `{ label, width }`. `stack` (`lg` / `md` / `sm`): the table fills its space and, below about 1000 / 820 / 480 px of room (a container query), each row becomes a card whose cells show their `data-label` (`.stack-table` in `admin.css`); Page Contacts uses it, so it never scrolls sideways. |
 | `Pagination.jsx` | Page numbers with gaps ("…"), "Showing x–y of z", and a rows-per-page picker. |
 | `ReportCard.jsx` | A collapsible report row: accent color, title, tag pills, then the status pill; actions and View / Hide details on the right; details below. |
 | `StatusSelect.jsx` | A **forward-only** status control: a "Move to …" button in the next status's color (blue In Progress, green Resolved) and a red **Dismiss** for open reports. `statusBadge(status)` gives the pill shown beside the title. |

@@ -209,7 +209,7 @@ const SiteContactsPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", paddingBottom: 80 }}>
+    <div style={{ paddingBottom: 80 }}>
       <GroupHeading icon="bi-telephone-outbound-fill" title={tx("Call Button")}>
         {tx("The red floating button on the landing and resident pages.")}
       </GroupHeading>
@@ -225,7 +225,7 @@ const SiteContactsPage = () => {
         </p>
 
         <Table
-          minWidth={1080}
+          stack="lg"
           headers={[
             { label: "Color", width: 64 },
             { label: "Icon", width: 170 },
@@ -245,7 +245,7 @@ const SiteContactsPage = () => {
             return (
               <React.Fragment key={key}>
                 <tr>
-                  <td className="table-cell" style={cellStyle}>
+                  <td className="table-cell" style={cellStyle} data-label={tx("Color")}>
                     <ColorPicker
                       color={c.color}
                       colors={options.colors}
@@ -253,7 +253,7 @@ const SiteContactsPage = () => {
                       onChange={(color) => updateContact(i, { color })}
                     />
                   </td>
-                  <td className="table-cell" style={cellStyle}>
+                  <td className="table-cell" style={cellStyle} data-label={tx("Icon")}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span
                         aria-hidden="true"
@@ -269,13 +269,13 @@ const SiteContactsPage = () => {
                       </select>
                     </div>
                   </td>
-                  <td className="table-cell" style={cellStyle}>
+                  <td className="table-cell" style={cellStyle} data-label={tx("Name")}>
                     <input className="form-input" value={c.label} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { label: e.target.value })} placeholder={tx("e.g. Barangay Sta. Fe")} aria-label={tx("Name")} />
                   </td>
-                  <td className="table-cell" style={cellStyle}>
+                  <td className="table-cell" style={cellStyle} data-label={tx("Description")}>
                     <input className="form-input" value={c.description || ""} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { description: e.target.value })} placeholder={tx("e.g. Barangay Emergency Line")} aria-label={tx("Description")} />
                   </td>
-                  <td className="table-cell" style={cellStyle}>
+                  <td className="table-cell" style={cellStyle} data-label={tx("Number")}>
                     {is911 ? (
                       // The national emergency number stays 911.
                       <div className="form-input" title={tx("911 can't be changed")} style={{ display: "flex", alignItems: "center", gap: 6, background: "#f3f4f6", color: "#374151", fontWeight: 600 }}>
@@ -286,7 +286,7 @@ const SiteContactsPage = () => {
                         onChange={(next) => updateContact(i, next)} />
                     )}
                   </td>
-                  <td className="table-cell" style={cellStyle}>
+                  <td className="table-cell" style={cellStyle} data-label={tx("People to choose from")}>
                     <button
                       type="button"
                       className="button button-secondary"
@@ -299,7 +299,7 @@ const SiteContactsPage = () => {
                       <i className={`bi ${peopleOpen ? "bi-chevron-up" : "bi-chevron-down"}`} aria-hidden="true" />
                     </button>
                   </td>
-                  <td className="table-cell" style={cellStyle}>
+                  <td className="table-cell" style={cellStyle} data-label={tx("Shown")}>
                     {is911 ? (
                       <button
                         type="button"
@@ -317,7 +317,7 @@ const SiteContactsPage = () => {
                       <span style={{ fontSize: 12.5, color: "#6b7280" }} title={tx("Remove it to take it off the call button.")}>{tx("Always")}</span>
                     )}
                   </td>
-                  <td className="table-cell" style={cellStyle}>
+                  <td className="table-cell" style={cellStyle} data-label={tx("Order")}>
                     <OrderButtons
                       index={i}
                       count={draft.emergencyContacts.length}
@@ -390,7 +390,7 @@ const SiteContactsPage = () => {
         </p>
 
         <Table
-          minWidth={900}
+          stack="md"
           headers={[
             { label: "Position", width: 140 },
             "First name",
@@ -405,25 +405,25 @@ const SiteContactsPage = () => {
             const who = officialName(o) || tx("Official");
             return (
               <tr key={i}>
-                <td className="table-cell" style={cellStyle}>
+                <td className="table-cell" style={cellStyle} data-label={tx("Position")}>
                   <input className="form-input" value={o.position || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { position: e.target.value })} placeholder={tx("e.g. Kagawad")} aria-label={tx("Position")} />
                 </td>
-                <td className="table-cell" style={cellStyle}>
+                <td className="table-cell" style={cellStyle} data-label={tx("First name")}>
                   <input className="form-input" value={o.firstName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { firstName: e.target.value })} placeholder={tx("e.g. Juan")} autoComplete="off" aria-label={tx("First name")} />
                 </td>
-                <td className="table-cell" style={cellStyle}>
+                <td className="table-cell" style={cellStyle} data-label={tx("Middle name (optional)")}>
                   <input className="form-input" value={o.middleName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { middleName: e.target.value })} placeholder={tx("e.g. D.")} autoComplete="off" aria-label={tx("Middle name (optional)")} />
                 </td>
-                <td className="table-cell" style={cellStyle}>
+                <td className="table-cell" style={cellStyle} data-label={tx("Last name")}>
                   <input className="form-input" value={o.lastName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { lastName: e.target.value })} placeholder={tx("e.g. Dela Cruz")} autoComplete="off" aria-label={tx("Last name")} />
                 </td>
-                <td className="table-cell" style={cellStyle}>
+                <td className="table-cell" style={cellStyle} data-label={tx("Number type")}>
                   <PhoneNumberInput part="type" number={o.number} numberType={o.numberType} label={`${who} number`} onChange={(next) => updateOfficial(i, next)} />
                 </td>
-                <td className="table-cell" style={cellStyle}>
+                <td className="table-cell" style={cellStyle} data-label={tx("Number")}>
                   <PhoneNumberInput part="digits" number={o.number} numberType={o.numberType} label={`${who} number`} onChange={(next) => updateOfficial(i, next)} />
                 </td>
-                <td className="table-cell" style={cellStyle}>
+                <td className="table-cell" style={cellStyle} data-label={tx("Order")}>
                   <OrderButtons
                     index={i}
                     count={draft.officials.length}
@@ -458,18 +458,18 @@ const SiteContactsPage = () => {
         </p>
 
         <Table
-          minWidth={560}
+          stack="sm"
           headers={["Name", { label: "Number", width: 240 }, { label: "Order", width: 130 }]}
         >
           {(draft.footerHotlines || []).map((h, i) => (
             <tr key={i}>
-              <td className="table-cell" style={cellStyle}>
+              <td className="table-cell" style={cellStyle} data-label={tx("Name")}>
                 <input className="form-input" value={h.label} maxLength={TEXT_MAX} onChange={(e) => updateHotline(i, { label: e.target.value })} placeholder={tx("e.g. Bureau of Fire Protection")} aria-label={tx("Name")} />
               </td>
-              <td className="table-cell" style={cellStyle}>
+              <td className="table-cell" style={cellStyle} data-label={tx("Number")}>
                 <input className="form-input" value={h.number} maxLength={25} onChange={(e) => updateHotline(i, { number: e.target.value })} placeholder={tx("e.g. +63464161234")} inputMode="tel" aria-label={tx("Number")} />
               </td>
-              <td className="table-cell" style={cellStyle}>
+              <td className="table-cell" style={cellStyle} data-label={tx("Order")}>
                 <OrderButtons
                   index={i}
                   count={draft.footerHotlines.length}
