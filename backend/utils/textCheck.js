@@ -116,19 +116,32 @@ const isSpam = (text) => {
 
 // Short forms people really use.
 const KNOWN_ABBREVIATIONS = new Set(['brgy', 'bgy', 'bfp', 'pnp', 'cctv', 'lpg', 'mmda', 'dswd', 'ndrrmc', 'cdrrmo', 'mdrrmo', 'drrm', 'tnvs']);
-// A long word with no vowels, or six consonants in a row ("fjdksl").
+// Letters only (a stretch of a word between digits): a long one with no
+// vowels, six consonants in a row ("fjdksl", "hhdjsj"), or a home-row key
+// mash ("asdfasdf", "ahsjsjah": only a s d f g h j k l, with consonants
+// bunched up; "halaga" and "dalaga" alternate, so they pass).
 // Text-speak stays fine ("mrmng" for marami, "tlga" for talaga).
-const isLetterSalad = (word) => /^[a-z]+$/.test(word) && !KNOWN_ABBREVIATIONS.has(word)
-  && ((word.length >= 6 && !/[aeiouy]/.test(word)) || /[^aeiouy]{6,}/.test(word));
+const isLetterSalad = (letters) => letters.length >= 4 && !KNOWN_ABBREVIATIONS.has(letters)
+  && ((letters.length >= 6 && !/[aeiouy]/.test(letters))
+    || /[^aeiouy]{6,}/.test(letters)
+    || (letters.length >= 6 && /^[asdfghjkl]+$/.test(letters) && /[sdfghjkl]{3,}/.test(letters)));
 
-const isMeaningless = (text) => {
+// Digits and letters switching back and forth ("97079y8y8hih"); four or more
+// switches, so codes like "Blk5Lot12" (three) still pass.
+const switchesOften = (word) => word.length >= 8 && (word.match(/\d(?=[a-z])|[a-z](?=\d)/g) || []).length >= 4;
+
+const isGibberishWord = (word) => switchesOften(word) || word.split(/[^a-z]+/).some(isLetterSalad);
+
+// noLetters: also count a text with no letters at all ("....", "12") as
+// meaningless (descriptions; not addresses, which can be just numbers).
+const isMeaningless = (text, { noLetters = true } = {}) => {
   const lower = plain(text).trim();
   if (!lower) return false;
-  if (!/[a-z]/.test(lower)) return lower.replace(/\s/g, '').length >= 2; // only numbers / symbols
+  if (!/[a-z]/.test(lower)) return noLetters && lower.replace(/\s/g, '').length >= 2; // only numbers / symbols
   const words = wordsOf(lower).filter((w) => /[a-z]/.test(w) && w.length >= 4);
   if (!words.length) return false;
-  const salad = words.filter(isLetterSalad).length;
-  return salad > 0 && salad * 2 >= words.length;
+  const gibberish = words.filter(isGibberishWord).length;
+  return gibberish > 0 && gibberish * 2 >= words.length;
 };
 
 // The first problem with a text of this kind: 'offensive', 'spam',
@@ -139,7 +152,7 @@ const checkText = (text, kind = 'description') => {
   if (hasOffensiveLanguage(text)) return 'offensive';
   if (kind === 'number') return /([a-z])\1{4,}/.test(plain(text)) ? 'spam' : null;
   if (isSpam(text)) return 'spam';
-  if (kind === 'description' && isMeaningless(text)) return 'meaningless';
+  if (isMeaningless(text, { noLetters: kind === 'description' })) return 'meaningless';
   return null;
 };
 
