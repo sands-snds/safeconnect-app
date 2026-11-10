@@ -81,7 +81,7 @@ const AssistanceRequestDetails = ({ request }) => {
         />
       </div>
 
-      <ReportImage type="assistance" id={request.id} hasMedia={request.hasMedia} mediaType={request.mediaType} />
+      <ReportImage type="assistance" report={request} />
 
       <ReportLocationMap latitude={request.latitude} longitude={request.longitude} />
     </div>

@@ -1,3 +1,5 @@
+const { checkMedia, mediaColumns, mediaRejected } = require("../utils/mediaCheck");
+const ReportMedia = require("../models/ReportMedia");
 const AssistanceRequest = require("../models/AssistanceRequest");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
@@ -18,6 +20,10 @@ class AssistanceRequestService {
         if (!data.photoUrl) {
             return { success: false, status: 400, message: PROOF_REQUIRED_MESSAGE };
         }
+
+        // The photo or video must be fresh and unedited (utils/mediaCheck.js).
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        if (media && !media.ok) return mediaRejected(media);
 
         const reference = await generateReference(AssistanceRequest.getLatestReference);
 
@@ -45,6 +51,8 @@ class AssistanceRequestService {
             victimDetails: data.victimDetails
         });
 
+        if (media) await ReportMedia.save("assistance_requests", requestId, mediaColumns(media));
+
         await NotificationService.create({
             title: "New Assistance Request",
             message: `${data.type} requested at ${data.location}`,
@@ -64,6 +72,8 @@ class AssistanceRequestService {
             return { success: false, status: 400, message: PROOF_REQUIRED_MESSAGE };
         }
 
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        if (media && !media.ok) return mediaRejected(media);
         const affected = await AssistanceRequest.update(id, {
             assistanceType: data.type,
             location: data.location,
@@ -78,6 +88,7 @@ class AssistanceRequestService {
             mediaType: data.mediaType
         });
 
+        if (media && affected > 0) await ReportMedia.save("assistance_requests", id, mediaColumns(media));
         return { success: affected > 0 };
     }
 }

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createEmergencyReport, updateEmergencyReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
-import { resultError, showIfMediaTooLarge } from './reportErrors';
+import { resultError, showIfMediaProblem } from './reportErrors';
+import { checkMediaFile, mediaCheckMessageKey } from '../shared/media/mediaCheck';
+import { DayOldNote } from '../shared/media/MediaAttachmentField';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -197,7 +199,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     };
   }, [formData.mediaPreviewUrl]);
  
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value, files, type, checked } = e.target;
  
     if (name === 'media') {
@@ -232,12 +234,24 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         return;
       }
  
+      // Taken today (or yesterday, with a note), and not edited.
+      const input = e.target;
+      const check = await checkMediaFile(file, isVideo);
+      if (!check.ok) {
+        showPopup({ type: 'warning', title: t('reportForm.mediaCheck.title'), message: t(mediaCheckMessageKey(check.reason)) });
+        input.value = '';
+        setFormData((prev) => ({ ...prev, media: null, mediaPreviewUrl: null, mediaType: null, mediaTakenAt: null, mediaDayOld: false }));
+        return;
+      }
+
       const previewUrl = URL.createObjectURL(file);
       setFormData((prev) => ({
         ...prev,
         media: file,
         mediaPreviewUrl: previewUrl,
-        mediaType: isVideo ? 'video' : 'image'
+        mediaType: isVideo ? 'video' : 'image',
+        mediaTakenAt: check.takenAt,
+        mediaDayOld: check.dayOld
       }));
       return;
     }
@@ -516,7 +530,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       setShowAssistancePrompt(true);
     } catch (error) {
       console.error('Error submitting report:', error);
-      if (showIfMediaTooLarge(error, t)) return;
+      if (showIfMediaProblem(error, t)) return;
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('emergencyModal.submitError') });
     } finally {
       setIsSubmitting(false);
@@ -1367,6 +1381,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                           <img src={formData.mediaPreviewUrl} alt="Selected attachment preview" />
                         )}
                       </div>
+                      <DayOldNote t={t} takenAt={formData.mediaTakenAt} dayOld={formData.mediaDayOld} />
                       <button
                         type="button"
                         className="btn-remove-media"

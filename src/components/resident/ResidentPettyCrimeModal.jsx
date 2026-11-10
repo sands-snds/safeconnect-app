@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPettyCrimeReport, updatePettyCrimeReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
-import { resultError, showIfMediaTooLarge } from './reportErrors';
+import { resultError, showIfMediaProblem } from './reportErrors';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -327,7 +327,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       setShowSuccessPopup(true);
     } catch (error) {
       console.log(error);
-      if (showIfMediaTooLarge(error, t)) return;
+      if (showIfMediaProblem(error, t)) return;
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('pettyCrimeModal.submitError') });
     } finally {
       setIsSubmitting(false);

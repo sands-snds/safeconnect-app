@@ -4,6 +4,13 @@ import { LanguageProvider } from '../../i18n/LanguageContext';
 import { createPettyCrimeReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
 
+// The photo / video date check has its own tests (mediaCheck.test.js); here
+// every attachment counts as taken today.
+jest.mock('../shared/media/mediaCheck', () => ({
+  ...jest.requireActual('../shared/media/mediaCheck'),
+  checkMediaFile: () => Promise.resolve({ ok: true, takenAt: new Date(), dayOld: false })
+}));
+
 
 jest.mock('../shared/location/LocationPickerMap', () => () => null);
 

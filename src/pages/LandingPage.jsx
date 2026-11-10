@@ -29,9 +29,13 @@ const useSignedInRedirect = () => {
   );
 
   
+  // Signing out lands on the top of the page (the carousel), not wherever
+  // the resident or admin page was scrolled to; any #section is dropped.
   useEffect(() => {
-    if (justSignedOut) navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state: null });
-  }, [justSignedOut, navigate, location.pathname, location.search, location.hash]);
+    if (!justSignedOut) return;
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+    window.scrollTo(0, 0);
+  }, [justSignedOut, navigate, location.pathname, location.search]);
 
   useEffect(() => {
     if (!checking) return undefined;
@@ -66,6 +70,12 @@ const useSignedInRedirect = () => {
 function LandingPage() {
   const { t } = useLanguage();
   const checking = useSignedInRedirect();
+
+  // Coming from another page in the app keeps that page's scroll position;
+  // start at the carousel unless a #section was asked for.
+  useEffect(() => {
+    if (!checking && !window.location.hash) window.scrollTo(0, 0);
+  }, [checking]);
 
   if (checking) {
     return (

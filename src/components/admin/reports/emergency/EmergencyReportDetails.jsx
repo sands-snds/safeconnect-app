@@ -69,7 +69,7 @@ const EmergencyReportDetails = ({ report }) => {
         />
       </div>
 
-      <ReportImage type="emergency" id={report.id} hasMedia={report.hasMedia} mediaType={report.mediaType} />
+      <ReportImage type="emergency" report={report} />
 
       <ReportLocationMap latitude={report.latitude} longitude={report.longitude} />
     </div>

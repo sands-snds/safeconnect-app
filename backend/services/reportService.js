@@ -1,3 +1,5 @@
+const { checkMedia, mediaColumns, mediaRejected } = require("../utils/mediaCheck");
+const ReportMedia = require("../models/ReportMedia");
 const Report = require("../models/Report");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
@@ -22,6 +24,10 @@ class ReportService {
         if (given && people === null) {
             return { success: false, status: 400, message: PEOPLE_MESSAGE };
         }
+
+        // The photo or video must be fresh and unedited (utils/mediaCheck.js).
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        if (media && !media.ok) return mediaRejected(media);
 
         const reference = await generateReference(Report.getLatestReference);
 
@@ -49,6 +55,8 @@ class ReportService {
 
         const reportId = await Report.create(report);
 
+        if (media) await ReportMedia.save("emergency_reports", reportId, mediaColumns(media));
+
         await NotificationService.create({
             title: "New Emergency Report",
             message: `${data.emergencyType} reported at ${data.location}`,
@@ -68,6 +76,8 @@ class ReportService {
         if (data.people !== undefined && peopleCount(data.people) === null) {
             return { success: false, status: 400, message: PEOPLE_MESSAGE };
         }
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        if (media && !media.ok) return mediaRejected(media);
         const affected = await Report.update(id, {
             emergencyType: data.emergencyType,
             severity: data.severity,
@@ -81,6 +91,7 @@ class ReportService {
             mediaType: data.mediaType
         });
 
+        if (media && affected > 0) await ReportMedia.save("emergency_reports", id, mediaColumns(media));
         return { success: affected > 0 };
     }
 }

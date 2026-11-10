@@ -2,6 +2,9 @@ const ExportService = require("../services/exportService");
 
 const isValidType = (type) => ExportService.validTypes.includes(type);
 
+// Printed on the report: "Generated: <date and time>  By: <name>".
+const generatedBy = (req) => (req.admin && (req.admin.full_name || req.admin.username || req.admin.email_address)) || "";
+
 exports.exportPDF = async (req, res) => {
     const { type } = req.params;
 
@@ -13,7 +16,7 @@ exports.exportPDF = async (req, res) => {
     }
 
     try {
-        await ExportService.exportPDF(type, req.query, res);
+        await ExportService.exportPDF(type, req.query, res, generatedBy(req));
     } catch (err) {
         console.error(err);
         
@@ -35,7 +38,7 @@ exports.exportExcel = async (req, res) => {
     }
 
     try {
-        await ExportService.exportExcel(type, req.query, res);
+        await ExportService.exportExcel(type, req.query, res, generatedBy(req));
     } catch (err) {
         console.error(err);
         if (!res.headersSent) {

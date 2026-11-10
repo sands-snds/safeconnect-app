@@ -7,6 +7,9 @@ const CELL_PAD = 4;
 const attachment = (name) =>
     `attachment; filename="${name.replace(/[^\x20-\x7e]/g, "_").replace(/"/g, "'")}"; filename*=UTF-8''${encodeURIComponent(name)}`;
 
+// "Generated: 11/1/2026, 12:20:43 AM  By: Juan Dela Cruz" (Philippine time).
+const generatedLine = (by) => `Generated: ${new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" })}${by ? `   By: ${by}` : ""}`;
+
 class PDFService {
     static generateTableReport(options, res) {
         return new Promise((resolve, reject) => {
@@ -16,6 +19,7 @@ class PDFService {
                     filename,
                     filenamePrefix,
                     subtitle,
+                    generatedBy,
                     summary = [],
                     columns,
                     rows,
@@ -49,7 +53,7 @@ class PDFService {
                     }
                 });
 
-                this.drawHeader(doc, reportTitle, subtitle);
+                this.drawHeader(doc, reportTitle, subtitle, generatedBy);
                 if (summary.length) this.drawSummary(doc, summary);
                 parts.forEach((part, i) => {
                     if (part.title) this.drawSectionTitle(doc, part.title, i > 0);
@@ -85,7 +89,7 @@ class PDFService {
             .text(logo.placeholder, x + 4, y + r - 8, { width: size - 8, align: "center" });
     }
 
-    static drawHeader(doc, reportTitle, subtitle) {
+    static drawHeader(doc, reportTitle, subtitle, generatedBy) {
         const { left, right } = doc.page.margins;
         const pageRight = doc.page.width - right;
         const top = doc.page.margins.top;
@@ -125,7 +129,7 @@ class PDFService {
         if (subtitle) {
             doc.text(subtitle, left, doc.y + 2, { width: pageRight - left, align: "center" });
         }
-        doc.text(`Generated: ${new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" })}`,
+        doc.text(generatedLine(generatedBy),
             left, doc.y + 2, { width: pageRight - left, align: "center" });
 
         doc.moveDown(1);

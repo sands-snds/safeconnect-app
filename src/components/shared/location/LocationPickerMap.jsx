@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { SANTA_FE_BOUNDARY, SANTA_FE_CENTER } from './santaFeArea';
 import { useLanguage } from '../../../i18n/LanguageContext';
+import { LimitToSantaFe, MapTypeSwitch, MAP_FRAME, StreetViewPane } from './mapLimits';
 
 
 
@@ -68,22 +69,6 @@ const FollowPin = ({ pin }) => {
   return null;
 };
 
-// Google Street View at the pin, in a new tab (Google Maps URLs: no API key).
-// Shows the nearest street-level photos; where Google has none it opens the
-// map there instead.
-export const streetViewUrl = ({ lat, lng }) =>
-  `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-
-export const switchButton = (active) => ({
-  padding: '5px 10px',
-  border: 'none',
-  background: active ? '#1f2937' : '#fff',
-  color: active ? '#fff' : '#374151',
-  fontSize: '12px',
-  fontWeight: 600,
-  cursor: 'pointer'
-});
-
 const LocationPickerMap = ({
   pin: rawPin,
   onPick,
@@ -91,7 +76,8 @@ const LocationPickerMap = ({
   outsideMessage,
   disabled = false,
   readOnly = false,
-  height = 240
+  height = 240,
+  streetView = true
 }) => {
   const { t } = useLanguage();
   const pinLat = Number(rawPin?.lat);
@@ -121,9 +107,12 @@ const LocationPickerMap = ({
 
   return (
     <div style={{ marginTop: readOnly ? 0 : '10px' }}>
+      {/* The map and, beside it, Google Street View of the pin. */}
+      <div style={{ display: 'grid', gridTemplateColumns: streetView ? '1fr 1fr' : '1fr', gap: '8px' }}>
       <div
         style={{
-          position: 'relative',
+          ...MAP_FRAME,
+          minWidth: 0,
           borderRadius: '8px',
           overflow: 'hidden',
           border: `1px solid ${isOutside ? '#dc3545' : '#d1d5db'}`
@@ -158,61 +147,12 @@ const LocationPickerMap = ({
           )}
           {!readOnly && <ClickToPin onPick={onPick} disabled={!canPick} />}
           <FollowPin pin={pin} />
+          <LimitToSantaFe />
         </MapContainer>
 
         
-        <div
-          style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            zIndex: 500,
-            display: 'flex',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            boxShadow: '0 1px 4px rgba(0,0,0,.3)'
-          }}
-        >
-          {[['map', 'Map'], ['satellite', 'Satellite']].map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setBasemap(key)}
-              aria-pressed={basemap === key}
-              style={switchButton(basemap === key)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <MapTypeSwitch basemap={basemap} onChange={setBasemap} />
 
-        {pin && !isOutside && (
-          <a
-            href={streetViewUrl(pin)}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="See the place in Google Street View (opens a new tab)"
-            style={{
-              position: 'absolute',
-              left: '10px',
-              bottom: '22px',
-              zIndex: 500,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              background: '#fff',
-              color: '#1f2937',
-              fontSize: '12px',
-              fontWeight: 600,
-              textDecoration: 'none',
-              boxShadow: '0 1px 4px rgba(0,0,0,.3)'
-            }}
-          >
-            <i className="bi bi-person-walking" aria-hidden="true"></i> Street View
-          </a>
-        )}
 
         {!pin && !readOnly && (
           <div
@@ -234,6 +174,14 @@ const LocationPickerMap = ({
             <i className="bi bi-hand-index-thumb"></i> {t('reportForm.mapTapToPin')}
           </div>
         )}
+      </div>
+      {streetView && (
+        <StreetViewPane
+          pin={pin && !isOutside ? pin : null}
+          height={height}
+          emptyText={isOutside ? t('reportForm.streetViewOutside') : t('reportForm.streetViewEmpty')}
+        />
+      )}
       </div>
 
       {readOnly ? null : isOutside ? (

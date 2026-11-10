@@ -85,6 +85,10 @@ CREATE TABLE emergency_reports (
   resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved or Dismissed
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
   dismissal_reason VARCHAR(500) DEFAULT NULL, -- why the barangay dismissed it (sent to the reporter)
+  media_taken_at DATETIME NULL DEFAULT NULL, -- when the photo/video was taken, from its details (backend/utils/mediaCheck.js)
+  media_latitude DECIMAL(10,7) DEFAULT NULL, -- where it was taken (GPS in its details), if any
+  media_longitude DECIMAL(10,7) DEFAULT NULL,
+  media_flags VARCHAR(100) DEFAULT NULL, -- e.g. 'day_old' (taken the day before)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_emergency_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -121,6 +125,10 @@ CREATE TABLE assistance_requests (
   resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved or Dismissed
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
   dismissal_reason VARCHAR(500) DEFAULT NULL, -- why the barangay dismissed it (sent to the reporter)
+  media_taken_at DATETIME NULL DEFAULT NULL, -- when the photo/video was taken, from its details (backend/utils/mediaCheck.js)
+  media_latitude DECIMAL(10,7) DEFAULT NULL, -- where it was taken (GPS in its details), if any
+  media_longitude DECIMAL(10,7) DEFAULT NULL,
+  media_flags VARCHAR(100) DEFAULT NULL, -- e.g. 'day_old' (taken the day before)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_assistance_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL
@@ -154,6 +162,10 @@ CREATE TABLE petty_crimes (
   resolved_at TIMESTAMP NULL DEFAULT NULL, -- set when status becomes Resolved or Dismissed
   archived_at TIMESTAMP NULL DEFAULT NULL, -- set by manual/auto archive (services/archiveService.js)
   dismissal_reason VARCHAR(500) DEFAULT NULL, -- why the barangay dismissed it (sent to the reporter)
+  media_taken_at DATETIME NULL DEFAULT NULL, -- when the photo/video was taken, from its details (backend/utils/mediaCheck.js)
+  media_latitude DECIMAL(10,7) DEFAULT NULL, -- where it was taken (GPS in its details), if any
+  media_longitude DECIMAL(10,7) DEFAULT NULL,
+  media_flags VARCHAR(100) DEFAULT NULL, -- e.g. 'day_old' (taken the day before)
   PRIMARY KEY (id),
   KEY reporter_id (reporter_id),
   CONSTRAINT fk_pettycrime_reporter FOREIGN KEY (reporter_id) REFERENCES registered_users (id) ON DELETE SET NULL

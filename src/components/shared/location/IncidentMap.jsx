@@ -3,7 +3,8 @@ import { MapContainer, TileLayer, Polygon, Marker, Popup, useMap } from 'react-l
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { SANTA_FE_BOUNDARY } from './santaFeArea';
-import { BASEMAPS, switchButton } from './LocationPickerMap';
+import { BASEMAPS } from './LocationPickerMap';
+import { LimitToSantaFe, MapTypeSwitch } from './mapLimits';
 import { MAP_TYPES, RESOLVED_COLOR, isOpenStatus, geocodeInSantaFe } from './mapReports';
 
 // Barangay Santa Fe with a marker per report, at the spot it was pinned.
@@ -12,7 +13,7 @@ import { MAP_TYPES, RESOLVED_COLOR, isOpenStatus, geocodeInSantaFe } from './map
 // report forms' LocationPickerMap.
 
 const STYLE = `
-  .im-wrap { position: relative; }
+  .im-wrap { position: relative; isolation: isolate; }
   .im-mk { position: relative; width: 34px; height: 34px; display: block; }
   .im-dot { position: absolute; inset: 0; border-radius: 50%; background: var(--c); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2.5px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.45); }
   .im-mk.quake .im-dot { border-radius: 8px; transform: rotate(45deg) scale(.92); }
@@ -135,16 +136,11 @@ export default function IncidentMap({ reports, selectedKey, onSelect, renderPopu
           </Marker>
         ))}
         <FitSantaFe />
+        <LimitToSantaFe />
         <FollowSelection selectedKey={selectedKey} markers={markers} />
       </MapContainer>
 
-      <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 500, display: 'flex', borderRadius: '6px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.3)' }}>
-        {[['map', 'Map'], ['satellite', 'Satellite']].map(([key, text]) => (
-          <button key={key} type="button" onClick={() => setBasemap(key)} aria-pressed={basemap === key} style={switchButton(basemap === key)}>
-            {text}
-          </button>
-        ))}
-      </div>
+      <MapTypeSwitch basemap={basemap} onChange={setBasemap} />
     </div>
   );
 }

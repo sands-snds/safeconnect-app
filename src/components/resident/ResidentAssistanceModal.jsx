@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
 import { showPopup } from '../shared/popup';
-import { resultError, showIfMediaTooLarge } from './reportErrors';
+import { resultError, showIfMediaProblem } from './reportErrors';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -380,7 +380,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);
-      if (showIfMediaTooLarge(error, t)) return;
+      if (showIfMediaProblem(error, t)) return;
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('assistanceModal.submitError') });
     } finally {
       setIsSubmitting(false);

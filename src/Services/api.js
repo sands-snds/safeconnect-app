@@ -417,6 +417,16 @@ export const updateUserRole = async (userId, role) => {
 
 
 
+// What the backend's media check found about a report's photo or video
+// (backend/utils/mediaCheck.js): when it was taken, its GPS position and
+// flags such as "day_old". Older reports have none of this.
+const mediaCheckOf = (r) => ({
+    takenAt: r.media_taken_at || null,
+    latitude: r.media_latitude != null ? Number(r.media_latitude) : null,
+    longitude: r.media_longitude != null ? Number(r.media_longitude) : null,
+    flags: r.media_flags ? String(r.media_flags).split(',') : []
+});
+
 export const fetchEmergencyReports = async () => {
     const res = await apiFetch(`${API_ENDPOINTS.EMERGENCY_REPORTS}`, { headers: authHeaders() });
     const data = await res.json();
@@ -440,6 +450,7 @@ export const fetchEmergencyReports = async () => {
         specialNeeds: r.special_needs || '',
         hasMedia: Boolean(r.has_media),
         mediaType: r.media_type || '',
+        mediaCheck: mediaCheckOf(r),
         reportFor: r.report_for || 'self',
         victimName: r.victim_name || '',
         victimContact: r.victim_contact || '',
@@ -504,6 +515,7 @@ export const fetchAssistanceRequests = async () => {
         victimOfEmergency: r.victim_of_emergency || '',
         hasMedia: Boolean(r.has_media),
         mediaType: r.media_type || '',
+        mediaCheck: mediaCheckOf(r),
         peopleAffected: r.number_of_people_needing_help || '0',
         location: r.current_location || '',
         latitude: r.latitude,
@@ -581,6 +593,7 @@ export const fetchPettyCrimes = async () => {
         suspectInfo: r.suspect_info || '',
         hasMedia: Boolean(r.has_media),
         mediaType: r.media_type || '',
+        mediaCheck: mediaCheckOf(r),
         isAnonymous: Boolean(r.is_anonymous),
         date: r.timestamp ? new Date(r.timestamp).toLocaleString() : '',
         rawDate: r.timestamp || null,

@@ -4,6 +4,13 @@ import { LanguageProvider } from '../../i18n/LanguageContext';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
 import { showPopup } from '../shared/popup';
 
+// The photo / video date check has its own tests (mediaCheck.test.js); here
+// every attachment counts as taken today.
+jest.mock('../shared/media/mediaCheck', () => ({
+  ...jest.requireActual('../shared/media/mediaCheck'),
+  checkMediaFile: () => Promise.resolve({ ok: true, takenAt: new Date(), dayOld: false })
+}));
+
 
 jest.mock('../shared/location/LocationPickerMap', () => () => null);
 
@@ -56,14 +63,18 @@ const renderModal = (props = {}) => {
     const consent = $('input[name="consent"]');
     if (consent && !consent.checked) fireEvent.click(consent);
   };
-  const attachPhoto = () => fireEvent.change($('input[type="file"]'), {
-    target: { files: [new File(['jpeg'], 'house.jpg', { type: 'image/jpeg' })] }
-  });
+  // Picking a file checks its details first, so wait for the preview.
+  const attachPhoto = async () => {
+    fireEvent.change($('input[type="file"]'), {
+      target: { files: [new File(['jpeg'], 'house.jpg', { type: 'image/jpeg' })] }
+    });
+    await screen.findByAltText('Selected attachment preview');
+  };
   return { ...utils, $, fill, attachPhoto, form: $('form'), fileInput: $('input[type="file"]') };
 };
 const EMERGENCY_LABEL = { 'Fire Emergency': 'Fire', 'Flood Emergency': 'Flood', Earthquake: 'Earthquake', Typhoon: 'Typhoon', Other: 'Other' };
 
-test('button layout: who, the three kinds of help, the emergency, and a required proof photo', () => {
+test('button layout: who, the three kinds of help, the emergency, and a required proof photo', async () => {
   renderModal();
   expect(screen.getByRole('button', { name: 'Me' })).toHaveAttribute('aria-pressed', 'true');
   const help = within(screen.getByRole('group', { name: 'What help do you need?' })).getAllByRole('button').map((b) => b.querySelector('b').textContent);
@@ -74,27 +85,27 @@ test('button layout: who, the three kinds of help, the emergency, and a required
   expect(screen.getByRole('button', { name: /Gallery/ })).toBeInTheDocument();
 });
 
-test('lists the Report Emergency types plus Other', () => {
+test('lists the Report Emergency types plus Other', async () => {
   renderModal();
   const names = within(screen.getByRole('group', { name: 'Victim of what emergency?' })).getAllByRole('button').map((b) => b.textContent);
   expect(names).toEqual(['Fire', 'Flood', 'Earthquake', 'Typhoon', 'Other']);
 });
 
-test('Send stays off and says what is missing until the request is complete', () => {
+test('Send stays off and says what is missing until the request is complete', async () => {
   const { fill, attachPhoto } = renderModal();
   const send = screen.getByRole('button', { name: /Send request/ });
   expect(send).toBeDisabled();
   expect(screen.getByText('Choose the help you need.')).toBeInTheDocument();
   fill('Flood Emergency');
   expect(screen.getByText('Add a photo or video as proof.')).toBeInTheDocument();
-  attachPhoto();
+  await attachPhoto();
   expect(send).not.toBeDisabled();
   expect(screen.getByText('Ready to send.')).toBeInTheDocument();
 });
 
 test('no kind of help chosen: submitting is blocked', async () => {
   const { form, attachPhoto, $ } = renderModal();
-  attachPhoto();
+  await attachPhoto();
   fireEvent.change($('textarea[name="situation"]'), { target: { value: 'We need help' } });
   fireEvent.click($('input[name="consent"]'));
   fireEvent.submit(form);
@@ -102,7 +113,7 @@ test('no kind of help chosen: submitting is blocked', async () => {
   expect(createAssistanceRequest).not.toHaveBeenCalled();
 });
 
-test('people needing help: starts at 1, − and + change it', () => {
+test('people needing help: starts at 1, − and + change it', async () => {
   const { $ } = renderModal();
   expect($('#as-people').value).toBe('1');
   fireEvent.click(screen.getByRole('button', { name: 'More people' }));
@@ -112,7 +123,7 @@ test('people needing help: starts at 1, − and + change it', () => {
   expect($('#as-people').value).toBe('2');
 });
 
-test('only the X closes the form; a tap outside it does nothing', () => {
+test('only the X closes the form; a tap outside it does nothing', async () => {
   const onClose = jest.fn();
   const { container } = renderModal({ onClose });
   fireEvent.mouseDown(container.querySelector('.qr-overlay'));
@@ -135,7 +146,7 @@ test('submitting without a photo is blocked', async () => {
 test('submits the chosen emergency with the photo', async () => {
   const { form, fill, attachPhoto } = renderModal();
   fill('Flood Emergency');
-  attachPhoto();
+  await attachPhoto();
   fireEvent.submit(form);
   await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
   expect(createAssistanceRequest.mock.calls[0][0]).toMatchObject({ victimOfEmergency: 'Flood Emergency', mediaType: 'image' });
@@ -145,7 +156,7 @@ test('submits the chosen emergency with the photo', async () => {
 test('Other: typed emergency is what gets saved', async () => {
   const { $, form, fill, attachPhoto } = renderModal();
   fill('Other');
-  attachPhoto();
+  await attachPhoto();
   fireEvent.change($('input[name="emergencyOther"]'), { target: { value: '  Landslide ' } });
   fireEvent.submit(form);
   await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
@@ -155,7 +166,7 @@ test('Other: typed emergency is what gets saved', async () => {
 test('Other with nothing typed is blocked', async () => {
   const { form, fill, attachPhoto } = renderModal();
   fill('Other');
-  attachPhoto();
+  await attachPhoto();
   fireEvent.submit(form);
   await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
     type: 'warning', message: 'Please specify the emergency you experienced.'
@@ -198,7 +209,7 @@ test('editing a request typed under Other restores it into the Other box', async
 test('the number of people needing help is required and sent', async () => {
   const { $, form, fill, attachPhoto } = renderModal();
   fill('Flood Emergency');
-  attachPhoto();
+  await attachPhoto();
   fireEvent.change($('#as-people'), { target: { value: '' } });
   fireEvent.submit(form);
   await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
@@ -215,7 +226,7 @@ test('the number of people needing help is required and sent', async () => {
 test('special needs: + and − set how many, and 0 leaves the category out', async () => {
   const { $, form, fill, attachPhoto } = renderModal();
   fill('Flood Emergency');
-  attachPhoto();
+  await attachPhoto();
   expect($('#as-special-count-elderly').value).toBe('');
 
   fireEvent.click(screen.getByRole('button', { name: 'One more: Elderly' }));
@@ -230,9 +241,9 @@ test('special needs: + and − set how many, and 0 leaves the category out', asy
   fireEvent.submit(form);
   await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
   expect(createAssistanceRequest.mock.calls[0][0].special).toBe('Elderly (2), Children (3)');
-});
+}, 15000); // many taps, plus the attachment check
 
-test('editing restores each special need with its number', () => {
+test('editing restores each special need with its number', async () => {
   const editingReport = {
     id: 6, title: 'Medical Aid', location: 'Somewhere, Sta. Fe', description: 'help',
     victim_of_emergency: 'Flood Emergency', has_media: 1, peopleAffected: 4,
@@ -293,7 +304,7 @@ describe('registered address', () => {
     expect($('input[name="houseNumber"]').value).toBe('Blk 6 Lot 1');
   });
 
-  test('no registered address: the boxes start empty', () => {
+  test('no registered address: the boxes start empty', async () => {
     const { $ } = renderWithAddress(null);
     expect($('input[name="houseNumber"]').value).toBe('');
     expect(screen.queryByText(HINT)).not.toBeInTheDocument();

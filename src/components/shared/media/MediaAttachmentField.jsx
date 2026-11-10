@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { showPopup } from '../popup';
+import { checkMediaFile, mediaCheckMessageKey } from './mediaCheck';
 
 
 
@@ -12,7 +13,8 @@ const ALLOWED_MEDIA_EXTENSIONS = /\.(jpe?g|mp4|mov|webm)$/i;
 const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPT = 'image/jpeg,image/jpg,video/mp4,video/quicktime,video/webm';
-const EMPTY_MEDIA = { file: null, previewUrl: null, type: null };
+// takenAt / dayOld: from the file's details (see mediaCheck.js).
+const EMPTY_MEDIA = { file: null, previewUrl: null, type: null, takenAt: null, dayOld: false };
 
 export const readAsDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -39,7 +41,7 @@ export const useMediaAttachment = (t) => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleMediaChange = (e) => {
+  const handleMediaChange = async (e) => {
     const file = e.target.files[0];
     if (!file) {
       clearMedia();
@@ -56,11 +58,28 @@ export const useMediaAttachment = (t) => {
       clearMedia();
       return;
     }
-    setMedia({ file, previewUrl: URL.createObjectURL(file), type: isVideo ? 'video' : 'image' });
+    // Taken today (or yesterday, with a note), and not edited.
+    const check = await checkMediaFile(file, isVideo);
+    if (!check.ok) {
+      showPopup({ type: 'warning', title: t('reportForm.mediaCheck.title'), message: t(mediaCheckMessageKey(check.reason)) });
+      clearMedia();
+      return;
+    }
+    setMedia({ file, previewUrl: URL.createObjectURL(file), type: isVideo ? 'video' : 'image', takenAt: check.takenAt, dayOld: check.dayOld });
   };
 
   return { media, fileInputRef, handleMediaChange, clearMedia };
 };
+
+// The red line under a preview when the photo or video was taken yesterday.
+export const DayOldNote = ({ t, takenAt, dayOld }) => (dayOld && takenAt ? (
+  <p role="status" style={{ margin: '6px 0 0', color: '#dc2626', fontSize: '12px', fontWeight: 600, lineHeight: 1.4 }}>
+    <i className="bi bi-clock-history" aria-hidden="true"></i>{' '}
+    {t('reportForm.mediaDayOld', {
+      date: takenAt.toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' })
+    })}
+  </p>
+) : null);
 
 const previewStyle = { display: 'block', width: '100%', maxHeight: '220px', objectFit: 'cover', background: '#000' };
 
@@ -119,6 +138,7 @@ const MediaAttachmentField = ({
             ? <video src={media.previewUrl} controls style={previewStyle} />
             : <img src={media.previewUrl} alt="Selected attachment preview" style={previewStyle} />}
         </div>
+        <DayOldNote t={t} takenAt={media.takenAt} dayOld={media.dayOld} />
         <button
           type="button"
           onClick={onRemove}

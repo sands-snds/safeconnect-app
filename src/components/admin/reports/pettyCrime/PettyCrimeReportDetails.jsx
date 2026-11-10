@@ -78,7 +78,7 @@ const PettyCrimeReportDetails = ({ report }) => {
         />
       </div>
 
-      <ReportImage type="pettyCrime" id={report.id} hasMedia={report.hasMedia} mediaType={report.mediaType} />
+      <ReportImage type="pettyCrime" report={report} />
 
       <ReportLocationMap latitude={report.latitude} longitude={report.longitude} />
     </div>

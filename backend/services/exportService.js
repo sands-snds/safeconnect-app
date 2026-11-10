@@ -567,7 +567,7 @@ class ExportService {
         return Object.keys(EXPORTERS);
     }
 
-    static async exportPDF(type, filters, res) {
+    static async exportPDF(type, filters, res, generatedBy = "") {
         const exporter = EXPORTERS[type];
         if (!exporter) throw new Error(`Unknown export type: ${type}`);
 
@@ -579,6 +579,7 @@ class ExportService {
                 reportTitle: exporter.reportTitle,
                 filename: fileName(exporter, filters, built),
                 subtitle,
+                generatedBy,
                 summary,
                 columns,
                 rows,
@@ -588,7 +589,7 @@ class ExportService {
         );
     }
 
-    static async exportExcel(type, filters, res) {
+    static async exportExcel(type, filters, res, generatedBy = "") {
         const exporter = EXPORTERS[type];
         if (!exporter) throw new Error(`Unknown export type: ${type}`);
 
@@ -600,6 +601,7 @@ class ExportService {
                 reportTitle: exporter.reportTitle,
                 filename: fileName(exporter, filters, built),
                 subtitle,
+                generatedBy,
                 summary,
                 columns,
                 rows,

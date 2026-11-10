@@ -13,6 +13,7 @@ class ExcelService {
             filename,
             filenamePrefix,
             subtitle,
+            generatedBy,
             summary = [],
             sections
         } = options;
@@ -49,7 +50,7 @@ class ExcelService {
             worksheet.getCell("A4").alignment = { horizontal: "center" };
         }
 
-        worksheet.getCell("A5").value = `Generated: ${new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" })}`;
+        worksheet.getCell("A5").value = `Generated: ${new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" })}${generatedBy ? `   By: ${generatedBy}` : ""}`;
 
         [1, 2, 3].forEach((r) => { worksheet.getRow(r).height = 22; });
         const addLogo = (logo, col) => {

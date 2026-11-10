@@ -33,6 +33,15 @@ const MEDIA_COLUMNS = {
     media_type: "VARCHAR(20) DEFAULT NULL"
 };
 
+// What the media check (utils/mediaCheck.js) found in the photo or video's
+// details: when it was taken, its GPS position, and flags such as "day_old".
+const MEDIA_CHECK_COLUMNS = {
+    media_taken_at: "DATETIME NULL DEFAULT NULL",
+    media_latitude: "DECIMAL(10,7) DEFAULT NULL",
+    media_longitude: "DECIMAL(10,7) DEFAULT NULL",
+    media_flags: "VARCHAR(100) DEFAULT NULL"
+};
+
 // Columns only some report tables have.
 const TABLE_EXTRA_COLUMNS = {
     // + the "report anonymously" flag
@@ -58,6 +67,7 @@ async function ensureSchema() {
         const columns = {
             ...REPORT_FOR_COLUMNS,
             ...ARCHIVE_COLUMNS,
+            ...MEDIA_CHECK_COLUMNS,
             ...TABLE_EXTRA_COLUMNS[table]
         };
         for (const [name, definition] of Object.entries(columns)) {

@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { DayOldNote } from '../shared/media/MediaAttachmentField';
 
 // The look shared by the three resident report forms (Report Emergency,
 // Request Assistance, Report Petty Crime): one card, a round colour icon in
@@ -167,6 +168,7 @@ export function MediaPicker({ t, id, label, required, optionalText, hint, media,
           {media.type === 'video'
             ? <video src={media.previewUrl} controls playsInline />
             : <img src={media.previewUrl} alt="Selected attachment preview" />}
+          <DayOldNote t={t} takenAt={media.takenAt} dayOld={media.dayOld} />
           <div className="qr-preview-actions">
             <button type="button" className="qr-redo" onClick={() => fileInputRef.current?.click()} disabled={disabled}><i className="bi bi-arrow-repeat" aria-hidden="true" /> {t('reportShared.change')}</button>
             <button type="button" className="qr-redo" onClick={onRemove} disabled={disabled}><i className="bi bi-trash3" aria-hidden="true" /> {t('reportShared.remove')}</button>

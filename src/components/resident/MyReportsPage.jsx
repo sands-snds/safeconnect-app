@@ -14,6 +14,7 @@ import ResidentAssistanceModal from "./ResidentAssistanceModal";
 import ResidentPettyCrimeModal from "./ResidentPettyCrimeModal";
 import { announceReportsChanged } from "./useCallAccess";
 import useReportMedia from "../shared/useReportMedia";
+import MediaLightbox from "../shared/media/MediaLightbox";
 
 const TYPE_LABEL_KEYS = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYPE_LABEL_KEYS[type]}`) : type);
@@ -127,6 +128,7 @@ const getRelativeTime = (dateStr) => {
 // (the My Reports list only says has_media).
 function ReportMediaPreview({ report, t }) {
   const { media, loading, failed } = useReportMedia(TYPE_LABEL_KEYS[report.type], report.id, true);
+  const [open, setOpen] = useState(false);
   if (loading || failed || !media) {
     return (
       <div className="mr-media-preview mr-media-placeholder">
@@ -134,13 +136,29 @@ function ReportMediaPreview({ report, t }) {
       </div>
     );
   }
+  const isVideo = (media.mediaType || report.media_type) === 'video';
+  // Tapping opens it full size on this page (a new tab can't show it).
   return (
     <div className="mr-media-preview">
-      {(media.mediaType || report.media_type) === 'video' ? (
-        <video src={media.photoUrl} controls />
+      {isVideo ? (
+        <video src={media.photoUrl} controls playsInline />
       ) : (
-        <img src={media.photoUrl} alt="Attached evidence" />
+        <button type="button" className="mr-media-open" onClick={() => setOpen(true)} aria-label={t('myReports.viewFullSize')}>
+          <img src={media.photoUrl} alt={t('myReports.attachedEvidence')} />
+        </button>
       )}
+      {isVideo && (
+        <button type="button" className="mr-media-full" onClick={() => setOpen(true)}>
+          <i className="bi bi-arrows-fullscreen" aria-hidden="true"></i> {t('myReports.viewFullSize')}
+        </button>
+      )}
+      <MediaLightbox
+        src={open ? media.photoUrl : null}
+        isVideo={isVideo}
+        alt={t('myReports.attachedEvidence')}
+        closeLabel={t('myReports.closeMedia')}
+        onClose={() => setOpen(false)}
+      />
     </div>
   );
 }
@@ -951,6 +969,9 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
           max-height: 200px;
           object-fit: cover;
         }
+
+        .mr-media-open { display: block; width: 100%; padding: 0; border: none; background: none; cursor: zoom-in; }
+        .mr-media-full { display: block; width: 100%; padding: 6px; border: none; border-top: 1px solid #e5e7eb; background: #f9fafb; color: #6B2C3E; font-size: 12px; font-weight: 600; cursor: pointer; }
 
         .mr-media-placeholder {
           padding: 28px 12px;

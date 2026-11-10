@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createEmergencyReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
-import { resultError, showIfMediaTooLarge } from './reportErrors';
+import { resultError, showIfMediaProblem } from './reportErrors';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -11,6 +11,8 @@ import { registeredAddress } from './useRegisteredAddress';
 import { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
 import { ReportFormShell, SendFoot } from './reportFormUi';
+import { checkMediaFile, mediaCheckMessageKey } from '../shared/media/mediaCheck';
+import { DayOldNote } from '../shared/media/MediaAttachmentField';
 
 // Report an Emergency, the quick way (design Option A): who needs help, what
 // is happening (one tap), a photo, Send. The location fills itself in: the
@@ -58,7 +60,7 @@ const readAsDataUrl = (file) => new Promise((resolve, reject) => {
 
 const EMPTY = {
   step: 1, who: 'self', type: null,
-  media: null, mediaUrl: null, mediaType: null,
+  media: null, mediaUrl: null, mediaType: null, mediaTakenAt: null, mediaDayOld: false,
   rel: '', victimName: '', victimContact: '',
   people: '', special: [], specialCounts: {}, details: '',
   address: { ...EMPTY_LOCATION }, showMap: false
@@ -114,7 +116,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   // The type's name in the other language, small under the tile
   const otherName = (x) => translations[language === 'tl' ? 'en' : 'tl']?.quickReport?.types?.[x.key] || '';
 
-  const pickMedia = (e) => {
+  const pickMedia = async (e) => {
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
     if (!file) return;
@@ -127,7 +129,13 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
       showPopup({ type: 'warning', message: isVideo ? t('reportForm.mediaTooLargeVideo') : t('reportForm.mediaTooLargeImage') });
       return;
     }
-    set({ media: file, mediaUrl: URL.createObjectURL(file), mediaType: isVideo ? 'video' : 'image' });
+    // Taken today (or yesterday, with a note), and not edited.
+    const check = await checkMediaFile(file, isVideo);
+    if (!check.ok) {
+      showPopup({ type: 'warning', title: t('reportForm.mediaCheck.title'), message: t(mediaCheckMessageKey(check.reason)) });
+      return;
+    }
+    set({ media: file, mediaUrl: URL.createObjectURL(file), mediaType: isVideo ? 'video' : 'image', mediaTakenAt: check.takenAt, mediaDayOld: check.dayOld });
   };
 
   // Where the report is: the GPS / map pin when there is one inside Santa
@@ -201,7 +209,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
       });
     } catch (error) {
       console.error('Error submitting report:', error);
-      if (!showIfMediaTooLarge(error, t)) {
+      if (!showIfMediaProblem(error, t)) {
         showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('emergencyModal.submitError') });
       }
     } finally {
@@ -328,6 +336,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                     {form.mediaType === 'video'
                       ? <video src={form.mediaUrl} controls playsInline />
                       : <img src={form.mediaUrl} alt={t('quickReport.photoAlt')} />}
+                    <DayOldNote t={t} takenAt={form.mediaTakenAt} dayOld={form.mediaDayOld} />
                     <button type="button" className="qr-redo" onClick={() => cameraRef.current?.click()} disabled={sending}><i className="bi bi-arrow-repeat" aria-hidden="true" /> {t('quickReport.retake')}</button>
                   </div>
                 ) : (

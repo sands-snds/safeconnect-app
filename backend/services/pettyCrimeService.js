@@ -1,3 +1,5 @@
+const { checkMedia, mediaColumns, mediaRejected } = require("../utils/mediaCheck");
+const ReportMedia = require("../models/ReportMedia");
 const PettyCrime = require("../models/PettyCrime");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
@@ -18,6 +20,10 @@ class PettyCrimeService {
         }
 
         const isAnonymous = data.isAnonymous === true || data.isAnonymous === "true";
+        // The photo or video must be fresh and unedited (utils/mediaCheck.js).
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        if (media && !media.ok) return mediaRejected(media);
+
         const reference = await generateReference(PettyCrime.getLatestReference);
 
         
@@ -45,6 +51,8 @@ class PettyCrimeService {
             victimDetails: data.victimDetails
         });
 
+        if (media) await ReportMedia.save("petty_crimes", reportId, mediaColumns(media));
+
         await NotificationService.create({
             title: "New Petty Crime Report",
             message: `${data.crimeType} reported at ${data.location}`,
@@ -64,6 +72,8 @@ class PettyCrimeService {
             return { success: false, status: 400, message: PHOTO_REQUIRED_MESSAGE };
         }
 
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        if (media && !media.ok) return mediaRejected(media);
         const affected = await PettyCrime.update(id, {
             crimeType: data.crimeType,
             location: data.location,
@@ -75,6 +85,7 @@ class PettyCrimeService {
             mediaType: data.mediaType
         });
 
+        if (media && affected > 0) await ReportMedia.save("petty_crimes", id, mediaColumns(media));
         return { success: affected > 0 };
     }
 }
