@@ -85,6 +85,11 @@ const LocationPickerMap = ({
   const hasPin = rawPin != null && Number.isFinite(pinLat) && Number.isFinite(pinLng);
   const pin = useMemo(() => (hasPin ? { lat: pinLat, lng: pinLng } : null), [hasPin, pinLat, pinLng]);
   const [basemap, setBasemap] = useState('map');
+  // Street View opens beside the map only when asked for (the button on the
+  // map): Google's street photos cover only some of Santa Fe's roads.
+  const [showStreet, setShowStreet] = useState(false);
+  const canShowStreet = streetView && Boolean(pin) && !isOutside;
+  const streetOpen = canShowStreet && showStreet;
   const markerRef = useRef(null);
   const icon = useMemo(() => pinIcon(isOutside ? '#6b7280' : '#dc3545'), [isOutside]);
   const tiles = BASEMAPS[basemap];
@@ -107,8 +112,8 @@ const LocationPickerMap = ({
 
   return (
     <div style={{ marginTop: readOnly ? 0 : '10px' }}>
-      {/* The map and, beside it, Google Street View of the pin. */}
-      <div style={{ display: 'grid', gridTemplateColumns: streetView ? '1fr 1fr' : '1fr', gap: '8px' }}>
+      {/* The map and, when opened, Google Street View of the pin beside it. */}
+      <div style={{ display: 'grid', gridTemplateColumns: streetOpen ? '1fr 1fr' : '1fr', gap: '8px' }}>
       <div
         style={{
           ...MAP_FRAME,
@@ -153,6 +158,35 @@ const LocationPickerMap = ({
         
         <MapTypeSwitch basemap={basemap} onChange={setBasemap} />
 
+        {canShowStreet && (
+          <button
+            type="button"
+            onClick={() => setShowStreet((v) => !v)}
+            aria-pressed={streetOpen}
+            title={streetOpen ? t('reportForm.streetViewHide') : t('reportForm.streetViewShow')}
+            style={{
+              position: 'absolute',
+              left: '10px',
+              bottom: '22px',
+              zIndex: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 10px',
+              border: 'none',
+              borderRadius: '6px',
+              background: streetOpen ? '#1f2937' : '#fff',
+              color: streetOpen ? '#fff' : '#1f2937',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 1px 4px rgba(0,0,0,.3)'
+            }}
+          >
+            <i className={`bi ${streetOpen ? 'bi-x-lg' : 'bi-person-walking'}`} aria-hidden="true"></i> Street View
+          </button>
+        )}
+
 
         {!pin && !readOnly && (
           <div
@@ -175,12 +209,8 @@ const LocationPickerMap = ({
           </div>
         )}
       </div>
-      {streetView && (
-        <StreetViewPane
-          pin={pin && !isOutside ? pin : null}
-          height={height}
-          emptyText={isOutside ? t('reportForm.streetViewOutside') : t('reportForm.streetViewEmpty')}
-        />
+      {streetOpen && (
+        <StreetViewPane pin={pin} height={height} emptyText={t('reportForm.streetViewEmpty')} />
       )}
       </div>
 

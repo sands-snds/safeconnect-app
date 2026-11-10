@@ -210,3 +210,33 @@ test('no crime type chosen: submitting is blocked', async () => {
   await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning', message: 'Choose what happened.' })));
   expect(createPettyCrimeReport).not.toHaveBeenCalled();
 });
+
+describe('text checks', () => {
+  test('keyboard spam in the description: a warning under it, and Send stays off until it is fixed', async () => {
+    const { container, fill } = renderModal();
+    fill('Theft');
+    const description = container.querySelector('textarea[name="description"]');
+    fireEvent.change(description, { target: { value: 'asdfghjkl' } });
+    expect(await screen.findByText('Avoid using repeated or random characters.')).toBeInTheDocument();
+    expect(screen.getByText('Fix the text marked in red to send.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send/ })).toBeDisabled();
+
+    fireEvent.change(description, { target: { value: 'Ninakaw ang bisikleta sa harap ng bahay' } });
+    await waitFor(() => expect(screen.queryByText('Avoid using repeated or random characters.')).not.toBeInTheDocument());
+  });
+
+  test('offensive words in the suspect details get their own warning', async () => {
+    const { container, fill } = renderModal();
+    fill('Theft');
+    fireEvent.change(container.querySelector('textarea[name="suspectInfo"]'), { target: { value: 'yung gago na naka itim' } });
+    expect(await screen.findByText('Please remove inappropriate or offensive language.')).toBeInTheDocument();
+  });
+
+  test('a TEXT_INVALID answer from the backend shows under its field', async () => {
+    createPettyCrimeReport.mockResolvedValueOnce({ success: false, code: 'TEXT_INVALID', fields: { description: 'meaningless' } });
+    const { form, fill } = renderModal();
+    fill('Theft');
+    fireEvent.submit(form);
+    expect(await screen.findByText('Please provide meaningful information about your report.')).toBeInTheDocument();
+  });
+});

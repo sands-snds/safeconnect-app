@@ -1,5 +1,6 @@
 const { checkMedia, mediaColumns, mediaRejected } = require("../utils/mediaCheck");
 const ReportMedia = require("../models/ReportMedia");
+const { textProblems } = require("../utils/textCheck");
 const AssistanceRequest = require("../models/AssistanceRequest");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
@@ -17,6 +18,9 @@ const PROOF_REQUIRED_MESSAGE = "Please attach a photo or video of your situation
 
 class AssistanceRequestService {
     static async create(data) {
+        // Spam, gibberish or offensive text in any field (utils/textCheck.js).
+        const badText = textProblems("assistance", data);
+        if (badText) return badText;
         if (!data.photoUrl) {
             return { success: false, status: 400, message: PROOF_REQUIRED_MESSAGE };
         }
@@ -68,6 +72,9 @@ class AssistanceRequestService {
     }
 
     static async update(id, data) {
+        // Spam, gibberish or offensive text in any field (utils/textCheck.js).
+        const badText = textProblems("assistance", data);
+        if (badText) return badText;
         if (!data.photoUrl && !(await AssistanceRequest.hasMedia(id))) {
             return { success: false, status: 400, message: PROOF_REQUIRED_MESSAGE };
         }

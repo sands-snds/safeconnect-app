@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createEmergencyReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
 import { resultError, showIfMediaProblem } from './reportErrors';
+import { useTextWarnings, serverTextErrors, TextWarning } from './textWarnings';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -85,6 +86,14 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   const home = registeredAddress();
   const pinned = Boolean(gpsCoords) && !isOutsideSantaFe;
 
+  // Spam, gibberish or offensive text: a warning under the field, and Send
+  // stays off until it's fixed (textWarnings.jsx; the backend checks again).
+  const [textServerErrors, setTextServerErrors] = useState({});
+  const { warnings: textWarn, blocked: textBlocked } = useTextWarnings({
+    victimName: { value: form.who === 'others' ? form.victimName : '', kind: 'short', api: 'victimName' },
+    details: { value: form.details, kind: 'description', api: 'details' }
+  }, textServerErrors);
+
   // Opening: start fresh, ask for the phone's location once. (Only when
   // "show" changes; the pin helpers are read through a ref.)
   const pinRef = useRef(pin);
@@ -93,6 +102,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
     if (!show) return undefined;
     setForm(EMPTY);
     setSent(null);
+    setTextServerErrors({});
     setSpecialInvalid(null);
     pinRef.current.setGpsCoords(null);
     pinRef.current.setLocationError('');
@@ -147,7 +157,8 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
     isOutsideSantaFe && 'outside',
     !form.media && 'photo',
     form.who === 'others' && !form.rel && 'rel',
-    !hasLocation && 'location'
+    !hasLocation && 'location',
+    textBlocked && 'text'
   ].filter(Boolean);
   const missingText = missing.length === 0 ? '' : missing[0] === 'outside' ? t('reportForm.outsideSantaFe') : t(`quickReport.need.${missing[0]}`);
 
@@ -209,7 +220,9 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
       });
     } catch (error) {
       console.error('Error submitting report:', error);
-      if (!showIfMediaProblem(error, t)) {
+      const textErrors = serverTextErrors(error, { victimName: form.victimName, details: form.details });
+      if (textErrors) setTextServerErrors(textErrors);
+      else if (!showIfMediaProblem(error, t)) {
         showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('emergencyModal.submitError') });
       }
     } finally {
@@ -314,7 +327,8 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                     <div className="qr-two">
                       <div className="qr-field">
                         <label htmlFor="qr-vname">{t('quickReport.theirName')} <small>{t('reportForm.optional')}</small></label>
-                        <input id="qr-vname" type="text" maxLength={100} value={form.victimName} onChange={(e) => set({ victimName: e.target.value })} placeholder={t('quickReport.namePlaceholder')} />
+                        <input id="qr-vname" type="text" maxLength={100} value={form.victimName} onChange={(e) => set({ victimName: e.target.value })} placeholder={t('quickReport.namePlaceholder')} aria-invalid={Boolean(textWarn.victimName) || undefined} />
+                        <TextWarning t={t} reason={textWarn.victimName} />
                       </div>
                       <div className="qr-field">
                         <label htmlFor="qr-vcontact">{t('quickReport.theirNumber')} <small>{t('reportForm.optional')}</small></label>
@@ -375,7 +389,8 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                     </div>
                     <div className="qr-field">
                       <label htmlFor="qr-details">{t('quickReport.describe')}</label>
-                      <textarea id="qr-details" rows={3} maxLength={2000} value={form.details} onChange={(e) => set({ details: e.target.value })} placeholder={t('emergencyModal.incidentDetailsPlaceholder')} />
+                      <textarea id="qr-details" rows={3} maxLength={2000} value={form.details} onChange={(e) => set({ details: e.target.value })} placeholder={t('emergencyModal.incidentDetailsPlaceholder')} aria-invalid={Boolean(textWarn.details) || undefined} />
+                      <TextWarning t={t} reason={textWarn.details} />
                     </div>
                   </div>
                 </details>

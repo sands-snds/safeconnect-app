@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
+import { TextWarning } from './textWarnings';
 
 // The look shared by the three resident report forms (Report Emergency,
 // Request Assistance, Report Petty Crime): one card, a round colour icon in
@@ -112,7 +113,8 @@ const FULL_RELATIONSHIPS = [
 ];
 
 // The person you are reporting / requesting for: every field of the old box.
-export function PersonBox({ t, idPrefix, title, rel, onRel, relOther, onRelOther, name, onName, nameOptional, contact, onContact, details, onDetails, disabled }) {
+// warnings: { relOther, name, details } text-check reasons (textWarnings.jsx).
+export function PersonBox({ t, idPrefix, title, rel, onRel, relOther, onRelOther, name, onName, nameOptional, contact, onContact, details, onDetails, disabled, warnings = {} }) {
   return (
     <div className="qr-forbox">
       <p className="qr-lbl red"><i className="bi bi-person-exclamation" aria-hidden="true" /> <span>{title}</span></p>
@@ -124,13 +126,15 @@ export function PersonBox({ t, idPrefix, title, rel, onRel, relOther, onRelOther
       {rel === 'Other' && (
         <div className="qr-field">
           <label htmlFor={`${idPrefix}-relother`}>{t('reportForm.relationshipOtherPlaceholder')} <span className="qr-req">*</span></label>
-          <input id={`${idPrefix}-relother`} type="text" maxLength={100} value={relOther} onChange={(e) => onRelOther(e.target.value)} disabled={disabled} />
+          <input id={`${idPrefix}-relother`} type="text" maxLength={100} value={relOther} onChange={(e) => onRelOther(e.target.value)} disabled={disabled} aria-invalid={Boolean(warnings.relOther) || undefined} />
+          <TextWarning t={t} reason={warnings.relOther} />
         </div>
       )}
       <div className="qr-two">
         <div className="qr-field">
           <label htmlFor={`${idPrefix}-vname`}>{t('reportForm.theirName')} {nameOptional ? <small>{t('reportForm.optional')}</small> : <span className="qr-req">*</span>}</label>
-          <input id={`${idPrefix}-vname`} type="text" maxLength={100} value={name} onChange={(e) => onName(e.target.value)} placeholder={t('reportForm.namePlaceholder')} disabled={disabled} />
+          <input id={`${idPrefix}-vname`} type="text" maxLength={100} value={name} onChange={(e) => onName(e.target.value)} placeholder={t('reportForm.namePlaceholder')} disabled={disabled} aria-invalid={Boolean(warnings.name) || undefined} />
+          <TextWarning t={t} reason={warnings.name} />
         </div>
         <div className="qr-field">
           <label htmlFor={`${idPrefix}-vcontact`}>{t('reportForm.theirContact')} <small>{t('reportForm.optional')}</small></label>
@@ -139,7 +143,8 @@ export function PersonBox({ t, idPrefix, title, rel, onRel, relOther, onRelOther
       </div>
       <div className="qr-field">
         <label htmlFor={`${idPrefix}-vdetails`}>{t('reportForm.additionalDetails')} <span className="qr-req">*</span></label>
-        <textarea id={`${idPrefix}-vdetails`} rows={2} maxLength={1000} value={details} onChange={(e) => onDetails(e.target.value)} placeholder={t('reportForm.additionalDetailsPlaceholder')} disabled={disabled} />
+        <textarea id={`${idPrefix}-vdetails`} rows={2} maxLength={1000} value={details} onChange={(e) => onDetails(e.target.value)} placeholder={t('reportForm.additionalDetailsPlaceholder')} disabled={disabled} aria-invalid={Boolean(warnings.details) || undefined} />
+        <TextWarning t={t} reason={warnings.details} />
       </div>
     </div>
   );

@@ -10,11 +10,13 @@ import { mediaCheckMessageKey } from '../shared/media/mediaCheck';
 export const MEDIA_TOO_LARGE = 'MEDIA_TOO_LARGE';
 export const MEDIA_REJECTED = 'MEDIA_REJECTED';
 
-// A failed API result as an Error that keeps the backend's code and reason.
+// A failed API result as an Error that keeps the backend's code, reason and
+// (for TEXT_INVALID) which fields failed.
 export const resultError = (result, fallbackMessage) =>
   Object.assign(new Error((result && result.message) || fallbackMessage), {
     code: result && result.code,
-    reason: result && result.reason
+    reason: result && result.reason,
+    fields: result && result.fields
   });
 
 // In a report form's catch: shows the matching popup and returns true when

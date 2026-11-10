@@ -1,5 +1,6 @@
 const { checkMedia, mediaColumns, mediaRejected } = require("../utils/mediaCheck");
 const ReportMedia = require("../models/ReportMedia");
+const { textProblems } = require("../utils/textCheck");
 const PettyCrime = require("../models/PettyCrime");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
@@ -15,6 +16,9 @@ const PHOTO_REQUIRED_MESSAGE = "Please attach a photo or video. It is required f
 
 class PettyCrimeService {
     static async create(data) {
+        // Spam, gibberish or offensive text in any field (utils/textCheck.js).
+        const badText = textProblems("pettyCrime", data);
+        if (badText) return badText;
         if (isPhotoRequired(data.crimeType) && !data.photoUrl) {
             return { success: false, status: 400, message: PHOTO_REQUIRED_MESSAGE };
         }
@@ -68,6 +72,9 @@ class PettyCrimeService {
     }
 
     static async update(id, data) {
+        // Spam, gibberish or offensive text in any field (utils/textCheck.js).
+        const badText = textProblems("pettyCrime", data);
+        if (badText) return badText;
         if (isPhotoRequired(data.crimeType) && !data.photoUrl && !(await PettyCrime.hasMedia(id))) {
             return { success: false, status: 400, message: PHOTO_REQUIRED_MESSAGE };
         }

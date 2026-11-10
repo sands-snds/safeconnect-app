@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPettyCrimeReport, updatePettyCrimeReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
 import { resultError, showIfMediaProblem } from './reportErrors';
+import { useTextWarnings, serverTextErrors, TextWarning } from './textWarnings';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -140,6 +141,23 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [victimRelationshipOther, setVictimRelationshipOther] = useState('');
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
+
+  // Spam, gibberish or offensive text: a warning under the field, and Send
+  // stays off until it's fixed (textWarnings.jsx; the backend checks again).
+  const [textServerErrors, setTextServerErrors] = useState({});
+  const forOthers = reportFor === 'others';
+  const { warnings: textWarn, blocked: textBlocked } = useTextWarnings({
+    description: { value: formData.description, kind: 'description', api: 'description' },
+    suspectInfo: { value: formData.suspectInfo, kind: 'description', api: 'suspectInfo' },
+    relOther: { value: forOthers ? victimRelationshipOther : '', kind: 'short', api: 'victimRelationship' },
+    name: { value: forOthers ? victimName : '', kind: 'short', api: 'victimName' },
+    details: { value: forOthers ? victimDetails : '', kind: 'description', api: 'victimDetails' },
+    houseNumber: { value: isEditing ? '' : formData.houseNumber, kind: 'number' },
+    street: { value: isEditing ? '' : formData.street, kind: 'short' },
+    area: { value: isEditing ? '' : formData.area, kind: 'short' },
+    landmark: { value: isEditing ? '' : formData.landmark, kind: 'short' },
+    location: { value: isEditing ? formData.location : '', kind: 'short', api: 'location' }
+  }, textServerErrors);
   const chooseWho = (who) => {
     setReportFor(who);
     if (who === 'self') {
@@ -208,6 +226,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     clearMedia();
     setGpsCoords(null);
     setLocationError('');
+    setTextServerErrors({});
   };
 
   // Closing the form (Cancel, X or clicking outside) clears it, so it opens
@@ -220,6 +239,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (textBlocked) return; // the warnings under the fields say what to fix
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
@@ -328,6 +348,11 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     } catch (error) {
       console.log(error);
       if (showIfMediaProblem(error, t)) return;
+      const textErrors = serverTextErrors(error, {
+        description: formData.description, suspectInfo: formData.suspectInfo, location: formData.location,
+        victimRelationship: victimRelationshipOther, victimName, victimDetails
+      });
+      if (textErrors) { setTextServerErrors(textErrors); return; }
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('pettyCrimeModal.submitError') });
     } finally {
       setIsSubmitting(false);
@@ -335,6 +360,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   };
   // The first thing still needed before sending (shown above Send), or null.
   const whatIsMissing = () => {
+    if (textBlocked) return 'text';
     if (reportFor === 'others') {
       if (!victimRelationship) return 'rel';
       if (victimRelationship === 'Other' && !victimRelationshipOther.trim()) return 'relOther';
@@ -416,6 +442,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           details={victimDetails}
           onDetails={setVictimDetails}
           disabled={isSubmitting}
+          warnings={textWarn}
         />
       )}
 
@@ -444,7 +471,9 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
             onChange={handleChange}
             placeholder={t('reportForm.fullAddress')}
             disabled={isSubmitting}
+            aria-invalid={Boolean(textWarn.location) || undefined}
           />
+          <TextWarning t={t} reason={textWarn.location} />
           {locationError && <p className="qr-err"><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {locationError}</p>}
           <p className="qr-note">{t('reportForm.serviceAreaNote')}</p>
           <div ref={locationSectionRef}>
@@ -474,6 +503,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               location={location}
               sectionRef={locationSectionRef}
               addressPrefilled={addressPrefilled}
+              warnings={textWarn}
             />
           </div>
         </div>
@@ -491,7 +521,9 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           required
           placeholder={t('pettyCrimeModal.descriptionPlaceholder')}
           disabled={isSubmitting}
+          aria-invalid={Boolean(textWarn.description) || undefined}
         />
+        <TextWarning t={t} reason={textWarn.description} />
       </div>
 
       <div className="qr-field">
@@ -505,7 +537,9 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           maxLength={1000}
           placeholder={t('pettyCrimeModal.suspectInfoPlaceholder')}
           disabled={isSubmitting}
+          aria-invalid={Boolean(textWarn.suspectInfo) || undefined}
         />
+        <TextWarning t={t} reason={textWarn.suspectInfo} />
       </div>
 
       <MediaPicker

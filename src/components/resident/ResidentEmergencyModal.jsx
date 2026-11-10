@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createEmergencyReport, updateEmergencyReport } from '../../Services/api';
 import { showPopup } from '../shared/popup';
 import { resultError, showIfMediaProblem } from './reportErrors';
+import { useTextWarnings, serverTextErrors, TextWarning } from './textWarnings';
 import { checkMediaFile, mediaCheckMessageKey } from '../shared/media/mediaCheck';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
@@ -120,6 +121,18 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [victimRelationshipOther, setVictimRelationshipOther] = useState('');
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
+
+  // Spam, gibberish or offensive text: a warning under the field, and Save
+  // stays off until it's fixed (textWarnings.jsx; the backend checks again).
+  const [textServerErrors, setTextServerErrors] = useState({});
+  const forOthers = reportFor === 'others';
+  const { warnings: textWarn, blocked: textBlocked } = useTextWarnings({
+    details: { value: formData.details, kind: 'description', api: 'details' },
+    location: { value: formData.location, kind: 'short', api: 'location' },
+    relOther: { value: forOthers ? victimRelationshipOther : '', kind: 'short', api: 'victimRelationship' },
+    victimName: { value: forOthers ? victimName : '', kind: 'short', api: 'victimName' },
+    victimDetails: { value: forOthers ? victimDetails : '', kind: 'description', api: 'victimDetails' }
+  }, textServerErrors);
 
   
   
@@ -333,6 +346,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     setVictimRelationshipOther('');
     setVictimDetails('');
     setSpecialInvalid(null);
+    setTextServerErrors({});
 
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -353,6 +367,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (textBlocked) return; // the warnings under the fields say what to fix
  
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
@@ -531,6 +546,11 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
     } catch (error) {
       console.error('Error submitting report:', error);
       if (showIfMediaProblem(error, t)) return;
+      const textErrors = serverTextErrors(error, {
+        details: formData.details, location: formData.location,
+        victimRelationship: victimRelationshipOther, victimName, victimDetails
+      });
+      if (textErrors) { setTextServerErrors(textErrors); return; }
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('emergencyModal.submitError') });
     } finally {
       setIsSubmitting(false);
@@ -1162,15 +1182,18 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     <option value="Other">{t('reportForm.relationshipOptions.other')}</option>
                   </select>
                   {victimRelationship === 'Other' && (
-                    <input
-                      type="text"
-                      placeholder={t('reportForm.relationshipOtherPlaceholder')}
-                      value={victimRelationshipOther}
-                      onChange={(e) => setVictimRelationshipOther(e.target.value)}
-                      disabled={isSubmitting}
-                      className="form-input"
-                      style={{ marginBottom: '10px' }}
-                    />
+                    <>
+                      <input
+                        type="text"
+                        placeholder={t('reportForm.relationshipOtherPlaceholder')}
+                        value={victimRelationshipOther}
+                        onChange={(e) => setVictimRelationshipOther(e.target.value)}
+                        disabled={isSubmitting}
+                        className="form-input"
+                        style={{ marginBottom: '10px' }}
+                      />
+                      <TextWarning t={t} reason={textWarn.relOther} />
+                    </>
                   )}
                   <div className="form-grid">
                     <div>
@@ -1188,6 +1211,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                         disabled={isSubmitting}
                         className="form-input"
                       />
+                      <TextWarning t={t} reason={textWarn.victimName} />
                     </div>
                     <div>
                       <label className="form-label">{t('reportForm.theirContact')} <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span></label>
@@ -1215,6 +1239,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     rows={2}
                     style={{ minHeight: '60px' }}
                   />
+                  <TextWarning t={t} reason={textWarn.victimDetails} />
                 </div>
               )}
 
@@ -1289,6 +1314,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   className="form-input"
                   style={{ marginTop: '8px' }}
                 />
+                <TextWarning t={t} reason={textWarn.location} />
 
                 {locationError && (
                   <div className="location-error">
@@ -1327,6 +1353,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   disabled={isSubmitting}
                   className="form-textarea"
                 ></textarea>
+                <TextWarning t={t} reason={textWarn.details} />
               </div>
 
               <div className="form-grid em-people-media">
@@ -1480,7 +1507,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || (!isEditing && cooldownRemaining > 0)}
+                  disabled={isSubmitting || textBlocked || (!isEditing && cooldownRemaining > 0)}
                   style={{
                     padding: '12px 20px',
                     borderRadius: '24px',

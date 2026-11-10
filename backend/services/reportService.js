@@ -1,5 +1,6 @@
 const { checkMedia, mediaColumns, mediaRejected } = require("../utils/mediaCheck");
 const ReportMedia = require("../models/ReportMedia");
+const { textProblems } = require("../utils/textCheck");
 const Report = require("../models/Report");
 const NotificationService = require("./notificationService");
 const { generateReference } = require("../utils/reference");
@@ -17,6 +18,9 @@ const PEOPLE_MESSAGE = `Please enter how many people are affected (1 to ${MAX_PE
 
 class ReportService {
     static async create(data) {
+        // Spam, gibberish or offensive text in any field (utils/textCheck.js).
+        const badText = textProblems("emergency", data);
+        if (badText) return badText;
         // Optional (the quick report leaves it to "Add details"), but a
         // number that is given must be 1 to 500.
         const given = data.people !== undefined && data.people !== null && data.people !== "";
@@ -73,6 +77,9 @@ class ReportService {
 
     
     static async update(id, data) {
+        // Spam, gibberish or offensive text in any field (utils/textCheck.js).
+        const badText = textProblems("emergency", data);
+        if (badText) return badText;
         if (data.people !== undefined && peopleCount(data.people) === null) {
             return { success: false, status: 400, message: PEOPLE_MESSAGE };
         }

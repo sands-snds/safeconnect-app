@@ -839,6 +839,7 @@ export const translations = {
         "transportVehicle": "Transport Vehicle"
       },
       "need": {
+        "text": "Fix the text marked in red to send.",
         "rel": "Choose how you know them.",
         "relOther": "Say how you know them.",
         "name": "Enter their name.",
@@ -904,6 +905,7 @@ export const translations = {
       send: "Send report",
       sending: "Sending…",
       need: {
+        text: "Fix the text marked in red to send.",
         photo: "Add a photo or video to send.",
         rel: "Choose how you know them to send.",
         location: "Pin the location on the map to send."
@@ -1007,6 +1009,11 @@ export const translations = {
       dangerNote: 'In immediate danger? Call 911 right away. After you submit a report, a red phone button with the emergency hotlines appears here.'
     },
     reportForm: {
+      textCheck: {
+        offensive: "Please remove inappropriate or offensive language.",
+        spam: "Avoid using repeated or random characters.",
+        meaningless: "Please provide meaningful information about your report."
+      },
       reportingFor: 'Who are you reporting for?',
       self: 'Reporting for Myself',
       others: 'Reporting for Others',
@@ -1057,6 +1064,8 @@ export const translations = {
         edited: 'This photo or video was changed in an editing app. Please attach the original from your camera.'
       },
       streetViewEmpty: 'Pin a place on the map to see it here in Street View.',
+      streetViewShow: 'Show Street View of this place beside the map',
+      streetViewHide: 'Hide Street View',
       streetViewOutside: 'Move the pin inside Barangay Sta. Fe to see Street View.',
       mediaTooLargeTitle: 'Photo or video too large',
       mediaTooLarge: 'Your photo or video is too large to send. Please attach a smaller one, such as a photo instead of a video, or a shorter video. Everything else you entered is still here.',
@@ -2235,6 +2244,7 @@ export const translations = {
         "transportVehicle": "Sasakyan"
       },
       "need": {
+        "text": "Ayusin ang tekstong may pulang babala para maipadala.",
         "rel": "Piliin kung paano mo sila kilala.",
         "relOther": "Sabihin kung paano mo sila kilala.",
         "name": "Ilagay ang kanilang pangalan.",
@@ -2300,6 +2310,7 @@ export const translations = {
       send: "Ipadala ang report",
       sending: "Ipinapadala…",
       need: {
+        text: "Ayusin ang tekstong may pulang babala para maipadala.",
         photo: "Magdagdag ng larawan o video para maipadala.",
         rel: "Piliin kung ano mo siya para maipadala.",
         location: "I-pin ang lokasyon sa mapa para maipadala."
@@ -2403,6 +2414,11 @@ export const translations = {
       dangerNote: 'Nasa agarang panganib? Tumawag agad sa 911. Pagkatapos mong magpadala ng report, lalabas dito ang pulang phone button para sa mga emergency hotline.'
     },
     reportForm: {
+      textCheck: {
+        offensive: "Pakialis ang hindi angkop o bastos na pananalita.",
+        spam: "Iwasan ang paulit-ulit o random na mga titik.",
+        meaningless: "Maglagay ng makabuluhang impormasyon tungkol sa iyong report."
+      },
       reportingFor: 'Sino ang iyong ino-report?',
       self: 'Ako Mismo',
       others: 'Ibang Tao',
@@ -2453,6 +2469,8 @@ export const translations = {
         edited: 'Binago sa isang editing app ang larawan o video na ito. I-attach ang orihinal mula sa iyong camera.'
       },
       streetViewEmpty: 'Mag-pin ng lugar sa mapa para makita ito rito sa Street View.',
+      streetViewShow: 'Ipakita ang Street View ng lugar na ito sa tabi ng mapa',
+      streetViewHide: 'Itago ang Street View',
       streetViewOutside: 'Ilipat ang pin sa loob ng Barangay Sta. Fe para makita ang Street View.',
       mediaTooLargeTitle: 'Masyadong malaki ang larawan o video',
       mediaTooLarge: 'Masyadong malaki ang iyong larawan o video para maipadala. Mag-attach ng mas maliit, gaya ng larawan sa halip na video, o mas maikling video. Nandito pa rin ang lahat ng iba mong inilagay.',

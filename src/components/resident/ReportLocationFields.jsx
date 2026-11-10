@@ -1,6 +1,7 @@
 import React from 'react';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import { forwardGeocode } from '../shared/location/geocode';
+import { TextWarning } from './textWarnings';
 
 // The address of a new report, in the same parts as the sign-up form's home
 // address: House / Lot / Block No., Street, Subdivision / Purok (optional),
@@ -59,7 +60,8 @@ export default function ReportLocationFields({
   location,
   sectionRef,
   addressPrefilled,
-  serviceAreaNote
+  serviceAreaNote,
+  warnings = {} // { houseNumber, street, area, landmark }: text-check reasons
 }) {
   const {
     gpsCoords,
@@ -132,30 +134,38 @@ export default function ReportLocationFields({
       </div>
 
       <div className="rl-grid">
-        <input
-          type="text"
-          name="houseNumber"
-          value={formData.houseNumber}
-          onChange={handleChange}
-          placeholder={t('reportForm.houseNumberPlaceholder')}
-          aria-label={t('reportForm.houseNumberPlaceholder')}
-          required={needsTypedAddress}
-          disabled={disabled}
-          maxLength={60}
-          className="rl-input"
-        />
-        <input
-          type="text"
-          name="street"
-          value={formData.street}
-          onChange={handleChange}
-          placeholder={t('reportForm.streetPlaceholder')}
-          aria-label={t('reportForm.streetPlaceholder')}
-          required={needsTypedAddress}
-          disabled={disabled}
-          maxLength={120}
-          className="rl-input"
-        />
+        <div>
+          <input
+            type="text"
+            name="houseNumber"
+            value={formData.houseNumber}
+            onChange={handleChange}
+            placeholder={t('reportForm.houseNumberPlaceholder')}
+            aria-label={t('reportForm.houseNumberPlaceholder')}
+            required={needsTypedAddress}
+            disabled={disabled}
+            maxLength={60}
+            className="rl-input"
+            aria-invalid={Boolean(warnings.houseNumber) || undefined}
+          />
+          <TextWarning t={t} reason={warnings.houseNumber} />
+        </div>
+        <div>
+          <input
+            type="text"
+            name="street"
+            value={formData.street}
+            onChange={handleChange}
+            placeholder={t('reportForm.streetPlaceholder')}
+            aria-label={t('reportForm.streetPlaceholder')}
+            required={needsTypedAddress}
+            disabled={disabled}
+            maxLength={120}
+            className="rl-input"
+            aria-invalid={Boolean(warnings.street) || undefined}
+          />
+          <TextWarning t={t} reason={warnings.street} />
+        </div>
       </div>
       <input
         type="text"
@@ -167,7 +177,9 @@ export default function ReportLocationFields({
         disabled={disabled}
         maxLength={120}
         className="rl-input rl-gap"
+        aria-invalid={Boolean(warnings.area) || undefined}
       />
+      <TextWarning t={t} reason={warnings.area} />
       <input
         type="text"
         value={t('reportForm.barangayFixed')}
@@ -186,7 +198,9 @@ export default function ReportLocationFields({
         disabled={disabled}
         maxLength={200}
         className="rl-input rl-gap"
+        aria-invalid={Boolean(warnings.landmark) || undefined}
       />
+      <TextWarning t={t} reason={warnings.landmark} />
 
       {locationError && (
         <div className="rl-error">

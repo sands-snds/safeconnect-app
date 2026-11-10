@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
 import { showPopup } from '../shared/popup';
 import { resultError, showIfMediaProblem } from './reportErrors';
+import { useTextWarnings, serverTextErrors, TextWarning } from './textWarnings';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -130,6 +131,23 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const [victimRelationshipOther, setVictimRelationshipOther] = useState('');
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
+
+  // Spam, gibberish or offensive text: a warning under the field, and Send
+  // stays off until it's fixed (textWarnings.jsx; the backend checks again).
+  const [textServerErrors, setTextServerErrors] = useState({});
+  const forOthers = reportFor === 'others';
+  const { warnings: textWarn, blocked: textBlocked } = useTextWarnings({
+    emergencyOther: { value: formData.emergency === OTHER_EMERGENCY ? formData.emergencyOther : '', kind: 'short', api: 'victimOfEmergency' },
+    situation: { value: formData.situation, kind: 'description', api: 'situation' },
+    relOther: { value: forOthers ? victimRelationshipOther : '', kind: 'short', api: 'victimRelationship' },
+    name: { value: forOthers ? victimName : '', kind: 'short', api: 'victimName' },
+    details: { value: forOthers ? victimDetails : '', kind: 'description', api: 'victimDetails' },
+    houseNumber: { value: isEditing ? '' : formData.houseNumber, kind: 'number' },
+    street: { value: isEditing ? '' : formData.street, kind: 'short' },
+    area: { value: isEditing ? '' : formData.area, kind: 'short' },
+    landmark: { value: isEditing ? '' : formData.landmark, kind: 'short' },
+    location: { value: isEditing ? formData.location : '', kind: 'short', api: 'location' }
+  }, textServerErrors);
   const chooseWho = (who) => {
     setReportFor(who);
     setHelpPlace(who === 'others' ? 'elsewhere' : 'home');
@@ -229,6 +247,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     setGpsCoords(null);
     setLocationError('');
     setSpecialInvalid(null);
+    setTextServerErrors({});
   };
 
   // Closing the form (Cancel, X or clicking outside) clears it, so it opens
@@ -241,6 +260,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (textBlocked) return; // the warnings under the fields say what to fix
     if (!isEditing) {
       const remaining = getCooldownRemainingMs();
       if (remaining > 0) {
@@ -381,6 +401,11 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     } catch (error) {
       console.error('Error submitting form:', error);
       if (showIfMediaProblem(error, t)) return;
+      const textErrors = serverTextErrors(error, {
+        victimOfEmergency: formData.emergencyOther, situation: formData.situation, location: formData.location,
+        victimRelationship: victimRelationshipOther, victimName, victimDetails
+      });
+      if (textErrors) { setTextServerErrors(textErrors); return; }
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('assistanceModal.submitError') });
     } finally {
       setIsSubmitting(false);
@@ -388,6 +413,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   };
   // The first thing still needed before sending (shown above Send), or null.
   const whatIsMissing = () => {
+    if (textBlocked) return 'text';
     if (reportFor === 'others') {
       if (!victimRelationship) return 'rel';
       if (victimRelationship === 'Other' && !victimRelationshipOther.trim()) return 'relOther';
@@ -469,6 +495,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           details={victimDetails}
           onDetails={setVictimDetails}
           disabled={isSubmitting}
+          warnings={textWarn}
         />
       )}
 
@@ -505,7 +532,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               maxLength={100}
               disabled={isSubmitting}
               placeholder={t('assistanceModal.emergencyOtherPlaceholder')}
+              aria-invalid={Boolean(textWarn.emergencyOther) || undefined}
             />
+            <TextWarning t={t} reason={textWarn.emergencyOther} />
           </div>
         )}
       </div>
@@ -536,7 +565,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
             placeholder={t('reportForm.fullAddress')}
             required
             disabled={isSubmitting}
+            aria-invalid={Boolean(textWarn.location) || undefined}
           />
+          <TextWarning t={t} reason={textWarn.location} />
           {locationError && <p className="qr-err"><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {locationError}</p>}
           <p className="qr-note">{t('assistanceModal.serviceAreaNote')}</p>
           <div ref={locationSectionRef}>
@@ -567,6 +598,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               sectionRef={locationSectionRef}
               addressPrefilled={addressPrefilled}
               serviceAreaNote={t('assistanceModal.serviceAreaNote')}
+              warnings={textWarn}
             />
           </div>
         </div>
@@ -622,7 +654,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           placeholder={t('assistanceModal.situationPlaceholder')}
           required
           disabled={isSubmitting}
+          aria-invalid={Boolean(textWarn.situation) || undefined}
         />
+        <TextWarning t={t} reason={textWarn.situation} />
       </div>
 
       <ConsentBox checked={formData.consent} onChange={handleChange} disabled={isSubmitting}>{t('reportForm.consent')}</ConsentBox>
