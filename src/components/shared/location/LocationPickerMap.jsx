@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Polygon, Marker, useMap, useMapEvents } from '
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { SANTA_FE_BOUNDARY, SANTA_FE_CENTER } from './santaFeArea';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 
 
@@ -92,6 +93,7 @@ const LocationPickerMap = ({
   readOnly = false,
   height = 240
 }) => {
+  const { t } = useLanguage();
   const pinLat = Number(rawPin?.lat);
   const pinLng = Number(rawPin?.lng);
   const hasPin = rawPin != null && Number.isFinite(pinLat) && Number.isFinite(pinLng);
@@ -229,7 +231,7 @@ const LocationPickerMap = ({
               whiteSpace: 'nowrap'
             }}
           >
-            <i className="bi bi-hand-index-thumb"></i> Tap the map to pin the location
+            <i className="bi bi-hand-index-thumb"></i> {t('reportForm.mapTapToPin')}
           </div>
         )}
       </div>
@@ -247,12 +249,11 @@ const LocationPickerMap = ({
             lineHeight: 1.4
           }}
         >
-          <i className="bi bi-exclamation-octagon-fill"></i> {outsideMessage}
+          <i className="bi bi-exclamation-octagon-fill"></i> {t('reportForm.outsideSantaFe')}
         </div>
       ) : pin ? (
         <div style={{ marginTop: '6px', fontSize: '15px', color: '#6b7280' }}>
-          <i className="bi bi-geo-alt-fill"></i> Pinned. Drag the pin to adjust (try Satellite if streets aren't labelled).
-          House number and street are now optional, but a landmark helps responders find you.
+          <i className="bi bi-geo-alt-fill"></i> {t('reportForm.mapPinnedHint')}
         </div>
       ) : (
         <div style={{ marginTop: '6px', fontSize: '15px', color: '#6b7280' }}>

@@ -65,7 +65,7 @@ export default function UserDropdown({
 
         <div className="resident-dropdown-divider" />
 
-        <button className="resident-dropdown-item" onClick={onLogout}>
+        <button className="resident-dropdown-item resident-dropdown-logout" onClick={onLogout}>
           <i className="bi bi-box-arrow-right" />
           <span>{t('residentNav.logout')}</span>
         </button>

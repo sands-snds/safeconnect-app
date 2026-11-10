@@ -142,7 +142,7 @@ export default function MobileMenu({
                     </div>
 
                     <button
-                        className="mobile-nav-item"
+                        className="mobile-nav-item mobile-nav-logout"
                         onClick={() =>
                             handleNavigation("/")
                         }

@@ -135,14 +135,16 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
 
   // Where the report is: the GPS / map pin when there is one inside Santa
   // Fe; otherwise, for yourself, your registered home.
-  const usingHome = form.who === 'self' && !pinned && Boolean(home);
+  // A pin outside Santa Fe must be moved first (no quiet fallback to home).
+  const usingHome = form.who === 'self' && !pinned && !isOutsideSantaFe && Boolean(home);
   const hasLocation = pinned || usingHome;
   const missing = [
+    isOutsideSantaFe && 'outside',
     !form.media && 'photo',
     form.who === 'others' && !form.rel && 'rel',
     !hasLocation && 'location'
   ].filter(Boolean);
-  const missingText = missing.length === 0 ? '' : t(`quickReport.need.${missing[0]}`);
+  const missingText = missing.length === 0 ? '' : missing[0] === 'outside' ? t('reportForm.outsideSantaFe') : t(`quickReport.need.${missing[0]}`);
 
   const send = async () => {
     if (missing.length || sending) return;
@@ -341,9 +343,9 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                 )}
 
                 {locationChip()}
-                {(form.showMap || (!hasLocation && !isLocating)) && (
+                {(form.showMap || isOutsideSantaFe || (!hasLocation && !isLocating)) && (
                   <div className="qr-map">
-                    {(locationError || isOutsideSantaFe) && <p className="qr-maperr">{isOutsideSantaFe ? outsideMessage : locationError}</p>}
+                    {(locationError || isOutsideSantaFe) && <p className="qr-maperr">{isOutsideSantaFe ? t('reportForm.outsideSantaFe') : locationError}</p>}
                     <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={sending} height={220} />
                   </div>
                 )}

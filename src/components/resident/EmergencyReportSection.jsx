@@ -229,7 +229,9 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
         .ir-cta:active { transform: translateY(1px); }
         .ir-cta:focus-visible { outline: 3px solid #6B2C3E; outline-offset: 2px; }
 
-        .ir-danger { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 32px 0 0; text-align: center; color: #991b1b; font-size: 0.88rem; font-weight: 600; }
+        /* The call note: the phone in a round badge, centred beside the text, however many lines it takes. */
+        .ir-danger { display: flex; align-items: center; gap: 12px; max-width: 760px; margin: 32px auto 0; padding: 12px 18px 12px 12px; border-radius: 14px; background: #fef2f2; border: 1px solid #fecaca; text-align: left; color: #991b1b; font-size: 0.88rem; font-weight: 600; line-height: 1.5; }
+        .ir-danger-ic { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: #dc2626; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3); }
 
         @media (max-width: 900px) {
           .ir-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -238,7 +240,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
           .ir-outer { padding: 72px 0 104px; }
           .ir-intro { margin-bottom: 32px; }
           .ir-cards { grid-template-columns: 1fr; gap: 18px; }
-          .ir-danger { align-items: flex-start; text-align: left; }
+          .ir-danger { margin-top: 24px; padding: 10px 14px 10px 10px; font-size: 0.84rem; }
         }
       `}</style>
 
@@ -280,7 +282,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
             })}
           </div>
 
-          <p className="ir-danger"><i className="bi bi-telephone-fill" aria-hidden="true" />{t('emergencyReportSection.dangerNote')}</p>
+          <p className="ir-danger"><span className="ir-danger-ic" aria-hidden="true"><i className="bi bi-telephone-fill" /></span><span>{t('emergencyReportSection.dangerNote')}</span></p>
         </div>
       </div>
 

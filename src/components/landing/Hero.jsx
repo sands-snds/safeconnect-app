@@ -44,6 +44,9 @@ const SIGNUP_FIELD_PART = {
     suAddrHouse: 2, suAddrStreet: 2, suIdType: 2, suIdFile: 2,
     suUsername: 3, suPassword: 3, suConfirm: 3, suAgree: 3,
 };
+// Sign-up text boxes take at most 20 characters (email excepted; the
+// contact number keeps its own 10-digit limit).
+const SIGNUP_TEXT_MAX = 20;
 const SIGNUP_PART_FIRST_FIELD = ['suFirst', 'suAddrHouse', 'suUsername'];
 const ID_ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
 const ID_EXTENSIONS = /\.(jpe?g|png|webp|pdf)$/i;
@@ -715,13 +718,13 @@ function Hero() {
                         <h3 className="auth-section">{t('signUp.sectionPersonal')}</h3>
                         <div className="auth-grid cols-3">
                             <AuthField id="suFirst" error={fieldErrors.suFirst} label={t('signUp.firstName')} icon="bi-person">
-                                <input type="text" className="auth-input" id="suFirst" {...fieldProps('suFirst')} autoComplete="given-name" placeholder={t('signUp.firstNamePlaceholder')} value={suFirst} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                                <input type="text" className="auth-input" id="suFirst" {...fieldProps('suFirst')} autoComplete="given-name" placeholder={t('signUp.firstNamePlaceholder')} value={suFirst} maxLength={SIGNUP_TEXT_MAX} onChange={e => setSuFirst(e.target.value.replace(NAME_ALLOWED_REGEX,'').slice(0,SIGNUP_TEXT_MAX))} />
                             </AuthField>
                             <AuthField id="suMiddle" label={t('signUp.middleName')} optional={t('signUp.optional')} icon="bi-person">
-                                <input type="text" className="auth-input" id="suMiddle" autoComplete="additional-name" placeholder={t('signUp.middlePlaceholder')} value={suMiddle} onChange={e => setSuMiddle(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                                <input type="text" className="auth-input" id="suMiddle" autoComplete="additional-name" placeholder={t('signUp.middlePlaceholder')} value={suMiddle} maxLength={SIGNUP_TEXT_MAX} onChange={e => setSuMiddle(e.target.value.replace(NAME_ALLOWED_REGEX,'').slice(0,SIGNUP_TEXT_MAX))} />
                             </AuthField>
                             <AuthField id="suLast" error={fieldErrors.suLast} label={t('signUp.lastName')} icon="bi-person">
-                                <input type="text" className="auth-input" id="suLast" {...fieldProps('suLast')} autoComplete="family-name" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,''))} />
+                                <input type="text" className="auth-input" id="suLast" {...fieldProps('suLast')} autoComplete="family-name" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} maxLength={SIGNUP_TEXT_MAX} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,'').slice(0,SIGNUP_TEXT_MAX))} />
                             </AuthField>
                         </div>
 
@@ -742,12 +745,12 @@ function Hero() {
                         <p className="auth-id-intro">{t('signUp.addressIntro')}</p>
                         <div className="auth-grid cols-2">
                             <AuthField id="suAddrHouse" error={fieldErrors.suAddrHouse} label={t('signUp.addressHouse')} icon="bi-house-door">
-                                <input type="text" className="auth-input" id="suAddrHouse" {...fieldProps('suAddrHouse')} autoComplete="address-line1" maxLength={60}
-                                    placeholder={t('signUp.addressHousePlaceholder')} value={suAddrHouse} onChange={e => setSuAddrHouse(e.target.value)} />
+                                <input type="text" className="auth-input" id="suAddrHouse" {...fieldProps('suAddrHouse')} autoComplete="address-line1" maxLength={SIGNUP_TEXT_MAX}
+                                    placeholder={t('signUp.addressHousePlaceholder')} value={suAddrHouse} onChange={e => setSuAddrHouse(e.target.value.slice(0,SIGNUP_TEXT_MAX))} />
                             </AuthField>
                             <AuthField id="suAddrStreet" error={fieldErrors.suAddrStreet} label={t('signUp.addressStreet')} icon="bi-signpost-2">
-                                <input type="text" className="auth-input" id="suAddrStreet" {...fieldProps('suAddrStreet')} autoComplete="address-line2" maxLength={120}
-                                    placeholder={t('signUp.addressStreetPlaceholder')} value={suAddrStreet} onChange={e => setSuAddrStreet(e.target.value)} />
+                                <input type="text" className="auth-input" id="suAddrStreet" {...fieldProps('suAddrStreet')} autoComplete="address-line2" maxLength={SIGNUP_TEXT_MAX}
+                                    placeholder={t('signUp.addressStreetPlaceholder')} value={suAddrStreet} onChange={e => setSuAddrStreet(e.target.value.slice(0,SIGNUP_TEXT_MAX))} />
                             </AuthField>
                         </div>
                         <AuthField id="suAddrFixed" label={t('signUp.addressBarangay')} icon="bi-geo-alt">
@@ -807,12 +810,12 @@ function Hero() {
                         <div className="auth-part" hidden={signUpPart !== 3}>
                         <h3 className="auth-section">{t('signUp.sectionSecurity')}</h3>
                         <AuthField id="suUsername" error={fieldErrors.suUsername} label={t('signUp.username')} icon="bi-at">
-                            <input type="text" className="auth-input" id="suUsername" {...fieldProps('suUsername')} autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} onChange={e => setSuUsername(e.target.value)} />
+                            <input type="text" className="auth-input" id="suUsername" {...fieldProps('suUsername')} autoComplete="username" placeholder={t('signUp.usernamePlaceholder')} value={suUsername} maxLength={SIGNUP_TEXT_MAX} onChange={e => setSuUsername(e.target.value.slice(0,SIGNUP_TEXT_MAX))} />
                         </AuthField>
                         <div className="auth-grid cols-2">
                             <AuthField id="suPassword" error={fieldErrors.suPassword} label={t('signUp.password')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showSuPw} onToggle={() => setShowSuPw(v=>!v)} />}>
-                                <input type={showSuPw?'text':'password'} className="auth-input has-toggle" id="suPassword" {...NO_CLIPBOARD} {...fieldProps('suPassword')} autoComplete="new-password" placeholder={t('signUp.passwordPlaceholder')} value={suPassword} onChange={e => setSuPassword(e.target.value)} />
+                                <input type={showSuPw?'text':'password'} className="auth-input has-toggle" id="suPassword" {...NO_CLIPBOARD} {...fieldProps('suPassword')} autoComplete="new-password" placeholder={t('signUp.passwordPlaceholder')} value={suPassword} maxLength={SIGNUP_TEXT_MAX} onChange={e => setSuPassword(e.target.value.slice(0,SIGNUP_TEXT_MAX))} />
                             </AuthField>
                             <AuthField id="suConfirm" error={fieldErrors.suConfirm} label={t('signUp.confirmPassword')} icon="bi-lock"
                                 toggle={<PasswordToggleButton visible={showSuConfPw} onToggle={() => setShowSuConfPw(v=>!v)} />}
@@ -820,7 +823,7 @@ function Hero() {
                                 hintTone={suPassword===suConfirm ? 'ok' : 'bad'}>
                                 <input type={showSuConfPw?'text':'password'} id="suConfirm" {...NO_CLIPBOARD} {...fieldProps('suConfirm')} autoComplete="new-password"
                                     className={`auth-input has-toggle${suConfirm ? (suPassword===suConfirm ? ' ok' : ' bad') : ''}`}
-                                    placeholder={t('signUp.confirmPasswordPlaceholder')} value={suConfirm} onChange={e => setSuConfirm(e.target.value)} />
+                                    placeholder={t('signUp.confirmPasswordPlaceholder')} value={suConfirm} maxLength={SIGNUP_TEXT_MAX} onChange={e => setSuConfirm(e.target.value.slice(0,SIGNUP_TEXT_MAX))} />
                             </AuthField>
                         </div>
                         

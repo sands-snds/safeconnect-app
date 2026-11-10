@@ -1,14 +1,25 @@
 import React from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import useSiteContent, { contactDescription } from '../shared/useSiteContent';
+import { formatMobile } from '../shared/EmergencyContactList';
 
-const HOTLINES = [
-  { key: 'barangay', phone: '+63 935 498 4838', icon: 'bi-house-fill',       color: '#6B2C3E' },
-  { key: 'dasma',     phone: '+63 46 242 0002',  icon: 'bi-shield-fill',      color: '#3b82f6' },
-  { key: 'cdrmc',     phone: '+63 46 230 0345',  icon: 'bi-heart-pulse-fill', color: '#10b981' },
-];
+// The numbers beside the 911 card come from the same list as the resident
+// emergency call button (Admin → Content → Page Contacts), so they stay in
+// step with it, Bureau of Fire Protection included. A contact with several
+// people on call (the barangay) gets one row per person.
+const hotlineRows = (contacts, t) => contacts
+  .filter((c) => !c.hidden && c.number && String(c.number).replace(/\s/g, '') !== '911')
+  .flatMap((c) => {
+    const note = contactDescription(c, t);
+    const people = Array.isArray(c.choices) ? c.choices.filter((ch) => ch && ch.number) : [];
+    if (people.length === 0) return [{ key: c.id || c.label, title: c.label, note, number: c.number, icon: c.icon, color: c.color }];
+    return people.map((ch, i) => ({ key: `${c.id || c.label}-${i}`, title: c.label, note: ch.name ? `${note} · ${ch.name}` : note, number: ch.number, icon: c.icon, color: c.color }));
+  });
 
 export default function Contact() {
   const { t } = useLanguage();
+  const { emergencyContacts = [] } = useSiteContent();
+  const hotlines = hotlineRows(emergencyContacts, t);
   return (
     <section id="contact" style={{ margin: 0, padding: 0 }}>
       <style>{`
@@ -78,11 +89,11 @@ export default function Contact() {
         }
         .ct-sos-btn:hover { transform: scale(1.05); }
 
-        .ct-list { display: flex; flex-direction: column; gap: 12px; }
-        /* Side by side with the 911 card: the three numbers share its height, so
+        .ct-list { display: flex; flex-direction: column; gap: 10px; }
+        /* Side by side with the 911 card: the numbers share its height, so
            their tops and bottoms line up with it. */
         @media (min-width: 821px) {
-          .ct-list .ct-row { flex: 1; padding: 18px 22px; }
+          .ct-list .ct-row { flex: 1; padding: 12px 22px; }
         }
         .ct-row {
           display: flex;
@@ -103,7 +114,7 @@ export default function Contact() {
         .ct-row-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .ct-row-top strong { font-size: 0.98rem; color: #111; font-weight: 800; }
         .ct-row-badge { font-size: 0.64rem; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
-        .ct-row-text p { margin: 3px 0 0; font-size: 0.78rem; color: #999; }
+        .ct-row-text p { margin: 3px 0 0; font-size: 0.78rem; color: #6b7280; }
         .ct-row-phone { font-size: 0.85rem; font-weight: 800; white-space: nowrap; display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
 
         .ct-banner {
@@ -148,20 +159,19 @@ export default function Contact() {
             </div>
 
             <div className="ct-list">
-              {HOTLINES.map((h) => (
-                <a key={h.key} href={`tel:${h.phone.replace(/\s/g, '')}`} className="ct-row">
+              {hotlines.map((h) => (
+                <a key={h.key} href={`tel:${String(h.number).replace(/\s/g, '')}`} className="ct-row">
                   <div className="ct-row-icon" style={{ background: `${h.color}15`, color: h.color }}>
                     <i className={`bi ${h.icon}`} />
                   </div>
                   <div className="ct-row-text">
                     <div className="ct-row-top">
-                      <strong>{t(`contact.hotlines.${h.key}.title`)}</strong>
-                      <span className="ct-row-badge" style={{ color: h.color, background: `${h.color}15` }}>{t(`contact.hotlines.${h.key}.sub`)}</span>
+                      <strong>{h.title}</strong>
                     </div>
-                    <p>{t(`contact.hotlines.${h.key}.note`)}</p>
+                    <p>{h.note}</p>
                   </div>
                   <div className="ct-row-phone" style={{ color: h.color }}>
-                    {h.phone} <i className="bi bi-arrow-up-right-circle-fill" />
+                    {formatMobile(h.number)} <i className="bi bi-arrow-up-right-circle-fill" />
                   </div>
                 </a>
               ))}

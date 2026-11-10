@@ -281,15 +281,15 @@ export const translations = {
       steps: {
         submit: {
           title: 'Submit a report',
-          body: 'Open SafeConnect and report an emergency, request assistance, or flag a petty crime — your location and photos are attached automatically.'
+          body: "Open SafeConnect and report an emergency, request assistance, or report a petty crime. Your location is filled in for you; add a photo as proof and send."
         },
         respond: {
           title: 'Your barangay responds',
-          body: 'Your report reaches the barangay response team the moment you send it, any hour of the day.'
+          body: "Your report reaches the barangay response team the moment you send it, any hour of the day. When needed, an emergency call button with the hotlines appears on your page."
         },
         stayUpdated: {
           title: 'Stay updated',
-          body: 'Follow your report in real time — from received, to in progress, to resolved.'
+          body: "Follow each report in My Reports and on your map, from Received to In Progress to Resolved, with a notification at every step."
         }
       }
     },
@@ -309,34 +309,34 @@ export const translations = {
       features: {
         emergencyReports: {
           label: 'Emergency Reports',
-          desc: 'Report fires, floods, or any life-threatening situation happening right now — help is one tap away.'
+          desc: "Report a fire, flood, earthquake or typhoon in a few taps: choose what's happening, add a photo and send. Your location is added for you."
         },
         assistanceRequests: {
           label: 'Assistance Requests',
-          desc: 'Request rescue, relief goods, or support during or after a disaster.'
+          desc: "Ask for food and water, medical aid or a transport vehicle, for yourself or for someone else."
         },
         crimeReports: {
           label: 'Petty Crime Reports',
-          desc: 'Report theft, vandalism, or suspicious activity in your area.'
+          desc: "Report theft, vandalism, harassment, trespassing, a public disturbance or suspicious activity in Barangay Sta. Fe."
         },
         announcements: {
           label: 'Announcements',
-          desc: 'Read the latest barangay alerts, updates, and community news.'
+          desc: "Read barangay alerts and news, and like or comment on them."
         },
         liveWeather: {
-          label: 'Live Weather',
-          desc: 'Check real-time weather conditions before heading out.'
+          label: "Weather & Alerts",
+          desc: "Today's weather and a 7-day forecast for Sta. Fe, with the heat index and any typhoon wind signal."
         },
         yourProfile: {
-          label: 'Your Profile',
-          desc: 'Manage your name, photo, and account password anytime.'
+          label: "My Reports & Profile",
+          desc: "Follow each report's status, see your reports on the map, and keep your profile and home address up to date."
         }
       }
     },
     contact: {
       badge: 'Emergency Contacts',
       title: 'Help is always one call away.',
-      subtitle: 'Save these numbers now. In an emergency, every second counts — you can also tap the floating call button anywhere on this page.',
+      subtitle: "Save these numbers now. In an emergency, every second counts.",
       sosEyebrow: 'Life-threatening emergency?',
       sosLabel: 'Police, fire, and medical response — nationwide, 24/7.',
       sosButton: 'Call 911 Now',
@@ -346,7 +346,7 @@ export const translations = {
         cdrmc:    { title: 'CDRMC Cavite',      sub: 'Disaster mgmt',note: 'Provincial disaster risk management & response' }
       },
       bannerTitle: 'Signed in? Report through SafeConnect.',
-      bannerDesc: 'Submit emergency reports, assistance requests, and petty crime reports — GPS and photos captured automatically.',
+      bannerDesc: "Submit emergency reports, assistance requests and petty crime reports. Your location is added for you; you add a photo as proof.",
       bannerCta: 'Open SafeConnect'
     },
     footer: {
@@ -981,6 +981,9 @@ export const translations = {
       landmarkPlaceholder: 'Landmark / directions (e.g. beside the covered court, blue gate)',
       serviceAreaNote: 'Reports are limited to Barangay Sta. Fe, Dasmariñas, Cavite, Philippines',
       addressPrefilled: 'Filled in from your registered address. You can change it.',
+      outsideSantaFe: "The pinned location is outside Barangay Sta. Fe. Please move the pin to the exact place where the incident happened inside Barangay Sta. Fe.",
+      mapPinnedHint: "Pinned. Drag the pin to adjust (try Satellite if streets aren't labelled). A landmark helps responders find the place.",
+      mapTapToPin: "Tap the map to pin the location",
       areaPlaceholder: 'Subdivision / Purok (optional)',
       barangayFixed: 'Barangay Santa Fe, Dasmariñas, Cavite',
       addressSearching: 'Finding this address on the map…',
@@ -1604,15 +1607,15 @@ export const translations = {
       steps: {
         submit: {
           title: 'Magsumite ng report',
-          body: 'Buksan ang SafeConnect at mag-report ng emergency, humingi ng tulong, o mag-flag ng petty crime — awtomatikong nakalakip ang iyong lokasyon at mga larawan.'
+          body: "Buksan ang SafeConnect at mag-report ng emergency, humingi ng tulong, o mag-report ng maliit na krimen. Kusang nailalagay ang iyong lokasyon; magdagdag ng larawan bilang patunay at ipadala."
         },
         respond: {
           title: 'Tumutugon ang iyong barangay',
-          body: 'Naaabot ng response team ng barangay ang iyong report sa sandaling ipadala mo ito, kahit anong oras ng araw.'
+          body: "Naaabot ng response team ng barangay ang iyong report sa sandaling ipadala mo ito, kahit anong oras. Kapag kailangan, lalabas sa iyong pahina ang emergency call button na may mga hotline."
         },
         stayUpdated: {
           title: 'Manatiling updated',
-          body: 'Subaybayan ang iyong report sa real time — mula received, hanggang in progress, hanggang resolved.'
+          body: "Subaybayan ang bawat report sa Aking mga Report at sa iyong mapa, mula Natanggap hanggang Inaasikaso hanggang Nalutas, na may abiso sa bawat hakbang."
         }
       }
     },
@@ -1632,34 +1635,34 @@ export const translations = {
       features: {
         emergencyReports: {
           label: 'Mga Ulat na Emergency',
-          desc: 'Mag-report ng sunog, baha, o anumang nagbabantang buhay na sitwasyon ngayon — isang tap lang ang layo ang tulong.'
+          desc: "Mag-report ng sunog, baha, lindol o bagyo sa ilang pindot lang: piliin ang nangyayari, magdagdag ng larawan at ipadala. Kusang nailalagay ang iyong lokasyon."
         },
         assistanceRequests: {
           label: 'Kahilingan ng Tulong',
-          desc: 'Humiling ng rescue, relief goods, o suporta sa panahon o pagkatapos ng kalamidad.'
+          desc: "Humingi ng pagkain at tubig, medikal na tulong o sasakyan, para sa iyo o sa ibang tao."
         },
         crimeReports: {
           label: 'Mga Ulat ng Maliit na Krimen',
-          desc: 'Mag-report ng pagnanakaw, bandalismo, o kahina-hinalang aktibidad sa inyong lugar.'
+          desc: "Mag-report ng pagnanakaw, bandalismo, panliligalig, panghihimasok, gulo sa publiko o kahina-hinalang aktibidad sa Barangay Sta. Fe."
         },
         announcements: {
           label: 'Mga Anunsyo',
-          desc: 'Basahin ang pinakabagong alerto, update, at balita ng barangay.'
+          desc: "Basahin ang mga alerto at balita ng barangay, at mag-like o mag-comment."
         },
         liveWeather: {
-          label: 'Live na Panahon',
-          desc: 'Tingnan ang real-time na kalagayan ng panahon bago lumabas.'
+          label: "Panahon at Babala",
+          desc: "Panahon ngayon at 7-araw na taya para sa Sta. Fe, kasama ang heat index at anumang signal ng bagyo."
         },
         yourProfile: {
-          label: 'Iyong Profile',
-          desc: 'Pamahalaan ang iyong pangalan, larawan, at password ng account anumang oras.'
+          label: "Aking mga Report at Profile",
+          desc: "Subaybayan ang status ng bawat report, tingnan ang mga ito sa mapa, at panatilihing updated ang iyong profile at address."
         }
       }
     },
     contact: {
       badge: 'Mga Emergency Contact',
       title: 'Laging isang tawag lang ang kailangan para makahingi ng tulong.',
-      subtitle: 'I-save na ang mga numerong ito ngayon. Sa emergency, mahalaga ang bawat segundo — maaari mo ring pindutin ang lumulutang na call button kahit saan sa pahinang ito.',
+      subtitle: "I-save na ang mga numerong ito ngayon. Sa emergency, mahalaga ang bawat segundo.",
       sosEyebrow: 'Emergency na nagbabanta sa buhay?',
       sosLabel: 'Pulis, bumbero, at medikal na tugon — sa buong bansa, 24/7.',
       sosButton: 'Tumawag sa 911 Ngayon',
@@ -1669,7 +1672,7 @@ export const translations = {
         cdrmc:    { title: 'CDRMC Cavite',      sub: 'Disaster mgmt',   note: 'Panlalawigang disaster risk management at tugon' }
       },
       bannerTitle: 'Naka-sign in na? Mag-report gamit ang SafeConnect.',
-      bannerDesc: 'Magsumite ng emergency report, kahilingan ng tulong, at ulat ng petty crime — awtomatikong nakukuha ang GPS at mga larawan.',
+      bannerDesc: "Magsumite ng emergency report, kahilingan ng tulong, at ulat ng maliit na krimen. Kusang nailalagay ang iyong lokasyon; magdagdag ka ng larawan bilang patunay.",
       bannerCta: 'Buksan ang SafeConnect'
     },
     footer: {
@@ -2304,6 +2307,9 @@ export const translations = {
       landmarkPlaceholder: 'Landmark / direksyon (hal. tabi ng covered court, blue gate)',
       serviceAreaNote: 'Limitado lang ang mga report sa Barangay Sta. Fe, Dasmariñas, Cavite, Philippines',
       addressPrefilled: 'Kinuha mula sa iyong nakarehistrong address. Maaari mo itong palitan.',
+      outsideSantaFe: "Ang naka-pin na lokasyon ay nasa labas ng nasasakupan ng Barangay Sta. Fe. Pakilipat ang pin sa mismong lugar kung saan nangyari ang insidente sa loob ng Barangay Sta. Fe.",
+      mapPinnedHint: "Naka-pin na. I-drag ang pin para ayusin (subukan ang Satellite kung walang pangalan ang mga kalye). Nakakatulong ang palatandaan para mahanap ng responders ang lugar.",
+      mapTapToPin: "Pindutin ang mapa para i-pin ang lokasyon",
       areaPlaceholder: 'Subdibisyon / Purok (opsyonal)',
       barangayFixed: 'Barangay Santa Fe, Dasmariñas, Cavite',
       addressSearching: 'Hinahanap ang address na ito sa mapa…',

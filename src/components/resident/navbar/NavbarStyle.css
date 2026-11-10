@@ -242,6 +242,26 @@
     width: 20px;
 }
 
+/* Logout: red with white text so it is easy to find. */
+.resident-dropdown-item.resident-dropdown-logout {
+    background-color: #dc2626;
+    color: #fff;
+    font-weight: 700;
+    width: auto;
+    margin: 0.25rem 0.75rem 0.5rem;
+    border-radius: 10px;
+}
+
+.resident-dropdown-item.resident-dropdown-logout:hover,
+.resident-dropdown-item.resident-dropdown-logout:focus-visible {
+    background-color: #b91c1c;
+    color: #fff;
+}
+
+.resident-dropdown-item.resident-dropdown-logout i {
+    opacity: 1;
+}
+
 .resident-dropdown-divider {
     height: 1px;
     background-color: #e9ecef;
@@ -1295,6 +1315,21 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     font-size: 1.25rem;
     width: 24px;
     text-align: center;
+}
+
+/* Logout: red with white text so it is easy to find. */
+.mobile-nav-item.mobile-nav-logout {
+    background-color: #dc2626;
+    color: #fff;
+    font-weight: 700;
+    margin-top: 0.5rem;
+}
+
+.mobile-nav-item.mobile-nav-logout:hover,
+.mobile-nav-item.mobile-nav-logout:active,
+.mobile-nav-item.mobile-nav-logout:focus-visible {
+    background-color: #b91c1c;
+    color: #fff;
 }
 
 .mobile-nav-item .notification-badge {
