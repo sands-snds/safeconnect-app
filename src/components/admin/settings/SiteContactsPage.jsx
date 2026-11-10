@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { fetchSiteContent, updateSiteContent } from "../../../Services/api";
 import { showPopup, confirmPopup } from "../../shared/popup";
 import { setSiteContent, officialName } from "../../shared/useSiteContent";
 import EmergencyContactList from "../../shared/EmergencyContactList";
 import DonationFooter from "../../shared/DonationFooter";
 import PhoneNumberInput from "./PhoneNumberInput";
+import Table from "../shared/Table";
 import { tx } from "../../../i18n/adminText";
 
 const ICON_NAMES = {
@@ -26,15 +27,6 @@ const sectionStyle = {
   borderRadius: 12,
   padding: 20,
   marginBottom: 20
-};
-
-const rowStyle = {
-  display: "flex",
-  gap: 10,
-  alignItems: "flex-end",
-  flexWrap: "wrap",
-  padding: "12px 0",
-  borderTop: "1px solid #f3f4f6"
 };
 
 const fieldStyle = (flex) => ({ display: "flex", flexDirection: "column", gap: 4, flex, minWidth: 140 });
@@ -85,6 +77,61 @@ const move = (list, index, delta) => {
   return next;
 };
 
+// Table cells hold inputs, so they're a little tighter than the Users table.
+const cellStyle = { padding: "10px 8px", verticalAlign: "middle" };
+
+// The contact's color: its dot opens the preset colors and a custom picker.
+const ColorPicker = ({ color, colors, label, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const box = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (e) => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  const custom = !colors.some((c) => c.toLowerCase() === (color || "").toLowerCase());
+  const dot = (c, active) => ({ width: 24, height: 24, borderRadius: "50%", background: c, cursor: "pointer", border: active ? "3px solid #111827" : "2px solid #fff", boxShadow: "0 0 0 1px #d1d5db", padding: 0 });
+  return (
+    <div ref={box} style={{ position: "relative", display: "inline-block" }}>
+      <button type="button" aria-label={label} aria-expanded={open} title={tx("Change color")} onClick={() => setOpen((v) => !v)} style={{ ...dot(color, false), width: 30, height: 30 }} />
+      {open && (
+        <div role="dialog" aria-label={label} style={{ position: "absolute", top: 36, left: 0, zIndex: 20, display: "grid", gridTemplateColumns: "repeat(5, 24px)", gap: 8, padding: 10, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.15)" }}>
+          {colors.map((c) => (
+            <button key={c} type="button" aria-label={`Color ${c}`} aria-pressed={color === c} onClick={() => { onChange(c); setOpen(false); }} style={dot(c, color === c)} />
+          ))}
+          <label
+            title={tx("Custom color")}
+            aria-label={tx("Custom color")}
+            style={{ ...dot(custom ? color : "#fff", custom), position: "relative", display: "flex", alignItems: "center", justifyContent: "center", color: custom ? "#fff" : "#374151", fontSize: 14 }}
+          >
+            <i className="bi bi-plus" />
+            <input
+              type="color"
+              value={/^#[0-9a-f]{6}$/i.test(color || "") ? color : "#000000"}
+              onChange={(e) => onChange(e.target.value)}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", border: 0, padding: 0 }}
+            />
+          </label>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Move up / move down / remove, for one table row. onRemove null: no remove.
+const OrderButtons = ({ index, count, onMove, onRemove, removeDisabled = false }) => (
+  <div style={{ display: "flex", gap: 6 }}>
+    <button type="button" style={iconButton()} title={tx("Move up")} aria-label={tx("Move up")} disabled={index === 0} onClick={() => onMove(-1)}><i className="bi bi-arrow-up" /></button>
+    <button type="button" style={iconButton()} title={tx("Move down")} aria-label={tx("Move down")} disabled={index === count - 1} onClick={() => onMove(1)}><i className="bi bi-arrow-down" /></button>
+    {onRemove && (
+      <button type="button" style={iconButton(true)} title={tx("Remove")} aria-label={tx("Remove")} disabled={removeDisabled} onClick={onRemove}><i className="bi bi-trash3" /></button>
+    )}
+  </div>
+);
+
 const SiteContactsPage = () => {
   const [saved, setSaved] = useState(null);   // last saved copy (for "Discard changes")
   const [draft, setDraft] = useState(null);
@@ -92,6 +139,13 @@ const SiteContactsPage = () => {
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  // Contacts whose "People to choose from" row is open (by contact id).
+  const [openPeople, setOpenPeople] = useState(() => new Set());
+  const togglePeople = (key) => setOpenPeople((set) => {
+    const next = new Set(set);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    return next;
+  });
 
   useEffect(() => {
     fetchSiteContent()
@@ -170,128 +224,150 @@ const SiteContactsPage = () => {
           {tx("The numbers in the call button, in this order. The footer's hotlines are edited separately under Footer below.")}
         </p>
 
-        {draft.emergencyContacts.map((c, i) => (
-          <div key={c.id || i} style={rowStyle}>
-            <div
-              title={ICON_NAMES[c.icon] || "Icon"}
-              style={{ width: 38, height: 38, borderRadius: "50%", background: c.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 20, flexShrink: 0 }}
-            >
-              <i className={`bi ${c.icon}`} />
-            </div>
-            <label style={fieldStyle("1 1 160px")}>
-              <span style={labelStyle}>{tx("Name")}</span>
-              <input className="form-input" value={c.label} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { label: e.target.value })} placeholder={tx("e.g. Barangay Sta. Fe")} />
-            </label>
-            <label style={fieldStyle("1 1 200px")}>
-              <span style={labelStyle}>{tx("Description")}</span>
-              <input className="form-input" value={c.description || ""} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { description: e.target.value })} placeholder={tx("e.g. Barangay Emergency Line")} />
-            </label>
-            <div style={fieldStyle("1 1 250px")}>
-              <span style={labelStyle}>{tx("Number")}</span>
-              {c.number === "911" ? (
-                // The national emergency number stays 911.
-                <div className="form-input" title={tx("911 can't be changed")} style={{ display: "flex", alignItems: "center", gap: 6, background: "#f3f4f6", color: "#374151", fontWeight: 600 }}>
-                  <i className="bi bi-lock-fill" aria-hidden="true" style={{ color: "#6b7280" }} /> 911
-                </div>
-              ) : (
-                <PhoneNumberInput number={c.number} numberType={c.numberType} label={`${c.label || "Contact"} number`}
-                  onChange={(next) => updateContact(i, next)} />
-              )}
-            </div>
-            <label style={fieldStyle("0 1 150px")}>
-              <span style={labelStyle}>{tx("Icon")}</span>
-              <select className="form-select" value={c.icon} onChange={(e) => updateContact(i, { icon: e.target.value })}>
-                {options.icons.map((icon) => (
-                  <option key={icon} value={icon}>{ICON_NAMES[icon] || icon}</option>
-                ))}
-              </select>
-            </label>
-            <div style={fieldStyle("0 1 auto")}>
-              <span style={labelStyle}>{tx("Color")}</span>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingTop: 4, maxWidth: 160 }}>
-                {options.colors.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    aria-label={`Color ${color}`}
-                    aria-pressed={c.color === color}
-                    onClick={() => updateContact(i, { color })}
-                    style={{ width: 22, height: 22, borderRadius: "50%", background: color, cursor: "pointer", border: c.color === color ? "3px solid #111827" : "2px solid #fff", boxShadow: "0 0 0 1px #d1d5db" }}
-                  />
-                ))}
-                {(() => {
-                  const custom = !options.colors.some((p) => p.toLowerCase() === (c.color || "").toLowerCase());
-                  return (
-                    <label
-                      title={tx("Custom color")}
-                      aria-label={tx("Custom color")}
-                      style={{ position: "relative", width: 22, height: 22, borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", background: custom ? c.color : "#fff", color: custom ? "#fff" : "#374151", border: custom ? "3px solid #111827" : "2px solid #fff", boxShadow: "0 0 0 1px #d1d5db", fontSize: 14, lineHeight: 1 }}
+        <Table
+          minWidth={1080}
+          headers={[
+            { label: "Color", width: 64 },
+            { label: "Icon", width: 170 },
+            "Name",
+            "Description",
+            { label: "Number", width: 250 },
+            { label: "People to choose from", width: 150 },
+            { label: "Shown", width: 90 },
+            { label: "Order", width: 130 }
+          ]}
+        >
+          {draft.emergencyContacts.map((c, i) => {
+            const key = c.id || `contact-${i}`;
+            const people = c.choices || [];
+            const peopleOpen = openPeople.has(key);
+            const is911 = c.number === "911";
+            return (
+              <React.Fragment key={key}>
+                <tr>
+                  <td className="table-cell" style={cellStyle}>
+                    <ColorPicker
+                      color={c.color}
+                      colors={options.colors}
+                      label={`${c.label || tx("Contact")} ${tx("color")}`}
+                      onChange={(color) => updateContact(i, { color })}
+                    />
+                  </td>
+                  <td className="table-cell" style={cellStyle}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span
+                        aria-hidden="true"
+                        title={ICON_NAMES[c.icon] || "Icon"}
+                        style={{ width: 32, height: 32, borderRadius: "50%", background: c.color, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                      >
+                        <i className={`bi ${c.icon}`} />
+                      </span>
+                      <select className="form-select" value={c.icon} onChange={(e) => updateContact(i, { icon: e.target.value })} aria-label={`${c.label || tx("Contact")} ${tx("icon")}`} style={{ minWidth: 0 }}>
+                        {options.icons.map((icon) => (
+                          <option key={icon} value={icon}>{ICON_NAMES[icon] || icon}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </td>
+                  <td className="table-cell" style={cellStyle}>
+                    <input className="form-input" value={c.label} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { label: e.target.value })} placeholder={tx("e.g. Barangay Sta. Fe")} aria-label={tx("Name")} />
+                  </td>
+                  <td className="table-cell" style={cellStyle}>
+                    <input className="form-input" value={c.description || ""} maxLength={TEXT_MAX} onChange={(e) => updateContact(i, { description: e.target.value })} placeholder={tx("e.g. Barangay Emergency Line")} aria-label={tx("Description")} />
+                  </td>
+                  <td className="table-cell" style={cellStyle}>
+                    {is911 ? (
+                      // The national emergency number stays 911.
+                      <div className="form-input" title={tx("911 can't be changed")} style={{ display: "flex", alignItems: "center", gap: 6, background: "#f3f4f6", color: "#374151", fontWeight: 600 }}>
+                        <i className="bi bi-lock-fill" aria-hidden="true" style={{ color: "#6b7280" }} /> 911
+                      </div>
+                    ) : (
+                      <PhoneNumberInput number={c.number} numberType={c.numberType} label={`${c.label || "Contact"} number`}
+                        onChange={(next) => updateContact(i, next)} />
+                    )}
+                  </td>
+                  <td className="table-cell" style={cellStyle}>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      aria-expanded={peopleOpen}
+                      onClick={() => togglePeople(key)}
+                      style={{ fontSize: 13, padding: "6px 10px", whiteSpace: "nowrap" }}
                     >
-                      <i className="bi bi-plus" />
-                      <input
-                        type="color"
-                        value={/^#[0-9a-f]{6}$/i.test(c.color || "") ? c.color : "#000000"}
-                        onChange={(e) => updateContact(i, { color: e.target.value })}
-                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", border: 0, padding: 0 }}
-                      />
-                    </label>
-                  );
-                })()}
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
-              <button type="button" style={iconButton()} title={tx("Move up")} disabled={i === 0} onClick={() => setContacts((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
-              <button type="button" style={iconButton()} title={tx("Move down")} disabled={i === draft.emergencyContacts.length - 1} onClick={() => setContacts((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
-              {c.number === "911" ? (
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={!c.hidden}
-                  title={c.hidden ? tx("Hidden from the call button. Click to show it.") : tx("Shown in the call button. Click to hide it.")}
-                  onClick={() => updateContact(i, { hidden: !c.hidden })}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 34, padding: "0 10px", borderRadius: 8, cursor: "pointer", fontSize: 12.5, fontWeight: 600,
-                    border: `1px solid ${c.hidden ? "#d1d5db" : "#166534"}`, background: c.hidden ? "#f3f4f6" : "#dcfce7", color: c.hidden ? "#6b7280" : "#166534" }}
-                >
-                  <i className={`bi ${c.hidden ? "bi-toggle-off" : "bi-toggle-on"}`} style={{ fontSize: 18 }} />
-                  {c.hidden ? tx("Off") : tx("On")}
-                </button>
-              ) : (
-                <button type="button" style={iconButton(true)} title={tx("Remove")} disabled={draft.emergencyContacts.length === 1} onClick={() => removeAt(setContacts, i, `"${c.label || "this contact"}" from the call button`)}><i className="bi bi-trash3" /></button>
-              )}
-            </div>
-
-            <div style={{ flex: "1 1 100%", marginLeft: 48, minWidth: 0, background: "#f9fafb", border: "1px solid #f3f4f6", borderRadius: 10, padding: "10px 12px" }}>
-              <div style={{ ...labelStyle, marginBottom: 2 }}>{tx("People to choose from (optional)")}</div>
-              <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>
-                {(c.choices || []).length
-                  ? tx("Callers pick one of these people instead of calling the number above.")
-                  : tx("Leave empty to call the number above directly, or add people so callers can choose who to call.")}
-              </p>
-              {(c.choices || []).map((p, j) => (
-                <div key={j} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
-                  <input className="form-input" style={{ flex: "1 1 200px", minWidth: 0 }} value={p.name} maxLength={TEXT_MAX} placeholder={tx("e.g. PB Juan Dela Cruz")} aria-label={`Person ${j + 1} name`}
-                    onChange={(e) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, name: e.target.value } : x)))} />
-                  <div style={{ flex: "1 1 250px", minWidth: 0 }}>
-                    <PhoneNumberInput number={p.number} numberType={p.numberType} label={`Person ${j + 1} number`}
-                      onChange={(next) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, ...next } : x)))} />
-                  </div>
-                  <button type="button" style={iconButton(true)} title={tx("Remove person")}
-                    onClick={async () => { if (await confirmRemove(`"${p.name || `person ${j + 1}`}"`)) setChoices(i, (l) => l.filter((_, k) => k !== j)); }}><i className="bi bi-x-lg" /></button>
-                </div>
-              ))}
-              <button type="button" className="button button-secondary" style={{ fontSize: 13, padding: "6px 12px" }}
-                disabled={(c.choices || []).length >= 4}
-                onClick={() => setChoices(i, (l) => [...l, { name: "", number: "", numberType: "mobile" }])}>
-                <i className="bi bi-person-plus" /> {tx("Add person")}
-              </button>
-            </div>
-          </div>
-        ))}
+                      <i className={`bi ${people.length ? "bi-people-fill" : "bi-person-plus"}`} aria-hidden="true" />{" "}
+                      {people.length ? tx("{{count}} people", { count: people.length }) : tx("Add people")}{" "}
+                      <i className={`bi ${peopleOpen ? "bi-chevron-up" : "bi-chevron-down"}`} aria-hidden="true" />
+                    </button>
+                  </td>
+                  <td className="table-cell" style={cellStyle}>
+                    {is911 ? (
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={!c.hidden}
+                        title={c.hidden ? tx("Hidden from the call button. Click to show it.") : tx("Shown in the call button. Click to hide it.")}
+                        onClick={() => updateContact(i, { hidden: !c.hidden })}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 34, padding: "0 10px", borderRadius: 8, cursor: "pointer", fontSize: 12.5, fontWeight: 600,
+                          border: `1px solid ${c.hidden ? "#d1d5db" : "#166534"}`, background: c.hidden ? "#f3f4f6" : "#dcfce7", color: c.hidden ? "#6b7280" : "#166534" }}
+                      >
+                        <i className={`bi ${c.hidden ? "bi-toggle-off" : "bi-toggle-on"}`} style={{ fontSize: 18 }} />
+                        {c.hidden ? tx("Off") : tx("On")}
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: 12.5, color: "#6b7280" }} title={tx("Remove it to take it off the call button.")}>{tx("Always")}</span>
+                    )}
+                  </td>
+                  <td className="table-cell" style={cellStyle}>
+                    <OrderButtons
+                      index={i}
+                      count={draft.emergencyContacts.length}
+                      onMove={(delta) => setContacts((l) => move(l, i, delta))}
+                      // 911 can be switched off but not removed.
+                      onRemove={is911 ? null : () => removeAt(setContacts, i, `"${c.label || "this contact"}" from the call button`)}
+                      removeDisabled={draft.emergencyContacts.length === 1}
+                    />
+                  </td>
+                </tr>
+                {peopleOpen && (
+                  <tr>
+                    <td className="table-cell" colSpan={8} style={{ ...cellStyle, background: "#f9fafb" }}>
+                      <div style={{ ...labelStyle, marginBottom: 2 }}>
+                        {tx("People to choose from (optional)")} · {c.label || tx("this contact")}
+                      </div>
+                      <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>
+                        {people.length
+                          ? tx("Callers pick one of these people instead of calling the number above.")
+                          : tx("Leave empty to call the number above directly, or add people so callers can choose who to call.")}
+                      </p>
+                      {people.map((p, j) => (
+                        <div key={j} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
+                          <input className="form-input" style={{ flex: "1 1 200px", minWidth: 0, maxWidth: 320 }} value={p.name} maxLength={TEXT_MAX} placeholder={tx("e.g. PB Juan Dela Cruz")} aria-label={`Person ${j + 1} name`}
+                            onChange={(e) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, name: e.target.value } : x)))} />
+                          <div style={{ flex: "1 1 250px", minWidth: 0, maxWidth: 340 }}>
+                            <PhoneNumberInput number={p.number} numberType={p.numberType} label={`Person ${j + 1} number`}
+                              onChange={(next) => setChoices(i, (l) => l.map((x, k) => (k === j ? { ...x, ...next } : x)))} />
+                          </div>
+                          <button type="button" style={iconButton(true)} title={tx("Remove person")}
+                            onClick={async () => { if (await confirmRemove(`"${p.name || `person ${j + 1}`}"`)) setChoices(i, (l) => l.filter((_, k) => k !== j)); }}><i className="bi bi-x-lg" /></button>
+                        </div>
+                      ))}
+                      <button type="button" className="button button-secondary" style={{ fontSize: 13, padding: "6px 12px" }}
+                        disabled={people.length >= 4}
+                        onClick={() => setChoices(i, (l) => [...l, { name: "", number: "", numberType: "mobile" }])}>
+                        <i className="bi bi-person-plus" /> {tx("Add person")}
+                      </button>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </Table>
 
         <button
           type="button"
           className="button button-secondary"
-          style={{ marginTop: 8 }}
+          style={{ marginTop: 12 }}
           disabled={draft.emergencyContacts.length >= 12}
           onClick={() => setContacts((l) => [...l, { id: `contact-${Date.now()}`, label: "", description: "", number: "", numberType: "mobile", icon: options.icons[0], color: options.colors[0] }])}
         >
@@ -313,41 +389,57 @@ const SiteContactsPage = () => {
           {tx("Shown in the footer's Barangay Officials column, in this order, as position and name (e.g. \"Kagawad Juan D. Dela Cruz\").")}
         </p>
 
-        {draft.officials.map((o, i) => (
-          <div key={i} style={rowStyle}>
-            <label style={fieldStyle("1 1 130px")}>
-              <span style={labelStyle}>{tx("Position")}</span>
-              <input className="form-input" value={o.position || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { position: e.target.value })} placeholder={tx("e.g. Kagawad")} />
-            </label>
-            <label style={fieldStyle("1 1 140px")}>
-              <span style={labelStyle}>{tx("First name")}</span>
-              <input className="form-input" value={o.firstName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { firstName: e.target.value })} placeholder={tx("e.g. Juan")} autoComplete="off" />
-            </label>
-            <label style={fieldStyle("1 1 120px")}>
-              <span style={labelStyle}>{tx("Middle name (optional)")}</span>
-              <input className="form-input" value={o.middleName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { middleName: e.target.value })} placeholder={tx("e.g. D.")} autoComplete="off" />
-            </label>
-            <label style={fieldStyle("1 1 140px")}>
-              <span style={labelStyle}>{tx("Last name")}</span>
-              <input className="form-input" value={o.lastName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { lastName: e.target.value })} placeholder={tx("e.g. Dela Cruz")} autoComplete="off" />
-            </label>
-            <div style={fieldStyle("1 1 250px")}>
-              <span style={labelStyle}>{tx("Number")}</span>
-              <PhoneNumberInput number={o.number} numberType={o.numberType} label={`${officialName(o) || "Official"} number`}
-                onChange={(next) => updateOfficial(i, next)} />
-            </div>
-            <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
-              <button type="button" style={iconButton()} title={tx("Move up")} disabled={i === 0} onClick={() => setOfficials((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
-              <button type="button" style={iconButton()} title={tx("Move down")} disabled={i === draft.officials.length - 1} onClick={() => setOfficials((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
-              <button type="button" style={iconButton(true)} title={tx("Remove")} onClick={() => removeAt(setOfficials, i, `"${officialName(o) || "this official"}" from the footer`)}><i className="bi bi-trash3" /></button>
-            </div>
-          </div>
-        ))}
+        <Table
+          minWidth={900}
+          headers={[
+            { label: "Position", width: 140 },
+            "First name",
+            { label: "Middle name (optional)", width: 130 },
+            "Last name",
+            { label: "Number type", width: 120 },
+            { label: "Number", width: 190 },
+            { label: "Order", width: 130 }
+          ]}
+        >
+          {draft.officials.map((o, i) => {
+            const who = officialName(o) || tx("Official");
+            return (
+              <tr key={i}>
+                <td className="table-cell" style={cellStyle}>
+                  <input className="form-input" value={o.position || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { position: e.target.value })} placeholder={tx("e.g. Kagawad")} aria-label={tx("Position")} />
+                </td>
+                <td className="table-cell" style={cellStyle}>
+                  <input className="form-input" value={o.firstName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { firstName: e.target.value })} placeholder={tx("e.g. Juan")} autoComplete="off" aria-label={tx("First name")} />
+                </td>
+                <td className="table-cell" style={cellStyle}>
+                  <input className="form-input" value={o.middleName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { middleName: e.target.value })} placeholder={tx("e.g. D.")} autoComplete="off" aria-label={tx("Middle name (optional)")} />
+                </td>
+                <td className="table-cell" style={cellStyle}>
+                  <input className="form-input" value={o.lastName || ""} maxLength={TEXT_MAX} onChange={(e) => updateOfficial(i, { lastName: e.target.value })} placeholder={tx("e.g. Dela Cruz")} autoComplete="off" aria-label={tx("Last name")} />
+                </td>
+                <td className="table-cell" style={cellStyle}>
+                  <PhoneNumberInput part="type" number={o.number} numberType={o.numberType} label={`${who} number`} onChange={(next) => updateOfficial(i, next)} />
+                </td>
+                <td className="table-cell" style={cellStyle}>
+                  <PhoneNumberInput part="digits" number={o.number} numberType={o.numberType} label={`${who} number`} onChange={(next) => updateOfficial(i, next)} />
+                </td>
+                <td className="table-cell" style={cellStyle}>
+                  <OrderButtons
+                    index={i}
+                    count={draft.officials.length}
+                    onMove={(delta) => setOfficials((l) => move(l, i, delta))}
+                    onRemove={() => removeAt(setOfficials, i, `"${officialName(o) || "this official"}" from the footer`)}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </Table>
 
         <button
           type="button"
           className="button button-secondary"
-          style={{ marginTop: 8 }}
+          style={{ marginTop: 12 }}
           disabled={draft.officials.length >= 20}
           onClick={() => setOfficials((l) => [...l, { ...EMPTY_OFFICIAL }])}
         >
@@ -365,28 +457,34 @@ const SiteContactsPage = () => {
           {tx("Shown in the footer's Emergency Hotline column, in this order. Separate from the call button, so leave out the barangay officials: they're already in the column beside it.")}
         </p>
 
-        {(draft.footerHotlines || []).map((h, i) => (
-          <div key={i} style={rowStyle}>
-            <label style={fieldStyle("2 1 240px")}>
-              <span style={labelStyle}>{tx("Name")}</span>
-              <input className="form-input" value={h.label} maxLength={TEXT_MAX} onChange={(e) => updateHotline(i, { label: e.target.value })} placeholder={tx("e.g. Bureau of Fire Protection")} />
-            </label>
-            <label style={fieldStyle("1 1 160px")}>
-              <span style={labelStyle}>{tx("Number")}</span>
-              <input className="form-input" value={h.number} maxLength={25} onChange={(e) => updateHotline(i, { number: e.target.value })} placeholder={tx("e.g. +63464161234")} inputMode="tel" />
-            </label>
-            <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
-              <button type="button" style={iconButton()} title={tx("Move up")} disabled={i === 0} onClick={() => setHotlines((l) => move(l, i, -1))}><i className="bi bi-arrow-up" /></button>
-              <button type="button" style={iconButton()} title={tx("Move down")} disabled={i === draft.footerHotlines.length - 1} onClick={() => setHotlines((l) => move(l, i, 1))}><i className="bi bi-arrow-down" /></button>
-              <button type="button" style={iconButton(true)} title={tx("Remove")} onClick={() => removeAt(setHotlines, i, `"${h.label || "this hotline"}" from the footer`)}><i className="bi bi-trash3" /></button>
-            </div>
-          </div>
-        ))}
+        <Table
+          minWidth={560}
+          headers={["Name", { label: "Number", width: 240 }, { label: "Order", width: 130 }]}
+        >
+          {(draft.footerHotlines || []).map((h, i) => (
+            <tr key={i}>
+              <td className="table-cell" style={cellStyle}>
+                <input className="form-input" value={h.label} maxLength={TEXT_MAX} onChange={(e) => updateHotline(i, { label: e.target.value })} placeholder={tx("e.g. Bureau of Fire Protection")} aria-label={tx("Name")} />
+              </td>
+              <td className="table-cell" style={cellStyle}>
+                <input className="form-input" value={h.number} maxLength={25} onChange={(e) => updateHotline(i, { number: e.target.value })} placeholder={tx("e.g. +63464161234")} inputMode="tel" aria-label={tx("Number")} />
+              </td>
+              <td className="table-cell" style={cellStyle}>
+                <OrderButtons
+                  index={i}
+                  count={draft.footerHotlines.length}
+                  onMove={(delta) => setHotlines((l) => move(l, i, delta))}
+                  onRemove={() => removeAt(setHotlines, i, `"${h.label || "this hotline"}" from the footer`)}
+                />
+              </td>
+            </tr>
+          ))}
+        </Table>
 
         <button
           type="button"
           className="button button-secondary"
-          style={{ marginTop: 8 }}
+          style={{ marginTop: 12 }}
           disabled={(draft.footerHotlines || []).length >= 12}
           onClick={() => setHotlines((l) => [...l, { label: "", number: "" }])}
         >
