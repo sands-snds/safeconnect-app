@@ -157,3 +157,15 @@ test('Back returns to the emergency types; Request assistance hands over the loc
   expect(onClose).toHaveBeenCalled();
   expect(onRequestAssistance).toHaveBeenCalledWith(expect.objectContaining({ reportFor: 'self', latitude: 14.32 }));
 });
+
+test('only the X closes the form: a tap outside it or Escape does nothing', () => {
+  const onClose = jest.fn();
+  const { container } = renderForm({ onClose });
+  const overlay = container.querySelector('.qr-overlay');
+  fireEvent.mouseDown(overlay);
+  fireEvent.click(overlay);
+  fireEvent.keyDown(window, { key: 'Escape' });
+  expect(onClose).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  expect(onClose).toHaveBeenCalledTimes(1);
+});

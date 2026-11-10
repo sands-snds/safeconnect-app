@@ -102,13 +102,9 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
 
   useEffect(() => () => { if (form.mediaUrl) URL.revokeObjectURL(form.mediaUrl); }, [form.mediaUrl]);
 
+  // Only the X closes the form: a tap outside it (or Escape) does nothing, so
+  // a half-filled report is never lost by accident.
   const close = useCallback(() => { if (!sending) onClose(); }, [sending, onClose]);
-  useEffect(() => {
-    if (!show) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [show, close]);
 
   if (!show) return null;
 
@@ -230,7 +226,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   };
 
   return (
-    <div className="qr-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) close(); }}>
+    <div className="qr-overlay">
       <style>{STYLE}</style>
       <div className="qr" role="dialog" aria-modal="true" aria-labelledby="qr-title" ref={dialogRef}>
         {sent ? (
@@ -395,7 +391,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
 
 const STYLE = `
   .qr-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(17, 17, 17, .6); display: flex; align-items: center; justify-content: center; padding: 20px; font-family: 'Montserrat', sans-serif; }
-  .qr { background: #fff; width: 100%; max-width: 640px; max-height: calc(100dvh - 40px); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; overflow: hidden; color: #111827; }
+  .qr { background: #fff; width: 100%; max-width: 600px; max-height: calc(100dvh - 40px); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; overflow: hidden; color: #111827; }
   .qr-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f0eaec; }
   .qr-head-ic { width: 40px; height: 40px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
   .qr-head h3 { margin: 0; font-size: 1.15rem; font-weight: 800; flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -469,16 +465,26 @@ const STYLE = `
   .qr-sent-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
   .qr :is(button, input, textarea, summary):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .qr-tile { transition: none; } }
+  /* Tablet and phone: still a card with the page showing around it, sized
+     to its content like Request Assistance, not a full-screen sheet. */
   @media (max-width: 767px) {
-    .qr-overlay { padding: 0; align-items: stretch; }
-    .qr { max-width: none; max-height: none; height: 100%; height: 100dvh; border-radius: 0; }
-    .qr-head { padding: 12px 14px; }
-    .qr-body { padding: 16px 14px; flex: 1; }
-    .qr-foot { padding: 12px 14px calc(16px + env(safe-area-inset-bottom, 0px)); }
-    .qr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .qr-tile { min-height: 120px; }
-    .qr-who button { min-height: 56px; padding: 8px 10px; gap: 8px; font-size: .95rem; }
-    .qr-wi { width: 32px; height: 32px; font-size: 16px; }
+    .qr-overlay { padding: 12px; }
+    .qr { max-height: calc(100dvh - 24px); border-radius: 14px; }
+    .qr-head { padding: 12px 14px; gap: 10px; }
+    .qr-head-ic { width: 34px; height: 34px; font-size: 16px; }
+    .qr-head h3 { font-size: 1.02rem; }
+    .qr-body { padding: 14px; gap: 12px; }
+    .qr-foot { padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px)); }
+    .qr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .qr-tile { min-height: 92px; gap: 6px; padding: 10px 6px; border-radius: 14px; }
+    .qr-ti { width: 44px; height: 44px; font-size: 21px; }
+    .qr-tile b { font-size: .95rem; }
+    .qr-who button { min-height: 50px; padding: 6px 10px; gap: 8px; font-size: .92rem; border-radius: 12px; }
+    .qr-wi { width: 30px; height: 30px; font-size: 15px; }
+    .qr-btn { min-height: 48px; }
+    .qr-preview img, .qr-preview video { height: 160px; }
+    .qr-sent { padding: 24px 16px 20px; }
+    .qr-sent-ic { width: 60px; height: 60px; font-size: 32px; }
     .qr-two { grid-template-columns: 1fr; }
     .qr .qr-field input[type="text"], .qr .qr-field input[type="tel"] { font-size: 16px; }
   }
