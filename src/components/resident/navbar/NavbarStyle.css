@@ -271,7 +271,7 @@
 
 
 
-@media (max-width: 768px) {
+@media (max-width: 1099px) {
     .resident-nav-links {
         display: none;
     }
@@ -1165,7 +1165,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 }
 
 
-@media (max-width: 768px) {
+@media (max-width: 1099px) {
     .mobile-header-actions .panel-dropdown {
         position: fixed;
         top: calc(var(--resident-navbar-height, 76px) + 8px);
@@ -1362,7 +1362,7 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
 
 
 
-@media (max-width: 768px) {
+@media (max-width: 1099px) {
     .mobile-header-actions {
         display: flex;
         margin-left: auto;

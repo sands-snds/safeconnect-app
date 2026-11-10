@@ -8,7 +8,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
-import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
+import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
+import { translations } from '../../i18n/translations';
+import { ReportFormShell, ReportHead, Lbl, WhoButtons, PairButtons, ChoiceTiles, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
 const CRIME_TYPES = [
   { key: 'theft', value: 'Theft' },
   { key: 'vandalism', value: 'Vandalism' },
@@ -19,6 +21,16 @@ const CRIME_TYPES = [
   { key: 'other', value: 'Other' }
 ];
 
+
+const CRIME_ICONS = {
+  theft: 'bi-bag-x-fill',
+  vandalism: 'bi-hammer',
+  publicDisturbance: 'bi-megaphone-fill',
+  suspiciousActivity: 'bi-eye-fill',
+  trespassing: 'bi-door-open-fill',
+  harassment: 'bi-person-exclamation',
+  other: 'bi-three-dots'
+};
 
 const PHOTO_OPTIONAL_CRIME_TYPES = ['Theft', 'Suspicious Activity', 'Harassment'];
 
@@ -74,7 +86,7 @@ const formatRemaining = (ms) => {
   return `${minutes}m`;
 };
 function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     ...EMPTY_LOCATION,
@@ -128,6 +140,12 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [victimRelationshipOther, setVictimRelationshipOther] = useState('');
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
+  const chooseWho = (who) => {
+    setReportFor(who);
+    if (who === 'self') {
+      setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails('');
+    }
+  };
   useEffect(() => {
     if (!editingReport) return;
     setFormData((prev) => ({
@@ -240,6 +258,11 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       showPopup({ type: 'warning', message: t('reportForm.provideDetails') });
       return;
     }
+    // Chosen with buttons now, so checked here rather than by the browser.
+    if (!formData.crimeType) {
+      showPopup({ type: 'warning', message: t('reportShared.need.crimeType') });
+      return;
+    }
     if (needsNewMedia && !media.file) {
       showPopup({ type: 'warning', message: t('pettyCrimeModal.mediaRequired') });
       return;
@@ -310,523 +333,223 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       setIsSubmitting(false);
     }
   };
+  // The first thing still needed before sending (shown above Send), or null.
+  const whatIsMissing = () => {
+    if (reportFor === 'others') {
+      if (!victimRelationship) return 'rel';
+      if (victimRelationship === 'Other' && !victimRelationshipOther.trim()) return 'relOther';
+      if (!isVictimNameOptional && !victimName.trim()) return 'name';
+      if (!victimDetails.trim()) return 'details';
+    }
+    if (!formData.crimeType) return 'crimeType';
+    if (isOutsideSantaFe) return 'outside';
+    if (isEditing ? !formData.location.trim() : (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim()))) {
+      return isEditing ? 'location' : 'address';
+    }
+    if (!formData.description.trim()) return 'description';
+    if (needsNewMedia && !media.file) return 'crimePhoto';
+    if (!formData.consent) return 'consent';
+    return null;
+  };
   const closeSuccessPopup = () => {
     setShowSuccessPopup(false);
     onClose();
   };
   if (!show && !showSuccessPopup) return null;
+
+  const otherLang = translations[language === 'tl' ? 'en' : 'tl'] || {};
+  const crimeItems = CRIME_TYPES.map((c) => ({
+    value: c.value,
+    icon: CRIME_ICONS[c.key],
+    label: t(`reportShared.crimeShort.${c.key}`),
+    sub: otherLang.reportShared?.crimeShort?.[c.key] || ''
+  }));
+  const chosenCrime = CRIME_TYPES.find((c) => c.value === formData.crimeType);
+  const crimeNote = chosenCrime && ['publicDisturbance', 'other'].includes(chosenCrime.key) ? t(`reportShared.crimeNote.${chosenCrime.key}`) : '';
+  const missingKey = whatIsMissing();
+  const missingText = !missingKey ? '' : missingKey === 'outside' ? t('reportForm.outsideSantaFe') : t(`reportShared.need.${missingKey}`);
+  const mediaHint = hasExistingMedia
+    ? t('reportForm.mediaHintEdit')
+    : !formData.crimeType
+      ? t('pettyCrimeModal.mediaHintSelectType')
+      : isPhotoRequired ? t('reportForm.mediaHintRequired') : t('pettyCrimeModal.mediaHintOptional');
+
   return (
 <>
-<style>{`
-  .rf-2col { display: grid; grid-template-columns: 1fr 1fr; }
-  @media (max-width: 480px) { .rf-2col { grid-template-columns: 1fr; } }
-`}</style>
 {show && (
-<div
-      className="modal-overlay report-modal-overlay"
-      style={{
-        position:'fixed',
-        top:0,
-        left:0,
-        right:0,
-        bottom:0,
-        width:'100vw',
-        backgroundColor:'rgba(0,0,0,.75)',
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center',
-        zIndex:10000,
-        padding:'20px',
-        overflowY:'auto'
-      }}
->
-<div
-        className="report-modal-card"
-        onClick={(e)=>e.stopPropagation()}
-        style={{
-          backgroundColor:'white',
-          borderRadius:'12px',
-          maxWidth:'800px',
-          width:'100%',
-          overflowY:'auto',
-          position:'relative',
-          boxShadow:'0 20px 60px rgba(0,0,0,.3)'
-        }}
->
-
-<div style={{
-          padding:'20px 24px',
-          borderBottom:'1px solid #e5e7eb',
-          position:'sticky',
-          top:0,
-          zIndex:1100,
-          background:'#fff',
-          display:'flex',
-          alignItems:'center',
-          gap:'12px'
-        }}>
-<div style={{
-            width:'44px',
-            height:'44px',
-            borderRadius:'50%',
-            backgroundColor:'#dc3545',
-            display:'flex',
-            alignItems:'center',
-            justifyContent:'center'
-          }}>
-<i
-              className="bi bi-shield-exclamation"
-              style={{
-                fontSize:'22px',
-                color:'white'
-              }}
-></i>
-</div>
-<h2 style={{
-            margin:0,
-            fontSize:'20px',
-            fontWeight:'700',
-            color:'#1f2937',
-            flex:1
-          }}>
-            {t('pettyCrimeModal.title')}
-</h2>
-<button
-            onClick={onClose}
-            type="button"
-            style={{
-              background:'transparent',
-              border:'none',
-              fontSize:'22px',
-              cursor:'pointer',
-              color:'#9ca3af',
-              padding:'4px'
-            }}
->
-<i className="bi bi-x-lg"></i>
-</button>
-</div>
-<form
-          onSubmit={handleSubmit}
-          style={{ padding:'24px' }}
->
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-              {t('reportForm.reportingFor')}
-            </label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="button"
-                onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails(''); }}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'self' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'self' ? '#fef2f2' : '#fff', color: reportFor === 'self' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
-                <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i>{t('reportForm.self')}
-              </button>
-              <button type="button"
-                onClick={() => setReportFor('others')}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'others' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'others' ? '#fef2f2' : '#fff', color: reportFor === 'others' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
-                <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i>{t('reportForm.others')}
-              </button>
-            </div>
-          </div>
-          {/* No anonymous option for new reports; one filed anonymously before keeps it. */}
-          {isEditing && editingReport.is_anonymous && (
-            <div style={{ marginBottom: '16px', fontSize: '13px', color: '#374151', background: '#f3f4f6', borderRadius: '8px', padding: '10px 14px' }}>
-              <i className="bi bi-incognito" style={{ marginRight: '6px' }}></i>{t('pettyCrimeModal.anonymousOnEdit')}
-            </div>
-          )}
-          {reportFor === 'others' && (
-            <div style={{ marginBottom: '16px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', padding: '14px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
-                <i className="bi bi-person-exclamation"></i> {t('reportForm.personBoxLabel')}
-              </label>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.relationship')} <span style={{ color: '#dc3545' }}>*</span></label>
-              <select className="form-select" value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
-                <option value="">{t('reportForm.relationshipPlaceholder')}</option>
-                <option value="Family Member">{t('reportForm.relationshipOptions.family')}</option>
-                <option value="Friend">{t('reportForm.relationshipOptions.friend')}</option>
-                <option value="Neighbor">{t('reportForm.relationshipOptions.neighbor')}</option>
-                <option value="Colleague">{t('reportForm.relationshipOptions.colleague')}</option>
-                <option value="Stranger">{t('reportForm.relationshipOptions.stranger')}</option>
-                <option value="Other">{t('reportForm.relationshipOptions.other')}</option>
-              </select>
-              {victimRelationship === 'Other' && (
-                <input type="text" placeholder={t('reportForm.relationshipOtherPlaceholder')}
-                  value={victimRelationshipOther} onChange={e => setVictimRelationshipOther(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }} />
-              )}
-              <div className="rf-2col" style={{ gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-                    {t('reportForm.theirName')}{' '}
-                    {isVictimNameOptional
-                      ? <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span>
-                      : <span style={{ color: '#dc3545' }}>*</span>}
-                  </label>
-                  <input type="text" placeholder={t('reportForm.namePlaceholder')} value={victimName} onChange={e => setVictimName(e.target.value)}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.theirContact')} <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span></label>
-                  <input type="tel" inputMode="numeric" placeholder="09XXXXXXXXX" maxLength={11} value={victimContact}
-                    onChange={e => setVictimContact(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
-                </div>
-              </div>
-              <label style={{ display: 'block', margin: '10px 0 6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-                {t('reportForm.additionalDetails')} <span style={{ color: '#dc3545' }}>*</span>
-              </label>
-              <textarea
-                placeholder={t('reportForm.additionalDetailsPlaceholder')}
-                value={victimDetails} onChange={e => setVictimDetails(e.target.value)}
-                rows={2}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', minHeight: '60px', fontFamily: 'inherit', resize: 'vertical' }} />
-            </div>
-          )}
-
-<div style={{ marginBottom:'16px' }}>
-<label style={{
-              display:'flex',
-              alignItems:'center',
-              gap:'6px',
-              marginBottom:'8px',
-              fontWeight:'600',
-              color:'#374151',
-              fontSize:'13px'
-            }}>
-<i className="bi bi-shield-fill-exclamation"></i>
-              {t('pettyCrimeModal.crimeType')}
-<span style={{color:'#dc3545'}}>*</span>
-</label>
-<select className="form-select"
-              name="crimeType"
-              required
-              value={formData.crimeType}
-              onChange={handleChange}
-              style={{
-                width:'100%',
-                
-                padding:'10px 36px 10px 14px',
-                textOverflow:'ellipsis',
-                borderRadius:'6px',
-                border:'1px solid #d1d5db'
-              }}
->
-<option value="">
-                {t('pettyCrimeModal.selectType')}
-</option>
-              {CRIME_TYPES.map(item=>(
-<option
-                  key={item.key}
-                  value={item.value}
->
-                  {t(`pettyCrimeModal.crimeTypes.${item.key}`)}
-</option>
-              ))}
-</select>
-</div>
-<div style={{ marginTop:'20px', marginBottom:'16px' }}>
-{isEditing ? (
-<>
-<label style={{ display:'flex', alignItems:'center', gap:'6px', fontWeight:'600', color:'#374151', fontSize:'13px', marginBottom:'8px' }}>
-<i className="bi bi-geo-alt-fill"></i>
-                {t('assistanceModal.currentAddress')}
-<span style={{color:'#dc3545'}}>*</span>
-</label>
-<input
-                  type="text"
-                  name="location"
-                  required
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder={t('reportForm.fullAddress')}
-                  style={{ width:'100%', padding:'10px 14px', borderRadius:'6px', border:'1px solid #d1d5db', fontSize:'14px', outline:'none' }}
-                />
-            {locationError && (
-<div style={{ marginTop:'6px', fontSize:'12px', color:'#dc3545' }}>
-<i className="bi bi-exclamation-triangle-fill"></i> {locationError}
-</div>
-            )}
-<div style={{ marginTop:'6px', fontSize:'12px', color:'#6b7280' }}>
-              {t('reportForm.serviceAreaNote')}
-</div>
-<div ref={locationSectionRef}>
-  <LocationPickerMap
-    pin={gpsCoords}
-    onPick={handlePickOnMap}
-    isOutside={isOutsideSantaFe}
-    outsideMessage={outsideMessage}
+<ReportFormShell tone="crime">
+  <ReportHead
+    icon="bi-shield-fill-exclamation"
+    title={t('pettyCrimeModal.title')}
+    onClose={onClose}
+    closeLabel={t('quickReport.close')}
     disabled={isSubmitting}
   />
-</div>
-</>
-) : (
-<>
-<label style={{ display:'block', fontWeight:'600', color:'#374151', fontSize:'13px', marginBottom:'8px' }}>
-              {t('pettyCrimeModal.whereHappened')}
-</label>
-<div style={{ display:'flex', gap:'10px', marginBottom:'14px' }} role="group" aria-label={t('pettyCrimeModal.whereHappened')}>
-              {[['home', 'bi-house-door-fill', 'pettyCrimeModal.atHome'], ['elsewhere', 'bi-signpost-split-fill', 'pettyCrimeModal.elsewhere']].map(([value, icon, key]) => (
-<button
-                  key={value}
-                  type="button"
-                  aria-pressed={incidentPlace === value}
-                  onClick={() => setIncidentPlace(value)}
-                  disabled={isSubmitting}
-                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${incidentPlace === value ? '#dc3545' : '#d1d5db'}`, background: incidentPlace === value ? '#fef2f2' : '#fff', color: incidentPlace === value ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
-                >
-<i className={`bi ${icon}`} style={{ marginRight: '6px' }}></i>{t(key)}
-</button>
-              ))}
-</div>
-<ReportLocationFields
-  t={t}
-  formData={formData}
-  onChange={handleChange}
-  disabled={isSubmitting}
-  showMap={showMap}
-  location={location}
-  sectionRef={locationSectionRef}
-  addressPrefilled={addressPrefilled}
-/>
-</>
-)}
-</div>
-<div style={{marginBottom:'16px'}}>
-<label style={{
-              display:'flex',
-              alignItems:'center',
-              gap:'6px',
-              marginBottom:'8px',
-              fontWeight:'600',
-              color:'#374151',
-              fontSize:'13px'
-            }}>
-<i className="bi bi-chat-left-text-fill"></i>
-              {t('pettyCrimeModal.description')}
-<span style={{color:'#dc3545'}}>*</span>
-</label>
-<textarea
-              name="description"
-              rows="4"
-              required
-              value={formData.description}
-              onChange={handleChange}
-              placeholder={t('pettyCrimeModal.descriptionPlaceholder')}
-              style={{
-                width:'100%',
-                padding:'10px 14px',
-                borderRadius:'6px',
-                border:'1px solid #d1d5db'
-              }}
-            />
-</div>
-<div style={{marginBottom:'16px'}}>
-<label style={{
-              display:'flex',
-              alignItems:'center',
-              gap:'6px',
-              marginBottom:'8px',
-              fontWeight:'600',
-              color:'#374151',
-              fontSize:'13px'
-            }}>
-<i className="bi bi-person-fill"></i>
-              {t('pettyCrimeModal.suspectInfo')}
-</label>
-<textarea
-              name="suspectInfo"
-              rows="3"
-              value={formData.suspectInfo}
-              onChange={handleChange}
-              placeholder={t('pettyCrimeModal.suspectInfoPlaceholder')}
-              style={{
-                width:'100%',
-                padding:'10px 14px',
-                borderRadius:'6px',
-                border:'1px solid #d1d5db'
-              }}
-            />
-</div>
-<MediaAttachmentField
-            t={t}
-            style={{ marginBottom: '16px' }}
-            label={t('reportForm.photoOrVideo')}
-            required={needsNewMedia}
-            requiredMark={needsNewMedia}
-            optionalMark={Boolean(formData.crimeType)}
-            hint={hasExistingMedia
-              ? t('reportForm.mediaHintEdit')
-              : !formData.crimeType
-                ? t('pettyCrimeModal.mediaHintSelectType')
-                : isPhotoRequired
-                  ? t('reportForm.mediaHintRequired')
-                  : t('pettyCrimeModal.mediaHintOptional')}
+  <form className="qr-form" onSubmit={handleSubmit}>
+    <div className="qr-body">
+      <WhoButtons
+        id="pc-who"
+        label={t('reportForm.reportingFor')}
+        value={reportFor}
+        onChange={chooseWho}
+        labels={{ self: t('quickReport.who.self'), others: t('quickReport.who.others') }}
+        disabled={isSubmitting}
+      />
+      {/* No anonymous option for new reports; one filed anonymously before keeps it. */}
+      {isEditing && editingReport.is_anonymous && (
+        <div className="qr-info"><i className="bi bi-incognito" aria-hidden="true" /> {t('pettyCrimeModal.anonymousOnEdit')}</div>
+      )}
+      {reportFor === 'others' && (
+        <PersonBox
+          t={t}
+          idPrefix="pc"
+          title={t('reportForm.personBoxLabel')}
+          rel={victimRelationship}
+          onRel={(v) => { setVictimRelationship(v); setVictimRelationshipOther(''); }}
+          relOther={victimRelationshipOther}
+          onRelOther={setVictimRelationshipOther}
+          name={victimName}
+          onName={setVictimName}
+          nameOptional={isVictimNameOptional}
+          contact={victimContact}
+          onContact={setVictimContact}
+          details={victimDetails}
+          onDetails={setVictimDetails}
+          disabled={isSubmitting}
+        />
+      )}
+
+      <div>
+        <Lbl id="pc-type" icon="bi-list-check" req>{t('reportShared.whatHappened')}</Lbl>
+        <ChoiceTiles
+          wide
+          labelledBy="pc-type"
+          items={crimeItems}
+          value={formData.crimeType}
+          onChange={(v) => setFormData((prev) => ({ ...prev, crimeType: v }))}
+          disabled={isSubmitting}
+        />
+        {crimeNote && <p className="qr-help">{crimeNote}</p>}
+      </div>
+
+      {isEditing ? (
+        <div className="qr-edit-address">
+          <Lbl id="pc-address" icon="bi-geo-alt-fill" req as="label">{t('assistanceModal.currentAddress')}</Lbl>
+          <input
+            type="text"
+            name="location"
+            aria-labelledby="pc-address"
+            required
+            value={formData.location}
+            onChange={handleChange}
+            placeholder={t('reportForm.fullAddress')}
             disabled={isSubmitting}
-            media={media}
-            fileInputRef={fileInputRef}
-            onChange={handleMediaChange}
-            onRemove={clearMedia}
           />
-<div style={{marginBottom:'20px'}}>
-<label style={{
-              display:'flex',
-              alignItems:'flex-start',
-              gap:'10px',
-              cursor:'pointer',
-              fontSize:'12px',
-              color:'#374151'
-            }}>
-<input
-                type="checkbox"
-                name="consent"
-                checked={formData.consent}
-                onChange={handleChange}
-                required
-                style={{
-                  accentColor:'#dc3545'
-                }}
-              />
-<span>
-                {t('pettyCrimeModal.consent')}
-</span>
-</label>
-</div>
-          {!isEditing && cooldownRemaining > 0 && (
-<div style={{
-              textAlign: 'center',
-              backgroundColor: '#fef2f2',
-              border: '1px solid #fecaca',
-              color: '#b91c1c',
-              fontSize: '13px',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              marginBottom: '16px'
-            }}>
-<i className="bi bi-clock-history"></i> {t('pettyCrimeModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}
-</div>
-          )}
-<div style={{
-            display:'grid',
-            gridTemplateColumns:'1fr 1fr',
-            gap:'12px'
-          }}>
-<button
-              type="button"
-              onClick={onClose}
+          {locationError && <p className="qr-err"><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {locationError}</p>}
+          <p className="qr-note">{t('reportForm.serviceAreaNote')}</p>
+          <div ref={locationSectionRef}>
+            <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={isSubmitting} />
+          </div>
+        </div>
+      ) : (
+        <div>
+          <Lbl id="pc-where" icon="bi-geo-alt-fill" req>{t('pettyCrimeModal.whereHappened')}</Lbl>
+          <PairButtons
+            id="pc-where"
+            value={incidentPlace}
+            onChange={setIncidentPlace}
+            disabled={isSubmitting}
+            options={[
+              { value: 'home', icon: 'bi-house-door-fill', label: t('pettyCrimeModal.atHome') },
+              { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
+            ]}
+          />
+          <div style={{ marginTop: 12 }}>
+            <ReportLocationFields
+              t={t}
+              formData={formData}
+              onChange={handleChange}
               disabled={isSubmitting}
-              style={{
-                padding:'12px 20px',
-                borderRadius:'24px',
-                border:'none',
-                background:'#6b7280',
-                color:'white',
-                fontWeight:'600'
-              }}
->
-<i className="bi bi-x-circle-fill"></i> {t('reportForm.cancel')}
-</button>
-<button
-              type="submit"
-              disabled={isSubmitting || (!isEditing && cooldownRemaining > 0)}
-              style={{
-                padding:'12px 20px',
-                borderRadius:'24px',
-                border:'none',
-                background: (isSubmitting || (!isEditing && cooldownRemaining > 0)) ? '#9ca3af' : '#dc3545',
-                color:'white',
-                fontWeight:'600',
-                cursor: (isSubmitting || (!isEditing && cooldownRemaining > 0)) ? 'not-allowed' : 'pointer'
-              }}
->
-              {isSubmitting ? (
-<>
-<i className="bi bi-hourglass-split"></i>
-                  {" "}{isEditing ? t('reportForm.saving') : t('reportForm.submitting')}
-</>
-              ) : (
-<>
-<i className="bi bi-send-fill"></i>
-                  {" "}{isEditing ? t('reportForm.saveChanges') : t('pettyCrimeModal.submitCrimeReport')}
-</>
-              )}
-</button>
-</div>
-</form>
-</div>
-</div>
+              showMap={showMap}
+              location={location}
+              sectionRef={locationSectionRef}
+              addressPrefilled={addressPrefilled}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="qr-field">
+        <Lbl id="pc-description" icon="bi-chat-left-text-fill" req as="label">{t('pettyCrimeModal.description')}</Lbl>
+        <textarea
+          name="description"
+          aria-labelledby="pc-description"
+          value={formData.description}
+          onChange={handleChange}
+          rows={4}
+          maxLength={2000}
+          required
+          placeholder={t('pettyCrimeModal.descriptionPlaceholder')}
+          disabled={isSubmitting}
+        />
+      </div>
+
+      <div className="qr-field">
+        <Lbl id="pc-suspect" icon="bi-person-bounding-box" optional={t('reportForm.optional')} as="label">{t('pettyCrimeModal.suspectInfo')}</Lbl>
+        <textarea
+          name="suspectInfo"
+          aria-labelledby="pc-suspect"
+          value={formData.suspectInfo}
+          onChange={handleChange}
+          rows={3}
+          maxLength={1000}
+          placeholder={t('pettyCrimeModal.suspectInfoPlaceholder')}
+          disabled={isSubmitting}
+        />
+      </div>
+
+      <MediaPicker
+        t={t}
+        id="pc-media"
+        label={t('reportShared.photoTitle')}
+        required={needsNewMedia}
+        optionalText={formData.crimeType ? t('reportForm.optional') : null}
+        hint={mediaHint}
+        media={media}
+        fileInputRef={fileInputRef}
+        onChange={handleMediaChange}
+        onRemove={clearMedia}
+        disabled={isSubmitting}
+      />
+
+      <ConsentBox checked={formData.consent} onChange={handleChange} disabled={isSubmitting}>{t('pettyCrimeModal.consent')}</ConsentBox>
+
+      {!isEditing && cooldownRemaining > 0 && (
+        <div className="qr-banner"><i className="bi bi-clock-history" aria-hidden="true" /> {t('pettyCrimeModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}</div>
+      )}
+    </div>
+    <SendFoot
+      missing={missingText}
+      readyText={t('reportShared.ready')}
+      label={isEditing ? t('reportShared.saveChanges') : t('reportShared.sendReport')}
+      busyLabel={isEditing ? t('reportForm.saving') : t('reportForm.submitting')}
+      busy={isSubmitting}
+      disabled={!isEditing && cooldownRemaining > 0}
+      icon={isEditing ? 'bi-check-lg' : 'bi-send-fill'}
+    />
+  </form>
+</ReportFormShell>
 )}
 
 {showSuccessPopup && (
-  <div
-    className="modal-overlay report-modal-overlay"
-    onClick={(e) => { if (e.target === e.currentTarget) closeSuccessPopup(); }}
-    style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      width: '100vw',
-      backgroundColor: 'rgba(0,0,0,.75)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 10001,
-      padding: '20px'
-    }}
+<ReportFormShell tone="crime">
+  <SentScreen
+    title={t('pettyCrimeModal.reportSubmitted')}
+    actions={<button type="button" className="qr-btn soft" onClick={closeSuccessPopup}>{t('assistanceModal.done')}</button>}
   >
-    <div
-      onClick={(e) => e.stopPropagation()}
-      style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        maxWidth: '420px',
-        width: '100%',
-        padding: '28px 24px',
-        textAlign: 'center',
-        boxShadow: '0 20px 60px rgba(0,0,0,.3)'
-      }}
-    >
-      <div style={{
-        width: '56px',
-        height: '56px',
-        borderRadius: '50%',
-        backgroundColor: '#16a34a',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '28px',
-        margin: '0 auto 16px'
-      }}>
-        <i className="bi bi-check-lg"></i>
-      </div>
-      <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 700, color: '#1f2937' }}>
-        {t('pettyCrimeModal.reportSubmitted')}
-      </h3>
-      <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#4b5563', lineHeight: 1.5 }}>
-        {t('pettyCrimeModal.reportSubmittedBody')}
-      </p>
-      <button
-        type="button"
-        onClick={closeSuccessPopup}
-        style={{
-          padding: '12px 20px',
-          borderRadius: '24px',
-          border: 'none',
-          background: '#dc3545',
-          color: 'white',
-          fontWeight: 600,
-          fontSize: '14px',
-          cursor: 'pointer',
-          width: '100%'
-        }}
-      >
-        {t('assistanceModal.done')}
-      </button>
-    </div>
-  </div>
+    <p>{t('pettyCrimeModal.reportSubmittedBody')}</p>
+  </SentScreen>
+</ReportFormShell>
 )}
 </>
   );

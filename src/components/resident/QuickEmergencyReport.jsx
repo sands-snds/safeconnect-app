@@ -10,6 +10,7 @@ import { announceReportsChanged } from './useCallAccess';
 import { registeredAddress } from './useRegisteredAddress';
 import { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
+import { ReportFormShell, SendFoot } from './reportFormUi';
 
 // Report an Emergency, the quick way (design Option A): who needs help, what
 // is happening (one tap), a photo, Send. The location fills itself in: the
@@ -226,9 +227,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   };
 
   return (
-    <div className="qr-overlay">
-      <style>{STYLE}</style>
-      <div className="qr" role="dialog" aria-modal="true" aria-labelledby="qr-title" ref={dialogRef}>
+    <ReportFormShell tone="emergency" dialogRef={dialogRef}>
         {sent ? (
           <div className="qr-sent">
             <span className="qr-sent-ic"><i className="bi bi-check-lg" aria-hidden="true" /></span>
@@ -375,117 +374,12 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
             )}
 
             {form.step === 2 && (
-              <div className="qr-foot">
-                <button type="button" className="qr-btn send" onClick={send} disabled={missing.length > 0 || sending}>
-                  {sending ? <><span className="spinner-border spinner-border-sm" aria-hidden="true" /> {t('quickReport.sending')}</> : <><i className="bi bi-send-fill" aria-hidden="true" /> {t('quickReport.send')}</>}
-                </button>
-                {missingText && <p className="qr-needs" role="status">{missingText}</p>}
-              </div>
+              <SendFoot type="button" onClick={send} missing={missingText} readyText={t('reportShared.ready')}
+                label={t('quickReport.send')} busyLabel={t('quickReport.sending')} busy={sending} />
             )}
           </>
         )}
-      </div>
-    </div>
+    </ReportFormShell>
   );
 }
 
-const STYLE = `
-  .qr-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(17, 17, 17, .6); display: flex; align-items: center; justify-content: center; padding: 20px; font-family: 'Montserrat', sans-serif; }
-  .qr { background: #fff; width: 100%; max-width: 600px; max-height: calc(100dvh - 40px); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; overflow: hidden; color: #111827; }
-  .qr-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f0eaec; }
-  .qr-head-ic { width: 40px; height: 40px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
-  .qr-head h3 { margin: 0; font-size: 1.15rem; font-weight: 800; flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .qr-step { font-size: .75rem; font-weight: 700; color: #6b7280; white-space: nowrap; }
-  .qr-x { width: 38px; height: 38px; border: 0; background: transparent; color: #6b7280; border-radius: 8px; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-  .qr-x:hover { background: #f3f4f6; color: #111; }
-  .qr-forchip { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 700; color: #991b1b; background: #fee2e2; border-radius: 999px; padding: 3px 10px; }
-  .qr-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-  .qr-lbl { margin: 0 0 8px; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6B2C3E; display: flex; align-items: center; gap: 6px; }
-  .qr-lbl.red { color: #b91c1c; margin: 0; }
-  .qr-lead { margin: 0; font-size: 1.05rem; font-weight: 800; color: #111; }
-  .qr-hint { margin: 2px 0 0; font-size: .85rem; color: #6b7280; }
-  .qr-q { margin: 0 0 6px; font-size: .85rem; font-weight: 700; color: #374151; }
-  .qr-req { color: #dc2626; }
-  .qr-who { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .qr-who button { min-height: 60px; border: 2px solid #e5e7eb; border-radius: 14px; background: #fff; display: flex; align-items: center; gap: 12px; padding: 10px 14px; font-size: 1rem; font-weight: 800; color: #111; cursor: pointer; text-align: left; font-family: inherit; }
-  .qr-wi { width: 38px; height: 38px; border-radius: 50%; background: #f3eef0; color: #6B2C3E; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .qr-who button[aria-pressed="true"] { border-color: #6B2C3E; background: #fdf7f9; box-shadow: 0 0 0 3px rgba(107, 44, 62, .12); }
-  .qr-who button[aria-pressed="true"] .qr-wi { background: #6B2C3E; color: #fff; }
-  .qr-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-  .qr-tile { min-height: 132px; border: 2px solid #f0eaec; border-radius: 18px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #111; padding: 14px 8px; font-family: inherit; transition: transform .08s, border-color .15s, background .15s; }
-  .qr-ti { width: 58px; height: 58px; border-radius: 50%; background: var(--c); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 27px; }
-  .qr-tile b { font-size: 1.02rem; font-weight: 800; }
-  .qr-tile small { font-size: .78rem; color: #6b7280; font-weight: 600; margin-top: -6px; }
-  .qr-tile:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 6%, #fff); }
-  .qr-tile:active { transform: scale(.98); }
-  .qr-forbox { border: 1.5px solid #fecaca; background: #fff7f7; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-  .qr-rel { display: flex; flex-wrap: wrap; gap: 8px; }
-  .qr-rel button { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid #e5e7eb; background: #fff; font-size: .9rem; font-weight: 700; color: #111; cursor: pointer; font-family: inherit; }
-  .qr-rel button[aria-pressed="true"] { border-color: #dc2626; background: #fee2e2; color: #991b1b; }
-  .qr-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .qr-field label { display: block; font-size: .8rem; font-weight: 700; color: #374151; margin-bottom: 4px; }
-  .qr-field label small { font-weight: 500; color: #9ca3af; }
-  .qr .qr-field input[type="text"], .qr .qr-field input[type="tel"], .qr .qr-field textarea { width: 100%; height: 44px; border: 1px solid #d1d5db; border-radius: 10px; padding: 0 12px; font-family: inherit; font-size: .95rem; background: #fff; color: #111827; }
-  .qr .qr-field textarea { height: auto; min-height: 80px; padding: 10px 12px; resize: vertical; }
-  .qr .qr-field input[type="text"]:focus, .qr .qr-field input[type="tel"]:focus, .qr .qr-field textarea:focus { outline: none; border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,.12); }
-  .qr-photo-row { display: flex; gap: 10px; }
-  .qr-photo-row .qr-btn { flex: 1; }
-  .qr-preview { position: relative; border-radius: 16px; overflow: hidden; background: #111; }
-  .qr-preview img, .qr-preview video { display: block; width: 100%; height: 200px; object-fit: cover; }
-  .qr-ok { position: absolute; left: 10px; top: 10px; z-index: 1; background: #16a34a; color: #fff; border-radius: 999px; padding: 4px 10px; font-size: .75rem; font-weight: 700; display: inline-flex; gap: 5px; align-items: center; }
-  .qr-redo { position: absolute; right: 10px; bottom: 10px; background: rgba(17,24,39,.85); color: #fff; border: 0; border-radius: 999px; padding: 8px 14px; font-size: .8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-family: inherit; }
-  .qr-loc { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #f0f9ff; border: 1px solid #bae6fd; color: #0c4a6e; font-size: .85rem; }
-  .qr-loc.warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
-  .qr-loc > .bi { font-size: 18px; color: #0284c7; flex-shrink: 0; }
-  .qr-loc.warn > .bi { color: #d97706; }
-  .qr-loc div { min-width: 0; }
-  .qr-loc b { display: block; font-size: .88rem; }
-  .qr-loc span { display: block; overflow-wrap: anywhere; }
-  .qr-loc button { margin-left: auto; border: 0; background: none; color: #0369a1; font-weight: 700; font-size: .85rem; cursor: pointer; white-space: nowrap; padding: 6px 4px; font-family: inherit; }
-  .qr-map { margin-top: -6px; }
-  .qr-maperr { margin: 0 0 6px; font-size: .8rem; color: #b91c1c; font-weight: 600; }
-  .qr-more { border: 1.5px solid #f0eaec; border-radius: 12px; padding: 0 12px; }
-  .qr-more summary { cursor: pointer; padding: 12px 0; font-weight: 700; font-size: .9rem; color: #374151; }
-  .qr-more-body { display: flex; flex-direction: column; gap: 14px; padding-bottom: 12px; margin: 0; }
-  .qr-foot { padding: 14px 20px; border-top: 1px solid #f0eaec; display: flex; flex-direction: column; gap: 6px; }
-  .qr-needs { margin: 0; font-size: .8rem; color: #6b7280; text-align: center; }
-  .qr-btn { min-height: 52px; border-radius: 12px; border: 0; padding: 0 18px; font-size: 1rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; }
-  .qr-btn.primary, .qr-btn.send { background: #dc2626; color: #fff; box-shadow: 0 6px 16px rgba(220,38,38,.3); }
-  .qr-btn.send { width: 100%; font-size: 1.08rem; }
-  .qr-btn.send:disabled { background: #e5e7eb; color: #9ca3af; box-shadow: none; cursor: not-allowed; }
-  .qr-btn.ghost { background: #fff; color: #374151; border: 1.5px solid #e5e7eb; }
-  .qr-btn.soft { background: #FDECEC; color: #6B2C3E; border: 1.5px solid #6B2C3E; }
-  .qr-sent { padding: 34px 24px 26px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; overflow-y: auto; }
-  .qr-sent-ic { width: 76px; height: 76px; border-radius: 50%; background: #dcfce7; color: #16a34a; font-size: 40px; display: flex; align-items: center; justify-content: center; }
-  .qr-sent h3 { margin: 0; font-size: 1.35rem; font-weight: 900; }
-  .qr-sent p { margin: 0; color: #4b5563; font-size: .95rem; max-width: 42ch; line-height: 1.55; }
-  .qr-ref b { color: #6B2C3E; letter-spacing: .04em; }
-  .qr-callnote { display: flex; gap: 10px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 12px; background: #fef2f2; color: #991b1b; font-size: .85rem; font-weight: 600; max-width: 460px; }
-  .qr-callnote .bi { font-size: 20px; flex-shrink: 0; }
-  .qr-sent-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
-  .qr :is(button, input, textarea, summary):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { .qr-tile { transition: none; } }
-  /* Tablet and phone: still a card with the page showing around it, sized
-     to its content like Request Assistance, not a full-screen sheet. */
-  @media (max-width: 767px) {
-    .qr-overlay { padding: 12px; }
-    .qr { max-height: calc(100dvh - 24px); border-radius: 14px; }
-    .qr-head { padding: 12px 14px; gap: 10px; }
-    .qr-head-ic { width: 34px; height: 34px; font-size: 16px; }
-    .qr-head h3 { font-size: 1.02rem; }
-    .qr-body { padding: 14px; gap: 12px; }
-    .qr-foot { padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px)); }
-    .qr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .qr-tile { min-height: 92px; gap: 6px; padding: 10px 6px; border-radius: 14px; }
-    .qr-ti { width: 44px; height: 44px; font-size: 21px; }
-    .qr-tile b { font-size: .95rem; }
-    .qr-who button { min-height: 50px; padding: 6px 10px; gap: 8px; font-size: .92rem; border-radius: 12px; }
-    .qr-wi { width: 30px; height: 30px; font-size: 15px; }
-    .qr-btn { min-height: 48px; }
-    .qr-preview img, .qr-preview video { height: 160px; }
-    .qr-sent { padding: 24px 16px 20px; }
-    .qr-sent-ic { width: 60px; height: 60px; font-size: 32px; }
-    .qr-two { grid-template-columns: 1fr; }
-    .qr .qr-field input[type="text"], .qr .qr-field input[type="tel"] { font-size: 16px; }
-  }
-`;

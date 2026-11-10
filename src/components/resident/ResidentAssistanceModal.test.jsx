@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import ResidentAssistanceModal from './ResidentAssistanceModal';
 import { LanguageProvider } from '../../i18n/LanguageContext';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
@@ -47,8 +47,8 @@ const renderModal = (props = {}) => {
   );
   const $ = (sel) => utils.container.querySelector(sel);
   const fill = (emergency) => {
-    fireEvent.change($('select[name="assistanceType"]'), { target: { value: 'Medical Aid' } });
-    if (emergency) fireEvent.change($('select[name="emergency"]'), { target: { value: emergency } });
+    fireEvent.click(screen.getByRole('button', { name: /^Medical Aid/ }));
+    if (emergency) fireEvent.click(within(screen.getByRole('group', { name: 'Victim of what emergency?' })).getByRole('button', { name: EMERGENCY_LABEL[emergency] }));
     const situation = $('textarea[name="situation"]');
     if (situation) fireEvent.change(situation, { target: { value: 'We need help' } });
     const people = $('#as-people');
@@ -61,22 +61,65 @@ const renderModal = (props = {}) => {
   });
   return { ...utils, $, fill, attachPhoto, form: $('form'), fileInput: $('input[type="file"]') };
 };
+const EMERGENCY_LABEL = { 'Fire Emergency': 'Fire', 'Flood Emergency': 'Flood', Earthquake: 'Earthquake', Typhoon: 'Typhoon', Other: 'Other' };
 
-test('shows "Victim of What Emergency?" and the photo field beside it, both required', () => {
-  const { $, fileInput } = renderModal();
-  expect(screen.getByText('Victim of What Emergency?')).toBeInTheDocument();
-  expect($('select[name="emergency"]').required).toBe(true);
-  expect(screen.getByText('Photo or Video (Proof)')).toBeInTheDocument();
-  expect(fileInput.required).toBe(true);
+test('button layout: who, the three kinds of help, the emergency, and a required proof photo', () => {
+  renderModal();
+  expect(screen.getByRole('button', { name: 'Me' })).toHaveAttribute('aria-pressed', 'true');
+  const help = within(screen.getByRole('group', { name: 'What help do you need?' })).getAllByRole('button').map((b) => b.querySelector('b').textContent);
+  expect(help).toEqual(['Food & Water', 'Medical Aid', 'Transport Vehicle']);
+  expect(screen.getByText('Photo or video (proof)').closest('.qr-lbl')).toHaveTextContent('*');
   expect(screen.getByText(/^Required. It helps the barangay verify your request/)).toBeInTheDocument();
-  // Same grid row
-  expect($('select[name="emergency"]').closest('.rf-2col')).toBe(fileInput.closest('.rf-2col'));
+  expect(screen.getByRole('button', { name: /Take a photo/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Gallery/ })).toBeInTheDocument();
 });
 
 test('lists the Report Emergency types plus Other', () => {
+  renderModal();
+  const names = within(screen.getByRole('group', { name: 'Victim of what emergency?' })).getAllByRole('button').map((b) => b.textContent);
+  expect(names).toEqual(['Fire', 'Flood', 'Earthquake', 'Typhoon', 'Other']);
+});
+
+test('Send stays off and says what is missing until the request is complete', () => {
+  const { fill, attachPhoto } = renderModal();
+  const send = screen.getByRole('button', { name: /Send request/ });
+  expect(send).toBeDisabled();
+  expect(screen.getByText('Choose the help you need.')).toBeInTheDocument();
+  fill('Flood Emergency');
+  expect(screen.getByText('Add a photo or video as proof.')).toBeInTheDocument();
+  attachPhoto();
+  expect(send).not.toBeDisabled();
+  expect(screen.getByText('Ready to send.')).toBeInTheDocument();
+});
+
+test('no kind of help chosen: submitting is blocked', async () => {
+  const { form, attachPhoto, $ } = renderModal();
+  attachPhoto();
+  fireEvent.change($('textarea[name="situation"]'), { target: { value: 'We need help' } });
+  fireEvent.click($('input[name="consent"]'));
+  fireEvent.submit(form);
+  await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning', message: 'Choose the help you need.' })));
+  expect(createAssistanceRequest).not.toHaveBeenCalled();
+});
+
+test('people needing help: starts at 1, − and + change it', () => {
   const { $ } = renderModal();
-  const values = [...$('select[name="emergency"]').options].map((o) => o.value);
-  expect(values).toEqual(['', 'Fire Emergency', 'Flood Emergency', 'Earthquake', 'Typhoon', 'Other']);
+  expect($('#as-people').value).toBe('1');
+  fireEvent.click(screen.getByRole('button', { name: 'More people' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More people' }));
+  expect($('#as-people').value).toBe('3');
+  fireEvent.click(screen.getByRole('button', { name: 'Fewer people' }));
+  expect($('#as-people').value).toBe('2');
+});
+
+test('only the X closes the form; a tap outside it does nothing', () => {
+  const onClose = jest.fn();
+  const { container } = renderModal({ onClose });
+  fireEvent.mouseDown(container.querySelector('.qr-overlay'));
+  fireEvent.click(container.querySelector('.qr-overlay'));
+  expect(onClose).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  expect(onClose).toHaveBeenCalledTimes(1);
 });
 
 test('submitting without a photo is blocked', async () => {
@@ -138,10 +181,12 @@ test('editing a request typed under Other restores it into the Other box', async
     victim_of_emergency: 'Landslide', has_media: 1, peopleAffected: 4
   };
   const { $, form } = renderModal({ editingReport });
-  expect($('select[name="emergency"]').value).toBe('Other');
+  expect(within(screen.getByRole('group', { name: 'Victim of what emergency?' })).getByRole('button', { name: 'Other' })).toHaveAttribute('aria-pressed', 'true');
   expect($('input[name="emergencyOther"]').value).toBe('Landslide');
   expect(screen.getByText(/Attach a new file only if you want to replace/)).toBeInTheDocument();
-  expect($('input[type="file"]').required).toBe(false); // the photo on file counts
+  expect(screen.getByText('Photo or video (proof)').closest('.qr-lbl')).toHaveTextContent('(optional)'); // the photo on file counts
+  fireEvent.click($('input[name="consent"]'));
+  expect(screen.getByRole('button', { name: /Save changes/ })).not.toBeDisabled();
   fireEvent.submit(form);
   await waitFor(() => expect(updateAssistanceRequest).toHaveBeenCalledTimes(1));
   const sent = updateAssistanceRequest.mock.calls[0][0];
@@ -234,7 +279,7 @@ describe('registered address', () => {
 
     fireEvent.change($('input[name="houseNumber"]'), { target: { value: '9' } });
     fireEvent.change($('input[name="street"]'), { target: { value: 'Rizal St.' } });
-    fireEvent.click(screen.getByRole('button', { name: /Myself/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Me' }));
     // what was typed for the other person isn't replaced
     expect($('input[name="houseNumber"]').value).toBe('9');
   });

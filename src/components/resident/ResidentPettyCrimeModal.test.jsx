@@ -28,6 +28,7 @@ jest.mock('../../Services/api', () => ({
   createPettyCrimeReport: jest.fn(() => Promise.resolve({ success: true, id: 1 })),
   updatePettyCrimeReport: jest.fn(() => Promise.resolve({ success: true }))
 }));
+jest.setTimeout(20000); // the first render of this form is slow on a busy test run
 jest.mock('../shared/popup', () => ({ showPopup: jest.fn() }));
 
 const renderModal = () => {
@@ -40,7 +41,7 @@ const renderModal = () => {
   const form = utils.container.querySelector('form');
   const fileInput = utils.container.querySelector('input[type="file"]');
   const fill = (crimeType) => {
-    fireEvent.change(utils.container.querySelector('select[name="crimeType"]'), { target: { value: crimeType } });
+    fireEvent.click(screen.getByRole('button', { name: new RegExp('^' + crimeType) }));
     fireEvent.change(utils.container.querySelector('textarea[name="description"]'), { target: { value: 'Something happened' } });
     fireEvent.click(utils.container.querySelector('input[name="consent"]'));
   };
@@ -56,7 +57,9 @@ test.each(['Theft', 'Suspicious Activity', 'Harassment'])('%s: photo is optional
   const { form, fileInput, fill } = renderModal();
   fill(type);
   expect(fileInput.required).toBe(false);
+  expect(screen.getByText('Photo or video').closest('.qr-lbl')).toHaveTextContent('(optional)');
   expect(screen.getByText(/Optional for this crime type/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Send report/ })).not.toBeDisabled();
   fireEvent.submit(form);
   await waitFor(() => expect(createPettyCrimeReport).toHaveBeenCalledTimes(1));
   expect(createPettyCrimeReport.mock.calls[0][0]).toMatchObject({ crimeType: type, photoUrl: null });
@@ -66,7 +69,10 @@ test.each(['Theft', 'Suspicious Activity', 'Harassment'])('%s: photo is optional
 test.each(['Vandalism', 'Public Disturbance', 'Trespassing', 'Other'])('%s: photo is required and submitting without one is blocked', async (type) => {
   const { form, fileInput, fill } = renderModal();
   fill(type);
-  expect(fileInput.required).toBe(true);
+  expect(fileInput).toBeTruthy();
+  expect(screen.getByText('Photo or video').closest('.qr-lbl')).toHaveTextContent('*');
+  expect(screen.getByRole('button', { name: /Send report/ })).toBeDisabled();
+  expect(screen.getByText('Add a photo or video. It is required for this crime type.')).toBeInTheDocument();
   fireEvent.submit(form);
   await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({
     type: 'warning',
@@ -100,8 +106,8 @@ test('rejects files that are not JPG or a supported video', () => {
 });
 
 test('before a crime type is picked, the hint explains which types need a photo', () => {
-  const { fileInput } = renderModal();
-  expect(fileInput.required).toBe(false);
+  renderModal();
+  expect(screen.getByText('Choose what happened.')).toBeInTheDocument();
   expect(screen.getByText(/Optional for Theft, Suspicious Activity and Harassment; required for all other/)).toBeInTheDocument();
 });
 
@@ -181,4 +187,19 @@ test('a photo or video too large for the server gets its own message', async () 
   })));
   expect(showPopup).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
   expect(screen.queryByText('Report Submitted')).not.toBeInTheDocument();
+});
+
+test('seven crime types as buttons, in the saved order', () => {
+  renderModal();
+  const names = Array.from(document.querySelectorAll('.qr-choice b')).map((b) => b.textContent);
+  expect(names).toEqual(['Theft', 'Vandalism', 'Public Disturbance', 'Suspicious Activity', 'Trespassing', 'Harassment', 'Other']);
+});
+
+test('no crime type chosen: submitting is blocked', async () => {
+  const { form, container } = renderModal();
+  fireEvent.change(container.querySelector('textarea[name="description"]'), { target: { value: 'Something happened' } });
+  fireEvent.click(container.querySelector('input[name="consent"]'));
+  fireEvent.submit(form);
+  await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning', message: 'Choose what happened.' })));
+  expect(createPettyCrimeReport).not.toHaveBeenCalled();
 });

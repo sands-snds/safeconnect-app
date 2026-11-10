@@ -801,6 +801,63 @@ export const translations = {
         dismissed: "Dismissed"
       }
     },
+    reportShared: {
+      "whoNeedsHelp": "Who needs help?",
+      "whatHelp": "What help do you need?",
+      "victimOf": "Victim of what emergency?",
+      "whereHelp": "Where should help go?",
+      "whatHappened": "What happened?",
+      "people": "People needing help",
+      "specialHint": "Tap + for each group, if any.",
+      "describeSituation": "Describe your situation",
+      "fewer": "Fewer people",
+      "more": "More people",
+      "proofTitle": "Photo or video (proof)",
+      "photoTitle": "Photo or video",
+      "change": "Change",
+      "remove": "Remove",
+      "sendRequest": "Send request",
+      "sendReport": "Send report",
+      "saveChanges": "Save changes",
+      "ready": "Ready to send.",
+      "crimeShort": {
+        "theft": "Theft",
+        "vandalism": "Vandalism",
+        "publicDisturbance": "Public Disturbance",
+        "suspiciousActivity": "Suspicious Activity",
+        "trespassing": "Trespassing",
+        "harassment": "Harassment",
+        "other": "Other"
+      },
+      "crimeNote": {
+        "publicDisturbance": "Noise, late-night drinking and similar.",
+        "other": "Not listed? Say what happened in the description."
+      },
+      "assistShort": {
+        "foodWater": "Food & Water",
+        "medicalAid": "Medical Aid",
+        "transportVehicle": "Transport Vehicle"
+      },
+      "need": {
+        "rel": "Choose how you know them.",
+        "relOther": "Say how you know them.",
+        "name": "Enter their name.",
+        "details": "Add details about the person.",
+        "assistType": "Choose the help you need.",
+        "emergency": "Choose the emergency.",
+        "emergencyOther": "Say which emergency.",
+        "proof": "Add a photo or video as proof.",
+        "address": "Enter the house number and street, or pin the spot on the map.",
+        "location": "Enter the address.",
+        "situation": "Describe your situation.",
+        "people": "Enter how many people need help.",
+        "special": "Enter how many for each special need you chose.",
+        "crimeType": "Choose what happened.",
+        "description": "Describe what happened.",
+        "crimePhoto": "Add a photo or video. It is required for this crime type.",
+        "consent": "Tick the confirmation box to send."
+      }
+    },
     quickReport: {
       title: "Report an Emergency",
       step: "Step {{n}} of 2",
@@ -2125,6 +2182,63 @@ export const translations = {
         inProgress: "Inaasikaso",
         resolved: "Nalutas",
         dismissed: "Kinansela"
+      }
+    },
+    reportShared: {
+      "whoNeedsHelp": "Sino ang nangangailangan ng tulong?",
+      "whatHelp": "Anong tulong ang kailangan mo?",
+      "victimOf": "Biktima ng anong emergency?",
+      "whereHelp": "Saan dapat ipadala ang tulong?",
+      "whatHappened": "Ano ang nangyari?",
+      "people": "Bilang ng nangangailangan ng tulong",
+      "specialHint": "Pindutin ang + para sa bawat grupo, kung mayroon.",
+      "describeSituation": "Ilarawan ang iyong sitwasyon",
+      "fewer": "Bawasan",
+      "more": "Dagdagan",
+      "proofTitle": "Larawan o video (patunay)",
+      "photoTitle": "Larawan o video",
+      "change": "Palitan",
+      "remove": "Alisin",
+      "sendRequest": "Ipadala ang kahilingan",
+      "sendReport": "Ipadala ang report",
+      "saveChanges": "I-save ang mga pagbabago",
+      "ready": "Handa nang ipadala.",
+      "crimeShort": {
+        "theft": "Pagnanakaw",
+        "vandalism": "Bandalismo",
+        "publicDisturbance": "Gulo sa Publiko",
+        "suspiciousActivity": "Kahina-hinalang Aktibidad",
+        "trespassing": "Panghihimasok",
+        "harassment": "Panliligalig",
+        "other": "Iba pa"
+      },
+      "crimeNote": {
+        "publicDisturbance": "Ingay, pag-inom sa hatinggabi at iba pa.",
+        "other": "Wala sa listahan? Isulat ang nangyari sa deskripsyon."
+      },
+      "assistShort": {
+        "foodWater": "Pagkain at Tubig",
+        "medicalAid": "Medikal na Tulong",
+        "transportVehicle": "Sasakyan"
+      },
+      "need": {
+        "rel": "Piliin kung paano mo sila kilala.",
+        "relOther": "Sabihin kung paano mo sila kilala.",
+        "name": "Ilagay ang kanilang pangalan.",
+        "details": "Magdagdag ng detalye tungkol sa tao.",
+        "assistType": "Piliin ang tulong na kailangan mo.",
+        "emergency": "Piliin ang emergency.",
+        "emergencyOther": "Sabihin kung anong emergency.",
+        "proof": "Magdagdag ng larawan o video bilang patunay.",
+        "address": "Ilagay ang numero ng bahay at kalye, o i-pin ang lugar sa mapa.",
+        "location": "Ilagay ang address.",
+        "situation": "Ilarawan ang iyong sitwasyon.",
+        "people": "Ilagay kung ilang tao ang nangangailangan ng tulong.",
+        "special": "Ilagay kung ilan para sa bawat espesyal na pangangailangan na pinili mo.",
+        "crimeType": "Piliin ang nangyari.",
+        "description": "Ilarawan ang nangyari.",
+        "crimePhoto": "Magdagdag ng larawan o video. Kailangan ito para sa ganitong uri ng krimen.",
+        "consent": "I-tsek ang kahon ng kumpirmasyon para maipadala."
       }
     },
     quickReport: {

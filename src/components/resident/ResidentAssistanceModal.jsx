@@ -9,15 +9,23 @@ import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
-import MediaAttachmentField, { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
+import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
+import { translations } from '../../i18n/translations';
+import { ReportFormShell, ReportHead, Lbl, WhoButtons, PairButtons, ChoiceTiles, Pills, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
 
 
 
 const EMERGENCY_OPTIONS = [
-  { value: 'Fire Emergency', labelKey: 'emergencyModal.typeFire' },
-  { value: 'Flood Emergency', labelKey: 'emergencyModal.typeFlood' },
-  { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake' },
-  { value: 'Typhoon', labelKey: 'emergencyModal.typeTyphoon' }
+  { value: 'Fire Emergency', labelKey: 'emergencyModal.typeFire', icon: 'bi-fire' },
+  { value: 'Flood Emergency', labelKey: 'emergencyModal.typeFlood', icon: 'bi-water' },
+  { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake', icon: 'bi-activity' },
+  { value: 'Typhoon', labelKey: 'emergencyModal.typeTyphoon', icon: 'bi-tropical-storm' }
+];
+// The saved values are unchanged; the tiles show short names.
+const ASSISTANCE_TYPES = [
+  { value: 'Food and Water', key: 'foodWater', icon: 'bi-basket2-fill' },
+  { value: 'Medical Aid', key: 'medicalAid', icon: 'bi-heart-pulse-fill' },
+  { value: 'Transport Vehicle', key: 'transportVehicle', icon: 'bi-truck-front-fill' }
 ];
 const OTHER_EMERGENCY = 'Other';
 
@@ -65,7 +73,7 @@ const formatRemaining = (ms) => {
 
 
 function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated, prefill }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     assistanceType: '',
@@ -74,7 +82,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     ...EMPTY_LOCATION,
     location: '',
     situation: '',
-    people: '',
+    people: '1',
     special: [],
     specialCounts: {},
     consent: false
@@ -105,10 +113,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   } = location;
   const locationSectionRef = useRef(null);
   const [reportFor, setReportFor] = useState('self');
-  // Requesting for yourself fills in your registered address; the map is
-  // only for requesting help for someone else.
-  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: reportFor === 'self', formData, setFormData });
-  const showMap = reportFor === 'others';
+  // Where help should go: "At my home" fills in the registered address,
+  // "Somewhere else" shows the map. Choosing "Someone else" starts on
+  // "Somewhere else"; the resident can still change it.
+  const [helpPlace, setHelpPlace] = useState('home');
+  const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: helpPlace === 'home', formData, setFormData });
+  const showMap = helpPlace === 'elsewhere';
 
   // Back to "Myself": the hidden map's pin no longer applies.
   useEffect(() => {
@@ -120,6 +130,13 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const [victimRelationshipOther, setVictimRelationshipOther] = useState('');
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
+  const chooseWho = (who) => {
+    setReportFor(who);
+    setHelpPlace(who === 'others' ? 'elsewhere' : 'home');
+    if (who === 'self') {
+      setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails('');
+    }
+  };
 
   useEffect(() => {
     if (!editingReport) return;
@@ -146,6 +163,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     if (!show || editingReport || !prefill) return;
     if (prefill.reportFor !== 'others') return; // their registered address fills in
     setReportFor('others');
+    setHelpPlace('elsewhere');
     if (prefill.address) setFormData((prev) => ({ ...prev, ...prefill.address }));
     if (prefill.latitude != null && prefill.longitude != null) {
       // After the "Myself" reset above has run for this render.
@@ -198,12 +216,13 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       ...EMPTY_LOCATION,
       location: '',
       situation: '',
-      people: '',
+      people: '1',
       special: [],
       specialCounts: {},
       consent: false
     });
     setReportFor('self');
+    setHelpPlace('home');
     setVictimName(''); setVictimContact(''); setVictimRelationship('');
     setVictimRelationshipOther(''); setVictimDetails('');
     clearMedia();
@@ -258,6 +277,12 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     }
     if (reportFor === 'others' && !victimDetails.trim()) {
       showPopup({ type: 'warning', message: t('assistanceModal.provideDetailsRequesting') });
+      return;
+    }
+    // Chosen with buttons now, so checked here rather than by the browser.
+    const unchosen = !formData.assistanceType ? 'assistType' : !formData.emergency ? 'emergency' : null;
+    if (unchosen) {
+      showPopup({ type: 'warning', message: t(`reportShared.need.${unchosen}`) });
       return;
     }
     if (needsNewMedia && !media.file) {
@@ -361,628 +386,273 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       setIsSubmitting(false);
     }
   };
+  // The first thing still needed before sending (shown above Send), or null.
+  const whatIsMissing = () => {
+    if (reportFor === 'others') {
+      if (!victimRelationship) return 'rel';
+      if (victimRelationship === 'Other' && !victimRelationshipOther.trim()) return 'relOther';
+      if (!isVictimNameOptional && !victimName.trim()) return 'name';
+      if (!victimDetails.trim()) return 'details';
+    }
+    if (!formData.assistanceType) return 'assistType';
+    if (!formData.emergency) return 'emergency';
+    if (formData.emergency === OTHER_EMERGENCY && !formData.emergencyOther.trim()) return 'emergencyOther';
+    if (needsNewMedia && !media.file) return 'proof';
+    if (isOutsideSantaFe) return 'outside';
+    if (isEditing ? !formData.location.trim() : (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim()))) {
+      return isEditing ? 'location' : 'address';
+    }
+    if (!formData.situation.trim()) return 'situation';
+    const people = Number(formData.people);
+    if (!Number.isInteger(people) || people < 1 || people > MAX_PEOPLE_NEEDING_HELP) return 'people';
+    if (missingSpecialCount(formData.special, formData.specialCounts)) return 'special';
+    if (!formData.consent) return 'consent';
+    return null;
+  };
   const closeSuccessPopup = () => {
     setShowSuccessPopup(false);
     onClose();
   };
   if (!show && !showSuccessPopup) return null;
+
+  const otherLang = translations[language === 'tl' ? 'en' : 'tl'] || {};
+  const assistItems = ASSISTANCE_TYPES.map((x) => ({
+    value: x.value,
+    icon: x.icon,
+    label: t(`reportShared.assistShort.${x.key}`),
+    sub: otherLang.reportShared?.assistShort?.[x.key] || ''
+  }));
+  const emergencyItems = [
+    ...EMERGENCY_OPTIONS.map((o) => ({ value: o.value, icon: o.icon, label: t(o.labelKey) })),
+    { value: OTHER_EMERGENCY, icon: 'bi-three-dots', label: t('reportShared.crimeShort.other') }
+  ];
+  const missingKey = whatIsMissing();
+  const missingText = !missingKey ? '' : missingKey === 'outside' ? t('reportForm.outsideSantaFe') : t(`reportShared.need.${missingKey}`);
+  const peopleNumber = Number(formData.people) || 0;
+  const setPeople = (n) => setFormData((prev) => ({ ...prev, people: String(Math.min(MAX_PEOPLE_NEEDING_HELP, Math.max(1, n))) }));
+
   return (
 <>
-<style>{`
-  .rf-2col { display: grid; grid-template-columns: 1fr 1fr; }
-  @media (max-width: 480px) { .rf-2col { grid-template-columns: 1fr; } }
-`}</style>
 {show && (
-<div
-      className="modal-overlay report-modal-overlay"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 10000,
-        padding: '20px',
-        overflowY: 'auto'
-      }}
->
-<div
-        className="modal-container report-modal-card"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          maxWidth: '800px',
-          width: '100%',
-          overflowY: 'auto',
-          position: 'relative',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-        }}
->
-
-<div style={{
-          padding: '20px 24px',
-          borderBottom: '1px solid #e5e7eb',
-          position: 'sticky',
-          top: 0,
-          zIndex: 1100,
-          background: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-<div style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '50%',
-            backgroundColor: '#dc3545',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-<i className="bi bi-life-preserver" style={{
-              fontSize: '22px',
-              color: 'white'
-            }}></i>
-</div>
-<h2 style={{
-            margin: 0,
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#1f2937',
-            flex: 1
-          }}>{isEditing ? t('assistanceModal.editTitle') : t('assistanceModal.requestTitle')}</h2>
-<button
-            onClick={onClose}
-            type="button"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              fontSize: '22px',
-              cursor: 'pointer',
-              color: '#9ca3af',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'color 0.2s'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#1f2937'}
-            onMouseLeave={(e) => e.target.style.color = '#9ca3af'}
->
-<i className="bi bi-x-lg"></i>
-</button>
-</div>
-<form onSubmit={handleSubmit} style={{ padding: '24px' }}>
-
-          {/* ── ADDED: Reporting For toggle ── */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-              {t('assistanceModal.whoRequestingFor')}
-            </label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="button"
-                onClick={() => { setReportFor('self'); setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails(''); }}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'self' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'self' ? '#fef2f2' : '#fff', color: reportFor === 'self' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
-                <i className="bi bi-person-fill" style={{ marginRight: '6px' }}></i>{t('assistanceModal.myself')}
-              </button>
-              <button type="button"
-                onClick={() => setReportFor('others')}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `2px solid ${reportFor === 'others' ? '#dc3545' : '#d1d5db'}`, background: reportFor === 'others' ? '#fef2f2' : '#fff', color: reportFor === 'others' ? '#dc3545' : '#374151', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>
-                <i className="bi bi-people-fill" style={{ marginRight: '6px' }}></i>{t('assistanceModal.someoneElse')}
-              </button>
-            </div>
-          </div>
-          {reportFor === 'others' && (
-            <div style={{ marginBottom: '16px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', padding: '14px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontWeight: '600', color: '#dc3545', fontSize: '13px' }}>
-                <i className="bi bi-person-exclamation"></i> {t('assistanceModal.personBoxLabel')}
-              </label>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.relationship')} <span style={{ color: '#dc3545' }}>*</span></label>
-              <select className="form-select" value={victimRelationship} onChange={e => { setVictimRelationship(e.target.value); setVictimRelationshipOther(''); }}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }}>
-                <option value="">{t('reportForm.relationshipPlaceholder')}</option>
-                <option value="Family Member">{t('reportForm.relationshipOptions.family')}</option>
-                <option value="Friend">{t('reportForm.relationshipOptions.friend')}</option>
-                <option value="Neighbor">{t('reportForm.relationshipOptions.neighbor')}</option>
-                <option value="Colleague">{t('reportForm.relationshipOptions.colleague')}</option>
-                <option value="Stranger">{t('reportForm.relationshipOptions.stranger')}</option>
-                <option value="Other">{t('reportForm.relationshipOptions.other')}</option>
-              </select>
-              {victimRelationship === 'Other' && (
-                <input type="text" placeholder={t('reportForm.relationshipOtherPlaceholder')}
-                  value={victimRelationshipOther} onChange={e => setVictimRelationshipOther(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', marginBottom: '10px' }} />
-              )}
-              <div className="rf-2col" style={{ gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-                    {t('reportForm.theirName')}{' '}
-                    {isVictimNameOptional
-                      ? <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span>
-                      : <span style={{ color: '#dc3545' }}>*</span>}
-                  </label>
-                  <input type="text" placeholder={t('reportForm.namePlaceholder')} value={victimName} onChange={e => setVictimName(e.target.value)}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>{t('reportForm.theirContact')} <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('reportForm.optional')}</span></label>
-                  <input type="tel" inputMode="numeric" placeholder="09XXXXXXXXX" maxLength={11} value={victimContact}
-                    onChange={e => setVictimContact(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }} />
-                </div>
-              </div>
-              <label style={{ display: 'block', margin: '10px 0 6px', fontWeight: '600', color: '#374151', fontSize: '13px' }}>
-                {t('reportForm.additionalDetails')} <span style={{ color: '#dc3545' }}>*</span>
-              </label>
-              <textarea
-                placeholder={t('reportForm.additionalDetailsPlaceholder')}
-                value={victimDetails} onChange={e => setVictimDetails(e.target.value)}
-                rows={2}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none', minHeight: '60px', fontFamily: 'inherit', resize: 'vertical' }} />
-            </div>
-          )}
-          {/* ── END ADDED ── */}
-
-<div style={{ marginBottom: '16px' }}>
-<div style={{ marginBottom: '16px' }}>
-<label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginBottom: '8px',
-              fontWeight: '600',
-              color: '#374151',
-              fontSize: '13px'
-            }}>
-<i
-                className="bi bi-list-check"
-                style={{ color: '#374151', fontSize: '14px' }}
-></i>
-              {t('assistanceModal.assistanceType')} <span style={{ color: '#dc3545' }}>*</span>
-</label>
-<select className="form-select"
-              name="assistanceType"
-              value={formData.assistanceType}
-              onChange={handleChange}
-              required
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                fontSize: '14px',
-                outline: 'none'
-              }}
->
-<option value="">{t('assistanceModal.selectType')}</option>
-<option value="Food and Water">
-                {t('assistanceModal.typeFoodWater')}
-</option>
-<option value="Medical Aid">
-                {t('assistanceModal.typeMedicalAid')}
-</option>
-<option value="Transport Vehicle">
-                {t('assistanceModal.typeTransportVehicle')}
-</option>
-</select>
-</div>
-<div className="rf-2col" style={{ gap: '12px', marginBottom: '16px', alignItems: 'start' }}>
-<div>
-<label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#374151',
-                fontSize: '13px'
-              }}>
-<i className="bi bi-exclamation-circle-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
-                {t('assistanceModal.victimOfEmergency')} <span style={{ color: '#dc3545' }}>*</span>
-</label>
-<select className="form-select"
-                name="emergency"
-                value={formData.emergency}
-                onChange={(e) => setFormData((prev) => ({ ...prev, emergency: e.target.value, emergencyOther: '' }))}
-                required
-                disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
->
-<option value="">{t('assistanceModal.selectEmergency')}</option>
-                {EMERGENCY_OPTIONS.map((opt) => (
-<option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
-                ))}
-<option value={OTHER_EMERGENCY}>{t('assistanceModal.emergencyOther')}</option>
-</select>
-              {formData.emergency === OTHER_EMERGENCY && (
-<input
-                  type="text"
-                  name="emergencyOther"
-                  value={formData.emergencyOther}
-                  onChange={handleChange}
-                  required
-                  maxLength={100}
-                  disabled={isSubmitting}
-                  placeholder={t('assistanceModal.emergencyOtherPlaceholder')}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: '6px',
-                    border: '1px solid #d1d5db',
-                    fontSize: '14px',
-                    outline: 'none',
-                    marginTop: '8px'
-                  }}
-                />
-              )}
-</div>
-<MediaAttachmentField
-              t={t}
-              label={t('assistanceModal.proofPhoto')}
-              required={needsNewMedia}
-              requiredMark={needsNewMedia}
-              hint={hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}
-              disabled={isSubmitting}
-              media={media}
-              fileInputRef={fileInputRef}
-              onChange={handleMediaChange}
-              onRemove={clearMedia}
-            />
-</div>
-{isEditing ? (
-<>
-<label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', color: '#374151', fontSize: '13px', marginBottom: '8px' }}>
-<i className="bi bi-geo-alt-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
-                {t('assistanceModal.currentAddress')} <span style={{ color: '#dc3545' }}>*</span>
-</label>
-<input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder={t('reportForm.fullAddress')}
-                  required
-                  disabled={isSubmitting}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: '6px',
-                    border: '1px solid #d1d5db',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#dc3545'}
-                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                />
-            {locationError && (
-<div style={{ marginTop: '6px', fontSize: '12px', color: '#dc3545' }}>
-<i className="bi bi-exclamation-triangle-fill"></i> {locationError}
-</div>
-            )}
-<div style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
-              {t('assistanceModal.serviceAreaNote')}
-</div>
-<div ref={locationSectionRef}>
-  <LocationPickerMap
-    pin={gpsCoords}
-    onPick={handlePickOnMap}
-    isOutside={isOutsideSantaFe}
-    outsideMessage={outsideMessage}
+<ReportFormShell tone="assist">
+  <ReportHead
+    icon="bi-life-preserver"
+    title={isEditing ? t('assistanceModal.editTitle') : t('assistanceModal.requestTitle')}
+    onClose={onClose}
+    closeLabel={t('quickReport.close')}
     disabled={isSubmitting}
   />
-</div>
-</>
-) : (
-<ReportLocationFields
-  t={t}
-  formData={formData}
-  onChange={handleChange}
-  disabled={isSubmitting}
-  showMap={showMap}
-  location={location}
-  sectionRef={locationSectionRef}
-  addressPrefilled={addressPrefilled}
-  serviceAreaNote={t('assistanceModal.serviceAreaNote')}
-/>
-)}
-</div>
-<div style={{ marginBottom: '16px' }}>
-<label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginBottom: '8px',
-              fontWeight: '600',
-              color: '#374151',
-              fontSize: '13px'
-            }}>
-<i className="bi bi-chat-left-text-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
-              {t('assistanceModal.describeSituation')} <span style={{ color: '#dc3545' }}>*</span>
-</label>
-<textarea
-              name="situation"
-              value={formData.situation}
+  <form className="qr-form" onSubmit={handleSubmit}>
+    <div className="qr-body">
+      <WhoButtons
+        id="as-who"
+        label={t('reportShared.whoNeedsHelp')}
+        value={reportFor}
+        onChange={chooseWho}
+        labels={{ self: t('quickReport.who.self'), others: t('quickReport.who.others') }}
+        disabled={isSubmitting}
+      />
+      {reportFor === 'others' && (
+        <PersonBox
+          t={t}
+          idPrefix="as"
+          title={t('assistanceModal.personBoxLabel')}
+          rel={victimRelationship}
+          onRel={(v) => { setVictimRelationship(v); setVictimRelationshipOther(''); }}
+          relOther={victimRelationshipOther}
+          onRelOther={setVictimRelationshipOther}
+          name={victimName}
+          onName={setVictimName}
+          nameOptional={isVictimNameOptional}
+          contact={victimContact}
+          onContact={setVictimContact}
+          details={victimDetails}
+          onDetails={setVictimDetails}
+          disabled={isSubmitting}
+        />
+      )}
+
+      <div>
+        <Lbl id="as-type" icon="bi-list-check" req>{t('reportShared.whatHelp')}</Lbl>
+        <ChoiceTiles
+          labelledBy="as-type"
+          items={assistItems}
+          value={formData.assistanceType}
+          onChange={(v) => setFormData((prev) => ({ ...prev, assistanceType: v }))}
+          disabled={isSubmitting}
+        />
+      </div>
+
+      <div>
+        <Lbl id="as-emergency" icon="bi-exclamation-circle-fill" req>{t('reportShared.victimOf')}</Lbl>
+        <Pills
+          labelledBy="as-emergency"
+          items={emergencyItems}
+          value={formData.emergency}
+          onChange={(v) => setFormData((prev) => ({ ...prev, emergency: v, emergencyOther: '' }))}
+          disabled={isSubmitting}
+        />
+        {formData.emergency === OTHER_EMERGENCY && (
+          <div className="qr-field" style={{ marginTop: 10 }}>
+            <label htmlFor="as-emergency-other">{t('assistanceModal.emergencyOther')} <span className="qr-req">*</span></label>
+            <input
+              id="as-emergency-other"
+              type="text"
+              name="emergencyOther"
+              value={formData.emergencyOther}
               onChange={handleChange}
-              rows="4"
-              placeholder={t('assistanceModal.situationPlaceholder')}
               required
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                fontSize: '14px',
-                resize: 'vertical',
-                outline: 'none',
-                fontFamily: 'inherit'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#dc3545'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-></textarea>
-</div>
-<div style={{ marginBottom: '16px' }}>
-<label htmlFor="as-people" style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginBottom: '8px',
-              fontWeight: '600',
-              color: '#374151',
-              fontSize: '13px'
-            }}>
-<i className="bi bi-people-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
-              {t('assistanceModal.peopleNeedingHelp')} <span style={{ color: '#dc3545' }}>*</span>
-</label>
-<input
+              maxLength={100}
+              disabled={isSubmitting}
+              placeholder={t('assistanceModal.emergencyOtherPlaceholder')}
+            />
+          </div>
+        )}
+      </div>
+
+      <MediaPicker
+        t={t}
+        id="as-media"
+        label={t('reportShared.proofTitle')}
+        required={needsNewMedia}
+        optionalText={t('reportForm.optional')}
+        hint={hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}
+        media={media}
+        fileInputRef={fileInputRef}
+        onChange={handleMediaChange}
+        onRemove={clearMedia}
+        disabled={isSubmitting}
+      />
+
+      {isEditing ? (
+        <div className="qr-edit-address">
+          <Lbl id="as-address" icon="bi-geo-alt-fill" req as="label">{t('assistanceModal.currentAddress')}</Lbl>
+          <input
+            type="text"
+            name="location"
+            aria-labelledby="as-address"
+            value={formData.location}
+            onChange={handleChange}
+            placeholder={t('reportForm.fullAddress')}
+            required
+            disabled={isSubmitting}
+          />
+          {locationError && <p className="qr-err"><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {locationError}</p>}
+          <p className="qr-note">{t('assistanceModal.serviceAreaNote')}</p>
+          <div ref={locationSectionRef}>
+            <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={isSubmitting} />
+          </div>
+        </div>
+      ) : (
+        <div>
+          <Lbl id="as-where" icon="bi-geo-alt-fill" req>{t('reportShared.whereHelp')}</Lbl>
+          <PairButtons
+            id="as-where"
+            value={helpPlace}
+            onChange={setHelpPlace}
+            disabled={isSubmitting}
+            options={[
+              { value: 'home', icon: 'bi-house-door-fill', label: t('pettyCrimeModal.atHome') },
+              { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
+            ]}
+          />
+          <div style={{ marginTop: 12 }}>
+            <ReportLocationFields
+              t={t}
+              formData={formData}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              showMap={showMap}
+              location={location}
+              sectionRef={locationSectionRef}
+              addressPrefilled={addressPrefilled}
+              serviceAreaNote={t('assistanceModal.serviceAreaNote')}
+            />
+          </div>
+        </div>
+      )}
+
+      <div>
+        <Lbl id="as-people-label" icon="bi-people-fill" req as="label">{t('reportShared.people')}</Lbl>
+        <div className="qr-count-row">
+          <div className="qr-count">
+            <button type="button" onClick={() => setPeople(peopleNumber - 1)} disabled={isSubmitting || peopleNumber <= 1} aria-label={t('reportShared.fewer')}>
+              <i className="bi bi-dash-lg" aria-hidden="true" />
+            </button>
+            <input
               id="as-people"
-              type="number"
+              type="text"
               name="people"
               inputMode="numeric"
-              min={1}
-              max={MAX_PEOPLE_NEEDING_HELP}
-              step={1}
+              aria-labelledby="as-people-label"
               value={formData.people}
               onChange={(e) => setFormData((prev) => ({ ...prev, people: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
-              placeholder={t('assistanceModal.peoplePlaceholder')}
-              required
               disabled={isSubmitting}
-              style={{
-                width: '100%',
-                maxWidth: '220px',
-                height: '40px',
-                padding: '0 14px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                fontSize: '14px',
-                outline: 'none',
-                fontFamily: 'inherit'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#dc3545'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-/>
-<div style={{ marginTop: '4px', fontSize: '12px', color: '#6b7280' }}>{t('assistanceModal.peopleHint')}</div>
-</div>
-<div className="form-group" style={{ marginBottom: '16px' }}>
-<label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginBottom: '8px',
-              fontWeight: '600',
-              color: '#374151',
-              fontSize: '13px'
-            }}>
-<i className="bi bi-info-circle-fill" style={{ color: '#374151', fontSize: '14px' }}></i>
-              {t('emergencyModal.specialNeeds')}
-</label>
-<SpecialNeedsPicker
-  idPrefix="as-special"
-  selected={formData.special}
-  counts={formData.specialCounts}
-  onToggle={handleSpecialToggle}
-  onCountChange={handleSpecialCount}
-  disabled={isSubmitting}
-  invalidKey={specialInvalid}
-/>
-</div>
-<div style={{ marginBottom: '20px' }}>
-<label style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '10px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              color: '#374151',
-              lineHeight: '1.5'
-            }}>
-<input
-                type="checkbox"
-                name="consent"
-                checked={formData.consent}
-                onChange={handleChange}
-                required
-                style={{
-                  marginTop: '2px',
-                  width: '16px',
-                  height: '16px',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  accentColor: '#dc3545'
-                }}
-              />
-<span>
-                {t('reportForm.consent')}
-</span>
-</label>
-</div>
-          {!isEditing && cooldownRemaining > 0 && (
-<div style={{
-              textAlign: 'center',
-              backgroundColor: '#fef2f2',
-              border: '1px solid #fecaca',
-              color: '#b91c1c',
-              fontSize: '13px',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              marginBottom: '8px'
-            }}>
-<i className="bi bi-clock-history"></i> {t('assistanceModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}
-</div>
-          )}
-<div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '12px',
-            marginTop: '24px'
-          }}>
-<button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              style={{
-                padding: '12px 20px',
-                borderRadius: '24px',
-                border: 'none',
-                background: '#6b7280',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                fontWeight: '600',
-                fontSize: '14px',
-                color: 'white',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                opacity: isSubmitting ? 0.5 : 1
-              }}
-              onMouseEnter={(e) => !isSubmitting && (e.target.style.background = '#4b5563')}
-              onMouseLeave={(e) => e.target.style.background = '#6b7280'}
->
-<i className="bi bi-x-circle-fill"></i> {t('reportForm.cancel')}
-</button>
-<button
-              type="submit"
-              disabled={isSubmitting || (!isEditing && cooldownRemaining > 0)}
-              style={{
-                padding: '12px 20px',
-                borderRadius: '24px',
-                border: 'none',
-                background: (isSubmitting || (!isEditing && cooldownRemaining > 0)) ? '#9ca3af' : '#dc3545',
-                color: 'white',
-                cursor: (isSubmitting || (!isEditing && cooldownRemaining > 0)) ? 'not-allowed' : 'pointer',
-                fontWeight: '600',
-                fontSize: '14px',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                opacity: isSubmitting ? 0.7 : 1
-              }}
-              onMouseEnter={(e) => !isSubmitting && (isEditing || cooldownRemaining === 0) && (e.target.style.background = '#bb2d3b')}
-              onMouseLeave={(e) => { if (!isSubmitting && (isEditing || cooldownRemaining === 0)) e.target.style.background = '#dc3545'; }}
->
-              {isSubmitting ? (
-<>
-<i className="bi bi-hourglass-split"></i> {isEditing ? t('reportForm.saving') : t('reportForm.submitting')}
-</>
-              ) : (
-<>
-<i className="bi bi-send-fill"></i> {isEditing ? t('reportForm.saveChanges') : t('assistanceModal.submitRequest')}
-</>
-              )}
-</button>
-</div>
-</form>
-</div>
-</div>
+            />
+            <button type="button" onClick={() => setPeople(peopleNumber + 1)} disabled={isSubmitting || peopleNumber >= MAX_PEOPLE_NEEDING_HELP} aria-label={t('reportShared.more')}>
+              <i className="bi bi-plus-lg" aria-hidden="true" />
+            </button>
+          </div>
+          <p>{t('assistanceModal.peopleHint')}</p>
+        </div>
+      </div>
+
+      <div className="form-group" style={{ margin: 0 }}>
+        <Lbl icon="bi-info-circle-fill" optional={t('reportForm.optional')}>{t('emergencyModal.specialNeeds')}</Lbl>
+        <SpecialNeedsPicker
+          idPrefix="as-special"
+          selected={formData.special}
+          counts={formData.specialCounts}
+          onToggle={handleSpecialToggle}
+          onCountChange={handleSpecialCount}
+          disabled={isSubmitting}
+          invalidKey={specialInvalid}
+        />
+      </div>
+
+      <div className="qr-field">
+        <Lbl id="as-situation" icon="bi-chat-left-text-fill" req as="label">{t('reportShared.describeSituation')}</Lbl>
+        <textarea
+          name="situation"
+          aria-labelledby="as-situation"
+          value={formData.situation}
+          onChange={handleChange}
+          rows={4}
+          maxLength={2000}
+          placeholder={t('assistanceModal.situationPlaceholder')}
+          required
+          disabled={isSubmitting}
+        />
+      </div>
+
+      <ConsentBox checked={formData.consent} onChange={handleChange} disabled={isSubmitting}>{t('reportForm.consent')}</ConsentBox>
+
+      {!isEditing && cooldownRemaining > 0 && (
+        <div className="qr-banner"><i className="bi bi-clock-history" aria-hidden="true" /> {t('assistanceModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}</div>
+      )}
+    </div>
+    <SendFoot
+      missing={missingText}
+      readyText={t('reportShared.ready')}
+      label={isEditing ? t('reportShared.saveChanges') : t('reportShared.sendRequest')}
+      busyLabel={isEditing ? t('reportForm.saving') : t('reportForm.submitting')}
+      busy={isSubmitting}
+      disabled={!isEditing && cooldownRemaining > 0}
+      icon={isEditing ? 'bi-check-lg' : 'bi-send-fill'}
+    />
+  </form>
+</ReportFormShell>
 )}
 
 {showSuccessPopup && (
-  <div
-    className="modal-overlay report-modal-overlay"
-    onClick={(e) => { if (e.target === e.currentTarget) closeSuccessPopup(); }}
-    style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      width: '100vw',
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 10001,
-      padding: '20px'
-    }}
+<ReportFormShell tone="assist">
+  <SentScreen
+    title={t('assistanceModal.requestSubmitted')}
+    actions={<button type="button" className="qr-btn soft" onClick={closeSuccessPopup}>{t('assistanceModal.done')}</button>}
   >
-    <div
-      onClick={(e) => e.stopPropagation()}
-      style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        maxWidth: '420px',
-        width: '100%',
-        padding: '28px 24px',
-        textAlign: 'center',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-      }}
-    >
-      <div style={{
-        width: '56px',
-        height: '56px',
-        borderRadius: '50%',
-        backgroundColor: '#16a34a',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '28px',
-        margin: '0 auto 16px'
-      }}>
-        <i className="bi bi-check-lg"></i>
-      </div>
-      <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 700, color: '#1f2937' }}>
-        {t('assistanceModal.requestSubmitted')}
-      </h3>
-      <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#4b5563', lineHeight: 1.5 }}>
-        {t('assistanceModal.requestSubmittedBody')}
-      </p>
-      <button
-        type="button"
-        onClick={closeSuccessPopup}
-        style={{
-          padding: '12px 20px',
-          borderRadius: '24px',
-          border: 'none',
-          background: '#dc3545',
-          color: 'white',
-          fontWeight: 600,
-          fontSize: '14px',
-          cursor: 'pointer',
-          width: '100%'
-        }}
-      >
-        {t('assistanceModal.done')}
-      </button>
-    </div>
-  </div>
+    <p>{t('assistanceModal.requestSubmittedBody')}</p>
+  </SentScreen>
+</ReportFormShell>
 )}
 </>
   );
