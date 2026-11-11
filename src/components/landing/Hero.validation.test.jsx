@@ -4,6 +4,19 @@ import { TERMS_VERSION } from '../shared/termsConsent';
 import { LanguageProvider } from '../../i18n/LanguageContext';
 import { signinUser, fetchSiteContent } from '../../Services/api';
 
+// The sign-up map (Leaflet doesn't load under Jest): a stand-in whose
+// buttons pin a spot in Santa Fe or one outside it.
+jest.mock('../shared/location/LocationPickerMap', () => function MockPickerMap(props) {
+  const React = require('react');
+  return React.createElement('div', { 'data-testid': 'signup-map' },
+    React.createElement('button', { type: 'button', onClick: () => props.onPick(14.3203, 120.9648) }, 'pin inside'),
+    React.createElement('button', { type: 'button', onClick: () => props.onPick(14.5995, 120.9842) }, 'pin outside'),
+    props.isOutside ? React.createElement('span', null, 'outside') : null);
+});
+jest.mock('../shared/location/geocode', () => ({
+  reverseGeocode: () => Promise.resolve({ houseNumber: 'Blk 9 Lot 2', street: 'Mabini St.' }),
+  forwardGeocode: () => Promise.resolve(null)
+}));
 jest.mock('../../Services/api', () => ({
   signinUser: jest.fn(),
   rememberLogin: jest.fn(),
@@ -327,6 +340,66 @@ describe('Sign Up: proof of residency', () => {
     expect(errorOf('suIdFile')).toMatch(/larger than 5 MB/);
   });
 
+  describe('home pin on the map (step 2, optional)', () => {
+    const toStep2 = () => {
+      openSignUp();
+      const type = (id, value) => fireEvent.change(field(id), { target: { value } });
+      type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suBirth', '2000-05-15'); type('suContact', '9171234567');
+      type('suEmail', 'juan@example.com');
+      submitAll();
+    };
+
+    test('the map and Use my current location are on step 2', () => {
+      toStep2();
+      expect(screen.getByTestId('signup-map')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Use my current location/ })).toBeInTheDocument();
+      expect(screen.getByText('Your home on the map')).toBeInTheDocument();
+    });
+
+    test('Use my current location asks the browser and pins the spot; empty address boxes are filled in', async () => {
+      const getCurrentPosition = jest.fn((ok) => ok({ coords: { latitude: 14.3203, longitude: 120.9648, accuracy: 12 } }));
+      Object.defineProperty(global.navigator, 'geolocation', { value: { getCurrentPosition }, configurable: true });
+      toStep2();
+      fireEvent.click(screen.getByRole('button', { name: /Use my current location/ }));
+      expect(getCurrentPosition).toHaveBeenCalled();
+      await waitFor(() => expect(field('suAddrHouse').value).toBe('Blk 9 Lot 2'));
+      expect(field('suAddrStreet').value).toBe('Mabini St.');
+      expect(screen.getByRole('button', { name: /Remove pin/ })).toBeInTheDocument();
+    });
+
+    test('a pin outside Santa Fe is pointed out and keeps the form on step 2', () => {
+      toStep2();
+      fillAddress();
+      attachId();
+      fireEvent.click(screen.getByRole('button', { name: 'pin outside' }));
+      submitAll();
+      expect(errorOf('suHomePin')).toMatch(/outside Barangay Sta. Fe/);
+      expect(document.querySelector('.auth-step.current .auth-step-l').textContent).toBe('Address & ID');
+      fireEvent.click(screen.getByRole('button', { name: /Remove pin/ }));
+      submitAll();
+      expect(document.querySelector('.auth-step.current .auth-step-l').textContent).toBe('Account');
+    });
+  });
+
+  test('the home pin is sent with the sign-up (and left out when there is none)', async () => {
+    localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
+    openSignUp();
+    const type = (id, value) => fireEvent.change(field(id), { target: { value } });
+    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suBirth', '2000-05-15'); type('suContact', '9171234567');
+    type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
+    type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
+    submitAll();
+    fillAddress();
+    attachId();
+    fireEvent.click(screen.getByRole('button', { name: 'pin inside' }));
+    fireEvent.click(field('suAgree'));
+    submitAll();
+    submitAll();
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(expect.stringMatching(/request-otp$/), expect.anything()));
+    const [, options] = global.fetch.mock.calls.find(([url]) => String(url).endsWith('/request-otp'));
+    expect(JSON.parse(options.body).homeLocation).toEqual({ lat: 14.3203, lng: 120.9648 });
+  });
+
   test('the chosen ID is shown and sent with the sign-up', async () => {
     localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
     openSignUp();
@@ -344,6 +417,7 @@ describe('Sign Up: proof of residency', () => {
     const body = JSON.parse(options.body);
     expect(body.address).toEqual({ houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.' });
     expect(body.birthdate).toBe('2000-05-15');
+    expect(body.homeLocation).toBeNull(); // the map pin is optional
     expect(body.validId.idType).toBe('Barangay ID');
     expect(body.validId.fileName).toBe('barangay-id.pdf');
     expect(body.validId.dataUrl).toMatch(/^data:application\/pdf;base64,/);

@@ -77,7 +77,10 @@ const LocationPickerMap = ({
   disabled = false,
   readOnly = false,
   height = 240,
-  streetView = true
+  streetView = true,
+  // notes: other wording for the line under the map ({ outside, pinned, empty });
+  // the report forms' wording is the default.
+  notes = null
 }) => {
   const { t } = useLanguage();
   const pinLat = Number(rawPin?.lat);
@@ -227,15 +230,15 @@ const LocationPickerMap = ({
             lineHeight: 1.4
           }}
         >
-          <i className="bi bi-exclamation-octagon-fill"></i> {t('reportForm.outsideSantaFe')}
+          <i className="bi bi-exclamation-octagon-fill"></i> {notes?.outside || t('reportForm.outsideSantaFe')}
         </div>
       ) : pin ? (
         <div style={{ marginTop: '6px', fontSize: '15px', color: '#6b7280' }}>
-          <i className="bi bi-geo-alt-fill"></i> {t('reportForm.mapPinnedHint')}
+          <i className="bi bi-geo-alt-fill"></i> {notes?.pinned || t('reportForm.mapPinnedHint')}
         </div>
       ) : (
         <div style={{ marginTop: '6px', fontSize: '15px', color: '#6b7280' }}>
-          The dashed line marks Barangay Sta. Fe. Reports can only be made from inside it.
+          {notes?.empty || 'The dashed line marks Barangay Sta. Fe. Reports can only be made from inside it.'}
         </div>
       )}
     </div>

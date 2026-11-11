@@ -3,6 +3,19 @@ import Hero from './Hero';
 import { LanguageProvider } from '../../i18n/LanguageContext';
 import { signinUser, fetchSiteContent, setAuthToken, rememberLogin } from '../../Services/api';
 
+// The sign-up map (Leaflet doesn't load under Jest): a stand-in whose
+// buttons pin a spot in Santa Fe or one outside it.
+jest.mock('../shared/location/LocationPickerMap', () => function MockPickerMap(props) {
+  const React = require('react');
+  return React.createElement('div', { 'data-testid': 'signup-map' },
+    React.createElement('button', { type: 'button', onClick: () => props.onPick(14.3203, 120.9648) }, 'pin inside'),
+    React.createElement('button', { type: 'button', onClick: () => props.onPick(14.5995, 120.9842) }, 'pin outside'),
+    props.isOutside ? React.createElement('span', null, 'outside') : null);
+});
+jest.mock('../shared/location/geocode', () => ({
+  reverseGeocode: () => Promise.resolve({ houseNumber: 'Blk 9 Lot 2', street: 'Mabini St.' }),
+  forwardGeocode: () => Promise.resolve(null)
+}));
 jest.mock('../../Services/api', () => ({
   signinUser: jest.fn(),
   rememberLogin: jest.fn(),

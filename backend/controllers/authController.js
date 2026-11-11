@@ -19,6 +19,7 @@ const NotificationService = require("../services/notificationService");
 const { parseIdUpload } = require("../utils/idDocument");
 const { parseAddress, addressOf } = require("../utils/address");
 const { parseBirthdate } = require("../utils/birthdate");
+const { parseHomePin } = require("../utils/homePin");
 
 
 
@@ -65,6 +66,10 @@ exports.requestOtp = async (req, res) => {
         const birth = parseBirthdate(req.body.birthdate);
         if (birth.error) return res.json({ success: false, code: "INVALID_BIRTHDATE", message: birth.error });
 
+        // Their home on the map (optional), inside Barangay Santa Fe.
+        const home_pin = parseHomePin(req.body.homeLocation);
+        if (home_pin.error) return res.json({ success: false, code: "INVALID_HOME_PIN", message: home_pin.error });
+
         // The ID the barangay checks before the account can sign in.
         const idDocument = parseIdUpload(validId);
         if (idDocument.error) return res.json({ success: false, code: "INVALID_ID", message: idDocument.error });
@@ -102,7 +107,7 @@ exports.requestOtp = async (req, res) => {
         otpStore.set(email, {
             otp,
             expiresAt: Date.now() + OTP_TTL_MS,
-            userData:  { fullName, username, contact, email, password: hashedPassword, address: home.address, birthdate: birth.birthdate },
+            userData:  { fullName, username, contact, email, password: hashedPassword, address: home.address, birthdate: birth.birthdate, homeLocation: home_pin.pin },
             idDocument,
         });
 
@@ -166,6 +171,7 @@ exports.verifyOtp = async (req, res) => {
             verificationStatus: "Pending",
             address:  userData.address,
             birthdate: userData.birthdate,
+            homeLocation: userData.homeLocation,
         });
         try {
             await ResidentIdDocument.save(userId, idDocument);

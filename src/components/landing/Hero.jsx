@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { signinUser, setAuthToken, rememberLogin } from '../../Services/api';
 import AuthModal, { AuthAlert, AuthField, AuthFieldError } from './AuthModal';
@@ -10,6 +10,8 @@ import { markAdminJustSignedIn } from '../admin/AdminModals/AdminDemoPopup';
 import { hasViewedTerms, openTerms, TERMS_VIEWED_EVENT } from '../shared/termsConsent';
 import { NO_CLIPBOARD } from '../shared/noClipboard';
 import { birthdateProblem, latestAllowedBirthdate, earliestAllowedBirthdate } from '../shared/birthdate';
+import LocationPickerMap from '../shared/location/LocationPickerMap';
+import useLocationPin from '../shared/location/useLocationPin';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
 
@@ -42,7 +44,7 @@ const ID_TYPES = [
 const SIGNUP_PARTS = ['details', 'address', 'account'];
 const SIGNUP_FIELD_PART = {
     suFirst: 1, suMiddle: 1, suLast: 1, suBirth: 1, suContact: 1, suEmail: 1,
-    suAddrHouse: 2, suAddrStreet: 2, suIdType: 2, suIdFile: 2,
+    suAddrHouse: 2, suAddrStreet: 2, suHomePin: 2, suIdType: 2, suIdFile: 2,
     suUsername: 3, suPassword: 3, suConfirm: 3, suAgree: 3,
 };
 // Sign-up text boxes take at most 20 characters (email excepted; the
@@ -176,6 +178,15 @@ function Hero() {
     // Home address in Barangay Santa Fe
     const [suAddrHouse,   setSuAddrHouse]   = useState('');
     const [suAddrStreet,  setSuAddrStreet]  = useState('');
+    // Their home on the map (optional): Use my current location (with the
+    // browser's permission) or a tap on the map, and the pin can be dragged.
+    // Pinning fills the address boxes only while they are still empty.
+    const fillAddressFromPin = useCallback(({ houseNumber, street }) => {
+        setSuAddrHouse((prev) => (prev.trim() ? prev : String(houseNumber || '').slice(0, SIGNUP_TEXT_MAX)));
+        setSuAddrStreet((prev) => (prev.trim() ? prev : String(street || '').slice(0, SIGNUP_TEXT_MAX)));
+    }, []);
+    const homePin = useLocationPin({ onAddress: fillAddressFromPin });
+    const clearHomePin = () => { homePin.setGpsCoords(null); homePin.setLocationError(''); };
     // Proof of residency
     const [suIdType,      setSuIdType]      = useState('');
     const [suIdFile,      setSuIdFile]      = useState(null);
@@ -326,7 +337,7 @@ function Hero() {
         setSuPassword(''); setSuConfirm(''); setSuAgree(false);
         setShowSuPw(false); setShowSuConfPw(false);
         clearIdFile(); setSuIdType('');
-        setSuAddrHouse(''); setSuAddrStreet('');
+        setSuAddrHouse(''); setSuAddrStreet(''); clearHomePin();
         setFpEmail(''); setFpNewPw(''); setFpConfirmPw('');
         setShowFpNewPw(false); setShowFpConfPw(false);
         resetOtp(); setOtpEmail(''); setResendCooldown(0);
@@ -435,6 +446,7 @@ function Hero() {
         else if (!EMAIL_REGEX.test(suEmail.trim())) problems.suEmail = t('auth.emailInvalid');
         if (!suAddrHouse.trim()) problems.suAddrHouse = t('signUp.addressHouseRequired');
         if (!suAddrStreet.trim()) problems.suAddrStreet = t('signUp.addressStreetRequired');
+        if (homePin.isOutsideSantaFe) problems.suHomePin = t('signUp.homePinOutside');
         if (!suIdType) problems.suIdType = t('signUp.idTypeRequired');
         if (!suIdFile) problems.suIdFile = t('signUp.idRequired');
         if (!suUsername.trim()) problems.suUsername = t('auth.usernameRequired');
@@ -473,11 +485,16 @@ function Hero() {
                 fullName, username: suUsername,
                 contact: `+63${suContact}`, email: suEmail, password: suPassword, birthdate: suBirth,
                 address: { houseNumber: suAddrHouse.trim(), street: suAddrStreet.trim() },
+                homeLocation: homePin.gpsCoords || null,
                 validId: { idType: suIdType, fileName: suIdFile.name, dataUrl },
             });
             if (!result.success) {
                 if (result.code === 'INVALID_ADDRESS') {
                     showSignUpErrors({ [/street/i.test(result.message) ? 'suAddrStreet' : 'suAddrHouse']: result.message });
+                    return;
+                }
+                if (result.code === 'INVALID_HOME_PIN') {
+                    showSignUpErrors({ suHomePin: result.message });
                     return;
                 }
                 if (result.code === 'INVALID_BIRTHDATE') {
@@ -511,7 +528,7 @@ function Hero() {
             setSuUsername(''); setSuContact(''); setSuEmail('');
             setSuPassword(''); setSuConfirm('');
             clearIdFile(); setSuIdType('');
-            setSuAddrHouse(''); setSuAddrStreet('');
+            setSuAddrHouse(''); setSuAddrStreet(''); clearHomePin();
             resetOtp(); setSignUpStep('form'); setSignUpPart(1);
             setShowSignUp(false); setShowSignIn(true);
             setSuccessMsg(t(result.pendingVerification ? 'signUp.accountPendingReview' : 'signUp.accountCreated'));
@@ -772,6 +789,36 @@ function Hero() {
                         <AuthField id="suAddrFixed" label={t('signUp.addressBarangay')} icon="bi-geo-alt">
                             <input type="text" className="auth-input" id="suAddrFixed" value={t('signUp.addressBarangayValue')} readOnly tabIndex={-1} aria-readonly="true" />
                         </AuthField>
+
+                        <div className={`auth-field auth-pin${fieldErrors.suHomePin ? ' has-error' : ''}`} role="group" aria-labelledby="suHomePin-label">
+                            <div className="auth-pin-head">
+                                <span className="auth-label" id="suHomePin-label">{t('signUp.homePin')} <span className="optional">{t('signUp.optional')}</span></span>
+                                <button type="button" id="suHomePin" className="auth-pin-locate" onClick={homePin.handleUseCurrentLocation} disabled={homePin.isLocating || isSubmitting}>
+                                    <i className={`bi ${homePin.isLocating ? 'bi-arrow-repeat auth-pin-spin' : 'bi-crosshair'}`} aria-hidden="true"></i>
+                                    {homePin.isLocating ? t('reportForm.locating') : t('reportForm.useCurrentLocation')}
+                                </button>
+                            </div>
+                            <p className="auth-pin-hint">{t('signUp.homePinHint')}</p>
+                            {/* Made only while this step shows: a map started in a hidden step has no size. */}
+                            {signUpPart === 2 && (
+                            <LocationPickerMap
+                                pin={homePin.gpsCoords}
+                                onPick={homePin.handlePickOnMap}
+                                isOutside={homePin.isOutsideSantaFe}
+                                disabled={isSubmitting}
+                                height={240}
+                                streetView={false}
+                                notes={{ outside: t('signUp.homePinOutside'), pinned: t('signUp.homePinPinned'), empty: t('signUp.homePinEmpty') }}
+                            />
+                            )}
+                            {homePin.locationError && <p className="auth-pin-note" role="status"><i className="bi bi-info-circle" aria-hidden="true"></i> {homePin.locationError}</p>}
+                            {homePin.gpsCoords && (
+                                <button type="button" className="auth-pin-remove" onClick={clearHomePin} disabled={isSubmitting}>
+                                    <i className="bi bi-x-circle" aria-hidden="true"></i> {t('signUp.homePinRemove')}
+                                </button>
+                            )}
+                            {fieldErrors.suHomePin && <AuthFieldError id="suHomePin">{fieldErrors.suHomePin}</AuthFieldError>}
+                        </div>
 
                         <h3 className="auth-section">{t('signUp.sectionResidency')}</h3>
                         <p className="auth-id-intro">{t('signUp.residencyIntro')}</p>

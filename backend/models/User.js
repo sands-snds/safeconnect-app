@@ -23,8 +23,8 @@ class User {
         const [result] = await db.query(
             `INSERT INTO registered_users
             (full_name, username, contact_number, email_address, password, role, status, verification_status,
-             address_house_number, address_street, address_area, birthdate)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             address_house_number, address_street, address_area, birthdate, home_latitude, home_longitude)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 user.fullName,
                 user.username || null,
@@ -37,7 +37,9 @@ class User {
                 user.address?.houseNumber || null,
                 user.address?.street || null,
                 user.address?.area || null,
-                user.birthdate || null
+                user.birthdate || null,
+                user.homeLocation ? user.homeLocation.lat : null,
+                user.homeLocation ? user.homeLocation.lng : null
             ]
         );
 
@@ -63,7 +65,10 @@ class User {
             ["address_street", "VARCHAR(120) DEFAULT NULL"],
             ["address_area", "VARCHAR(120) DEFAULT NULL"],
             // Given at sign-up; residents must be 15 or older.
-            ["birthdate", "DATE DEFAULT NULL"]
+            ["birthdate", "DATE DEFAULT NULL"],
+            // Their home pinned on the sign-up form's map (optional).
+            ["home_latitude", "DECIMAL(10,7) DEFAULT NULL"],
+            ["home_longitude", "DECIMAL(10,7) DEFAULT NULL"]
         ]) {
             if (have.has(name)) continue;
             try {

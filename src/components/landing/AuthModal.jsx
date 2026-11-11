@@ -82,6 +82,20 @@ const STYLES = `
   .auth-input.auth-date { -webkit-appearance: none; appearance: none; min-height: 44px; line-height: 44px; text-align: left; font-family: inherit; }
   .auth-input.auth-date::-webkit-date-and-time-value { text-align: left; }
   .auth-input.auth-date::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .65; }
+  /* Sign Up: the home pin on the map */
+  .auth-pin-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .auth-pin-head .auth-label { margin-bottom: 0; }
+  .auth-pin-locate { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid #6B2C3E; background: #fff; color: #6B2C3E; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .auth-pin-locate:hover:not(:disabled) { background: #6B2C3E; color: #fff; }
+  .auth-pin-locate:disabled { opacity: .6; cursor: not-allowed; }
+  .auth-pin-locate:focus-visible, .auth-pin-remove:focus-visible { outline: 3px solid rgba(107, 44, 62, 0.35); outline-offset: 2px; }
+  .auth-pin-spin { animation: auth-pin-spin 0.8s linear infinite; }
+  @keyframes auth-pin-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .auth-pin-spin { animation: none; } }
+  .auth-pin-hint { margin: 0; font-size: 0.8rem; color: #6b7280; line-height: 1.45; }
+  .auth-pin-note { margin: 6px 0 0; font-size: 0.8rem; color: #b45309; line-height: 1.4; }
+  .auth-pin-remove { margin-top: 6px; display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 2px 0; color: #6b7280; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .auth-pin-remove:hover:not(:disabled) { color: #b91c1c; }
   .auth-input:focus { outline: none; border-color: #6B2C3E; background: #fff; box-shadow: 0 0 0 4px rgba(107, 44, 62, 0.12); }
   .auth-input.ok { border-color: #16a34a; }
   .auth-input.bad { border-color: #dc2626; }
