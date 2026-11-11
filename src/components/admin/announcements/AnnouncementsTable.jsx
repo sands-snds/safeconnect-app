@@ -506,8 +506,6 @@ const AnnouncementsTable = ({
         settingLabel={tx("Auto-archive announcements:")}
       />
 
-      {/* Pinned first on the residents' News page; on / off and its picture. */}
-      {!showArchived && <FacebookCardControl />}
 
       {loading ? (
         <div>{tx("Loading announcements...")}</div>
@@ -515,6 +513,8 @@ const AnnouncementsTable = ({
         <ListView
           data={pagedData}
           layout="cards"
+          // The Facebook page card: always the first item of the Active list.
+          leadingItem={!showArchived ? <FacebookCardControl key="facebook-card" /> : null}
           cardsContainerStyle={{
             display: 'flex',
             flexDirection: 'column',

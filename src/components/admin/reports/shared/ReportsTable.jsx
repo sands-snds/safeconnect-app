@@ -2,20 +2,27 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { tx } from "../../../../i18n/adminText";
 
 // The report tabs as a table (Emergency, Assistance, Petty Crime).
-// - Column widths can be dragged at each header's right edge; they're
-//   remembered per tab in this browser.
+// - The table always fits its space: one column (flex: true, Location) takes
+//   whatever width is left, so View details is never pushed out of sight.
+// - The other columns can be dragged wider or narrower at each header's right
+//   edge (or with arrow keys there), but never past what the rest needs, and
+//   never past about 2½ times their normal width. Widths are remembered per tab
+//   in this browser and shrink to fit a smaller window.
 // - A faint line between columns; each row has its type's accent bar.
 // - "View details" opens a row underneath with the full details.
 // - When the space gets narrow (tablets, phones) each row becomes a card with
 //   its column names, so there's no sideways scrolling.
 //
-// columns: [{ key, label, width, minWidth, render(report) }]
+// columns: [{ key, label, width, minWidth, flex, render(report) }]
 // renderActions(report): the row's buttons (Move to …, Archive).
 // renderDetails(report): the opened row (details, Dismiss).
 
 const MIN_WIDTH = 70;
+const MAX_FACTOR = 2.5;
+const FLEX_MIN = 140;     // the flexible column never gets narrower than this
 const ACCENT_WIDTH = 6;
-const TOGGLE_WIDTH = 116;
+const TOGGLE_WIDTH = 124;
+const CARDS_BELOW = 760;  // matches the @container rule below
 
 const storageKey = (type) => `sc_report_columns_${type}`;
 const loadWidths = (type) => {
@@ -47,8 +54,9 @@ const STYLE = `
   .rt .rt-details > td { background: #fffafa; padding: 16px 18px 18px; border-right: 0; }
   .rt-resize { position: absolute; top: 0; right: -4px; width: 9px; height: 100%; cursor: col-resize; z-index: 1; touch-action: none; }
   .rt-resize::after { content: ""; position: absolute; top: 25%; bottom: 25%; left: 4px; width: 1px; background: transparent; }
-  .rt th:hover .rt-resize::after, .rt-resize.dragging::after { background: #6B2C3E; }
-  .rt-id { font-weight: 700; white-space: nowrap; }
+  .rt th:hover .rt-resize::after, .rt-resize.dragging::after, .rt-resize:focus-visible::after { background: #6B2C3E; }
+  .rt-id { display: block; font-size: 12px; font-weight: 700; color: #6b7280; letter-spacing: .02em; white-space: nowrap; }
+  .rt-name { display: block; font-weight: 600; }
   .rt-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
   .rt-muted { color: #6b7280; font-size: 13px; }
   .rt-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -75,6 +83,18 @@ const STYLE = `
   }
 `;
 
+// The widths actually drawn: the saved / default ones, scaled down together
+// when they don't leave the flexible column its minimum.
+const fitWidths = (fixedCols, chosen, room) => {
+  const total = fixedCols.reduce((sum, col) => sum + chosen[col.key], 0);
+  const available = room - ACCENT_WIDTH - TOGGLE_WIDTH - FLEX_MIN;
+  if (!room || total <= available || available <= 0) return chosen;
+  const scale = available / total;
+  const fitted = { ...chosen };
+  fixedCols.forEach((col) => { fitted[col.key] = Math.max(col.minWidth || MIN_WIDTH, Math.floor(chosen[col.key] * scale)); });
+  return fitted;
+};
+
 export default function ReportsTable({
   type,
   accentColor,
@@ -84,28 +104,57 @@ export default function ReportsTable({
   onToggle,
   renderActions,
   renderDetails,
-  actionsWidth = 220
+  actionsWidth = 230
 }) {
-  const [widths, setWidths] = useState(() => loadWidths(type));
+  const [saved, setSaved] = useState(() => loadWidths(type));
+  const [room, setRoom] = useState(0);
+  const wrapRef = useRef(null);
   const drag = useRef(null);
   const [dragging, setDragging] = useState(null);
 
-  useEffect(() => { setWidths(loadWidths(type)); }, [type]);
+  useEffect(() => { setSaved(loadWidths(type)); }, [type]);
 
-  const widthOf = (col) => widths[col.key] || col.width;
+  // Follow the space the table has.
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return undefined;
+    const measure = () => setRoom(el.clientWidth);
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
-  // Drag a header's right edge to resize that column.
+  // The fixed-width columns (all but the flexible one), then the Actions column.
+  const allCols = [...columns, { key: "actions", label: "Actions", width: actionsWidth, minWidth: 150 }];
+  const fixedCols = allCols.filter((col) => !col.flex);
+  const chosen = {};
+  fixedCols.forEach((col) => { chosen[col.key] = saved[col.key] || col.width; });
+  const widths = fitWidths(fixedCols, chosen, room);
+
+  // How wide a column may get: its cap, and only as far as the others allow.
+  const maxFor = (col) => {
+    const others = fixedCols.filter((c) => c.key !== col.key).reduce((sum, c) => sum + widths[c.key], 0);
+    const roomLeft = room ? room - ACCENT_WIDTH - TOGGLE_WIDTH - FLEX_MIN - others : Infinity;
+    return Math.max(col.minWidth || MIN_WIDTH, Math.min(Math.round(col.width * MAX_FACTOR), roomLeft));
+  };
+  const clamp = (col, value) => Math.min(maxFor(col), Math.max(col.minWidth || MIN_WIDTH, Math.round(value)));
+
   const onPointerMove = useCallback((e) => {
     const d = drag.current;
     if (!d) return;
-    const next = Math.max(d.min, Math.round(d.startWidth + (e.clientX - d.startX)));
-    setWidths((w) => (w[d.key] === next ? w : { ...w, [d.key]: next }));
+    const next = Math.min(d.max, Math.max(d.min, Math.round(d.startWidth + (e.clientX - d.startX))));
+    setSaved((w) => (w[d.key] === next ? w : { ...w, [d.key]: next }));
   }, []);
   const onPointerUp = useCallback(() => {
     if (!drag.current) return;
     drag.current = null;
     setDragging(null);
-    setWidths((w) => { saveWidths(type, w); return w; });
+    setSaved((w) => { saveWidths(type, w); return w; });
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerup", onPointerUp);
   }, [onPointerMove, type]);
@@ -116,8 +165,7 @@ export default function ReportsTable({
 
   const startResize = (col, e) => {
     e.preventDefault();
-    const th = e.currentTarget.parentElement;
-    drag.current = { key: col.key, startX: e.clientX, startWidth: th.getBoundingClientRect().width, min: col.minWidth || MIN_WIDTH };
+    drag.current = { key: col.key, startX: e.clientX, startWidth: widths[col.key], min: col.minWidth || MIN_WIDTH, max: maxFor(col) };
     setDragging(col.key);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
@@ -127,41 +175,45 @@ export default function ReportsTable({
   const nudge = (col, e) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
-    const current = widthOf(col) || e.currentTarget.parentElement.getBoundingClientRect().width;
-    const next = Math.max(col.minWidth || MIN_WIDTH, Math.round(current + (e.key === "ArrowRight" ? 16 : -16)));
-    const updated = { ...widths, [col.key]: next };
-    setWidths(updated);
+    const next = clamp(col, widths[col.key] + (e.key === "ArrowRight" ? 16 : -16));
+    const updated = { ...saved, [col.key]: next };
+    setSaved(updated);
     saveWidths(type, updated);
   };
 
   const span = columns.length + 3; // accent + columns + actions + toggle
+  const asCards = room > 0 && room <= CARDS_BELOW;
 
   return (
-    <div className="rt-wrap">
+    <div className="rt-wrap" ref={wrapRef}>
       <style>{STYLE}</style>
       <div className="rt-box">
         <table className="rt">
           <colgroup>
             <col style={{ width: ACCENT_WIDTH }} />
-            {columns.map((col) => <col key={col.key} style={{ width: widthOf(col) }} />)}
-            <col style={{ width: widths.actions || actionsWidth }} />
+            {allCols.map((col) => <col key={col.key} style={col.flex ? undefined : { width: widths[col.key] }} />)}
             <col style={{ width: TOGGLE_WIDTH }} />
           </colgroup>
           <thead>
             <tr>
               <th className="rt-accent" aria-hidden="true"></th>
-              {[...columns, { key: "actions", label: "Actions", minWidth: 150 }].map((col) => (
+              {allCols.map((col) => (
                 <th key={col.key} scope="col">
                   {tx(col.label)}
-                  <span
-                    role="separator"
-                    aria-orientation="vertical"
-                    aria-label={tx("Resize the {{column}} column", { column: tx(col.label) })}
-                    tabIndex={0}
-                    className={`rt-resize${dragging === col.key ? " dragging" : ""}`}
-                    onPointerDown={(e) => startResize(col, e)}
-                    onKeyDown={(e) => nudge(col, e)}
-                  />
+                  {!col.flex && !asCards && (
+                    <span
+                      role="separator"
+                      aria-orientation="vertical"
+                      aria-label={tx("Resize the {{column}} column", { column: tx(col.label) })}
+                      aria-valuenow={widths[col.key]}
+                      aria-valuemin={col.minWidth || MIN_WIDTH}
+                      aria-valuemax={maxFor(col)}
+                      tabIndex={0}
+                      className={`rt-resize${dragging === col.key ? " dragging" : ""}`}
+                      onPointerDown={(e) => startResize(col, e)}
+                      onKeyDown={(e) => nudge(col, e)}
+                    />
+                  )}
                 </th>
               ))}
               <th scope="col"><span className="visually-hidden">{tx("Details")}</span></th>
@@ -207,4 +259,14 @@ export default function ReportsTable({
 // A status pill in the cards' colors.
 export const StatusPill = ({ badge }) => (
   <span className="rt-pill" style={{ background: badge.bg, color: badge.color }}>{tx(badge.text)}</span>
+);
+
+// The first column: the report ID small above the person's name, and the
+// "For …" tag when it was filed for someone else.
+export const PersonCell = ({ report, name, tag }) => (
+  <>
+    <span className="rt-id">{report.reference || `#${report.id}`}</span>
+    <span className="rt-name">{name}</span>
+    {tag}
+  </>
 );

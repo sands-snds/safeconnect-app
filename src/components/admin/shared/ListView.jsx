@@ -22,6 +22,9 @@ const ListView = ({
   // layout "custom": renderTable(visibleData) draws this page's rows itself
   // (the report tabs' ReportsTable).
   renderTable,
+  // Cards layout: drawn first in the list, on the first page (Announcements'
+  // pinned Facebook page card).
+  leadingItem,
   statusOptions,
 
   layout = 'table',
@@ -186,6 +189,7 @@ const ListView = ({
       ) : layout === 'cards' ? (
         <div>
           <div className="lv-cards" style={cardsContainerStyle}>
+            {currentPage === 1 && leadingItem}
             {visibleData.map(item => renderRow(item))}
           </div>
 

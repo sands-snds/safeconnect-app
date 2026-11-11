@@ -6,7 +6,7 @@ import AssistanceRequestDetails from "./AssistanceRequestDetails";
 import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
 import DismissalNote from "../shared/DismissalNote";
-import ReportsTable, { StatusPill } from "../shared/ReportsTable";
+import ReportsTable, { StatusPill, PersonCell } from "../shared/ReportsTable";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
@@ -17,8 +17,13 @@ const STATUS_OPTIONS = [
   "Dismissed"
 ];
 
+// The person first, with the report ID small above the name. Location takes
+// whatever width is left (flex), so the table always fits.
 const COLUMNS = [
-  { key: "id", label: "Report ID", width: 150, render: (r) => <span className="rt-id">{r.reference || `#${r.id}`}</span> },
+  {
+    key: "requester", label: "Requester", width: 190,
+    render: (r) => <PersonCell report={r} name={r.requester} tag={<ReportForTag report={r} />} />
+  },
   {
     key: "help", label: "Help needed", width: 190,
     render: (r) => (
@@ -28,16 +33,7 @@ const COLUMNS = [
       </>
     )
   },
-  {
-    key: "requester", label: "Requester", width: 170,
-    render: (r) => (
-      <>
-        <div>{r.requester}</div>
-        <ReportForTag report={r} />
-      </>
-    )
-  },
-  { key: "location", label: "Location", width: 240, render: (r) => r.location },
+  { key: "location", label: "Location", flex: true, render: (r) => r.location },
   { key: "people", label: "People", width: 80, render: (r) => r.peopleAffected || 1 },
   { key: "filed", label: "Filed", width: 150, render: (r) => <span className="rt-muted">{r.date}</span> },
   { key: "status", label: "Status", width: 120, render: (r) => <StatusPill badge={statusBadge(r.status)} /> }

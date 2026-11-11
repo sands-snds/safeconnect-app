@@ -21,11 +21,12 @@ const renderTable = () => render(
 
 beforeEach(() => localStorage.clear());
 
-test('a table with REPORT ID first and the reports in rows', () => {
+test('the reporter comes first, with the report ID above the name; no separate ID column', () => {
   renderTable();
   const heads = screen.getAllByRole('columnheader').map((h) => h.textContent.trim()).filter(Boolean);
-  expect(heads).toEqual(['Report ID', 'Type', 'Reporter', 'Location', 'People', 'Filed', 'Status', 'Actions', 'Details']);
-  expect(screen.getByText('EM-2026-000041')).toBeInTheDocument();
+  expect(heads).toEqual(['Reporter', 'Type', 'Location', 'People', 'Filed', 'Status', 'Actions', 'Details']);
+  const cell = screen.getByText('EM-2026-000041').closest('td');
+  expect(within(cell).getByText('Juan Dela Cruz')).toBeInTheDocument();
 });
 
 test('rows keep "Move to …"; Dismiss is inside View details', () => {
@@ -35,17 +36,23 @@ test('rows keep "Move to …"; Dismiss is inside View details', () => {
   expect(within(row).queryByRole('button', { name: /Dismiss/ })).toBeNull();
 
   fireEvent.click(within(row).getByRole('button', { name: /View details/ }));
-  expect(screen.getByText('Report details here')).toBeInTheDocument();
   const details = screen.getByText('Report details here').closest('tr');
   expect(within(details).getByRole('button', { name: /Dismiss/ })).toBeInTheDocument();
 });
 
-test('a column can be resized (here with the keyboard) and is remembered', () => {
+test('Location takes the leftover space, so it has no resize handle', () => {
+  renderTable();
+  expect(screen.queryByRole('separator', { name: 'Resize the Location column' })).toBeNull();
+});
+
+test('a column can be resized, is remembered, and stops at its limit', () => {
   const { container } = renderTable();
-  const handle = screen.getByRole('separator', { name: 'Resize the Location column' });
+  const handle = screen.getByRole('separator', { name: 'Resize the Type column' });
   fireEvent.keyDown(handle, { key: 'ArrowRight' });
-  const cols = container.querySelectorAll('colgroup col');
-  // accent, Report ID, Type, Reporter, Location…
-  expect(cols[4].style.width).toBe('256px');
-  expect(JSON.parse(localStorage.getItem('sc_report_columns_emergency')).location).toBe(256);
+  const typeCol = container.querySelectorAll('colgroup col')[2]; // accent, Reporter, Type
+  expect(typeCol.style.width).toBe('166px');
+  expect(JSON.parse(localStorage.getItem('sc_report_columns_emergency')).type).toBe(166);
+
+  for (let i = 0; i < 40; i += 1) fireEvent.keyDown(handle, { key: 'ArrowRight' });
+  expect(typeCol.style.width).toBe('375px'); // 2½ × its normal 150 px
 });

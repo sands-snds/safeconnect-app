@@ -39,6 +39,20 @@
   display: none;
 }
 
+/* Collapsed (AdminSidebar's collapse button): icons only */
+.desktop-sidebar {
+  transition: width .2s ease;
+}
+
+.desktop-sidebar.collapsed {
+  width: 72px;
+}
+
+.desktop-sidebar button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
 .mobile-menu-overlay {
   position: fixed;
   top: 0;

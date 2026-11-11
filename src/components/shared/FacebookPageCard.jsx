@@ -21,7 +21,9 @@ export function useFacebookCard() {
 }
 
 const STYLE = `
-  .fb-card { display: flex; align-items: center; gap: 14px; padding: 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+  .fb-card-frame { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.05); overflow: hidden; }
+  .fb-card { display: flex; align-items: center; gap: 14px; padding: 12px; }
+  .fb-card-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-top: 1px solid #f3f4f6; background: #faf8f9; }
   .fb-card.off { opacity: .55; }
   .fb-card-img { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: #f3f4f6; }
   .fb-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -38,21 +40,25 @@ const STYLE = `
 `;
 
 // labels: { kicker, title, subtitle, visit }. off: drawn faded (the admin's
-// view of a hidden card).
-export default function FacebookPageCard({ card, labels, off = false }) {
+// view of a hidden card). footer: controls shown in a strip at the bottom of
+// the same card (the admin's On / Off and Change picture).
+export default function FacebookPageCard({ card, labels, off = false, footer = null }) {
   if (!card) return null;
   return (
-    <div className={`fb-card${off ? ' off' : ''}`}>
+    <div className="fb-card-frame">
       <style>{STYLE}</style>
-      <img className="fb-card-img" src={card.imageUrl} alt="" loading="lazy" />
-      <div className="fb-card-text">
-        <span className="fb-card-kicker"><i className="bi bi-facebook" aria-hidden="true"></i> {labels.kicker}</span>
-        <p className="fb-card-title">{labels.title}</p>
-        <p className="fb-card-sub">{labels.subtitle}</p>
+      <div className={`fb-card${off ? ' off' : ''}`}>
+        <img className="fb-card-img" src={card.imageUrl} alt="" loading="lazy" />
+        <div className="fb-card-text">
+          <span className="fb-card-kicker"><i className="bi bi-facebook" aria-hidden="true"></i> {labels.kicker}</span>
+          <p className="fb-card-title">{labels.title}</p>
+          <p className="fb-card-sub">{labels.subtitle}</p>
+        </div>
+        <a className="fb-card-go" href={card.pageUrl} target="_blank" rel="noopener noreferrer">
+          {labels.visit} <i className="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+        </a>
       </div>
-      <a className="fb-card-go" href={card.pageUrl} target="_blank" rel="noopener noreferrer">
-        {labels.visit} <i className="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-      </a>
+      {footer && <div className="fb-card-footer">{footer}</div>}
     </div>
   );
 }

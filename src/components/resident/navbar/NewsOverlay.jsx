@@ -195,19 +195,6 @@ const NewsOverlay = ({
                         )}
 
                         <div className="news-feed">
-                            {showFacebook && (
-                                <div className="news-facebook" style={{ marginBottom: 14 }}>
-                                    <FacebookPageCard
-                                        card={facebookCard}
-                                        labels={{
-                                            kicker: t('news.facebookKicker'),
-                                            title: t('news.facebookTitle'),
-                                            subtitle: t('news.facebookSubtitle'),
-                                            visit: t('news.facebookVisit')
-                                        }}
-                                    />
-                                </div>
-                            )}
                             {filtering && visible.length === 0 && (
                                 <div className="news-state-message news-no-match">
                                     <i className="bi bi-search" aria-hidden="true" />
@@ -237,6 +224,18 @@ const NewsOverlay = ({
                             )}
 
                             <div className="news-list">
+                                {/* The barangay's Facebook page: always the first item. */}
+                                {showFacebook && (
+                                    <FacebookPageCard
+                                        card={facebookCard}
+                                        labels={{
+                                            kicker: t('news.facebookKicker'),
+                                            title: t('news.facebookTitle'),
+                                            subtitle: t('news.facebookSubtitle'),
+                                            visit: t('news.facebookVisit')
+                                        }}
+                                    />
+                                )}
                                 {visible.map((item, index) => (
                                     <AnnouncementCard
                                         key={item.id}
