@@ -11,7 +11,7 @@ jest.mock('../shared/media/mediaCheck', () => ({
   checkMediaFile: () => Promise.resolve({ ok: true, takenAt: new Date(), dayOld: false })
 }));
 
-jest.mock('../shared/location/LocationPickerMap', () => () => <div data-testid="map" />);
+jest.mock('../shared/location/LocationPickerMap', () => ({ pin }) => <div data-testid="map" data-pin={pin ? `${pin.lat},${pin.lng}` : 'none'} />);
 // GPS: a pin inside Santa Fe unless a test turns it off.
 let mockPinned = true;
 jest.mock('../shared/location/useLocationPin', () => () => ({
@@ -118,6 +118,18 @@ test('no GPS: for me, the registered home address is used', async () => {
   fireEvent.click(sendButton());
   await waitFor(() => expect(createEmergencyReport).toHaveBeenCalledTimes(1));
   expect(createEmergencyReport.mock.calls[0][0]).toMatchObject({ location: 'Blk 5 Lot 12, Sampaguita St.', latitude: 14.321, longitude: 120.964 });
+});
+
+test('no GPS, for me: the map shows the saved home pin (the same one as sign-up and Settings)', () => {
+  mockPinned = false;
+  sessionStorage.setItem('currentUser', JSON.stringify({
+    id: 7, fullName: 'Juan Dela Cruz', contact: '09171234567',
+    address: { houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.' }, homeLocation: { lat: 14.3195, lng: 120.964 }
+  }));
+  renderForm();
+  fireEvent.click(screen.getByText('Earthquake').closest('button'));
+  fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+  expect(screen.getByTestId('map')).toHaveAttribute('data-pin', '14.3195,120.964');
 });
 
 test('no GPS and reporting for someone else: the map opens to pin the spot', () => {

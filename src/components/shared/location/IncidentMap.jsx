@@ -26,6 +26,7 @@ const STYLE = `
   @keyframes im-ping { 0% { transform: scale(.7); opacity: .9; } 100% { transform: scale(2.4); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .im-mk.open .im-ring { animation: none; opacity: .55; transform: scale(1.5); } }
   .im-icon { background: none; border: 0; }
+  .im-home { width: 30px; height: 30px; border-radius: 8px; background: #fff; color: var(--c); border: 2.5px solid var(--c); display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
   .im-popup .leaflet-popup-content-wrapper { border-radius: 12px; }
   .im-popup .leaflet-popup-content { margin: 12px 14px; min-width: 220px; font-family: inherit; }
 `;
@@ -43,6 +44,15 @@ const markerIcon = (report, selected) => {
       + `<span class="im-dot"><i class="bi ${t.icon}" aria-hidden="true"></i></span></span>`
   });
 };
+
+// The resident's home (the pin from sign-up / Settings).
+export const HOME_COLOR = '#0f766e';
+const HOME_ICON = L.divIcon({
+  className: 'im-icon',
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+  html: `<span class="im-home" style="--c:${HOME_COLOR}"><i class="bi bi-house-heart-fill" aria-hidden="true"></i></span>`
+});
 
 // Fire on top, then the other open reports, resolved ones underneath.
 const Z_ORDER = { fire: 600, quake: 500, flood: 400, typhoon: 300, emergency: 350, assist: 200, crime: 100 };
@@ -72,7 +82,8 @@ function FollowSelection({ selectedKey, markers }) {
 
 // placeAll: also look up the address of finished reports without a pin (the
 // resident's own map shows every report; the staff map only the open ones).
-export default function IncidentMap({ reports, selectedKey, onSelect, renderPopup, height = 470, label = 'Map of Barangay Santa Fe', placeAll = false }) {
+// home: { lat, lng, label } shows the resident's home pin (Your Reports on the Map).
+export default function IncidentMap({ reports, selectedKey, onSelect, renderPopup, height = 470, label = 'Map of Barangay Santa Fe', placeAll = false, home = null }) {
   const [basemap, setBasemap] = useState('satellite'); // satellite first; Map is one tap away
   const [found, setFound] = useState({});
   const markers = useRef({});
@@ -119,6 +130,9 @@ export default function IncidentMap({ reports, selectedKey, onSelect, renderPopu
           referrerPolicy="strict-origin-when-cross-origin"
         />
         <Polygon positions={SANTA_FE_BOUNDARY} pathOptions={boundaryStyle} interactive={false} />
+        {home && (
+          <Marker position={[home.lat, home.lng]} icon={HOME_ICON} zIndexOffset={-100} title={home.label} keyboard={false} />
+        )}
         {placed.map((r) => (
           <Marker
             key={r.key}

@@ -39,8 +39,3 @@ test('zooming out stops when the whole barangay fits; zooming in is not limited'
   expect(fakeMap.setZoom).toHaveBeenCalledWith(15); // was zoomed out further
   expect(fakeMap.options.maxZoom).toBeUndefined();
 });
-
-test('a GPS pin outside Santa Fe stays reachable, so the resident can see why it is refused', () => {
-  render(<LimitToSantaFe include={{ lat: FAR[0], lng: FAR[1] }} />);
-  expect(area().contains(FAR)).toBe(true);
-});

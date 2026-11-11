@@ -7,22 +7,17 @@ import { SANTA_FE_BOUNDARY } from './santaFeArea';
 
 const SANTA_FE_BOUNDS = L.latLngBounds(SANTA_FE_BOUNDARY);
 
-// The map stays on Barangay Santa Fe: it can't be dragged away from the
+// Every map stays on Barangay Santa Fe: it can't be dragged away from the
 // barangay (a small margin keeps the boundary line off the edge), and zooming
 // out stops once the whole barangay fits. Zooming in works as usual. The fit
 // is worked out from the map's size, so it also fits phones, and recalculated
-// when the map is resized.
-// include: a point that must stay reachable even though it is outside the
-// barangay (a GPS pin outside Santa Fe, so the resident can see why it's
-// refused); the limit then stretches just enough to take it in.
+// when the map is resized. A GPS pin outside Santa Fe stays out of view; the
+// form says why it can't be used.
 const MARGIN = 0.08;
-export function LimitToSantaFe({ include = null } = {}) {
+export function LimitToSantaFe() {
   const map = useMap();
-  const lat = include ? Number(include.lat) : null;
-  const lng = include ? Number(include.lng) : null;
   useEffect(() => {
     const area = L.latLngBounds(SANTA_FE_BOUNDARY).pad(MARGIN);
-    if (Number.isFinite(lat) && Number.isFinite(lng) && !area.contains([lat, lng])) area.extend([lat, lng]);
     map.options.maxBoundsViscosity = 1.0; // a hard edge, not a rubber band
     map.setMaxBounds(area);
     const apply = () => {
@@ -35,7 +30,7 @@ export function LimitToSantaFe({ include = null } = {}) {
     apply();
     map.on('resize', apply);
     return () => { map.off('resize', apply); };
-  }, [map, lat, lng]);
+  }, [map]);
   return null;
 }
 

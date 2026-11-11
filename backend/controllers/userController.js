@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const { parseAddress } = require("../utils/address");
+const { parseHomePin } = require("../utils/homePin");
+const { homePinOf } = require("../utils/homeCoords");
 const RememberedLogin = require("../models/RememberedLogin");
 const { generateToken } = require("../utils/jwt");
 const { passwordProblem, fullNameProblem, normalizeName } = require("../utils/validation");
@@ -207,12 +209,20 @@ exports.updateContact = async (req, res) => {
 };
 
 // PATCH /users/:id/address { address: { houseNumber, street, area } }
+// PATCH /users/:id/address  { address, homeLocation? }
+// The home address and, when sent, the home pin on the map (the same one as
+// the sign-up form; reports made at home use it). Both are checked first.
 exports.updateAddress = async (req, res) => {
     try {
         const home = parseAddress(req.body.address);
         if (home.error) return res.status(400).json({ success: false, message: home.error });
+        const sentPin = req.body.homeLocation !== undefined;
+        const pin = sentPin ? parseHomePin(req.body.homeLocation) : null;
+        if (pin && pin.error) return res.status(400).json({ success: false, code: "INVALID_HOME_PIN", message: pin.error });
         await User.updateAddress(req.params.id, home.address);
-        return res.json({ success: true, address: home.address });
+        if (pin) await User.updateHomeLocation(req.params.id, pin.pin);
+        const saved = await User.findById(req.params.id);
+        return res.json({ success: true, address: home.address, homeLocation: homePinOf(saved) });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ success: false, message: "Failed to update your address." });

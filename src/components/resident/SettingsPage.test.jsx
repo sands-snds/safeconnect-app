@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import SettingsPage from './SettingsPage';
 import { LanguageProvider } from '../../i18n/LanguageContext';
 import {
-  fetchUserProfile, updateFullName, updateUsername, updateContact, updateEmail, changePassword, uploadProfilePhoto
+  fetchUserProfile, updateFullName, updateUsername, updateContact, updateEmail, changePassword, uploadProfilePhoto, updateAddress
 } from '../../Services/api';
 
 jest.mock('../../Services/api', () => ({
@@ -12,7 +12,21 @@ jest.mock('../../Services/api', () => ({
   updateContact: jest.fn(),
   updateEmail: jest.fn(),
   changePassword: jest.fn(),
-  uploadProfilePhoto: jest.fn()
+  uploadProfilePhoto: jest.fn(),
+  updateAddress: jest.fn()
+}));
+// The home map (Leaflet doesn't load under Jest): shows its pin, and its
+// buttons pin a spot in Santa Fe or one outside it.
+jest.mock('../shared/location/LocationPickerMap', () => function MockPickerMap({ pin, onPick, isOutside }) {
+  const React = require('react');
+  return React.createElement('div', { 'data-testid': 'home-map', 'data-pin': pin ? `${pin.lat},${pin.lng}` : 'none' },
+    React.createElement('button', { type: 'button', onClick: () => onPick(14.3195, 120.964) }, 'move pin'),
+    React.createElement('button', { type: 'button', onClick: () => onPick(14.5995, 120.9842) }, 'pin outside'),
+    isOutside ? React.createElement('span', null, 'outside') : null);
+});
+jest.mock('../shared/location/geocode', () => ({
+  reverseGeocode: () => Promise.resolve({ houseNumber: '', street: '' }),
+  forwardGeocode: () => Promise.resolve(null)
 }));
 
 const ROW = {
@@ -161,6 +175,66 @@ describe('Contact details', () => {
     await waitFor(() => expect(updateEmail).toHaveBeenCalledWith(7, 'new@example.com', 'Secret123!'));
     expect(updateContact).toHaveBeenCalledWith(7, '+639987654321');
     expect(await screen.findByText('Your contact details have been updated.')).toBeInTheDocument();
+  });
+});
+
+describe('Home address and the home pin on the map', () => {
+  const HOME_ROW = {
+    ...ROW,
+    address_house_number: 'Blk 5 Lot 12', address_street: 'Sampaguita St.', address_area: 'Villa Santa Fe',
+    home_latitude: '14.3203000', home_longitude: '120.9648000'
+  };
+  const openContact = async () => {
+    fetchUserProfile.mockResolvedValue(HOME_ROW);
+    await renderSettings();
+    fireEvent.click(screen.getByRole('button', { name: /Contact details/ }));
+  };
+  const save = () => screen.getByRole('button', { name: /Save/ });
+
+  test('there is no Subdivision box any more; the map shows the saved pin', async () => {
+    await openContact();
+    expect(screen.queryByLabelText(/Subdivision/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('House / Lot / Block No.')).toHaveValue('Blk 5 Lot 12');
+    expect(screen.getByText('Your home on the map')).toBeInTheDocument();
+    expect(screen.getByTestId('home-map')).toHaveAttribute('data-pin', '14.3203,120.9648');
+    expect(screen.getByRole('button', { name: /Use my current location/ })).toBeInTheDocument();
+    expect(save()).toBeDisabled();
+  });
+
+  test('moving the pin saves it, and the new spot is used everywhere (the signed-in account)', async () => {
+    updateAddress.mockResolvedValue({ success: true, address: { houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.', area: 'Villa Santa Fe' }, homeLocation: { lat: 14.3195, lng: 120.964 } });
+    await openContact();
+    fireEvent.click(screen.getByRole('button', { name: 'move pin' }));
+    expect(save()).not.toBeDisabled();
+    fireEvent.click(save());
+    await waitFor(() => expect(updateAddress).toHaveBeenCalledTimes(1));
+    expect(updateAddress).toHaveBeenCalledWith(7, { houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.', area: 'Villa Santa Fe' }, { lat: 14.3195, lng: 120.964 });
+    await waitFor(() => expect(onProfileUpdate).toHaveBeenCalledWith(expect.objectContaining({ homeLocation: { lat: 14.3195, lng: 120.964 } })));
+  });
+
+  test('a pin outside Santa Fe is not saved', async () => {
+    await openContact();
+    fireEvent.click(screen.getByRole('button', { name: 'pin outside' }));
+    fireEvent.click(save());
+    expect(await screen.findByRole('alert')).toHaveTextContent(/outside Barangay Sta. Fe/);
+    expect(updateAddress).not.toHaveBeenCalled();
+  });
+
+  test('changing only the address keeps the pin and the old subdivision', async () => {
+    updateAddress.mockResolvedValue({ success: true, address: { houseNumber: 'Blk 6 Lot 1', street: 'Sampaguita St.', area: 'Villa Santa Fe' }, homeLocation: { lat: 14.3203, lng: 120.9648 } });
+    await openContact();
+    fireEvent.change(screen.getByLabelText('House / Lot / Block No.'), { target: { value: 'Blk 6 Lot 1' } });
+    fireEvent.click(save());
+    await waitFor(() => expect(updateAddress).toHaveBeenCalledTimes(1));
+    expect(updateAddress).toHaveBeenCalledWith(7, { houseNumber: 'Blk 6 Lot 1', street: 'Sampaguita St.', area: 'Villa Santa Fe' }, undefined);
+  });
+
+  test('Cancel puts the saved pin back', async () => {
+    await openContact();
+    fireEvent.click(screen.getByRole('button', { name: 'move pin' }));
+    expect(screen.getByTestId('home-map')).toHaveAttribute('data-pin', '14.3195,120.964');
+    fireEvent.click(screen.getByRole('button', { name: /Cancel/ }));
+    expect(screen.getByTestId('home-map')).toHaveAttribute('data-pin', '14.3203,120.9648');
   });
 });
 

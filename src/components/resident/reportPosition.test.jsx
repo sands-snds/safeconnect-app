@@ -22,9 +22,9 @@ jest.mock('../../Services/api', () => ({
   saveLanguagePreference: jest.fn()
 }));
 // The map itself (Leaflet doesn't load under Jest): lists what it was given.
-jest.mock('../shared/location/IncidentMap', () => function MockIncidentMap({ reports, placeAll }) {
+jest.mock('../shared/location/IncidentMap', () => function MockIncidentMap({ reports, placeAll, home }) {
   const React = require('react');
-  return React.createElement('ul', { 'data-testid': 'map', 'data-place-all': String(Boolean(placeAll)) },
+  return React.createElement('ul', { 'data-testid': 'map', 'data-place-all': String(Boolean(placeAll)), 'data-home': home ? `${home.lat},${home.lng}` : 'none' },
     reports.map((r) => React.createElement('li', { key: r.key, 'data-status': r.status, 'data-pos': r.position ? `${r.position[0] ?? r.position.lat},${r.position[1] ?? r.position.lng}` : 'none' }, r.title)));
 });
 
@@ -90,6 +90,8 @@ describe('Your Reports on the Map', () => {
     expect(items.Vandalism.status).toBe('Dismissed');
     expect(screen.getByTestId('map').dataset.placeAll).toBe('true'); // any still without a place is looked up
     expect(screen.getByText('Resolved or dismissed')).toBeInTheDocument();
+    expect(screen.getByTestId('map').dataset.home).toBe('14.3203,120.9648'); // the saved home pin
+    expect(screen.getByText('Your home')).toBeInTheDocument();
   });
 
   test('only the reports the resident archived are left off', async () => {

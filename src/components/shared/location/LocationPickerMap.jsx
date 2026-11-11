@@ -155,7 +155,7 @@ const LocationPickerMap = ({
           )}
           {!readOnly && <ClickToPin onPick={onPick} disabled={!canPick} />}
           <FollowPin pin={pin} />
-          <LimitToSantaFe include={isOutside ? pin : null} />
+          <LimitToSantaFe />
         </MapContainer>
 
         

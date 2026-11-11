@@ -251,11 +251,12 @@ export const updateContact = async (userId, contact) => {
 };
 
 // address: { houseNumber, street, area } in Barangay Santa Fe
-export const updateAddress = async (userId, address) => {
+// homeLocation ({ lat, lng }): the home pin, sent only when it changed.
+export const updateAddress = async (userId, address, homeLocation) => {
     const res = await apiFetch(`${API_ENDPOINTS.USERS}/${userId}/address`, {
         method: "PATCH",
         headers: authHeaders(),
-        body: JSON.stringify({ address }),
+        body: JSON.stringify(homeLocation ? { address, homeLocation } : { address }),
     });
     return res.json();
 };

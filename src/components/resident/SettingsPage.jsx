@@ -14,6 +14,8 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import PhotoCropModal from '../shared/PhotoCropModal';
 import { useInstallApp } from '../shared/installApp';
 import { ageFrom, formatBirthdate } from '../shared/birthdate';
+import LocationPickerMap from '../shared/location/LocationPickerMap';
+import useLocationPin from '../shared/location/useLocationPin';
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024; 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -101,7 +103,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   // Home address in Santa Fe (filled into reports made for yourself)
   const [addrHouse, setAddrHouse] = useState('');
   const [addrStreet, setAddrStreet] = useState('');
-  const [addrArea, setAddrArea] = useState('');
+  // The home pin on the map: the same one as the sign-up form; reports made
+  // at home use it, and it shows on Your Reports on the Map.
+  const homePin = useLocationPin();
   const [savingContact, setSavingContact] = useState(false);
   const [contactMessage, setContactMessage] = useState(null);
 
@@ -125,7 +129,8 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     setContactInput(stripPhonePrefix(p?.contact));
     setAddrHouse(p?.address?.houseNumber || '');
     setAddrStreet(p?.address?.street || '');
-    setAddrArea(p?.address?.area || '');
+    homePin.setGpsCoords(p?.homeLocation || null);
+    homePin.setLocationError('');
   };
 
   const loadProfile = async () => {
@@ -145,6 +150,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         birthdate: result.birthdate || null,
         address: result.address_house_number || result.address_street
           ? { houseNumber: result.address_house_number || '', street: result.address_street || '', area: result.address_area || '' }
+          : null,
+        homeLocation: result.home_latitude != null && result.home_longitude != null
+          ? { lat: Number(result.home_latitude), lng: Number(result.home_longitude) }
           : null
       } : (user || null);
 
@@ -154,7 +162,8 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
       if (mapped?.id) {
         onProfileUpdate?.({
           fullName: mapped.fullName, username: mapped.username, email: mapped.email,
-          contact: mapped.contact, photoUrl: mapped.photoUrl, address: mapped.address
+          contact: mapped.contact, photoUrl: mapped.photoUrl, address: mapped.address,
+          homeLocation: mapped.homeLocation
         });
       }
     } catch {
@@ -253,9 +262,13 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
   const fullContact = contactInput ? `+63${contactInput}` : '';
   const contactChanged = fullContact !== (profile?.contact || '') && stripPhonePrefix(profile?.contact) !== contactInput;
   const savedAddress = profile?.address || {};
+  const savedPin = profile?.homeLocation || null;
+  const pinNow = homePin.gpsCoords;
+  const pinChanged = Boolean(pinNow) && (!savedPin
+    || Math.abs(pinNow.lat - savedPin.lat) > 1e-7 || Math.abs(pinNow.lng - savedPin.lng) > 1e-7);
   const addressChanged = addrHouse.trim() !== (savedAddress.houseNumber || '')
     || addrStreet.trim() !== (savedAddress.street || '')
-    || addrArea.trim() !== (savedAddress.area || '');
+    || pinChanged;
   const contactDirty = emailChanged || contactChanged || addressChanged;
 
   const handleSaveContact = async (e) => {
@@ -273,6 +286,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
     if (addressChanged && (!addrHouse.trim() || !addrStreet.trim())) {
       setContactMessage({ type: 'error', text: t('settings.addressRequired') }); return;
     }
+    if (pinChanged && homePin.isOutsideSantaFe) {
+      setContactMessage({ type: 'error', text: t('signUp.homePinOutside') }); return;
+    }
 
     setSavingContact(true);
     try {
@@ -283,8 +299,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         updates.contact = fullContact;
       }
       if (addressChanged) {
-        const address = { houseNumber: addrHouse.trim(), street: addrStreet.trim(), area: addrArea.trim() };
-        const result = await updateAddress(user.id, address);
+        // The subdivision isn't asked for any more; one saved before is kept.
+        const address = { houseNumber: addrHouse.trim(), street: addrStreet.trim(), area: savedAddress.area || '' };
+        const result = await updateAddress(user.id, address, pinChanged ? pinNow : undefined);
         if (!result.success) {
           if (Object.keys(updates).length) {
             setProfile((p) => ({ ...p, ...updates }));
@@ -294,6 +311,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
           return;
         }
         updates.address = result.address || address;
+        updates.homeLocation = result.homeLocation || (pinChanged ? pinNow : savedPin);
       }
       if (emailChanged) {
         const result = await updateEmail(user.id, email, emailPassword);
@@ -438,6 +456,19 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         .st-panel-sub { margin: 4px 0 1.5rem; font-size: 0.88rem; color: #6b7280; line-height: 1.5; }
         .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
         .st-subhead { margin: 1.25rem 0 0; padding-top: 1.25rem; border-top: 1px solid #f0eaec; font-size: 1rem; font-weight: 700; color: #1f2937; }
+        /* The home pin on the map (Contact details) */
+        .st-pin { margin-top: 14px; }
+        .st-pin-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+        .st-pin-head label { margin: 0; }
+        .st-pin-locate { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid #6B2C3E; background: #fff; color: #6B2C3E; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .st-pin-locate:hover:not(:disabled) { background: #6B2C3E; color: #fff; }
+        .st-pin-locate:disabled { opacity: .6; cursor: not-allowed; }
+        .st-pin-locate:focus-visible { outline: 3px solid rgba(107, 44, 62, 0.35); outline-offset: 2px; }
+        .st-pin-spin { animation: st-pin-spin 0.8s linear infinite; }
+        @keyframes st-pin-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .st-pin-spin { animation: none; } }
+        .st-pin-sub { margin: 4px 0 0; font-size: 0.82rem; color: #6b7280; line-height: 1.45; }
+        .st-pin-note { margin: 6px 0 0; font-size: 0.8rem; color: #b45309; }
         .st-optional { font-weight: 400; color: #9ca3af; }
         .st-field { margin-bottom: 1.1rem; }
         .st-field label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: #374151; }
@@ -615,14 +646,31 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                         value={addrStreet} onChange={(e) => setAddrStreet(e.target.value)} disabled={loadingProfile} placeholder={t('signUp.addressStreetPlaceholder')} />
                     </div>
                     <div className="st-field">
-                      <label htmlFor="settings-addr-area">{t('signUp.addressArea')} <span className="st-optional">{t('signUp.optional')}</span></label>
-                      <input id="settings-addr-area" className="st-input" type="text" maxLength={120}
-                        value={addrArea} onChange={(e) => setAddrArea(e.target.value)} disabled={loadingProfile} placeholder={t('signUp.addressAreaPlaceholder')} />
-                    </div>
-                    <div className="st-field">
                       <label htmlFor="settings-addr-fixed">{t('signUp.addressBarangay')}</label>
                       <input id="settings-addr-fixed" className="st-input" type="text" value={t('signUp.addressBarangayValue')} readOnly disabled />
                     </div>
+                  </div>
+                  <div className="st-field st-pin" role="group" aria-labelledby="settings-home-pin">
+                    <div className="st-pin-head">
+                      <label id="settings-home-pin">{t('signUp.homePin')}</label>
+                      <button type="button" className="st-pin-locate" onClick={homePin.handleUseCurrentLocation} disabled={homePin.isLocating || loadingProfile || savingContact}>
+                        <i className={`bi ${homePin.isLocating ? 'bi-arrow-repeat st-pin-spin' : 'bi-crosshair'}`} aria-hidden="true"></i>
+                        {homePin.isLocating ? t('reportForm.locating') : t('reportForm.useCurrentLocation')}
+                      </button>
+                    </div>
+                    <p className="st-pin-sub">{t('settings.homePinSub')}</p>
+                    {isOpen && section === 'contact' && (
+                      <LocationPickerMap
+                        pin={homePin.gpsCoords}
+                        onPick={homePin.handlePickOnMap}
+                        isOutside={homePin.isOutsideSantaFe}
+                        disabled={loadingProfile || savingContact}
+                        height={260}
+                        streetView={false}
+                        notes={{ outside: t('signUp.homePinOutside'), pinned: t('signUp.homePinPinned'), empty: t('settings.homePinNone') }}
+                      />
+                    )}
+                    {homePin.locationError && <p className="st-pin-note" role="status"><i className="bi bi-info-circle" aria-hidden="true"></i> {homePin.locationError}</p>}
                   </div>
                   {emailChanged && (
                     <div className="st-reveal">

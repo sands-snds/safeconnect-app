@@ -39,6 +39,21 @@ export const registeredHomePin = (formData) => {
   }
 };
 
+// The resident's saved home pin (sign-up map / Settings), or null. Every
+// map and report form reads it from here, so they all show the same spot.
+export const savedHomePin = () => {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    const user = raw && raw.user ? raw.user : raw;
+    const pin = user && user.homeLocation;
+    const lat = Number(pin && pin.lat);
+    const lng = Number(pin && pin.lng);
+    return pin && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  } catch {
+    return null;
+  }
+};
+
 // The home pin for a saved report's address text, when that address is the
 // resident's registered home (an older report saved without a position).
 export const homePinForLocation = (location) => {

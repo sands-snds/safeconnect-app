@@ -206,6 +206,15 @@ class User {
         return result.affectedRows;
     }
 
+    // The home pin (sign-up map / Settings): { lat, lng }.
+    static async updateHomeLocation(id, pin) {
+        const [result] = await db.query(
+            `UPDATE registered_users SET home_latitude = ?, home_longitude = ? WHERE id = ?`,
+            [pin.lat, pin.lng, id]
+        );
+        return result.affectedRows;
+    }
+
     static async updateEmail(id, email) {
         const [result] = await db.query(
             `UPDATE registered_users SET email_address = ? WHERE id = ?`,

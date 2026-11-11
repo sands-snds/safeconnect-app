@@ -7,7 +7,7 @@ import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
-import { registeredAddress } from './useRegisteredAddress';
+import { registeredAddress, registeredHomePin } from './useRegisteredAddress';
 import { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
 import { ReportFormShell, SendFoot, CAMERA_ACCEPT } from './reportFormUi';
@@ -362,7 +362,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                 {(form.showMap || isOutsideSantaFe || (!hasLocation && !isLocating)) && (
                   <div className="qr-map">
                     {(locationError || isOutsideSantaFe) && <p className="qr-maperr">{isOutsideSantaFe ? t('reportForm.outsideSantaFe') : locationError}</p>}
-                    <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={sending} height={220} />
+                    <LocationPickerMap pin={gpsCoords || (usingHome ? registeredHomePin(home) : null)} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={sending} height={220} />
                   </div>
                 )}
 

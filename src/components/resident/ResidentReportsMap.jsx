@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { fetchMyReports } from '../../Services/api';
-import IncidentMap from '../shared/location/IncidentMap';
+import IncidentMap, { HOME_COLOR } from '../shared/location/IncidentMap';
+import { useLiveEvent } from '../shared/liveBus';
 import { MAP_TYPES, LEGEND_TYPES, RESOLVED_COLOR, fromMyReport, timeAgo } from '../shared/location/mapReports';
 import { REPORTS_CHANGED_EVENT } from './useCallAccess';
 import { useReportArchive } from './reportArchive';
-import { homePinForLocation } from './useRegisteredAddress';
+import { homePinForLocation, savedHomePin } from './useRegisteredAddress';
 
 // "Your Reports on the Map", beside the list on the My Reports page (panel).
 // Only the resident's own reports
@@ -66,6 +67,12 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
   // All their reports: open ones blink in their colour, resolved or dismissed
   // ones are grey. Only those the resident archived (My Reports → Archived)
   // are left off.
+  // The resident's home pin (sign-up / Settings), read each time the map is
+  // drawn; a change on another device arrives with the "profile" update.
+  const [, setProfileVersion] = useState(0);
+  useLiveEvent(['profile'], () => setProfileVersion((v) => v + 1));
+  const homePin = savedHomePin();
+
   const isArchived = useReportArchive();
   const active = useMemo(
     () => reports.filter((r) => !isArchived(r.reportType, r.id)),
@@ -106,6 +113,7 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
         .rm-mk { position: relative; width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; background: var(--c); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
         .rm-mk.quake { border-radius: 6px; transform: rotate(45deg) scale(.9); }
         .rm-mk.quake i { transform: rotate(-45deg); }
+        .rm-mk.rm-home { border-radius: 7px; background: #fff; color: var(--c); border: 2px solid var(--c); }
         .rm-legend-blink { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 0.84rem; color: #4b5563; line-height: 1.45; }
         .rm-blink { position: relative; width: 26px; height: 26px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
         .rm-blink::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #dc2626; }
@@ -139,6 +147,7 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
               onSelect={setSelectedKey}
               renderPopup={renderPopup}
               placeAll
+              home={homePin ? { ...homePin, label: t('reportsMap.yourHome') } : null}
               height={height || (phone ? 330 : 420)}
               label={t('reportsMap.mapLabel')}
             />
@@ -155,6 +164,12 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
                   <span className="rm-mk" style={{ '--c': RESOLVED_COLOR }} aria-hidden="true"><i className="bi bi-check-lg" /></span>
                   {t('reportsMap.legendDone')}
                 </li>
+                {homePin && (
+                  <li>
+                    <span className="rm-mk rm-home" style={{ '--c': HOME_COLOR }} aria-hidden="true"><i className="bi bi-house-heart-fill" /></span>
+                    {t('reportsMap.yourHome')}
+                  </li>
+                )}
               </ul>
               <p className="rm-legend-blink"><span className="rm-blink" aria-hidden="true" />{t('reportsMap.legendBlink')}</p>
             </div>
