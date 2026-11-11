@@ -61,6 +61,21 @@ test('shows a profile summary and section navigation', async () => {
   expect(screen.getByRole('button', { name: /Account/ })).toHaveAttribute('aria-current', 'page');
 });
 
+test('shows the birthday given at sign-up, with the age, in the summary and under Account', async () => {
+  fetchUserProfile.mockResolvedValue({ ...ROW, birthdate: '2000-05-15' });
+  await renderSettings();
+  expect(screen.getAllByText(/May 15, 2000/)).toHaveLength(1); // the summary
+  fireEvent.click(screen.getByRole('button', { name: /Account/ }));
+  expect(screen.getByText('Birthday')).toBeInTheDocument();
+  expect(screen.getByText(/May 15, 2000 · \d+ years old/)).toBeInTheDocument();
+});
+
+test('an older account without a birthday shows a dash', async () => {
+  await renderSettings();
+  fireEvent.click(screen.getByRole('button', { name: /Account/ }));
+  expect(screen.getByText('Birthday').nextSibling).toHaveTextContent('—');
+});
+
 describe('Full name', () => {
   test('Save is disabled until something changes', async () => {
     await renderSettings();

@@ -83,7 +83,7 @@ describe('Sign Up', () => {
   };
   const type = (id, value) => fireEvent.change(field(id), { target: { value } });
   const fillStep1 = () => {
-    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
+    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suBirth', '2000-05-15'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com');
   };
   const fillStep2 = () => { fillAddress(); attachId(); };
@@ -147,9 +147,63 @@ describe('Sign Up', () => {
     expect(errorOf('suAgree')).toMatch(/read the Terms/);
   });
 
+  describe('birthdate (15 years old and above)', () => {
+    const yearsAgo = (years, dayShift = 0) => {
+      const d = new Date();
+      d.setFullYear(d.getFullYear() - years);
+      d.setDate(d.getDate() + dayShift);
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+    const fillWithBirth = (birth) => {
+      type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
+      type('suEmail', 'juan@example.com');
+      if (birth !== undefined) type('suBirth', birth);
+    };
+
+    test('is a date picker on step 1 that offers no date under 15 years ago', () => {
+      openSignUp();
+      expect(field('suBirth')).toHaveAttribute('type', 'date');
+      expect(field('suBirth').closest('.auth-part')).not.toHaveAttribute('hidden');
+      expect(field('suBirth')).toHaveAttribute('max', yearsAgo(15));
+      expect(screen.getByText('You must be 15 years old or above to register.')).toBeInTheDocument();
+    });
+
+    test('missing: says so and stays on step 1', () => {
+      openSignUp();
+      fillWithBirth();
+      submit();
+      expect(errorOf('suBirth')).toBe('Please enter your birthdate.');
+      expect(stepShown()).toBe('Your details');
+    });
+
+    test('under 15 (turns 15 tomorrow): a clear message, and registration does not go on', () => {
+      openSignUp();
+      fillWithBirth(yearsAgo(15, 1));
+      submit();
+      expect(errorOf('suBirth')).toBe('You must be at least 15 years old to register.');
+      expect(stepShown()).toBe('Your details');
+    });
+
+    test('a date in the future is pointed out', () => {
+      openSignUp();
+      fillWithBirth(yearsAgo(-1));
+      submit();
+      expect(errorOf('suBirth')).toBe("Your birthdate can't be in the future.");
+    });
+
+    test('turning 15 today is old enough', () => {
+      openSignUp();
+      fillWithBirth(yearsAgo(15));
+      submit();
+      expect(errorOf('suBirth')).toBeUndefined();
+      expect(stepShown()).toBe('Address & ID');
+    });
+  });
+
   test('a later field is the only problem: the focus goes straight to it', async () => {
     openSignUp();
-    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '91712');
+    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suBirth', '2000-05-15'); type('suContact', '91712');
     type('suEmail', 'juan@example.com');
     submit();
     expect(errorOf('suContact')).toBe('Contact number must be exactly 10 digits');
@@ -277,7 +331,7 @@ describe('Sign Up: proof of residency', () => {
     localStorage.setItem('sf_terms_viewed', TERMS_VERSION);
     openSignUp();
     const type = (id, value) => fireEvent.change(field(id), { target: { value } });
-    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
+    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suBirth', '2000-05-15'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
     type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
     fillAddress();
@@ -289,6 +343,7 @@ describe('Sign Up: proof of residency', () => {
     const [, options] = global.fetch.mock.calls.find(([url]) => String(url).endsWith('/request-otp'));
     const body = JSON.parse(options.body);
     expect(body.address).toEqual({ houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.' });
+    expect(body.birthdate).toBe('2000-05-15');
     expect(body.validId.idType).toBe('Barangay ID');
     expect(body.validId.fileName).toBe('barangay-id.pdf');
     expect(body.validId.dataUrl).toMatch(/^data:application\/pdf;base64,/);
@@ -317,7 +372,7 @@ describe('Server can\'t reach the database', () => {
     renderHero();
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign Up' })[0]);
     const type = (id, value) => fireEvent.change(field(id), { target: { value } });
-    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suContact', '9171234567');
+    type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suBirth', '2000-05-15'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com'); type('suUsername', 'juandc');
     type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
     fillAddress();

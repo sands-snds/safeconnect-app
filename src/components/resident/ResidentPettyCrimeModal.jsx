@@ -34,6 +34,12 @@ const CRIME_ICONS = {
 
 const PHOTO_OPTIONAL_CRIME_TYPES = ['Theft', 'Suspicious Activity', 'Harassment'];
 
+// "Other" asks for the kind of incident in its own box; that text is saved
+// as the report's crime type (as the Assistance form does with its emergency).
+const OTHER_CRIME = 'Other';
+const LISTED_CRIMES = CRIME_TYPES.map((c) => c.value).filter((v) => v !== OTHER_CRIME);
+const crimeTypeOf = (form) => (form.crimeType === OTHER_CRIME ? form.crimeOther.trim() : form.crimeType);
+
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_pettycrime';
 
 const REPORT_COOLDOWN_MS = 0;
@@ -92,6 +98,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     ...EMPTY_LOCATION,
     location: '',
     crimeType: '',
+    crimeOther: '',
     description: '',
     suspectInfo: '',
     consent: false
@@ -146,6 +153,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [textServerErrors, setTextServerErrors] = useState({});
   const forOthers = reportFor === 'others';
   const { warnings: textWarn, blocked: textBlocked } = useTextWarnings({
+    crimeOther: { value: formData.crimeType === OTHER_CRIME ? formData.crimeOther : '', kind: 'short', api: 'crimeType' },
     description: { value: formData.description, kind: 'description', api: 'description' },
     suspectInfo: { value: formData.suspectInfo, kind: 'description', api: 'suspectInfo' },
     relOther: { value: forOthers ? victimRelationshipOther : '', kind: 'short', api: 'victimRelationship' },
@@ -166,7 +174,9 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     if (!editingReport) return;
     setFormData((prev) => ({
       ...prev,
-      crimeType: editingReport.title || '',
+      // A type typed under Other goes back into the Other box.
+      crimeType: !editingReport.title ? '' : LISTED_CRIMES.includes(editingReport.title) ? editingReport.title : OTHER_CRIME,
+      crimeOther: editingReport.title && !LISTED_CRIMES.includes(editingReport.title) && editingReport.title !== OTHER_CRIME ? editingReport.title : '',
       description: editingReport.description || '',
       suspectInfo: editingReport.suspectInfo || '',
       location: editingReport.location || ''
@@ -210,6 +220,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       ...EMPTY_LOCATION,
       location: '',
       crimeType: '',
+      crimeOther: '',
       description: '',
       suspectInfo: '',
       consent: false
@@ -281,6 +292,10 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       showPopup({ type: 'warning', message: t('reportShared.need.crimeType') });
       return;
     }
+    if (formData.crimeType === OTHER_CRIME && !formData.crimeOther.trim()) {
+      showPopup({ type: 'warning', message: t('reportShared.need.crimeOther') });
+      return;
+    }
     if (needsNewMedia && !media.file) {
       showPopup({ type: 'warning', message: t('pettyCrimeModal.mediaRequired') });
       return;
@@ -291,7 +306,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       if (isEditing) {
         const result = await updatePettyCrimeReport({
           id: editingReport.id,
-          crimeType: formData.crimeType,
+          crimeType: crimeTypeOf(formData),
           location: formData.location.trim(),
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
@@ -315,7 +330,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       const fullLocation = composeLocation(formData, gpsCoords);
       const coords = await coordsForSubmit(formData, gpsCoords, showMap);
       const result = await createPettyCrimeReport({
-        crimeType: formData.crimeType,
+        crimeType: crimeTypeOf(formData),
         userId: currentUser.id || null,
         fullname: fullName,
         contact,
@@ -349,6 +364,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       if (showIfMediaProblem(error, t)) return;
       const textErrors = serverTextErrors(error, {
         description: formData.description, suspectInfo: formData.suspectInfo, location: formData.location,
+        crimeType: formData.crimeType === OTHER_CRIME ? formData.crimeOther : '',
         victimRelationship: victimRelationshipOther, victimName, victimDetails
       });
       if (textErrors) { setTextServerErrors(textErrors); return; }
@@ -367,6 +383,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       if (!victimDetails.trim()) return 'details';
     }
     if (!formData.crimeType) return 'crimeType';
+    if (formData.crimeType === OTHER_CRIME && !formData.crimeOther.trim()) return 'crimeOther';
     if (isOutsideSantaFe) return 'outside';
     if (isEditing ? !formData.location.trim() : (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim()))) {
       return isEditing ? 'location' : 'address';
@@ -450,10 +467,28 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
           labelledBy="pc-type"
           items={crimeItems}
           value={formData.crimeType}
-          onChange={(v) => setFormData((prev) => ({ ...prev, crimeType: v }))}
+          onChange={(v) => setFormData((prev) => ({ ...prev, crimeType: v, crimeOther: v === OTHER_CRIME ? prev.crimeOther : '' }))}
           disabled={isSubmitting}
         />
         {crimeNote && <p className="qr-help">{crimeNote}</p>}
+        {formData.crimeType === OTHER_CRIME && (
+          <div className="qr-field qr-sub">
+            <label htmlFor="pc-crime-other">{t('pettyCrimeModal.crimeOther')} <span className="qr-req">*</span></label>
+            <input
+              id="pc-crime-other"
+              type="text"
+              name="crimeOther"
+              value={formData.crimeOther}
+              onChange={handleChange}
+              required
+              maxLength={100}
+              disabled={isSubmitting}
+              placeholder={t('pettyCrimeModal.crimeOtherPlaceholder')}
+              aria-invalid={Boolean(textWarn.crimeOther) || undefined}
+            />
+            <TextWarning t={t} reason={textWarn.crimeOther} />
+          </div>
+        )}
       </div>
 
       {isEditing ? (

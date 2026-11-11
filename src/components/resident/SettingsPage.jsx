@@ -13,6 +13,7 @@ import {
 import { useLanguage } from '../../i18n/LanguageContext';
 import PhotoCropModal from '../shared/PhotoCropModal';
 import { useInstallApp } from '../shared/installApp';
+import { ageFrom, formatBirthdate } from '../shared/birthdate';
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024; 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,7 +75,7 @@ const PasswordInput = ({ id, value, onChange, placeholder, autoComplete, t }) =>
 };
 
 function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const fileInputRef = useRef(null);
 
   const [section, setSection] = useState('profile');
@@ -141,6 +142,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
         status: result.status,
         photoUrl: result.photoUrl || null,
         createdAt: result.created_at,
+        birthdate: result.birthdate || null,
         address: result.address_house_number || result.address_street
           ? { houseNumber: result.address_house_number || '', street: result.address_street || '', area: result.address_area || '' }
           : null
@@ -356,6 +358,9 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
 
   const initials = (profile?.fullName || profile?.username || 'U')
     .trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join('').toUpperCase();
+  // Given at sign-up (older accounts have none). Shown, not edited, here.
+  const birthdayText = profile?.birthdate ? formatBirthdate(profile.birthdate, language === 'tl' ? 'fil-PH' : 'en-US') : '';
+  const birthdayAge = profile?.birthdate ? ageFrom(profile.birthdate) : null;
   const roleText = profile?.role ? profile.role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '—';
 
   return (
@@ -523,6 +528,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
               <div className="st-summary-meta">
                 {profile?.username && <span><i className="bi bi-at" />{profile.username}</span>}
                 {profile?.email && <span><i className="bi bi-envelope-fill" />{profile.email}</span>}
+                {birthdayText && <span><i className="bi bi-cake2-fill" />{birthdayText}</span>}
                 <span><i className="bi bi-calendar-event-fill" />{t('settings.memberSince')} {formatMemberSince(profile?.createdAt)}</span>
               </div>
               <button type="button" className="st-photo-link" onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto || loadingProfile}>
@@ -725,6 +731,7 @@ function SettingsPage({ isOpen, onClose, user, onProfileUpdate }) {
                     <span>{t('settings.accountStatus')}</span>
                     <span>{profile?.status ? <span className="st-badge">{profile.status}</span> : '—'}</span>
                   </div>
+                  <div className="st-row"><span>{t('settings.birthday')}</span><span>{birthdayText ? `${birthdayText} · ${t('settings.age', { age: birthdayAge })}` : '—'}</span></div>
                   <div className="st-row"><span>{t('settings.memberSince')}</span><span>{formatMemberSince(profile?.createdAt)}</span></div>
                 </div>
               )}

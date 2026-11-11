@@ -65,9 +65,10 @@ function ResidentPage() {
         />
       </section>
 
-      <ResidentReportsMap />
-
+      {/* Announcements and weather first, then the map. */}
       <ResidentWidgets />
+
+      <ResidentReportsMap />
 
       <section id="emergency-report">
         <EmergencyReportSection

@@ -9,6 +9,7 @@ import { showAccountStatusPopup } from '../shared/accountStatusPopup';
 import { markAdminJustSignedIn } from '../admin/AdminModals/AdminDemoPopup';
 import { hasViewedTerms, openTerms, TERMS_VIEWED_EVENT } from '../shared/termsConsent';
 import { NO_CLIPBOARD } from '../shared/noClipboard';
+import { birthdateProblem, latestAllowedBirthdate, earliestAllowedBirthdate } from '../shared/birthdate';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
 
@@ -40,7 +41,7 @@ const ID_TYPES = [
 // Sign Up in three steps; Next checks only the fields on the current one.
 const SIGNUP_PARTS = ['details', 'address', 'account'];
 const SIGNUP_FIELD_PART = {
-    suFirst: 1, suMiddle: 1, suLast: 1, suContact: 1, suEmail: 1,
+    suFirst: 1, suMiddle: 1, suLast: 1, suBirth: 1, suContact: 1, suEmail: 1,
     suAddrHouse: 2, suAddrStreet: 2, suIdType: 2, suIdFile: 2,
     suUsername: 3, suPassword: 3, suConfirm: 3, suAgree: 3,
 };
@@ -73,6 +74,7 @@ const SIGNUP_SERVER_FIELDS = [
     [/account with this email|email address does not appear/i, 'suEmail'],
     [/^password|password must/i, 'suPassword'],
     [/mobile|contact number/i, 'suContact'],
+    [/birthdate|years old/i, 'suBirth'],
 ];
 const RESET_SERVER_FIELDS = [
     [/^password|password must|new password/i, 'fpNewPw'],
@@ -163,6 +165,7 @@ function Hero() {
     const [suFirst,       setSuFirst]       = useState('');
     const [suMiddle,      setSuMiddle]      = useState('');
     const [suLast,        setSuLast]        = useState('');
+    const [suBirth,       setSuBirth]       = useState(''); // "YYYY-MM-DD"
     const [suUsername,    setSuUsername]    = useState('');
     const [suContact,     setSuContact]     = useState('');
     const [suEmail,       setSuEmail]       = useState('');
@@ -318,7 +321,7 @@ function Hero() {
         setSignInStep('form'); setPendingSignIn(null);
         setSignUpStep('form'); setSignUpPart(1); setForgotStep('email');
         setSiEmail(''); setSiPassword(''); setShowSiPw(false);
-        setSuFirst(''); setSuMiddle(''); setSuLast('');
+        setSuFirst(''); setSuMiddle(''); setSuLast(''); setSuBirth('');
         setSuUsername(''); setSuContact(''); setSuEmail('');
         setSuPassword(''); setSuConfirm(''); setSuAgree(false);
         setShowSuPw(false); setShowSuConfPw(false);
@@ -424,6 +427,8 @@ function Hero() {
         const problems = {};
         if (!suFirst.trim()) problems.suFirst = t('auth.firstNameRequired');
         if (!suLast.trim()) problems.suLast = t('auth.lastNameRequired');
+        const birthProblem = birthdateProblem(suBirth);
+        if (birthProblem) problems.suBirth = t(`auth.${birthProblem}`);
         if (!suContact) problems.suContact = t('auth.contactRequired');
         else if (suContact.length !== 10) problems.suContact = t('auth.contactDigits');
         if (!suEmail.trim()) problems.suEmail = t('auth.emailRequired');
@@ -466,13 +471,17 @@ function Hero() {
             }
             const result = await apiPost('request-otp', {
                 fullName, username: suUsername,
-                contact: `+63${suContact}`, email: suEmail, password: suPassword,
+                contact: `+63${suContact}`, email: suEmail, password: suPassword, birthdate: suBirth,
                 address: { houseNumber: suAddrHouse.trim(), street: suAddrStreet.trim() },
                 validId: { idType: suIdType, fileName: suIdFile.name, dataUrl },
             });
             if (!result.success) {
                 if (result.code === 'INVALID_ADDRESS') {
                     showSignUpErrors({ [/street/i.test(result.message) ? 'suAddrStreet' : 'suAddrHouse']: result.message });
+                    return;
+                }
+                if (result.code === 'INVALID_BIRTHDATE') {
+                    showSignUpErrors({ suBirth: result.message });
                     return;
                 }
                 if (result.code === 'INVALID_ID') {
@@ -498,7 +507,7 @@ function Hero() {
         try {
             const result = await apiPost('verify-otp', { email: otpEmail, otp: code });
             if (!result.success) { setError(serverMessage(result, 'auth.otpInvalid')); return; }
-            setSuFirst(''); setSuMiddle(''); setSuLast('');
+            setSuFirst(''); setSuMiddle(''); setSuLast(''); setSuBirth('');
             setSuUsername(''); setSuContact(''); setSuEmail('');
             setSuPassword(''); setSuConfirm('');
             clearIdFile(); setSuIdType('');
@@ -725,6 +734,13 @@ function Hero() {
                             </AuthField>
                             <AuthField id="suLast" error={fieldErrors.suLast} label={t('signUp.lastName')} icon="bi-person">
                                 <input type="text" className="auth-input" id="suLast" {...fieldProps('suLast')} autoComplete="family-name" placeholder={t('signUp.lastNamePlaceholder')} value={suLast} maxLength={SIGNUP_TEXT_MAX} onChange={e => setSuLast(e.target.value.replace(NAME_ALLOWED_REGEX,'').slice(0,SIGNUP_TEXT_MAX))} />
+                            </AuthField>
+                        </div>
+                        <div className="auth-grid cols-2">
+                            {/* The phone's or browser's own date picker; it won't offer dates under 15 years ago. */}
+                            <AuthField id="suBirth" error={fieldErrors.suBirth} label={t('signUp.birthdate')} icon="bi-calendar-heart" hint={t('signUp.birthdateHint')}>
+                                <input type="date" className="auth-input auth-date" id="suBirth" {...fieldProps('suBirth')} autoComplete="bday"
+                                    min={earliestAllowedBirthdate()} max={latestAllowedBirthdate()} value={suBirth} onChange={e => setSuBirth(e.target.value)} />
                             </AuthField>
                         </div>
 

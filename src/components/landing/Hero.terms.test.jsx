@@ -45,6 +45,7 @@ const openSignUp = () => {
   const type = (placeholder, value) => fireEvent.change(screen.getByPlaceholderText(placeholder), { target: { value } });
   type('First name', 'Juan');
   type('Last name', 'Dela Cruz');
+  fireEvent.change(document.getElementById('suBirth'), { target: { value: '2000-05-15' } });
   type('Choose a username', 'juandc');
   type('9XXXXXXXXX', '9171234567');
   type('Enter your email', 'juan@example.com');

@@ -104,6 +104,10 @@ export const translations = {
       firstNameRequired: 'Please enter your first name.',
       lastNameRequired: 'Please enter your last name.',
       contactRequired: 'Please enter your mobile number (the 10 digits after +63).',
+      birthdateRequired: 'Please enter your birthdate.',
+      birthdateInvalid: 'Please enter a valid birthdate.',
+      birthdateFuture: "Your birthdate can't be in the future.",
+      birthdateTooYoung: 'You must be at least 15 years old to register.',
       usernameRequired: 'Please choose a username.',
       newPasswordRequired: 'Please enter a new password.',
       confirmPasswordRequired: 'Please type the password again to confirm it.',
@@ -158,6 +162,8 @@ export const translations = {
       middlePlaceholder: 'Middle name',
       lastName: 'Last Name',
       lastNamePlaceholder: 'Last name',
+      birthdate: 'Birthdate',
+      birthdateHint: 'You must be 15 years old or above to register.',
       username: 'Username',
       usernamePlaceholder: 'Choose a username',
       contactNumber: 'Contact Number',
@@ -295,12 +301,12 @@ export const translations = {
     },
     demoVideo: {
       unmute: 'Unmute',
-      eyebrow: 'Barangay Videos',
+      eyebrow: 'Tutorial on How to Use the System',
       defaultTitle: 'Videos from the Barangay',
       subtitle: 'Watch the latest videos and updates from Barangay Santa Fe.',
       comingSoonTitle: 'No video yet',
-      comingSoonText: 'Videos from the barangay will be shown here.',
-      newsBadge: 'Barangay video'
+      comingSoonText: 'The tutorial video will be shown here.',
+      newsBadge: 'System tutorial'
     },
     services: {
       badge: 'What You Can Do',
@@ -831,7 +837,7 @@ export const translations = {
       },
       "crimeNote": {
         "publicDisturbance": "Noise, late-night drinking and similar.",
-        "other": "Not listed? Say what happened in the description."
+        "other": "Not listed? Type the kind of incident below."
       },
       "assistShort": {
         "foodWater": "Food & Water",
@@ -847,6 +853,7 @@ export const translations = {
         "assistType": "Choose the help you need.",
         "emergency": "Choose the emergency.",
         "emergencyOther": "Say which emergency.",
+        "crimeOther": "Say what kind of incident it was.",
         "proof": "Add a photo or video as proof.",
         "address": "Enter the house number and street, or pin the spot on the map.",
         "location": "Enter the address.",
@@ -1185,6 +1192,8 @@ export const translations = {
     pettyCrimeModal: {
       whereHappened: 'Where did the incident happen?',
       atHome: 'At my home',
+      crimeOther: 'Type of incident',
+      crimeOtherPlaceholder: 'e.g. Illegal gambling, stray animals',
       elsewhere: 'Somewhere else',
       title: 'Report Petty Crime',
       crimeType: 'Crime Type',
@@ -1363,6 +1372,8 @@ export const translations = {
       accountType: 'Account type',
       accountStatus: 'Account status',
       memberSince: 'Member since',
+      birthday: 'Birthday',
+      age: '{{age}} years old',
       nav: {
         profile: 'Profile',
         contact: 'Contact details',
@@ -1513,6 +1524,10 @@ export const translations = {
       firstNameRequired: 'Pakilagay ang iyong unang pangalan.',
       lastNameRequired: 'Pakilagay ang iyong apelyido.',
       contactRequired: 'Pakilagay ang iyong numero ng mobile (ang 10 digit pagkatapos ng +63).',
+      birthdateRequired: 'Pakilagay ang iyong petsa ng kapanganakan.',
+      birthdateInvalid: 'Pakilagay ang tamang petsa ng kapanganakan.',
+      birthdateFuture: 'Hindi puwedeng nasa hinaharap ang iyong petsa ng kapanganakan.',
+      birthdateTooYoung: 'Dapat ay 15 taong gulang ka pataas para makapagparehistro.',
       usernameRequired: 'Pumili ng username.',
       newPasswordRequired: 'Pakilagay ang bagong password.',
       confirmPasswordRequired: 'Pakiulit ang password para makumpirma ito.',
@@ -1567,6 +1582,8 @@ export const translations = {
       middlePlaceholder: 'Gitnang pangalan',
       lastName: 'Apelyido',
       lastNamePlaceholder: 'Apelyido',
+      birthdate: 'Petsa ng kapanganakan',
+      birthdateHint: 'Dapat ay 15 taong gulang ka pataas para makapagparehistro.',
       username: 'Username',
       usernamePlaceholder: 'Pumili ng username',
       contactNumber: 'Numero ng Contact',
@@ -1704,12 +1721,12 @@ export const translations = {
     },
     demoVideo: {
       unmute: 'Lagyan ng tunog',
-      eyebrow: 'Mga Video ng Barangay',
+      eyebrow: 'Tutorial kung Paano Gamitin ang System',
       defaultTitle: 'Mga Video mula sa Barangay',
       subtitle: 'Panoorin ang pinakabagong mga video at balita mula sa Barangay Santa Fe.',
       comingSoonTitle: 'Wala pang video',
-      comingSoonText: 'Dito ipapakita ang mga video mula sa barangay.',
-      newsBadge: 'Video ng barangay'
+      comingSoonText: 'Dito ipapakita ang tutorial na video.',
+      newsBadge: 'Tutorial ng system'
     },
     services: {
       badge: 'Ano ang Magagawa Mo',
@@ -2240,7 +2257,7 @@ export const translations = {
       },
       "crimeNote": {
         "publicDisturbance": "Ingay, pag-inom sa hatinggabi at iba pa.",
-        "other": "Wala sa listahan? Isulat ang nangyari sa deskripsyon."
+        "other": "Wala sa listahan? Isulat sa ibaba kung anong uri ng insidente."
       },
       "assistShort": {
         "foodWater": "Pagkain at Tubig",
@@ -2256,6 +2273,7 @@ export const translations = {
         "assistType": "Piliin ang tulong na kailangan mo.",
         "emergency": "Piliin ang emergency.",
         "emergencyOther": "Sabihin kung anong emergency.",
+        "crimeOther": "Sabihin kung anong uri ng insidente.",
         "proof": "Magdagdag ng larawan o video bilang patunay.",
         "address": "Ilagay ang numero ng bahay at kalye, o i-pin ang lugar sa mapa.",
         "location": "Ilagay ang address.",
@@ -2594,6 +2612,8 @@ export const translations = {
     pettyCrimeModal: {
       whereHappened: 'Saan nangyari ang insidente?',
       atHome: 'Sa aking bahay',
+      crimeOther: 'Uri ng insidente',
+      crimeOtherPlaceholder: 'hal. Ilegal na sugal, gumagalang hayop',
       elsewhere: 'Sa ibang lugar',
       title: 'Mag-report ng Petty Crime',
       crimeType: 'Uri ng Krimen',
@@ -2772,6 +2792,8 @@ export const translations = {
       accountType: 'Uri ng account',
       accountStatus: 'Status ng account',
       memberSince: 'Miyembro mula noong',
+      birthday: 'Kaarawan',
+      age: '{{age}} taong gulang',
       nav: {
         profile: 'Profile',
         contact: 'Detalye ng contact',

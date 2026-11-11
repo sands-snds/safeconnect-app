@@ -28,7 +28,7 @@ export default function DemoVideoSection() {
         .dm-blob-1 { width: 360px; height: 360px; background: #6B2C3E; opacity: 0.12; top: -120px; right: -110px; }
         .dm-blob-2 { width: 300px; height: 300px; background: #FFC107; opacity: 0.16; bottom: -130px; left: -90px; }
 
-        .dm-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
+        .dm-badge { display: inline-flex; align-items: center; justify-content: center; gap: 6px; max-width: 100%; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; line-height: 1.4; text-align: center; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 18px; }
 
         .dm-intro { position: relative; z-index: 2; max-width: 620px; margin: 0 auto 48px; text-align: center; }
         .dm-intro h2 { margin: 0 0 16px; font-size: clamp(1.9rem, 3.8vw, 2.8rem); font-weight: 900; color: #111; line-height: 1.18; letter-spacing: -0.02em; }
@@ -43,6 +43,8 @@ export default function DemoVideoSection() {
 
         @media (max-width: 560px) {
           .dm-intro { margin-bottom: 32px; }
+          /* The long tutorial label: tighter letters so it fits on one line on most phones. */
+          .dm-badge { letter-spacing: 0.05em; padding: 5px 12px; }
           .dm-card { padding: 8px; border-radius: 18px; }
           .dm-placeholder strong { font-size: 16px; }
           .dm-placeholder span { font-size: 13px; }

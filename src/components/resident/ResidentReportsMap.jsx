@@ -78,7 +78,7 @@ export default function ResidentReportsMap() {
     <section className="resident-reports-map" aria-labelledby="rm-title">
       <style>{`
         /* Padding is on .rm-outer: styles/App.css zeroes every <section>'s padding. */
-        .rm-outer { padding: 64px 0 72px; background: linear-gradient(180deg, #ffffff 0%, #fbf7f8 100%); }
+        .rm-outer { padding: 64px 0 72px; background: linear-gradient(180deg, #fbf7f8 0%, #ffffff 100%); }
         .rm-inner { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
         .rm-intro { max-width: 640px; margin: 0 auto 28px; text-align: center; }
         .rm-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 14px; }

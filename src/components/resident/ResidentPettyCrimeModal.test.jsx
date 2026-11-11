@@ -49,6 +49,9 @@ const renderModal = () => {
   const fileInput = utils.container.querySelector('input[type="file"]');
   const fill = (crimeType) => {
     fireEvent.click(screen.getByRole('button', { name: new RegExp('^' + crimeType) }));
+    if (crimeType === 'Other') {
+      fireEvent.change(utils.container.querySelector('input[name="crimeOther"]'), { target: { value: 'Illegal gambling' } });
+    }
     fireEvent.change(utils.container.querySelector('textarea[name="description"]'), { target: { value: 'Something happened' } });
     fireEvent.click(utils.container.querySelector('input[name="consent"]'));
   };
@@ -86,6 +89,64 @@ test.each(['Vandalism', 'Public Disturbance', 'Trespassing', 'Other'])('%s: phot
     message: expect.stringMatching(/required for this crime type/)
   })));
   expect(createPettyCrimeReport).not.toHaveBeenCalled();
+});
+
+describe('Other: the kind of incident in its own box', () => {
+  const attachPhoto = (fileInput) => {
+    global.URL.createObjectURL = jest.fn(() => 'blob:preview');
+    global.URL.revokeObjectURL = jest.fn();
+    fireEvent.change(fileInput, { target: { files: [new File(['fake-jpeg'], 'scene.jpg', { type: 'image/jpeg' })] } });
+  };
+
+  test('the box shows only for Other, and goes (emptied) when another type is picked', () => {
+    const { container } = renderModal();
+    const box = () => container.querySelector('input[name="crimeOther"]');
+    fireEvent.click(screen.getByRole('button', { name: /^Theft/ }));
+    expect(box()).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^Other/ }));
+    expect(screen.getByLabelText(/Type of incident/)).toBe(box());
+    expect(box()).toBeRequired();
+    fireEvent.change(box(), { target: { value: 'Stray dogs' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Vandalism/ }));
+    expect(box()).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^Other/ }));
+    expect(box().value).toBe('');
+  });
+
+  test('left empty: Send stays off and says what is missing; nothing is sent', async () => {
+    const { container, form, fileInput } = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: /^Other/ }));
+    fireEvent.change(container.querySelector('textarea[name="description"]'), { target: { value: 'Something happened' } });
+    fireEvent.click(container.querySelector('input[name="consent"]'));
+    attachPhoto(fileInput);
+    await screen.findByAltText('Selected attachment preview');
+    expect(screen.getByText('Say what kind of incident it was.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send report/ })).toBeDisabled();
+    fireEvent.submit(form);
+    await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ message: 'Say what kind of incident it was.' })));
+    expect(createPettyCrimeReport).not.toHaveBeenCalled();
+  });
+
+  test('the typed kind of incident is saved as the crime type', async () => {
+    const { form, fileInput, fill } = renderModal();
+    fill('Other');
+    attachPhoto(fileInput);
+    await screen.findByAltText('Selected attachment preview');
+    fireEvent.submit(form);
+    await waitFor(() => expect(createPettyCrimeReport).toHaveBeenCalledTimes(1));
+    expect(createPettyCrimeReport.mock.calls[0][0]).toMatchObject({ crimeType: 'Illegal gambling', description: 'Something happened' });
+  });
+
+  test('editing a report typed under Other puts it back in the box', () => {
+    sessionStorage.setItem('currentUser', JSON.stringify({ id: 7, fullName: 'Juan Dela Cruz' }));
+    const { container } = render(
+      <LanguageProvider>
+        <ResidentPettyCrimeModal show onClose={() => {}} editingReport={{ id: 3, title: 'Illegal gambling', description: 'Cards at night', location: 'Blk 1, Barangay Sta. Fe' }} />
+      </LanguageProvider>
+    );
+    expect(screen.getByRole('button', { name: /^Other/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(container.querySelector('input[name="crimeOther"]').value).toBe('Illegal gambling');
+  });
 });
 
 test('required type: attaching a JPG submits it as a base64 image', async () => {

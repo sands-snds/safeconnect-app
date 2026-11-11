@@ -23,8 +23,8 @@ class User {
         const [result] = await db.query(
             `INSERT INTO registered_users
             (full_name, username, contact_number, email_address, password, role, status, verification_status,
-             address_house_number, address_street, address_area)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             address_house_number, address_street, address_area, birthdate)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 user.fullName,
                 user.username || null,
@@ -36,7 +36,8 @@ class User {
                 user.verificationStatus || null,
                 user.address?.houseNumber || null,
                 user.address?.street || null,
-                user.address?.area || null
+                user.address?.area || null,
+                user.birthdate || null
             ]
         );
 
@@ -60,7 +61,9 @@ class User {
             // The home address given at sign-up (Barangay Santa Fe).
             ["address_house_number", "VARCHAR(60) DEFAULT NULL"],
             ["address_street", "VARCHAR(120) DEFAULT NULL"],
-            ["address_area", "VARCHAR(120) DEFAULT NULL"]
+            ["address_area", "VARCHAR(120) DEFAULT NULL"],
+            // Given at sign-up; residents must be 15 or older.
+            ["birthdate", "DATE DEFAULT NULL"]
         ]) {
             if (have.has(name)) continue;
             try {
@@ -119,19 +122,26 @@ class User {
         return result.affectedRows;
     }
 
+    // Every signed-in request reads this, so it still works (without the
+    // birthdate) in the moment after a restart before that column exists.
+    // The birthdate comes back as "YYYY-MM-DD" text, not a time-zoned Date.
     static async findById(id) {
-        const [rows] = await db.query(
-            `
-            SELECT
+        const columns = `
                 id, full_name, username, contact_number,
                 email_address, role, status, photo_url, created_at,
-                address_house_number, address_street, address_area
-            FROM registered_users
-            WHERE id = ?
-            `,
-            [id]
-        );
-        return rows[0];
+                address_house_number, address_street, address_area`;
+        try {
+            const [rows] = await db.query(
+                `SELECT ${columns}, DATE_FORMAT(birthdate, '%Y-%m-%d') AS birthdate
+                 FROM registered_users WHERE id = ?`,
+                [id]
+            );
+            return rows[0];
+        } catch (err) {
+            if (err.code !== "ER_BAD_FIELD_ERROR") throw err;
+            const [rows] = await db.query(`SELECT ${columns} FROM registered_users WHERE id = ?`, [id]);
+            return rows[0];
+        }
     }
 
     static async findByIdWithPassword(id) {

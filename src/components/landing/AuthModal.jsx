@@ -77,6 +77,11 @@ const STYLES = `
   .auth-input::placeholder { color: #9ca3af; }
   /* Edge/IE add their own reveal/clear buttons next to ours */
   .auth-input::-ms-reveal, .auth-input::-ms-clear { display: none; }
+  /* Birthdate: the same height and text as the other boxes (iOS Safari
+     otherwise shrinks an empty date box and centres its text). */
+  .auth-input.auth-date { -webkit-appearance: none; appearance: none; min-height: 44px; line-height: 44px; text-align: left; font-family: inherit; }
+  .auth-input.auth-date::-webkit-date-and-time-value { text-align: left; }
+  .auth-input.auth-date::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .65; }
   .auth-input:focus { outline: none; border-color: #6B2C3E; background: #fff; box-shadow: 0 0 0 4px rgba(107, 44, 62, 0.12); }
   .auth-input.ok { border-color: #16a34a; }
   .auth-input.bad { border-color: #dc2626; }

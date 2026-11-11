@@ -18,6 +18,7 @@ const ResidentIdDocument = require("../models/ResidentIdDocument");
 const NotificationService = require("../services/notificationService");
 const { parseIdUpload } = require("../utils/idDocument");
 const { parseAddress, addressOf } = require("../utils/address");
+const { parseBirthdate } = require("../utils/birthdate");
 
 
 
@@ -60,6 +61,10 @@ exports.requestOtp = async (req, res) => {
         const home = parseAddress(req.body.address);
         if (home.error) return res.json({ success: false, code: "INVALID_ADDRESS", message: home.error });
 
+        // Residents 15 years old and above only (the form checks this too).
+        const birth = parseBirthdate(req.body.birthdate);
+        if (birth.error) return res.json({ success: false, code: "INVALID_BIRTHDATE", message: birth.error });
+
         // The ID the barangay checks before the account can sign in.
         const idDocument = parseIdUpload(validId);
         if (idDocument.error) return res.json({ success: false, code: "INVALID_ID", message: idDocument.error });
@@ -97,7 +102,7 @@ exports.requestOtp = async (req, res) => {
         otpStore.set(email, {
             otp,
             expiresAt: Date.now() + OTP_TTL_MS,
-            userData:  { fullName, username, contact, email, password: hashedPassword, address: home.address },
+            userData:  { fullName, username, contact, email, password: hashedPassword, address: home.address, birthdate: birth.birthdate },
             idDocument,
         });
 
@@ -160,6 +165,7 @@ exports.verifyOtp = async (req, res) => {
             status:   "Pending",
             verificationStatus: "Pending",
             address:  userData.address,
+            birthdate: userData.birthdate,
         });
         try {
             await ResidentIdDocument.save(userId, idDocument);
@@ -514,6 +520,7 @@ function toPublicUser(user) {
         role:     user.role,
         photoUrl,
         address:  addressOf(user),
+        birthdate: user.birthdate || null,
     };
 }
 
