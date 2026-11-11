@@ -276,7 +276,6 @@ describe('registered address', () => {
     const { $ } = renderWithAddress();
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
     expect($('input[name="street"]').value).toBe('Sampaguita St.');
-    expect($('input[name="area"]').value).toBe('Villa Santa Fe');
     expect(screen.getByText(HINT)).toBeInTheDocument();
   });
 

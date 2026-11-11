@@ -4,8 +4,9 @@ import { forwardGeocode } from '../shared/location/geocode';
 import { TextWarning } from './textWarnings';
 
 // The address of a new report, in the same parts as the sign-up form's home
-// address: House / Lot / Block No., Street, Subdivision / Purok (optional),
-// and the fixed Barangay Santa Fe line, plus an optional landmark.
+// address: House / Lot / Block No., Street and the fixed Barangay Santa Fe
+// line, plus an optional landmark. There is no Subdivision / Purok box; an
+// `area` still in the form data (from a map pin) only helps find the pin.
 //
 // showMap: the map (and "Use my current location") only shows when the
 // incident isn't at the resident's home. The map and the address boxes stay
@@ -16,10 +17,10 @@ export const EMPTY_LOCATION = { houseNumber: '', street: '', area: '', landmark:
 
 const SERVICE_AREA_LINE = 'Barangay Sta. Fe, Dasmariñas, Cavite, Philippines';
 
-// The report's location text, e.g. "Blk 5 Lot 12, Sampaguita St., Villa Santa
-// Fe, Barangay Sta. Fe, Dasmariñas, Cavite, Philippines (Landmark: blue gate)".
+// The report's location text, e.g. "Blk 5 Lot 12, Sampaguita St., Barangay
+// Sta. Fe, Dasmariñas, Cavite, Philippines (Landmark: blue gate)".
 export const composeLocation = (formData, gpsCoords) => {
-  const line = [formData.houseNumber, formData.street, formData.area]
+  const line = [formData.houseNumber, formData.street]
     .map((part) => (part || '').trim())
     .filter(Boolean)
     .join(', ');
@@ -61,7 +62,7 @@ export default function ReportLocationFields({
   sectionRef,
   addressPrefilled,
   serviceAreaNote,
-  warnings = {} // { houseNumber, street, area, landmark }: text-check reasons
+  warnings = {} // { houseNumber, street, landmark }: text-check reasons
 }) {
   const {
     gpsCoords,
@@ -167,19 +168,6 @@ export default function ReportLocationFields({
           <TextWarning t={t} reason={warnings.street} />
         </div>
       </div>
-      <input
-        type="text"
-        name="area"
-        value={formData.area}
-        onChange={handleChange}
-        placeholder={t('reportForm.areaPlaceholder')}
-        aria-label={t('reportForm.areaPlaceholder')}
-        disabled={disabled}
-        maxLength={120}
-        className="rl-input rl-gap"
-        aria-invalid={Boolean(warnings.area) || undefined}
-      />
-      <TextWarning t={t} reason={warnings.area} />
       <input
         type="text"
         value={t('reportForm.barangayFixed')}

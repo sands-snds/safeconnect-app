@@ -145,7 +145,6 @@ describe('where the incident happened', () => {
     expect(screen.getByRole('button', { name: /At my home/i })).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
     expect($('input[name="street"]').value).toBe('Sampaguita St.');
-    expect($('input[name="area"]').value).toBe('Villa Santa Fe');
     expect(screen.queryByRole('button', { name: /Use my current location/i })).not.toBeInTheDocument();
   });
 
@@ -154,7 +153,6 @@ describe('where the incident happened', () => {
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
     fireEvent.click(screen.getByRole('button', { name: /Somewhere else/i }));
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe(''));
-    expect($('input[name="area"]').value).toBe('');
     expect(screen.getByRole('button', { name: /Use my current location/i })).toBeInTheDocument();
   });
 });

@@ -143,7 +143,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     details: { value: forOthers ? victimDetails : '', kind: 'description', api: 'victimDetails' },
     houseNumber: { value: isEditing ? '' : formData.houseNumber, kind: 'number' },
     street: { value: isEditing ? '' : formData.street, kind: 'short' },
-    area: { value: isEditing ? '' : formData.area, kind: 'short' },
     landmark: { value: isEditing ? '' : formData.landmark, kind: 'short' },
     location: { value: isEditing ? formData.location : '', kind: 'short', api: 'location' }
   }, textServerErrors);
@@ -517,7 +516,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           disabled={isSubmitting}
         />
         {formData.emergency === OTHER_EMERGENCY && (
-          <div className="qr-field" style={{ marginTop: 10 }}>
+          <div className="qr-field qr-sub">
             <label htmlFor="as-emergency-other">{t('assistanceModal.emergencyOther')} <span className="qr-req">*</span></label>
             <input
               id="as-emergency-other"
@@ -584,7 +583,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
               { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
             ]}
           />
-          <div style={{ marginTop: 12 }}>
+          <div className="qr-addr">
             <ReportLocationFields
               t={t}
               formData={formData}

@@ -153,7 +153,6 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     details: { value: forOthers ? victimDetails : '', kind: 'description', api: 'victimDetails' },
     houseNumber: { value: isEditing ? '' : formData.houseNumber, kind: 'number' },
     street: { value: isEditing ? '' : formData.street, kind: 'short' },
-    area: { value: isEditing ? '' : formData.area, kind: 'short' },
     landmark: { value: isEditing ? '' : formData.landmark, kind: 'short' },
     location: { value: isEditing ? formData.location : '', kind: 'short', api: 'location' }
   }, textServerErrors);
@@ -490,7 +489,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
             ]}
           />
-          <div style={{ marginTop: 12 }}>
+          <div className="qr-addr">
             <ReportLocationFields
               t={t}
               formData={formData}

@@ -380,6 +380,32 @@ export const REPORT_FORM_STYLE = `
   .qr :is(button, input, textarea, summary):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .qr-tile, .qr-choice, .qr-who button, .qr-rel button { transition: none; } }
 
+  /* Request Assistance and Report Petty Crime: more room between sections,
+     fields and buttons so the longer forms are easier to follow. */
+  .qr:is(.qr-assist, .qr-crime) .qr-head { padding: 18px 24px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-body { padding: 24px 24px 28px; gap: 28px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-lbl { margin-bottom: 12px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-lbl.red { margin: 0; }
+  .qr:is(.qr-assist, .qr-crime) .qr-field label.qr-lbl { margin-bottom: 12px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-q { margin-bottom: 10px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-who,
+  .qr:is(.qr-assist, .qr-crime) .qr-choices { gap: 12px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-rel { gap: 10px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-forbox { padding: 18px; gap: 18px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-two { gap: 14px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-field label { margin-bottom: 7px; }
+  .qr:is(.qr-assist, .qr-crime) :is(.qr-help, .qr-note, .qr-err) { margin-top: 8px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-photo-row { gap: 12px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-count-row { gap: 16px; }
+  .qr:is(.qr-assist, .qr-crime) .rl-section .rl-label-row { margin-bottom: 12px; }
+  .qr:is(.qr-assist, .qr-crime) .rl-section .rl-grid { gap: 12px; }
+  .qr:is(.qr-assist, .qr-crime) .rl-section .rl-gap { margin-top: 12px; }
+  .qr:is(.qr-assist, .qr-crime) .rl-section .rl-note { margin-top: 10px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-addr { margin-top: 16px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-sub { margin-top: 12px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-consent { padding: 14px 16px; }
+  .qr:is(.qr-assist, .qr-crime) .qr-foot { padding: 16px 24px 18px; gap: 10px; }
+
   /* Tablet and phone: still a card with the page around it, sized to its content. */
   @media (max-width: 767px) {
     .qr-overlay { padding: 12px; }
@@ -417,5 +443,14 @@ export const REPORT_FORM_STYLE = `
     .qr-rel.qr-grid3 { gap: 6px; }
     .qr-rel.qr-grid3 button { min-height: 44px; padding: 4px 6px; font-size: .8rem; }
     .qr .qr-field input[type="text"], .qr .qr-field input[type="tel"], .qr .qr-field textarea, .qr .rl-section .rl-input, .qr .qr-edit-address input, .qr .qr-count input[type="text"] { font-size: 16px; }
+    .qr:is(.qr-assist, .qr-crime) .qr-head { padding: 14px 16px; }
+    .qr:is(.qr-assist, .qr-crime) .qr-body { padding: 18px 16px 22px; gap: 24px; }
+    .qr:is(.qr-assist, .qr-crime) .qr-lbl,
+    .qr:is(.qr-assist, .qr-crime) .qr-field label.qr-lbl { margin-bottom: 10px; }
+    .qr:is(.qr-assist, .qr-crime) .qr-who,
+    .qr:is(.qr-assist, .qr-crime) .qr-choices { gap: 10px; }
+    .qr:is(.qr-assist, .qr-crime) .qr-rel { gap: 8px; }
+    .qr:is(.qr-assist, .qr-crime) .qr-forbox { padding: 14px; gap: 16px; }
+    .qr:is(.qr-assist, .qr-crime) .qr-foot { padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
   }
 `;

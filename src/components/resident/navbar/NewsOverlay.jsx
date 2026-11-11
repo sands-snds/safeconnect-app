@@ -201,6 +201,24 @@ const NewsOverlay = ({
                                 </div>
                             )}
 
+                            {/* Weather or the demo video is showing but there are
+                                no articles: say so beside them, not a blank column. */}
+                            {announcements.length === 0 && (
+                                <div className="news-state-message news-no-match" role="status">
+                                    {announcementsLoading ? (
+                                        <>
+                                            <div className="spinner-border spinner-border-sm" aria-hidden="true" />
+                                            <p>{t('news.loading')}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className={`bi ${announcementsError ? "bi-exclamation-circle" : "bi-megaphone"}`} aria-hidden="true" />
+                                            <p>{announcementsError || t('news.empty')}</p>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="news-list">
                                 {visible.map((item, index) => (
                                     <AnnouncementCard
