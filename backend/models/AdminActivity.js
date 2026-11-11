@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const live = require("../services/liveUpdates");
 
 
 
@@ -29,6 +30,7 @@ class AdminActivity {
             VALUES (?, ?, ?, ?, ?)`,
             [admin.id, admin.email_address, admin.username || null, action, details]
         );
+        live.notifyAdminsSoon("logs");
     }
 
     

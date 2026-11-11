@@ -76,4 +76,18 @@ const afterSuccess = (fn) => (req, res, next) => {
     next();
 };
 
-module.exports = { subscribe, notifyUser, notifyAdmins, notifyAll, afterSuccess };
+// For busy sources (activity and sign-in logs): many changes within a second
+// become one event, so a burst of sign-ins doesn't make every staff page reload
+// again and again.
+const pending = new Map();
+const notifyAdminsSoon = (type, delayMs = 1000) => {
+    if (pending.has(type)) return;
+    const timer = setTimeout(() => {
+        pending.delete(type);
+        notifyAdmins(type);
+    }, delayMs);
+    if (timer.unref) timer.unref();
+    pending.set(type, timer);
+};
+
+module.exports = { subscribe, notifyUser, notifyAdmins, notifyAdminsSoon, notifyAll, afterSuccess };

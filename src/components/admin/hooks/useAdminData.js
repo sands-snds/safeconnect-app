@@ -121,6 +121,11 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         }
     };
 
+    // Live updates. Users and logs load for a Super Admin only, the same as
+    // on page load.
+    const refreshUsers = () => (isSuperAdmin ? loadRegisteredUsers() : Promise.resolve());
+    const refreshLogs = () => (isSuperAdmin ? Promise.all([loadSignInLogs(), loadAdminLogs()]) : Promise.resolve());
+
     // Silent background refresh
     const refreshAllData = async () => {
         setIsRefreshing(true);
@@ -260,6 +265,8 @@ export default function useAdminData({ isSuperAdmin = false } = {}) {
         archiveNotifications,
         loadAllData,
         refreshAllData,
+        refreshUsers,
+        refreshLogs,
         loadAnnouncements,
         loadNotifications,
         handleRefresh,

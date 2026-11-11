@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const live = require("../services/liveUpdates");
 
 class ResidentActivity {
     static async ensureTable() {
@@ -21,6 +22,7 @@ class ResidentActivity {
             `INSERT INTO resident_activity_logs (user_id, email_address, action, details) VALUES (?, ?, ?, ?)`,
             [userId, email, action, details ? String(details).slice(0, 255) : null]
         );
+        live.notifyAdminsSoon("logs");
     }
 
     static async forEmailsSince(emails, since) {

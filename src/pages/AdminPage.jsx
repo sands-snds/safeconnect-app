@@ -26,6 +26,7 @@ import useTabNotifications from '../components/shared/useTabNotifications';
 import { useLanguage } from '../i18n/LanguageContext';
 import { setAdminLanguage } from '../i18n/adminText';
 import { announceCommentsChanged } from '../components/shared/commentsLive';
+import { refreshSiteContent } from '../components/shared/useSiteContent';
 
 const AdminPage = () => {
   const { language } = useLanguage();
@@ -66,6 +67,8 @@ const AdminPage = () => {
 
     loadAllData,
     refreshAllData,
+    refreshUsers,
+    refreshLogs,
     loadAnnouncements,
     loadNotifications,
     handleRefresh,
@@ -207,10 +210,20 @@ useEffect(() => {
 
   useSyncOnFocus(isAuthenticated);
 
+  // Changes made by residents or other staff show up without a reload.
+  // Reports, users and notifications go through the same loaders as the
+  // Refresh button, so each staff member still only gets what their role
+  // allows. Pages that load their own data listen through liveBus.
+  const reloadAll = () => refreshAllData();
   useLiveUpdates(isAuthenticated, {
-    'admin-notifications': () => refreshAllData(),
+    'admin-notifications': reloadAll,
+    reports: reloadAll,
+    'admin-notification-state': loadNotifications,
+    users: refreshUsers,
+    logs: refreshLogs,
     announcements: loadAnnouncements,
     comments: announceCommentsChanged,
+    'site-content': refreshSiteContent,
     state: refreshSyncedState,
     reconnected: () => { refreshAllData(); refreshSyncedState(); loadNotifications(); }
   });

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { fetchVerifications, fetchValidIdBlob, decideVerification } from "../../../Services/api";
 import { confirmPopup, showPopup } from "../../shared/popup";
 import { tx } from "../../../i18n/adminText";
+import { useLiveEvent } from "../../shared/liveBus";
 
 // Residents who signed up with a valid ID wait here until an Official or
 // Admin checks that they live in Barangay Santa Fe. Approving activates the
@@ -269,6 +270,10 @@ export default function AccountVerificationPage({ focusId, onClearFocus, onChang
         const timer = setInterval(() => { if (document.visibilityState !== "hidden") load(); }, REFRESH_MS);
         return () => clearInterval(timer);
     }, [load, reviewingId]);
+
+    // A new sign-up, or another staff member's decision, right away (also
+    // paused while one is open, so the record being reviewed doesn't shift).
+    useLiveEvent(["users", "admin-notifications", "reconnected"], load, !reviewingId);
 
     // Opened from a notification: show that registration.
     useEffect(() => {

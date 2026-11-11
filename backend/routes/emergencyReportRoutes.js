@@ -8,6 +8,8 @@ const reportController = require("../controllers/reportController");
 const { verifyToken, verifyAdmin, verifyReportAccess, reportAsSignedInUser } = require("../middleware/authMiddleware");
 const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
 const { logResidentActivity, reportReference } = require("../middleware/residentActivity");
+const { reportsChanged } = require("../middleware/liveReports");
+const changed = reportsChanged("emergency_reports");
 
 const logStatus = logActivity("Updated report status", describeStatusChange("emergency_reports", "Emergency report"));
 
@@ -31,13 +33,13 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-router.post("/",             verifyToken,             upload.array("media", 10), reportAsSignedInUser, logResidentActivity("Submitted emergency report"), reportController.createReport);
+router.post("/",             verifyToken,             changed, upload.array("media", 10), reportAsSignedInUser, logResidentActivity("Submitted emergency report"), reportController.createReport);
 router.get("/",              verifyToken, verifyAdmin, reportController.getReports);
 router.get("/statistics",    verifyToken, verifyAdmin, reportController.getStatistics);
 router.get("/:id",           verifyToken, verifyReportAccess("emergency_reports", "admin"), reportController.getReport);
-router.put("/:id",           verifyToken, verifyReportAccess("emergency_reports", "super"), logResidentActivity("Edited emergency report", reportReference("emergency_reports")), reportController.updateReport);
+router.put("/:id",           verifyToken, verifyReportAccess("emergency_reports", "super"), changed, logResidentActivity("Edited emergency report", reportReference("emergency_reports")), reportController.updateReport);
 router.put("/:id/status",    verifyToken, verifyAdmin, logStatus, reportController.updateStatus);
 router.patch("/:id/status",  verifyToken, verifyAdmin, logStatus, reportController.updateStatus);
-router.delete("/:id",        verifyToken, verifyReportAccess("emergency_reports", "super"), logResidentActivity("Deleted emergency report", reportReference("emergency_reports")), reportController.deleteReport);
+router.delete("/:id",        verifyToken, verifyReportAccess("emergency_reports", "super"), changed, logResidentActivity("Deleted emergency report", reportReference("emergency_reports")), reportController.deleteReport);
 
 module.exports = router;

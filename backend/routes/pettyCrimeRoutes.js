@@ -8,6 +8,8 @@ const controller = require("../controllers/pettyCrimeController");
 const { verifyToken, verifyAdmin, verifyReportAccess, reportAsSignedInUser } = require("../middleware/authMiddleware");
 const { logActivity, describeStatusChange } = require("../middleware/activityLogger");
 const { logResidentActivity, reportReference } = require("../middleware/residentActivity");
+const { reportsChanged } = require("../middleware/liveReports");
+const changed = reportsChanged("petty_crimes");
 
 const logStatus = logActivity("Updated report status", describeStatusChange("petty_crimes", "Petty crime report"));
 
@@ -31,12 +33,12 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-router.post("/",             verifyToken,             upload.array("media", 10), reportAsSignedInUser, logResidentActivity("Submitted petty crime report"), controller.createReport);
+router.post("/",             verifyToken,             changed, upload.array("media", 10), reportAsSignedInUser, logResidentActivity("Submitted petty crime report"), controller.createReport);
 router.get("/",              verifyToken, verifyAdmin, controller.getReports);
 router.get("/statistics",    verifyToken, verifyAdmin, controller.getStatistics);
 router.get("/:id",           verifyToken, verifyReportAccess("petty_crimes", "admin"), controller.getReport);
-router.put("/:id",           verifyToken, verifyReportAccess("petty_crimes", "super"), logResidentActivity("Edited petty crime report", reportReference("petty_crimes")), controller.updateReport);
+router.put("/:id",           verifyToken, verifyReportAccess("petty_crimes", "super"), changed, logResidentActivity("Edited petty crime report", reportReference("petty_crimes")), controller.updateReport);
 router.patch("/:id/status",  verifyToken, verifyAdmin, logStatus, controller.updateStatus);
-router.delete("/:id",        verifyToken, verifyReportAccess("petty_crimes", "super"), logResidentActivity("Deleted petty crime report", reportReference("petty_crimes")), controller.deleteReport);
+router.delete("/:id",        verifyToken, verifyReportAccess("petty_crimes", "super"), changed, logResidentActivity("Deleted petty crime report", reportReference("petty_crimes")), controller.deleteReport);
 
 module.exports = router;

@@ -23,6 +23,7 @@ import { announceCommentsChanged } from "../shared/commentsLive";
 import useTabNotifications, { markNotificationsViewed } from "../shared/useTabNotifications";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { MAIN_LOGO } from "../shared/logos";
+import { refreshSiteContent } from "../shared/useSiteContent";
 import "./navbar/NavbarStyle.css";
 
 
@@ -264,6 +265,8 @@ function ResidentNavbar() {
     profile: refreshProfile,
     reports: refreshReports,
     comments: () => { announceCommentsChanged(); reloadAnnouncements(); },
+    // Hotlines, officials, photos and videos edited by staff.
+    'site-content': refreshSiteContent,
     reconnected: () => {
       refreshSyncedState();
       focusRefresh.current();

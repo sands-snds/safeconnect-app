@@ -17,6 +17,7 @@ import {
   updateAnnouncementArchiveSettings
 } from "../../../Services/api";
 import { tx } from "../../../i18n/adminText";
+import { useLiveEvent } from "../../shared/liveBus";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -77,8 +78,9 @@ const AnnouncementsTable = ({
   const filterType = "announcements";
   const currentFilters = filters[filterType] || { status: "All Items", search: "" };
 
-  const loadAnnouncements = useCallback(async () => {
-    setLoading(true);
+  // silent: a live update, so no loading spinner over the table.
+  const loadAnnouncements = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError("");
 
     try {
@@ -95,6 +97,10 @@ const AnnouncementsTable = ({
     loadAnnouncements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Posted, edited or archived by another staff member, or liked or
+  // commented on by residents: the table updates on its own.
+  useLiveEvent(["announcements", "comments", "reconnected"], () => loadAnnouncements({ silent: true }));
 
   useEffect(() => {
     if (pendingCreateAnnouncement) {

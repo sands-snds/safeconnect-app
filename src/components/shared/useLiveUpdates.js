@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { API_ENDPOINTS, getAuthToken } from '../../Services/api';
+import { emitLive } from './liveBus';
+
+// Events that arrive close together (a status change sends "reports" and
+// "admin-notifications") are handled once, a moment later: each handler runs
+// once and each type is passed on to liveBus listeners once.
+const BATCH_MS = 250;
 
 
 
@@ -23,11 +29,27 @@ export default function useLiveUpdates(enabled, handlers) {
     let retryTimer = null;
     let failures = 0;
     let connectedBefore = false;
+    let batch = new Set();
+    let batchTimer = null;
+
+    const flush = () => {
+      batchTimer = null;
+      const types = [...batch];
+      batch = new Set();
+      const run = new Set();
+      types.forEach((type) => {
+        const fn = handlersRef.current[type];
+        if (fn) run.add(fn);
+      });
+      run.forEach((fn) => fn());
+      types.forEach(emitLive);
+    };
 
     const handle = (block) => {
       const match = block.match(/^event: *(.+)$/m);
-      const fn = match && handlersRef.current[match[1].trim()];
-      if (fn) fn();
+      if (!match) return;
+      batch.add(match[1].trim());
+      if (!batchTimer) batchTimer = setTimeout(flush, BATCH_MS);
     };
 
     const connect = async () => {
@@ -44,7 +66,10 @@ export default function useLiveUpdates(enabled, handlers) {
         if (res.status === 401 || res.status === 403) return;
         if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
-        if (connectedBefore && handlersRef.current.reconnected) handlersRef.current.reconnected();
+        if (connectedBefore) {
+          if (handlersRef.current.reconnected) handlersRef.current.reconnected();
+          emitLive('reconnected');
+        }
         connectedBefore = true;
         failures = 0;
 
@@ -73,6 +98,7 @@ export default function useLiveUpdates(enabled, handlers) {
     return () => {
       stopped = true;
       clearTimeout(retryTimer);
+      clearTimeout(batchTimer);
       if (controller) controller.abort();
     };
   }, [enabled]);

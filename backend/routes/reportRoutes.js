@@ -11,6 +11,8 @@ const archiveController = require("../controllers/archiveController");
 const { REPORT_TABLES } = require("../services/archiveService");
 const { verifyToken, verifyAdmin, verifySuperAdmin, verifySelfOrAnyAdmin } = require("../middleware/authMiddleware");
 const { logActivity } = require("../middleware/activityLogger");
+const { reportsChanged, tableOfType } = require("../middleware/liveReports");
+const archiveChanged = reportsChanged(tableOfType);
 
 // e.g. "Emergency report ER-2026-0001"
 const describeReport = async (req) => {
@@ -42,9 +44,9 @@ router.put("/archive-settings", verifyToken, verifyAdmin, verifySuperAdmin,
     logActivity("Changed archive settings", describeArchiveSetting), archiveController.updateSettings);
 
 // :type is emergency | assistance | pettyCrime
-router.patch("/:type/:id/archive", verifyToken, verifyAdmin,
+router.patch("/:type/:id/archive", verifyToken, verifyAdmin, archiveChanged,
     logActivity("Archived report", describeReport), archiveController.archiveReport);
-router.patch("/:type/:id/restore", verifyToken, verifyAdmin,
+router.patch("/:type/:id/restore", verifyToken, verifyAdmin, archiveChanged,
     logActivity("Restored archived report", describeReport), archiveController.restoreReport);
 
 module.exports = router;

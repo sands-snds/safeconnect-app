@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import useLiveUpdates from './useLiveUpdates';
 import { getAuthToken } from '../../Services/api';
+import { LIVE_EVENT, emitLive, useLiveEvent } from './liveBus';
 
 jest.mock('../../Services/api', () => ({
   API_ENDPOINTS: { ME: 'http://api.test/api/me' },
@@ -70,4 +71,30 @@ test('does nothing when not signed in or disabled', () => {
   getAuthToken.mockReturnValue(null);
   renderHook(() => useLiveUpdates(true, {}));
   expect(global.fetch).not.toHaveBeenCalled();
+});
+
+test('a burst of events runs a shared handler once and passes each type on to page listeners', async () => {
+  global.fetch = jest.fn(() => Promise.resolve(streamResponse([
+    ': connected\n\n',
+    'event: reports\ndata: {}\n\nevent: admin-notifications\ndata: {}\n\nevent: reports\ndata: {}\n\n'
+  ])));
+  const reload = jest.fn();
+  const heard = [];
+  const listener = (e) => heard.push(e.detail);
+  window.addEventListener(LIVE_EVENT, listener);
+  renderHook(() => useLiveUpdates(true, { reports: reload, 'admin-notifications': reload }));
+  await waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
+  expect(heard.sort()).toEqual(['admin-notifications', 'reports']);
+  window.removeEventListener(LIVE_EVENT, listener);
+});
+
+test('useLiveEvent only hears the types it asks for, and not while paused', () => {
+  const fn = jest.fn();
+  const { rerender } = renderHook(({ on }) => useLiveEvent(['users'], fn, on), { initialProps: { on: true } });
+  emitLive('reports');
+  emitLive('users');
+  expect(fn).toHaveBeenCalledTimes(1);
+  rerender({ on: false });
+  emitLive('users');
+  expect(fn).toHaveBeenCalledTimes(1);
 });

@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const live = require("../services/liveUpdates");
 
 const SIGNIN_EXTRA_COLUMNS = {
     ip_address: "VARCHAR(45) DEFAULT NULL",
@@ -21,6 +22,7 @@ class Log {
     }
 
     static async logSignin(fullName, email, status, ctx = {}) {
+        live.notifyAdminsSoon("logs");
         try {
             const [result] = await db.query(
                 `INSERT INTO signin_logs

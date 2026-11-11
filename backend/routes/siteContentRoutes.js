@@ -8,6 +8,9 @@ const { verifyToken, verifyAdmin, verifySuperAdmin } = require("../middleware/au
 const { logActivity } = require("../middleware/activityLogger");
 
 const adminOnly = [verifyToken, verifyAdmin, verifySuperAdmin];
+const { afterSuccess, notifyAll } = require("../services/liveUpdates");
+// Hotlines, officials, photos and videos: open pages show the new ones.
+const contentChanged = afterSuccess(() => notifyAll("site-content"));
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const VIDEO_TYPES = ["video/mp4", "video/webm"];
@@ -42,12 +45,12 @@ const handleUpload = (req, res, next) =>
 router.get("/", controller.getContent);
 
 // Admin (super_admin) only: Content > Page Contacts.
-router.put("/", ...adminOnly,
+router.put("/", ...adminOnly, contentChanged,
     logActivity("Updated page contacts", () => "Emergency contacts, officials and socials"),
     controller.updateContent);
 
 // Admin (super_admin) only: Content > Page Contents.
-router.put("/media", ...adminOnly,
+router.put("/media", ...adminOnly, contentChanged,
     logActivity("Updated page contents", () => "Carousel photos and demo videos"),
     controller.updateMedia);
 router.post("/upload", ...adminOnly, handleUpload, checkImageSize, controller.uploadMedia);

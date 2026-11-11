@@ -13,6 +13,11 @@ const {
 const { logActivity } = require("../middleware/activityLogger");
 const User = require("../models/User");
 const { roleLabel } = require("../utils/roles");
+const { afterSuccess, notifyUser, notifyAdmins } = require("../services/liveUpdates");
+
+// An account changed: the staff user lists and Account Verification reload,
+// and the person's own open pages pick up their new details or status.
+const accountChanged = afterSuccess((req) => { notifyAdmins("users"); notifyUser(req.params.id, "profile"); });
 
 const describeUserChange = (field) => async (req) => {
     const user = await User.findById(req.params.id);
@@ -38,18 +43,17 @@ const describeVerification = async (req) => {
 };
 router.get("/verifications", verifyToken, verifyAdmin, verifySuperAdmin, verificationController.list);
 router.get("/:id/valid-id", verifyToken, verifyAdmin, verifySuperAdmin, verificationController.getIdDocument);
-router.patch("/:id/verification", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Reviewed account registration", describeVerification), verificationController.decide);
-router.put("/:id", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
-router.patch("/:id/status", verifyToken, verifyAdmin, verifySuperAdmin, logUserStatus, userController.updateUserStatus);
-router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Changed user role", describeUserChange("role")), userController.updateUserRole);
+router.patch("/:id/verification", verifyToken, verifyAdmin, verifySuperAdmin, accountChanged, logActivity("Reviewed account registration", describeVerification), verificationController.decide);
+router.put("/:id", verifyToken, verifyAdmin, verifySuperAdmin, accountChanged, logUserStatus, userController.updateUserStatus);
+router.patch("/:id/status", verifyToken, verifyAdmin, verifySuperAdmin, accountChanged, logUserStatus, userController.updateUserStatus);
+router.patch("/:id/role", verifyToken, verifyAdmin, verifySuperAdmin, accountChanged, logActivity("Changed user role", describeUserChange("role")), userController.updateUserRole);
 // Closed accounts: Archived tab.
-router.patch("/:id/archive", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Archived account", describeUserTarget), userController.archiveUser);
-router.patch("/:id/restore", verifyToken, verifyAdmin, verifySuperAdmin, logActivity("Restored archived account", describeUserTarget), userController.restoreUser);
+router.patch("/:id/archive", verifyToken, verifyAdmin, verifySuperAdmin, accountChanged, logActivity("Archived account", describeUserTarget), userController.archiveUser);
+router.patch("/:id/restore", verifyToken, verifyAdmin, verifySuperAdmin, accountChanged, logActivity("Restored archived account", describeUserTarget), userController.restoreUser);
 
 router.get("/:id", verifyToken, verifySelfOrAdmin, userController.getUserById);
 
-const { afterSuccess, notifyUser } = require("../services/liveUpdates");
-const profileChanged = afterSuccess((req) => notifyUser(req.params.id, "profile"));
+const profileChanged = accountChanged;
 
 router.post("/:id/photo", verifyToken, verifySelfOrAdmin, profileChanged, upload.single("photo"), userController.uploadPhoto);
 router.patch("/:id/name", verifyToken, verifySelfOrAdmin, profileChanged, userController.updateFullName);

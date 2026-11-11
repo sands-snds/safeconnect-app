@@ -4,6 +4,7 @@ import { showPopup } from '../../shared/popup';
 import { timeAgo } from '../shared/timeUtils';
 import { notificationType, notificationTarget } from './notificationTypes';
 import { tx } from "../../../i18n/adminText";
+import { useLiveEvent } from '../../shared/liveBus';
 
 const PAGE_SIZE = 20;
 const FILTERS = [
@@ -96,6 +97,12 @@ export default function NotificationsPage({
   useEffect(() => {
     if (box === 'archived' && archived === null) loadArchived();
   }, [box, archived]);
+
+  // Another staff member archived or restored one: the Archived tab follows
+  // (the inbox comes from the admin page, which reloads it).
+  useLiveEvent(['admin-notification-state', 'admin-notifications', 'reconnected'], () => {
+    if (archived !== null) loadArchived();
+  });
 
   useEffect(() => {
     if (!focus?.id) return;

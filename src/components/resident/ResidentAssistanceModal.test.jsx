@@ -4,6 +4,8 @@ import { LanguageProvider } from '../../i18n/LanguageContext';
 import { createAssistanceRequest, updateAssistanceRequest } from '../../Services/api';
 import { showPopup } from '../shared/popup';
 
+jest.setTimeout(20000); // some of these tests take ~4.5 s alone, near Jest's 5 s default, and time out on a busy run
+
 // The photo / video date check has its own tests (mediaCheck.test.js); here
 // every attachment counts as taken today.
 jest.mock('../shared/media/mediaCheck', () => ({

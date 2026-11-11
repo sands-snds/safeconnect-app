@@ -64,7 +64,7 @@ router.put("/:id", verifyToken, verifyAdmin, announcementsChanged, upload.single
 router.delete("/:id", verifyToken, verifyAdmin, announcementsChanged, logActivity("Deleted announcement", announcementTitle), controller.deleteAnnouncement);
 
 router.get("/:id/comments", controller.getComments);
-router.post("/:id/like", verifyToken, controller.toggleLike);
+router.post("/:id/like", verifyToken, announcementsChanged, controller.toggleLike);
 router.post("/:id/comments", verifyToken, controller.createComment);
 router.delete("/comments/:commentId", verifyToken, controller.deleteComment);
 
