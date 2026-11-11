@@ -16,7 +16,9 @@ const STYLE = `
   .rdp-desc { flex: 1 1 360px; min-width: 0; background: #fff; border: 1px solid #f1e4e7; border-left: 4px solid var(--rdp-accent); border-radius: 10px; padding: 12px 16px 14px; }
   .rdp-kicker { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--rdp-accent); margin-bottom: 6px; }
   .rdp-desc-text { margin: 0; font-size: 15.5px; line-height: 1.55; color: #111827; white-space: pre-wrap; word-break: break-word; }
+  .rdp-desc-text.small { font-size: 14.5px; }
   .rdp-desc-text.empty { color: #9ca3af; font-style: italic; font-size: 14px; }
+  .rdp-desc-extra { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #ead9dd; }
   .rdp-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
   .rdp-body { display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
   .rdp-facts { flex: 1 1 220px; min-width: 200px; max-width: 340px; display: flex; flex-direction: column; gap: 10px; }
@@ -36,7 +38,10 @@ const STYLE = `
 `;
 
 // facts: [{ icon, label, value, muted, warn, key }]; empty values are left out.
+// extraText: { icon, label, value, empty } shown under the description in the
+// same card (petty crime's suspect information).
 const ReportDetailsPanel = ({
+  extraText = null,
   type,
   report,
   accentColor = "#6B2C3E",
@@ -55,14 +60,25 @@ const ReportDetailsPanel = ({
       <DismissalNote report={report} />
 
       <div className="rdp-top">
-        <section className="rdp-desc" aria-label={tx(descriptionLabel)}>
+        {/* A div, not a section: App.css strips every section's padding. */}
+        <div className="rdp-desc" role="region" aria-label={tx(descriptionLabel)}>
           <div className="rdp-kicker">
             <i className="bi bi-chat-square-text-fill" aria-hidden="true" /> {tx(descriptionLabel)}
           </div>
           <p className={`rdp-desc-text${description ? "" : " empty"}`}>
             {description || tx("No description was given.")}
           </p>
-        </section>
+          {extraText && (
+            <div className="rdp-desc-extra">
+              <div className="rdp-kicker">
+                <i className={`bi ${extraText.icon}`} aria-hidden="true" /> {extraText.label}
+              </div>
+              <p className={`rdp-desc-text small${extraText.value ? "" : " empty"}`}>
+                {extraText.value || extraText.empty}
+              </p>
+            </div>
+          )}
+        </div>
         {actions && <div className="rdp-actions">{actions}</div>}
       </div>
 

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import EmergencyReportDetails from '../emergency/EmergencyReportDetails';
 import PettyCrimeReportDetails from '../pettyCrime/PettyCrimeReportDetails';
 
@@ -59,6 +59,7 @@ test('a dismissed report shows why at the top', () => {
 
 test('petty crime shows the suspect, and hides the contact when anonymous', () => {
   render(<PettyCrimeReportDetails report={{ ...REPORT, isAnonymous: true, suspectInfo: 'Tall, red cap' }} />);
-  expect(screen.getByText('Tall, red cap')).toBeInTheDocument();
+  const card = screen.getByRole('region', { name: 'Description' });
+  expect(within(card).getByText('Tall, red cap')).toBeInTheDocument();
   expect(screen.queryByText('09171234567')).toBeNull();
 });

@@ -25,15 +25,14 @@ const PettyCrimeReportDetails = ({ report, actions }) => (
             label: isForOthers(report) ? tx("Reporter Contact") : tx("Contact Number"),
             value: report.phone || tx("Not provided"),
             muted: !report.phone
-          },
-      {
-        icon: "bi-person-bounding-box",
-        label: tx("Suspect Information"),
-        value: report.suspectInfo || tx("None"),
-        muted: !report.suspectInfo,
-        warn: Boolean(report.suspectInfo)
-      }
+          }
     ]}
+    extraText={{
+      icon: "bi-person-bounding-box",
+      label: tx("Suspect Information"),
+      value: (report.suspectInfo || "").trim(),
+      empty: tx("None")
+    }}
   />
 );
 
