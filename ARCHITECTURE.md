@@ -751,9 +751,10 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 | Component | What it does |
 |---|---|
 | `ReportsPage.jsx` | Picks the Emergency, Assistance or Petty Crime tab, and applies the **Active/Archived split**, status filter, "filed for" filter and search. Renders `ArchiveToolbar` above the list. With `focusId` (from a notification) it shows only that report, opened, with a "Show all reports" bar. |
-| `emergency/EmergencyPage.jsx` → `EmergencyReportsTable.jsx` → `EmergencyReportDetails.jsx` | Each report is a `ReportCard` (red accent; the status pill after the title's pills) with a `StatusSelect`, an `ArchiveButton`, and expandable details (`DismissalNote` for a dismissed one) including the photo or video and the map. |
-| `assistance/…` | The same structure for assistance requests (with an "N people" pill). |
-| `pettyCrime/…` | The same structure for petty crimes. |
+| `emergency/EmergencyPage.jsx` → `EmergencyReportsTable.jsx` → `EmergencyReportDetails.jsx` | A `ReportsTable` (`shared/ReportsTable.jsx`, through `ListView` `layout="custom"`): Report ID, Type, Reporter (with the "For" tag), Location, People, Filed, Status (the cards' pill colors), Actions (`StatusSelect` "Move to …" and `ArchiveButton`) and View / Hide details. The opened row shows `DismissalNote`, the details (photo or video, map) and **Dismiss** (`StatusSelect` with `showAdvance={false}`). Red accent. |
+| `assistance/…` | The same table for assistance requests (Help needed, Requester, People; maroon accent). |
+| `pettyCrime/…` | The same table for petty crimes (Crime type; amber accent). |
+| `shared/ReportsTable.jsx` | The report tabs' table: `columns` (`{ key, label, width, render }`), resizable by dragging (or arrow keys on) each header's right edge, widths saved per tab in `localStorage` (`sc_report_columns_<type>`); faint column lines; each row's accent bar; an opened-details row; below 760 px of room (container query) each row becomes a labelled card. `StatusPill` draws a status in the cards' colors. |
 | `shared/ArchiveToolbar.jsx` | The **Active (n) / Archived (n)** switch and the auto-archive period (super admins get a dropdown; other admins see it as text). Used by the report tabs, Announcements, Users and the logs. On phones the two tabs span the width and the setting sits below (`archive-toolbar*` in `admin.css`). |
 | `shared/ArchiveButton.jsx` | **Archive** on Resolved and Dismissed reports and **Restore** on archived ones. |
 | `shared/DismissalNote.jsx` | The reason, at the top of a dismissed report's details. |

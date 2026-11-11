@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 
 import ListView, { allOption } from "../../shared/ListView";
-import ReportCard from "../../shared/ReportCard";
 
 import EmergencyReportDetails from "./EmergencyReportDetails";
 import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
 import DismissalNote from "../shared/DismissalNote";
+import ReportsTable, { StatusPill } from "../shared/ReportsTable";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
@@ -15,6 +15,24 @@ const STATUS_OPTIONS = [
   "In Progress",
   "Resolved",
   "Dismissed"
+];
+
+const COLUMNS = [
+  { key: "id", label: "Report ID", width: 150, render: (r) => <span className="rt-id">{r.reference || `#${r.id}`}</span> },
+  { key: "type", label: "Type", width: 150, render: (r) => tx(r.emergency) },
+  {
+    key: "reporter", label: "Reporter", width: 170,
+    render: (r) => (
+      <>
+        <div>{r.reporter}</div>
+        <ReportForTag report={r} />
+      </>
+    )
+  },
+  { key: "location", label: "Location", width: 240, render: (r) => r.location },
+  { key: "people", label: "People", width: 80, render: (r) => (r.peopleAffected && r.peopleAffected !== "0" ? r.peopleAffected : <span className="rt-muted">—</span>) },
+  { key: "filed", label: "Filed", width: 150, render: (r) => <span className="rt-muted">{r.date}</span> },
+  { key: "status", label: "Status", width: 120, render: (r) => <StatusPill badge={statusBadge(r.status)} /> }
 ];
 
 const EmergencyReportsTable = ({
@@ -38,51 +56,54 @@ const EmergencyReportsTable = ({
     );
   };
 
-  const renderRow = (report) => (
-    <ReportCard
-      key={report.id}
+  const renderTable = (items) => (
+    <ReportsTable
+      type="emergency"
       accentColor="#dc2626"
-      title={tx(report.emergency)}
-      badge={statusBadge(report.status)}
-      tag={
+      columns={COLUMNS}
+      items={items}
+      expandedId={expandedRowId}
+      onToggle={toggleDetails}
+      renderActions={(report) => (
         <>
-          {report.peopleAffected && report.peopleAffected !== "0" && (
-            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: "#f3f4f6", color: "#374151", fontWeight: 600, whiteSpace: "nowrap" }}>
-              {report.peopleAffected} people
-            </span>
-          )}
-          <ReportForTag report={report} />
-        </>
-      }
-      subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
-      statusControl={
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <StatusSelect
             value={report.status}
             reportId={report.id}
             reportType="emergency"
             onUpdateStatus={onUpdateStatus}
             showBadge={false}
+            showDismiss={false}
           />
           <ArchiveButton report={report} reportType="emergency" onArchive={onArchive} />
-        </div>
-      }
-      expanded={expandedRowId === report.id}
-      onToggle={() => toggleDetails(report.id)}
-    >
-      <DismissalNote report={report} />
-      <EmergencyReportDetails report={report} />
-    </ReportCard>
+        </>
+      )}
+      renderDetails={(report) => (
+        <>
+          <DismissalNote report={report} />
+          <EmergencyReportDetails report={report} />
+          <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
+            <StatusSelect
+              value={report.status}
+              reportId={report.id}
+              reportType="emergency"
+              onUpdateStatus={onUpdateStatus}
+              showBadge={false}
+              showAdvance={false}
+            />
+          </div>
+        </>
+      )}
+    />
   );
 
   return (
     <ListView
       data={data}
-      layout="cards"
+      layout="custom"
+      renderTable={renderTable}
       filterType="emergency"
       filters={filters}
       setFilters={setFilters}
-      renderRow={renderRow}
       statusOptions={[
         allOption("All Statuses"),
         ...STATUS_OPTIONS

@@ -23,13 +23,17 @@ const NEXT_BUTTON_CLASS = {
 
 const CLOSED_STATUSES = ["Resolved", "Dismissed"];
 
+// showAdvance / showDismiss: the reports table shows "Move to …" in the row
+// and Dismiss inside the opened details.
 const StatusSelect = ({
   value,
   reportId,
   reportType,
   onUpdateStatus,
 
-  showBadge = true
+  showBadge = true,
+  showAdvance = true,
+  showDismiss = true
 }) => {
   const [pendingNext, setPendingNext] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,7 +74,7 @@ const StatusSelect = ({
         </span>
       )}
 
-      {nextStatus && (
+      {showAdvance && nextStatus && (
         <button
           type="button"
           className={`button ${NEXT_BUTTON_CLASS[nextStatus] || "button-soft"}`}
@@ -85,7 +89,7 @@ const StatusSelect = ({
         </button>
       )}
 
-      {canDismiss && (
+      {showDismiss && canDismiss && (
         <button
           type="button"
           className="button button-danger-soft"

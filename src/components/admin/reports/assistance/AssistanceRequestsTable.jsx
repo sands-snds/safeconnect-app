@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 
 import ListView, { allOption } from "../../shared/ListView";
-import ReportCard from "../../shared/ReportCard";
 
 import AssistanceRequestDetails from "./AssistanceRequestDetails";
 import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
 import DismissalNote from "../shared/DismissalNote";
+import ReportsTable, { StatusPill } from "../shared/ReportsTable";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
@@ -15,6 +15,32 @@ const STATUS_OPTIONS = [
   "In Progress",
   "Resolved",
   "Dismissed"
+];
+
+const COLUMNS = [
+  { key: "id", label: "Report ID", width: 150, render: (r) => <span className="rt-id">{r.reference || `#${r.id}`}</span> },
+  {
+    key: "help", label: "Help needed", width: 190,
+    render: (r) => (
+      <>
+        <div>{tx(r.assistanceType)}</div>
+        {r.victimOfEmergency && <div className="rt-muted">{tx(r.victimOfEmergency)}</div>}
+      </>
+    )
+  },
+  {
+    key: "requester", label: "Requester", width: 170,
+    render: (r) => (
+      <>
+        <div>{r.requester}</div>
+        <ReportForTag report={r} />
+      </>
+    )
+  },
+  { key: "location", label: "Location", width: 240, render: (r) => r.location },
+  { key: "people", label: "People", width: 80, render: (r) => r.peopleAffected || 1 },
+  { key: "filed", label: "Filed", width: 150, render: (r) => <span className="rt-muted">{r.date}</span> },
+  { key: "status", label: "Status", width: 120, render: (r) => <StatusPill badge={statusBadge(r.status)} /> }
 ];
 
 const AssistanceRequestsTable = ({
@@ -38,49 +64,54 @@ const AssistanceRequestsTable = ({
     );
   };
 
-  const renderRow = (request) => (
-    <ReportCard
-      key={request.id}
+  const renderTable = (items) => (
+    <ReportsTable
+      type="assistance"
       accentColor="#6B2C3E"
-      title={request.victimOfEmergency ? `${tx(request.assistanceType)} · ${tx(request.victimOfEmergency)}` : tx(request.assistanceType)}
-      badge={statusBadge(request.status)}
-      tag={
+      columns={COLUMNS}
+      items={items}
+      expandedId={expandedRowId}
+      onToggle={toggleDetails}
+      renderActions={(request) => (
         <>
-          <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: "#f3f4f6", color: "#374151", fontWeight: 600, whiteSpace: "nowrap" }}>
-            {request.peopleAffected || 1} people
-          </span>
-          <ReportForTag report={request} />
-        </>
-      }
-      subtitle={`${request.requester} · ${request.location} · ${request.date}`}
-      statusControl={
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <StatusSelect
             value={request.status}
             reportId={request.id}
             reportType="assistance"
             onUpdateStatus={onUpdateStatus}
             showBadge={false}
+            showDismiss={false}
           />
           <ArchiveButton report={request} reportType="assistance" onArchive={onArchive} />
-        </div>
-      }
-      expanded={expandedRowId === request.id}
-      onToggle={() => toggleDetails(request.id)}
-    >
-      <DismissalNote report={request} />
-      <AssistanceRequestDetails request={request} />
-    </ReportCard>
+        </>
+      )}
+      renderDetails={(request) => (
+        <>
+          <DismissalNote report={request} />
+          <AssistanceRequestDetails request={request} />
+          <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
+            <StatusSelect
+              value={request.status}
+              reportId={request.id}
+              reportType="assistance"
+              onUpdateStatus={onUpdateStatus}
+              showBadge={false}
+              showAdvance={false}
+            />
+          </div>
+        </>
+      )}
+    />
   );
 
   return (
     <ListView
       data={data}
-      layout="cards"
+      layout="custom"
+      renderTable={renderTable}
       filterType="assistance"
       filters={filters}
       setFilters={setFilters}
-      renderRow={renderRow}
       statusOptions={[
         allOption("All Statuses"),
         ...STATUS_OPTIONS

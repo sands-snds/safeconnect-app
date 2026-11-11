@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 
 import ListView, { allOption } from "../../shared/ListView";
-import ReportCard from "../../shared/ReportCard";
 
 import PettyCrimeReportDetails from "./PettyCrimeReportDetails";
 import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
 import DismissalNote from "../shared/DismissalNote";
+import ReportsTable, { StatusPill } from "../shared/ReportsTable";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
@@ -15,6 +15,23 @@ const STATUS_OPTIONS = [
   "In Progress",
   "Resolved",
   "Dismissed"
+];
+
+const COLUMNS = [
+  { key: "id", label: "Report ID", width: 150, render: (r) => <span className="rt-id">{r.reference || `#${r.id}`}</span> },
+  { key: "crime", label: "Crime type", width: 170, render: (r) => tx(r.crimeType) },
+  {
+    key: "reporter", label: "Reporter", width: 170,
+    render: (r) => (
+      <>
+        <div>{r.reporter}</div>
+        <ReportForTag report={r} />
+      </>
+    )
+  },
+  { key: "location", label: "Location", width: 260, render: (r) => r.location },
+  { key: "filed", label: "Filed", width: 150, render: (r) => <span className="rt-muted">{r.date}</span> },
+  { key: "status", label: "Status", width: 120, render: (r) => <StatusPill badge={statusBadge(r.status)} /> }
 ];
 
 const PettyCrimeReportsTable = ({
@@ -38,42 +55,54 @@ const PettyCrimeReportsTable = ({
     );
   };
 
-  const renderRow = (report) => (
-    <ReportCard
-      key={report.id}
+  const renderTable = (items) => (
+    <ReportsTable
+      type="pettyCrime"
       accentColor="#b45309"
-      title={tx(report.crimeType)}
-      badge={statusBadge(report.status)}
-      tag={<ReportForTag report={report} />}
-      subtitle={`${report.reporter} · ${report.location} · ${report.date}`}
-      statusControl={
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      columns={COLUMNS}
+      items={items}
+      expandedId={expandedRowId}
+      onToggle={toggleDetails}
+      renderActions={(report) => (
+        <>
           <StatusSelect
             value={report.status}
             reportId={report.id}
             reportType="pettyCrime"
             onUpdateStatus={onUpdateStatus}
             showBadge={false}
+            showDismiss={false}
           />
           <ArchiveButton report={report} reportType="pettyCrime" onArchive={onArchive} />
-        </div>
-      }
-      expanded={expandedRowId === report.id}
-      onToggle={() => toggleDetails(report.id)}
-    >
-      <DismissalNote report={report} />
-      <PettyCrimeReportDetails report={report} />
-    </ReportCard>
+        </>
+      )}
+      renderDetails={(report) => (
+        <>
+          <DismissalNote report={report} />
+          <PettyCrimeReportDetails report={report} />
+          <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
+            <StatusSelect
+              value={report.status}
+              reportId={report.id}
+              reportType="pettyCrime"
+              onUpdateStatus={onUpdateStatus}
+              showBadge={false}
+              showAdvance={false}
+            />
+          </div>
+        </>
+      )}
+    />
   );
 
   return (
     <ListView
       data={data}
-      layout="cards"
+      layout="custom"
+      renderTable={renderTable}
       filterType="pettyCrime"
       filters={filters}
       setFilters={setFilters}
-      renderRow={renderRow}
       statusOptions={[
         allOption("All Statuses"),
         ...STATUS_OPTIONS

@@ -19,6 +19,9 @@ const ListView = ({
   onAdd,
   headers,
   renderRow,
+  // layout "custom": renderTable(visibleData) draws this page's rows itself
+  // (the report tabs' ReportsTable).
+  renderTable,
   statusOptions,
 
   layout = 'table',
@@ -178,7 +181,9 @@ const ListView = ({
       </div>
       )}
 
-      {layout === 'cards' ? (
+      {layout === 'custom' && renderTable ? (
+        renderTable(visibleData)
+      ) : layout === 'cards' ? (
         <div>
           <div className="lv-cards" style={cardsContainerStyle}>
             {visibleData.map(item => renderRow(item))}
