@@ -16,6 +16,7 @@ import { announceReportsChanged } from "./useCallAccess";
 import useReportMedia from "../shared/useReportMedia";
 import MediaLightbox from "../shared/media/MediaLightbox";
 import ResidentReportsMap from "./ResidentReportsMap";
+import { archiveReport, restoreReport, useReportArchive } from "./reportArchive";
 
 const TYPE_LABEL_KEYS = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYPE_LABEL_KEYS[type]}`) : type);
@@ -182,6 +183,28 @@ const mapHeightFor = () => {
 
 function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }) {
   const [mapHeight] = useState(mapHeightFor);
+
+  // The map beside the list moves like the weather card on the News page: it
+  // scrolls with the page until its bottom is in view, then holds there until
+  // the end of the list (its section), never covering the page header.
+  const bodyRef = useRef(null);
+  const mapColRef = useRef(null);
+  useEffect(() => {
+    const body = bodyRef.current;
+    const col = mapColRef.current;
+    if (!isOpen || !body || !col || typeof ResizeObserver === 'undefined') return undefined;
+    const GAP = 20;
+    const update = () => {
+      const padTop = parseFloat(getComputedStyle(body).paddingTop) || 0;
+      const room = body.clientHeight - padTop - col.offsetHeight - GAP;
+      col.style.setProperty('--map-sticky-top', `${Math.min(GAP, room)}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(body);
+    ro.observe(col);
+    return () => ro.disconnect();
+  }, [isOpen]);
   const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -232,6 +255,15 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, userId]);
 
+  // Reports or Archived (the resident's own archive, reportArchive.js).
+  const [showArchived, setShowArchived] = useState(false);
+  const isArchived = useReportArchive();
+  const boxReports = useMemo(
+    () => reports.filter((r) => isArchived(r.type, r.id) === showArchived),
+    [reports, isArchived, showArchived]
+  );
+  const archivedCount = useMemo(() => reports.filter((r) => isArchived(r.type, r.id)).length, [reports, isArchived]);
+
   const lastLoadedAt = useRef(0);
   const handledFocus = useRef(null);
   const skipPageReset = useRef(false);
@@ -274,14 +306,14 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
   }, [liveVersion]);
 
   const counts = useMemo(() => {
-    const c = { All: reports.length, Emergency: 0, Assistance: 0, 'Petty Crime': 0 };
-    reports.forEach((r) => { c[r.type] = (c[r.type] || 0) + 1; });
+    const c = { All: boxReports.length, Emergency: 0, Assistance: 0, 'Petty Crime': 0 };
+    boxReports.forEach((r) => { c[r.type] = (c[r.type] || 0) + 1; });
     return c;
-  }, [reports]);
+  }, [boxReports]);
 
 
   const filteredReports = useMemo(() => {
-    let list = activeFilter === 'All' ? reports : reports.filter((r) => r.type === activeFilter);
+    let list = activeFilter === 'All' ? boxReports : boxReports.filter((r) => r.type === activeFilter);
 
     if (statusFilter !== 'all') {
       const stage = getStageIndex(statusFilter);
@@ -303,28 +335,33 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
       const db = new Date(b.date).getTime() || 0;
       return sortOrder === 'oldest' ? da - db : db - da;
     });
-  }, [reports, activeFilter, statusFilter, searchQuery, sortOrder]);
+  }, [boxReports, activeFilter, statusFilter, searchQuery, sortOrder]);
 
   
   const pageCount = Math.max(1, Math.ceil(filteredReports.length / PAGE_SIZE));
   useEffect(() => {
     if (skipPageReset.current) { skipPageReset.current = false; return; }
     setPage(1);
-  }, [activeFilter, statusFilter, searchQuery, sortOrder]);
+  }, [activeFilter, statusFilter, searchQuery, sortOrder, showArchived]);
 
   useEffect(() => {
     if (!isOpen || !focusReport || handledFocus.current === focusReport.nonce || loading) return;
     const key = `${focusReport.type}-${focusReport.id}`;
     
-    const ordered = [...reports].sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
+    const target = reports.find((r) => `${r.type}-${r.id}` === key);
+    const inArchive = Boolean(target && isArchived(target.type, target.id));
+    const ordered = reports
+      .filter((r) => isArchived(r.type, r.id) === inArchive)
+      .sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
     const index = ordered.findIndex((r) => `${r.type}-${r.id}` === key);
     if (index === -1) {
       if (lastLoadedAt.current > focusReport.nonce) handledFocus.current = focusReport.nonce;
       return;
     }
     handledFocus.current = focusReport.nonce;
-    const filtersChange = activeFilter !== 'All' || statusFilter !== 'all' || searchQuery !== '' || sortOrder !== 'newest';
+    const filtersChange = activeFilter !== 'All' || statusFilter !== 'all' || searchQuery !== '' || sortOrder !== 'newest' || showArchived !== inArchive;
     skipPageReset.current = filtersChange;
+    setShowArchived(inArchive);
     setActiveFilter('All');
     setStatusFilter('all');
     setSearchQuery('');
@@ -370,6 +407,18 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
     if (report.type === 'Emergency') setShowEmergencyModal(true);
     if (report.type === 'Assistance') setShowAssistanceModal(true);
     if (report.type === 'Petty Crime') setShowCrimeModal(true);
+  };
+
+  // Archive (or, in the Archived view, restore) a report: it moves between
+  // the two lists; nothing about the report itself changes.
+  const toggleArchived = (report) => {
+    if (showArchived) {
+      restoreReport(report.type, report.id);
+      showPopup({ type: 'success', title: t('myReports.restoredTitle'), message: t('myReports.restoredBody') });
+    } else {
+      archiveReport(report.type, report.id);
+      showPopup({ type: 'success', title: t('myReports.archivedTitle'), message: t('myReports.archivedBody') });
+    }
   };
 
   const handleDelete = async (report) => {
@@ -478,15 +527,26 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
 
         .mr-wrap { max-width: 880px; margin: 0 auto; }
 
+        /* Reports | Archived */
+        .mr-box { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 0.9rem; background: #fff; border: 1px solid #ece4e6; border-radius: 12px; }
+        .mr-box-btn { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; padding: 7px 14px; border-radius: 9px; font-size: 0.85rem; font-weight: 600; color: #4b5563; cursor: pointer; font-family: inherit; }
+        .mr-box-btn:hover { color: #6B2C3E; }
+        .mr-box-btn[aria-pressed="true"] { background: #6B2C3E; color: #fff; }
+        .mr-box-btn .count { font-size: 0.72rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: rgba(107, 44, 62, 0.12); color: #6B2C3E; }
+        .mr-box-btn[aria-pressed="true"] .count { background: rgba(255, 255, 255, 0.25); color: #fff; }
+        .mr-box-btn:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; }
+
         /* Reports and the map, like the News page: the list on the left and
-           the map on the right (scrolling with the page) on wide screens; one
-           column, the map first, on tablets and phones. */
+           the map on the right on wide screens, moving like the News page's
+           weather card (see bodyRef); one column, the map first, on tablets
+           and phones. */
         .mr-layout { max-width: 880px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
         .mr-layout > .mr-wrap { max-width: none; margin: 0; min-width: 0; }
         .mr-map-col { min-width: 0; }
         @media (max-width: 1099px) { .mr-map-col { order: -1; } }
         @media (min-width: 1100px) {
           .mr-layout { max-width: 1320px; grid-template-columns: minmax(0, 1fr) minmax(420px, 42%); gap: 28px; align-items: start; }
+          .mr-map-col { position: sticky; top: var(--map-sticky-top, 20px); }
         }
 
         /* ── Toolbar: underline tabs instead of pill buttons ── */
@@ -1054,11 +1114,20 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
         </div>
       </div>
 
-      <div className="myreports-body">
+      <div className="myreports-body" ref={bodyRef}>
         <div className="mr-layout">
         <div className="mr-wrap">
 
           <div className="mr-toolbar">
+            <div className="mr-box" role="group" aria-label={t('myReports.boxLabel')}>
+              <button type="button" className="mr-box-btn" aria-pressed={!showArchived} onClick={() => setShowArchived(false)}>
+                <i className="bi bi-file-earmark-text" aria-hidden="true" /> {t('myReports.boxActive')}
+              </button>
+              <button type="button" className="mr-box-btn" aria-pressed={showArchived} onClick={() => setShowArchived(true)}>
+                <i className="bi bi-archive" aria-hidden="true" /> {t('myReports.boxArchived')}
+                {archivedCount > 0 && <span className="count">{archivedCount}</span>}
+              </button>
+            </div>
             <div className="mr-tabs">
               {FILTERS.map((f) => (
                 <button
@@ -1103,8 +1172,8 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
           {!loading && !error && reports.length > 0 && isSearchOrFilterActive && (
             <p className="mr-result-count">
               {reports.length === 1
-                ? t('myReports.showingCountSingular', { shown: filteredReports.length, total: reports.length })
-                : t('myReports.showingCountPlural', { shown: filteredReports.length, total: reports.length })}
+                ? t('myReports.showingCountSingular', { shown: filteredReports.length, total: boxReports.length })
+                : t('myReports.showingCountPlural', { shown: filteredReports.length, total: boxReports.length })}
             </p>
           )}
 
@@ -1140,6 +1209,8 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                   ? t('myReports.noSearchMatch')
                   : statusFilter !== 'all'
                     ? t('myReports.noFilterMatch')
+                  : showArchived && activeFilter === 'All'
+                    ? t('myReports.emptyArchived')
                   : activeFilter === 'All'
                     ? t('myReports.emptyAll')
                     : t('myReports.emptyFiltered', { type: typeLabel(activeFilter, t) })}
@@ -1302,7 +1373,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                         </button>
                       ) : <span />}
 
-                      {canEditOrDelete && (
+                      {(
                         <div className="mr-menu-wrap" data-menu-key={key}>
                           <button
                             type="button"
@@ -1316,6 +1387,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                           </button>
                           {openMenuKey === key && (
                             <div className="mr-menu" role="menu" aria-label={t('myReports.moreOptions')}>
+                              {canEditOrDelete && (
                               <button
                                 type="button"
                                 role="menuitem"
@@ -1325,6 +1397,19 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                               >
                                 <i className="bi bi-pencil"></i> {t('myReports.edit')}
                               </button>
+                              )}
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="mr-menu-item"
+                                autoFocus={!canEditOrDelete}
+                                onClick={() => { setOpenMenuKey(null); toggleArchived(r); }}
+                              >
+                                {showArchived
+                                  ? <><i className="bi bi-arrow-counterclockwise"></i> {t('myReports.restore')}</>
+                                  : <><i className="bi bi-archive"></i> {t('myReports.archive')}</>}
+                              </button>
+                              {canEditOrDelete && (
                               <button
                                 type="button"
                                 role="menuitem"
@@ -1333,6 +1418,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                               >
                                 <i className="bi bi-trash"></i> {t('myReports.delete')}
                               </button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1380,7 +1466,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
         </div>
 
         {/* Mounted only while the page is open, so the map sizes itself to a visible box. */}
-        <aside className="mr-map-col">
+        <aside className="mr-map-col" ref={mapColRef}>
           {isOpen && <ResidentReportsMap panel height={mapHeight} />}
         </aside>
         </div>

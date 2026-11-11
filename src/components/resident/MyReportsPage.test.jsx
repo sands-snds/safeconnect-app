@@ -6,9 +6,13 @@ import {
   updateEmergencyReport,
   updateAssistanceRequest,
   updatePettyCrimeReport,
-  deleteEmergencyReport
+  deleteEmergencyReport,
+  markItemsRead,
+  unmarkItems,
+  saveLanguagePreference
 } from '../../Services/api';
 import { showPopup, confirmPopup } from '../shared/popup';
+import { __resetSyncedState } from '../shared/useSyncedState';
 
 // The photo / video date check has its own tests (mediaCheck.test.js); here
 // every attachment counts as taken today.
@@ -48,7 +52,12 @@ jest.mock('../../Services/api', () => ({
   createAssistanceRequest: jest.fn(),
   updateAssistanceRequest: jest.fn(),
   createPettyCrimeReport: jest.fn(),
-  updatePettyCrimeReport: jest.fn()
+  updatePettyCrimeReport: jest.fn(),
+  // the resident's synced settings (archived reports are kept there)
+  fetchMyState: jest.fn(),
+  markItemsRead: jest.fn(),
+  unmarkItems: jest.fn(),
+  saveLanguagePreference: jest.fn()
 }));
 jest.mock('../shared/popup', () => ({ showPopup: jest.fn(), confirmPopup: jest.fn() }));
 
@@ -75,6 +84,10 @@ const REPORTS = [
 
 
 beforeEach(() => {
+  __resetSyncedState();
+  markItemsRead.mockResolvedValue(true);
+  unmarkItems.mockResolvedValue(true);
+  saveLanguagePreference.mockResolvedValue(true);
   localStorage.setItem('sf_language', 'en');
   fetchMyReports.mockResolvedValue(REPORTS);
   updateEmergencyReport.mockResolvedValue({ success: true });
@@ -207,13 +220,13 @@ describe('Three-dot menu', () => {
     expect(screen.getAllByRole('button', { name: 'More options' })).toHaveLength(3);
   });
 
-  test('clicking it shows Edit and Delete', async () => {
+  test('clicking it shows Edit, Archive and Delete', async () => {
     await renderPage();
     openMenu('Theft');
     const btn = within(cardFor('Theft')).getByRole('button', { name: 'More options' });
     expect(btn).toHaveAttribute('aria-expanded', 'true');
     const menu = within(cardFor('Theft')).getByRole('menu');
-    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent.trim())).toEqual(['Edit', 'Delete']);
+    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent.trim())).toEqual(['Edit', 'Archive', 'Delete']);
   });
 
   test('closes when clicking the button again, clicking outside, or pressing Esc', async () => {
@@ -247,10 +260,58 @@ describe('Three-dot menu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  test('reports that can no longer be edited have no menu', async () => {
+  test('reports that can no longer be edited can only be archived', async () => {
     fetchMyReports.mockResolvedValue([{ ...REPORTS[2], status: 'In Progress' }]);
     render(<LanguageProvider><MyReportsPage isOpen userId={7} onClose={() => {}} /></LanguageProvider>);
     await screen.findByText('Theft');
-    expect(screen.queryByRole('button', { name: 'More options' })).not.toBeInTheDocument();
+    openMenu('Theft');
+    const menu = within(cardFor('Theft')).getByRole('menu');
+    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent.trim())).toEqual(['Archive']);
+  });
+});
+
+describe('Archive', () => {
+  const titles = () => [...document.querySelectorAll('.mr-list > *')].map((c) => c.querySelector('.mr-card-heading')?.textContent || '');
+  const box = (name) => screen.getByRole('button', { name: new RegExp('^' + name) });
+
+  test('archiving moves a report to Archived, saved with the account; restoring brings it back', async () => {
+    await renderPage();
+    expect(box('Reports')).toHaveAttribute('aria-pressed', 'true');
+    chooseFromMenu('Theft', 'Archive');
+    expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ title: 'Report archived' }));
+    expect(markItemsRead).toHaveBeenCalledWith(['report-archived:pettyCrime-33']);
+    expect(titles().some((h) => h.includes('Theft'))).toBe(false);
+    expect(box('Archived')).toHaveTextContent('1');
+
+    fireEvent.click(box('Archived'));
+    expect(titles()).toHaveLength(1);
+    expect(cardFor('Theft')).toBeTruthy();
+    chooseFromMenu('Theft', 'Restore');
+    expect(unmarkItems).toHaveBeenCalledWith(['report-archived:pettyCrime-33']);
+    expect(screen.getByText('No archived reports. Reports you archive are kept here.')).toBeInTheDocument();
+
+    fireEvent.click(box('Reports'));
+    expect(cardFor('Theft')).toBeTruthy();
+  });
+
+  test('the type tabs, search and counts work inside Archived', async () => {
+    await renderPage();
+    chooseFromMenu('Theft', 'Archive');
+    chooseFromMenu('Medical Aid', 'Archive');
+    fireEvent.click(box('Archived'));
+    expect(titles()).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: /^Petty Crime/ }));
+    expect(titles()).toHaveLength(1);
+    expect(cardFor('Theft')).toBeTruthy();
+  });
+
+  test('a report opened from a notification shows in Archived when it was archived', async () => {
+    const view = (focusReport) => <LanguageProvider><MyReportsPage isOpen userId={7} onClose={() => {}} focusReport={focusReport} /></LanguageProvider>;
+    const { rerender } = render(view(null));
+    await screen.findByText('Fire Emergency');
+    chooseFromMenu('Theft', 'Archive');
+    rerender(view({ type: 'Petty Crime', id: 33, nonce: Date.now() }));
+    await waitFor(() => expect(box('Archived')).toHaveAttribute('aria-pressed', 'true'));
+    expect(cardFor('Theft')).toBeTruthy();
   });
 });

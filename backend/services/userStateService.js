@@ -63,10 +63,12 @@ async function markRead(userId, keys) {
 }
 
 
-const RESTORABLE_PREFIX = "notif-archived:";
+// Markers a person can take back: an archived notification, and an archived
+// report in My Reports (restored from its Archived view).
+const RESTORABLE_PREFIXES = ["notif-archived:", "report-archived:"];
 
 async function unmark(userId, keys) {
-    const restorable = keys.filter((k) => k.startsWith(RESTORABLE_PREFIX));
+    const restorable = keys.filter((k) => RESTORABLE_PREFIXES.some((p) => k.startsWith(p)));
     if (!restorable.length) return;
     await db.query(
         `DELETE FROM user_read_items WHERE user_id = ? AND item_key IN (?)`,

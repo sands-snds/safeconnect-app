@@ -4,6 +4,7 @@ import { fetchMyReports } from '../../Services/api';
 import IncidentMap from '../shared/location/IncidentMap';
 import { MAP_TYPES, LEGEND_TYPES, fromMyReport, isOpenStatus, timeAgo } from '../shared/location/mapReports';
 import { REPORTS_CHANGED_EVENT } from './useCallAccess';
+import { useReportArchive } from './reportArchive';
 
 // "Your Reports on the Map", beside the list on the My Reports page (panel).
 // Only the resident's own reports
@@ -57,8 +58,13 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
     return () => { window.removeEventListener(REPORTS_CHANGED_EVENT, load); clearInterval(tick); };
   }, [load]);
 
-  // Only reports still being worked on; a resolved one leaves the map.
-  const active = useMemo(() => reports.filter((r) => isOpenStatus(r.status)), [reports]);
+  // Only reports still being worked on; a resolved one leaves the map, and so
+  // does one the resident archived (My Reports → Archived).
+  const isArchived = useReportArchive();
+  const active = useMemo(
+    () => reports.filter((r) => isOpenStatus(r.status) && !isArchived(r.reportType, r.id)),
+    [reports, isArchived]
+  );
 
   const typeName = (r) => t(`reportsMap.types.${r.type}`);
   const statusText = (s) => t(`reportsMap.status.${STATUS_KEY[s] || 'received'}`);
