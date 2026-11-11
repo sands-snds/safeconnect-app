@@ -30,6 +30,9 @@ CREATE TABLE registered_users (
   address_house_number VARCHAR(60) DEFAULT NULL, -- home address in Barangay Santa Fe (sign-up)
   address_street VARCHAR(120) DEFAULT NULL,
   address_area VARCHAR(120) DEFAULT NULL, -- subdivision or purok (optional)
+  birthdate DATE DEFAULT NULL, -- given at sign-up; residents must be 15 or older
+  home_latitude DECIMAL(10,7) DEFAULT NULL, -- the home pinned on the sign-up / Settings map
+  home_longitude DECIMAL(10,7) DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   archived_at TIMESTAMP NULL DEFAULT NULL, -- Closed accounts moved to the Users tab's Archived list
   PRIMARY KEY (id),
@@ -318,7 +321,10 @@ INSERT INTO system_settings (setting_key, setting_value) VALUES
 -- --------------------------------------------------------
 -- user_read_items / user_preferences: which notifications and announcements
 -- an account has read, and its language, so both follow the account to
--- other devices. Also auto-created by the backend on start.
+-- other devices. Also the resident's own My Reports archive
+-- (report-archived:<kind>-<id>; report-kept:<kind>-<id> after restoring one
+-- that was archived automatically 7 days after it closed).
+-- Also auto-created by the backend on start.
 -- --------------------------------------------------------
 CREATE TABLE user_read_items (
   user_id INT NOT NULL,

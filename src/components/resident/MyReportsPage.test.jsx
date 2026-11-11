@@ -315,3 +315,38 @@ describe('Archive', () => {
     expect(cardFor('Theft')).toBeTruthy();
   });
 });
+
+describe('Automatic archive after 7 days', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const ago = (days) => new Date(Date.now() - days * DAY).toISOString();
+  const box = (name) => screen.getByRole('button', { name: new RegExp('^' + name) });
+
+  beforeEach(() => {
+    fetchMyReports.mockResolvedValue([
+      { ...REPORTS[0], date: ago(30) }, // open for a month: stays
+      { ...REPORTS[1], status: 'Resolved', resolved_at: ago(2) }, // closed 2 days ago: stays
+      { ...REPORTS[2], status: 'Dismissed', resolved_at: ago(8) } // closed 8 days ago: archived
+    ]);
+  });
+
+  test('reports resolved or dismissed 7+ days ago move to Archived on their own; open ones never do', async () => {
+    await renderPage();
+    expect(cardFor('Medical Aid')).toBeTruthy();
+    expect(screen.queryByText('Theft')).not.toBeInTheDocument();
+    expect(box('Archived')).toHaveTextContent('1');
+
+    fireEvent.click(box('Archived'));
+    expect(cardFor('Theft')).toBeTruthy();
+    expect(screen.getByText(/move here on their own 7 days after/)).toBeInTheDocument();
+  });
+
+  test('restoring an automatically archived report keeps it in the list', async () => {
+    await renderPage();
+    fireEvent.click(box('Archived'));
+    chooseFromMenu('Theft', 'Restore');
+    expect(markItemsRead).toHaveBeenCalledWith(['report-kept:pettyCrime-33']);
+
+    fireEvent.click(box('Reports'));
+    expect(cardFor('Theft')).toBeTruthy();
+  });
+});

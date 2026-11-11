@@ -75,7 +75,7 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
 
   const isArchived = useReportArchive();
   const active = useMemo(
-    () => reports.filter((r) => !isArchived(r.reportType, r.id)),
+    () => reports.filter((r) => !isArchived(r)),
     [reports, isArchived]
   );
 

@@ -64,6 +64,7 @@ export const fromMyReport = (r) => {
     location: r.location || '',
     who: '',
     position: coords(r.latitude, r.longitude),
+    closedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
     archived: Boolean(r.archived_at)
   };
 };

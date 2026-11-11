@@ -16,7 +16,7 @@ import { announceReportsChanged } from "./useCallAccess";
 import useReportMedia from "../shared/useReportMedia";
 import MediaLightbox from "../shared/media/MediaLightbox";
 import ResidentReportsMap from "./ResidentReportsMap";
-import { archiveReport, restoreReport, useReportArchive } from "./reportArchive";
+import { archiveReport, restoreReport, useReportArchive, AUTO_ARCHIVE_DAYS } from "./reportArchive";
 
 const TYPE_LABEL_KEYS = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYPE_LABEL_KEYS[type]}`) : type);
@@ -259,10 +259,10 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
   const [showArchived, setShowArchived] = useState(false);
   const isArchived = useReportArchive();
   const boxReports = useMemo(
-    () => reports.filter((r) => isArchived(r.type, r.id) === showArchived),
+    () => reports.filter((r) => isArchived(r) === showArchived),
     [reports, isArchived, showArchived]
   );
-  const archivedCount = useMemo(() => reports.filter((r) => isArchived(r.type, r.id)).length, [reports, isArchived]);
+  const archivedCount = useMemo(() => reports.filter((r) => isArchived(r)).length, [reports, isArchived]);
 
   const lastLoadedAt = useRef(0);
   const handledFocus = useRef(null);
@@ -349,9 +349,9 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
     const key = `${focusReport.type}-${focusReport.id}`;
     
     const target = reports.find((r) => `${r.type}-${r.id}` === key);
-    const inArchive = Boolean(target && isArchived(target.type, target.id));
+    const inArchive = Boolean(target && isArchived(target));
     const ordered = reports
-      .filter((r) => isArchived(r.type, r.id) === inArchive)
+      .filter((r) => isArchived(r) === inArchive)
       .sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
     const index = ordered.findIndex((r) => `${r.type}-${r.id}` === key);
     if (index === -1) {
@@ -551,6 +551,8 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
 
         /* ── Toolbar: underline tabs instead of pill buttons ── */
         .mr-toolbar { margin-bottom: 1.5rem; }
+        .mr-auto-note { display: flex; align-items: flex-start; gap: 8px; margin: -0.75rem 0 1.25rem; padding: 10px 14px; border-radius: 10px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 0.85rem; line-height: 1.45; }
+        .mr-auto-note i { margin-top: 2px; color: #6b7280; }
 
         /* No scrolling: the tabs fit (tighter on phones) and wrap only on very
            narrow screens. (overflow-x: auto plus the tabs' -2px underline
@@ -1168,6 +1170,12 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
               </div>
             )}
           </div>
+
+          {showArchived && (
+            <p className="mr-auto-note">
+              <i className="bi bi-clock-history" aria-hidden="true" /> {t('myReports.autoArchiveNote', { days: AUTO_ARCHIVE_DAYS })}
+            </p>
+          )}
 
           {!loading && !error && reports.length > 0 && isSearchOrFilterActive && (
             <p className="mr-result-count">

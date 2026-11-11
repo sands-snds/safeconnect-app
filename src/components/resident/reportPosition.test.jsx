@@ -94,6 +94,14 @@ describe('Your Reports on the Map', () => {
     expect(screen.getByText('Your home')).toBeInTheDocument();
   });
 
+  test('reports closed 7+ days ago are archived on their own, so they leave the map too', async () => {
+    const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
+    fetchMyReports.mockResolvedValue(REPORTS.map((r) => (r.id === 4 ? { ...r, resolved_at: eightDaysAgo } : r)));
+    renderMap();
+    await waitFor(() => expect(within(screen.getByTestId('map')).getAllByRole('listitem')).toHaveLength(3));
+    expect(screen.queryByText('Vandalism')).not.toBeInTheDocument();
+  });
+
   test('only the reports the resident archived are left off', async () => {
     fetchMyReports.mockResolvedValue(REPORTS);
     archiveReport('Petty Crime', 3);
