@@ -3,6 +3,7 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 import AnnouncementCard from "./AnnouncementCard";
 import WeatherCard from "./WeatherCard";
 import DemoVideoCard from "./DemoVideoCard";
+import FacebookPageCard, { useFacebookCard } from "../../shared/FacebookPageCard";
 import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
 
 
@@ -61,7 +62,10 @@ const NewsOverlay = ({
     const filtering = category !== "all" || query.trim() !== "";
     const showVideo = Boolean(systemDemo?.showInNews && hasVideo(systemDemo));
     const hasSide = Boolean(weather) || showVideo;
-    const hasContent = announcements.length > 0 || hasSide;
+    // The barangay's Facebook page, pinned above the announcements when on.
+    const [facebookCard] = useFacebookCard();
+    const showFacebook = Boolean(facebookCard && facebookCard.enabled);
+    const hasContent = announcements.length > 0 || hasSide || showFacebook;
 
     
     
@@ -191,6 +195,19 @@ const NewsOverlay = ({
                         )}
 
                         <div className="news-feed">
+                            {showFacebook && (
+                                <div className="news-facebook" style={{ marginBottom: 14 }}>
+                                    <FacebookPageCard
+                                        card={facebookCard}
+                                        labels={{
+                                            kicker: t('news.facebookKicker'),
+                                            title: t('news.facebookTitle'),
+                                            subtitle: t('news.facebookSubtitle'),
+                                            visit: t('news.facebookVisit')
+                                        }}
+                                    />
+                                </div>
+                            )}
                             {filtering && visible.length === 0 && (
                                 <div className="news-state-message news-no-match">
                                     <i className="bi bi-search" aria-hidden="true" />

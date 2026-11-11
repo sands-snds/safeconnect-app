@@ -722,6 +722,47 @@ export const archiveAnnouncement = async (id, archived = true) => {
     return res.json().catch(() => ({ success: false }));
 };
 
+// The Facebook page card pinned above the announcements
+// (backend/services/facebookCardService.js): { enabled, imageUrl, pageUrl }.
+// imageUrl is the uploaded picture, or the built-in one.
+export const FACEBOOK_CARD_DEFAULT_IMAGE = "/images/facebook-page.jpg";
+const facebookCardOf = (data) => {
+    const card = data && data.card;
+    if (!card) return null;
+    return {
+        enabled: card.enabled !== false,
+        imageUrl: card.imagePath ? resolveAssetUrl(card.imagePath) : FACEBOOK_CARD_DEFAULT_IMAGE,
+        pageUrl: card.pageUrl
+    };
+};
+
+export const fetchFacebookCard = async () => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/facebook-card`);
+    return facebookCardOf(await res.json().catch(() => null));
+};
+
+export const setFacebookCardEnabled = async (enabled) => {
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/facebook-card`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ enabled }),
+    });
+    const data = await res.json().catch(() => ({ success: false }));
+    return { success: Boolean(data.success), message: data.message, card: facebookCardOf(data) };
+};
+
+export const uploadFacebookCardImage = async (file) => {
+    const body = new FormData();
+    body.append("image", file);
+    const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/facebook-card/image`, {
+        method: "POST",
+        headers: authHeadersNoContentType(),
+        body,
+    });
+    const data = await res.json().catch(() => ({ success: false }));
+    return { success: Boolean(data.success), message: data.message, card: facebookCardOf(data) };
+};
+
 export const fetchAnnouncementArchiveSettings = async () => {
     const res = await apiFetch(`${API_ENDPOINTS.ANNOUNCEMENTS}/archive-settings`, { headers: authHeaders() });
     const data = await res.json().catch(() => null);

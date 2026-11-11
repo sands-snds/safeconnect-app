@@ -27,6 +27,28 @@ router.get("/", attachUserIfPresent, controller.getAnnouncements);
 
 router.get("/link-preview", verifyToken, verifyAdmin, controller.getLinkPreview);
 
+// The Facebook page card pinned above the announcements: anyone can read it;
+// Officials and Admins switch it on / off and change its picture (no delete).
+const FacebookCard = require("../services/facebookCardService");
+router.get("/facebook-card", async (req, res) => {
+    try { res.json({ success: true, card: await FacebookCard.get() }); }
+    catch (err) { console.error(err); res.status(500).json({ success: false, message: "Couldn't load the Facebook card." }); }
+});
+router.put("/facebook-card", verifyToken, verifyAdmin, announcementsChanged,
+    logActivity("Changed Facebook card", (req) => (req.body?.enabled ? "Facebook page card: shown" : "Facebook page card: hidden")),
+    async (req, res) => {
+        if (typeof req.body?.enabled !== "boolean") return res.status(400).json({ success: false, message: "Say whether the card is on or off." });
+        try { res.json({ success: true, card: await FacebookCard.setEnabled(req.body.enabled) }); }
+        catch (err) { console.error(err); res.status(500).json({ success: false, message: "Couldn't save the Facebook card." }); }
+    });
+router.post("/facebook-card/image", verifyToken, verifyAdmin, announcementsChanged, upload.single("image"),
+    logActivity("Changed Facebook card", () => "Facebook page card: new picture"),
+    async (req, res) => {
+        if (!req.file) return res.status(400).json({ success: false, message: "Choose a JPEG, PNG or WEBP picture." });
+        try { res.json({ success: true, card: await FacebookCard.setImage(`/uploads/${req.file.filename}`) }); }
+        catch (err) { console.error(err); res.status(500).json({ success: false, message: "Couldn't save the picture." }); }
+    });
+
 const ARCHIVE_PERIOD_NAMES = { 7: "7 days", 90: "3 months", 180: "6 months", 365: "1 year" };
 const describeArchiveSetting = (req) => {
     const days = Number(req.body?.days);

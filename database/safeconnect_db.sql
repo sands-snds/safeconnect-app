@@ -301,6 +301,7 @@ CREATE TABLE admin_activity_logs (
 -- announcement_auto_archive_days: 0 (off), 7, 90, 180 or 365
 -- signin_log_auto_archive_days / admin_log_auto_archive_days: 0 (off), 30, 90, 180 or 365
 -- site_contacts / site_media: JSON, added once an Admin saves Page Contacts / Page Contents
+-- facebook_page_card: JSON { enabled, imagePath }, the Facebook card pinned above the announcements
 -- --------------------------------------------------------
 CREATE TABLE system_settings (
   setting_key VARCHAR(100) NOT NULL,

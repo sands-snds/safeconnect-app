@@ -5,6 +5,7 @@ import AnnouncementModal from "./AnnouncementModal";
 import ResultPopup from "../../shared/ResultPopup";
 import { confirmPopup } from "../../shared/popup";
 import AnnouncementComments from "./AnnouncementComments";
+import FacebookCardControl from "./FacebookCardControl";
 import { CATEGORY_COLORS } from "./constants";
 import MediaLightbox from "../../shared/media/MediaLightbox";
 import AnnouncementShareButton from "./AnnouncementShareButton";
@@ -504,6 +505,9 @@ const AnnouncementsTable = ({
         periodOptions={ANNOUNCEMENT_ARCHIVE_OPTIONS}
         settingLabel={tx("Auto-archive announcements:")}
       />
+
+      {/* Pinned first on the residents' News page; on / off and its picture. */}
+      {!showArchived && <FacebookCardControl />}
 
       {loading ? (
         <div>{tx("Loading announcements...")}</div>

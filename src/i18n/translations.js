@@ -935,6 +935,10 @@ export const translations = {
       goTo: 'Go to article {{n}}'
     },
     news: {
+      facebookKicker: 'Official Facebook page',
+      facebookTitle: 'Barangay Sta. Fe on Facebook',
+      facebookSubtitle: 'More news, photos and advisories from the barangay.',
+      facebookVisit: 'Visit page',
       latestNews: 'Latest News',
       headerSubtitle: 'Barangay alerts, updates, and community news',
       searchPlaceholder: 'Search updates',
@@ -2340,6 +2344,10 @@ export const translations = {
       goTo: 'Pumunta sa balita {{n}}'
     },
     news: {
+      facebookKicker: 'Opisyal na Facebook page',
+      facebookTitle: 'Barangay Sta. Fe sa Facebook',
+      facebookSubtitle: 'Higit pang balita, larawan at abiso mula sa barangay.',
+      facebookVisit: 'Bisitahin',
       latestNews: 'Pinakabagong Balita',
       headerSubtitle: 'Mga alerto, update, at balita ng barangay',
       searchPlaceholder: 'Maghanap ng update',
