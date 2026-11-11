@@ -10,7 +10,7 @@ import { announceReportsChanged } from './useCallAccess';
 import { registeredAddress } from './useRegisteredAddress';
 import { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
-import { ReportFormShell, SendFoot } from './reportFormUi';
+import { ReportFormShell, SendFoot, CAMERA_ACCEPT } from './reportFormUi';
 import { checkMediaFile, mediaCheckMessageKey } from '../shared/media/mediaCheck';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
 
@@ -60,7 +60,7 @@ const readAsDataUrl = (file) => new Promise((resolve, reject) => {
 
 const EMPTY = {
   step: 1, who: 'self', type: null,
-  media: null, mediaUrl: null, mediaType: null, mediaTakenAt: null, mediaDayOld: false,
+  media: null, mediaUrl: null, mediaType: null, mediaTakenAt: null, mediaDayOld: false, mediaFromCamera: false,
   rel: '', victimName: '', victimContact: '',
   people: '', special: [], specialCounts: {}, details: '',
   address: { ...EMPTY_LOCATION }, showMap: false
@@ -124,6 +124,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   const typeName = (x) => t(`quickReport.types.${x.key}`);
 
   const pickMedia = async (e) => {
+    const fromCamera = e.target === cameraRef.current;
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
     if (!file) return;
@@ -137,12 +138,12 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
       return;
     }
     // Taken today (or yesterday, with a note), and not edited.
-    const check = await checkMediaFile(file, isVideo);
+    const check = await checkMediaFile(file, isVideo, new Date(), { fromCamera });
     if (!check.ok) {
       showPopup({ type: 'warning', title: t('reportForm.mediaCheck.title'), message: t(mediaCheckMessageKey(check.reason)) });
       return;
     }
-    set({ media: file, mediaUrl: URL.createObjectURL(file), mediaType: isVideo ? 'video' : 'image', mediaTakenAt: check.takenAt, mediaDayOld: check.dayOld });
+    set({ media: file, mediaUrl: URL.createObjectURL(file), mediaType: isVideo ? 'video' : 'image', mediaTakenAt: check.takenAt, mediaDayOld: check.dayOld, mediaFromCamera: Boolean(check.fromCamera) });
   };
 
   // Where the report is: the GPS / map pin when there is one inside Santa
@@ -195,6 +196,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
         special: formatSpecialNeeds(form.special, form.specialCounts),
         photoUrl,
         mediaType: form.mediaType,
+        mediaSource: form.mediaFromCamera ? 'camera' : null,
         reportFor: form.who,
         victimName: form.who === 'others' ? form.victimName.trim() || null : null,
         victimContact: form.who === 'others' ? form.victimContact.trim() || null : null,
@@ -338,7 +340,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                   <p className="qr-lead">{t('quickReport.photoTitle')}</p>
                   <p className="qr-hint">{t('quickReport.photoHint')}</p>
                 </div>
-                <input ref={cameraRef} type="file" accept={MEDIA_ACCEPT} capture="environment" hidden onChange={pickMedia} aria-hidden="true" tabIndex={-1} />
+                <input ref={cameraRef} type="file" accept={CAMERA_ACCEPT} capture="environment" hidden onChange={pickMedia} aria-hidden="true" tabIndex={-1} />
                 <input ref={galleryRef} type="file" accept={MEDIA_ACCEPT} hidden onChange={pickMedia} aria-hidden="true" tabIndex={-1} />
                 {form.media ? (
                   <div className="qr-preview">

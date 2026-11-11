@@ -4,6 +4,7 @@ import { COMMENTS_CHANGED_EVENT } from "../../shared/commentsLive";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import { flashHighlight } from "../../shared/highlight";
 import CommentAvatar from "../../shared/CommentAvatar";
+import MediaLightbox from "../../shared/media/MediaLightbox";
 import {
     toggleAnnouncementLike,
     fetchAnnouncementComments,
@@ -107,6 +108,8 @@ export default function AnnouncementCard({
     
     
     const [imageFailed, setImageFailed] = useState(false);
+    // The photo, full size on the same page (tap it).
+    const [photoOpen, setPhotoOpen] = useState(false);
     const showImage = photo && !imageFailed;
 
     const [liked, setLiked] = useState(!!announcement.likedByMe);
@@ -386,13 +389,26 @@ export default function AnnouncementCard({
             )}
             {showImage ? (
                 <div className="news-card-media">
-                    <img
-                        src={photo}
+                    <button
+                        type="button"
+                        onClick={() => setPhotoOpen(true)}
+                        aria-label={t('myReports.viewFullSize')}
+                        style={{ display: 'block', width: '100%', height: '100%', padding: 0, border: 0, background: 'none', cursor: 'zoom-in' }}
+                    >
+                        <img
+                            src={photo}
+                            alt={announcement.title}
+                            className="news-card-image"
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                            onError={() => setImageFailed(true)}
+                        />
+                    </button>
+                    <MediaLightbox
+                        src={photoOpen ? photo : null}
                         alt={announcement.title}
-                        className="news-card-image"
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
-                        onError={() => setImageFailed(true)}
+                        closeLabel={t('myReports.closeMedia')}
+                        onClose={() => setPhotoOpen(false)}
                     />
                 </div>
             ) : announcement.sourceUrl ? (

@@ -5,6 +5,8 @@ import AnnouncementModal from "./AnnouncementModal";
 import ResultPopup from "../../shared/ResultPopup";
 import { confirmPopup } from "../../shared/popup";
 import AnnouncementComments from "./AnnouncementComments";
+import { CATEGORY_COLORS } from "./constants";
+import MediaLightbox from "../../shared/media/MediaLightbox";
 import AnnouncementShareButton from "./AnnouncementShareButton";
 import {
   fetchAnnouncements,
@@ -40,16 +42,6 @@ const STATUS_OPTIONS = [
   "Evacuation"
 ];
 
-const CATEGORY_COLORS = {
-  "Emergency Alert": { bg: "#fee2e2", color: "#b91c1c" },
-  "Weather Advisory": { bg: "#dbeafe", color: "#1e40af" },
-  "Evacuation": { bg: "#fef3c7", color: "#92400e" },
-  "Community Event": { bg: "#ede9fe", color: "#6d28d9" },
-  "Community Update": { bg: "#dcfce7", color: "#166534" },
-  "Announcement": { bg: "rgba(107, 44, 62, 0.1)", color: "#6B2C3E" },
-  "General": { bg: "rgba(107, 44, 62, 0.1)", color: "#6B2C3E" }
-};
-
 const AnnouncementsTable = ({
   filters,
   setFilters,
@@ -73,6 +65,9 @@ const AnnouncementsTable = ({
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  // The announcement whose photo is open full size (MediaLightbox).
+  const [photoOpen, setPhotoOpen] = useState(null);
+
   // Active / Archived tab (ArchiveToolbar).
   const [showArchived, setShowArchived] = useState(false);
 
@@ -249,14 +244,29 @@ const AnnouncementsTable = ({
 
   const renderRow = (announcement) => {
     const image = announcement.imageUrl || announcement.sourceImage;
+    // Archived: only its comments can be read (and deleted), and it can be
+    // unarchived. No editing, sharing or new comments.
+    const archived = Boolean(announcement.archivedAt);
     const categoryStyle = CATEGORY_COLORS[announcement.category] || CATEGORY_COLORS["General"];
 
     return (
       <div key={announcement.id} className="announcement-admin-card">
         {image && (
-          <div
+          <button
+            type="button"
             className="announcement-admin-card-media"
-            style={{ backgroundImage: `url(${image})` }}
+            style={{ backgroundImage: `url(${image})`, border: 0, padding: 0, cursor: "zoom-in" }}
+            onClick={() => setPhotoOpen(announcement.id)}
+            aria-label={tx("View full size")}
+            title={tx("View full size")}
+          />
+        )}
+        {image && (
+          <MediaLightbox
+            src={photoOpen === announcement.id ? image : null}
+            alt={announcement.title}
+            closeLabel={tx("Close")}
+            onClose={() => setPhotoOpen(null)}
           />
         )}
 
@@ -311,32 +321,46 @@ const AnnouncementsTable = ({
                 )}
               </button>
 
-              <AnnouncementShareButton announcement={announcement} />
+              {!archived && <AnnouncementShareButton announcement={announcement} />}
             </div>
 
-            <button
-              type="button"
-              className="button button-primary"
-              style={{ fontSize: 12.5, padding: '8px 18px' }}
-              onClick={() => setEditingAnnouncement && setEditingAnnouncement(announcement)}
-            >
-              <i className="bi bi-pencil-square"></i> {tx("Edit")}
-            </button>
+            {archived ? (
+              <button
+                type="button"
+                className="button button-primary"
+                style={{ fontSize: 12.5, padding: '8px 18px' }}
+                onClick={() => handleArchiveToggle(announcement)}
+              >
+                <i className="bi bi-arrow-counterclockwise"></i> {tx("Unarchive")}
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="button button-primary"
+                  style={{ fontSize: 12.5, padding: '8px 18px' }}
+                  onClick={() => setEditingAnnouncement && setEditingAnnouncement(announcement)}
+                >
+                  <i className="bi bi-pencil-square"></i> {tx("Edit")}
+                </button>
 
-            <button
-              type="button"
-              className="button button-primary"
-              style={{ fontSize: 12.5, padding: '8px 18px' }}
-              onClick={() => handleDelete(announcement.id)}
-            >
-              <i className="bi bi-trash"></i> {tx("Delete")}
-            </button>
+                <button
+                  type="button"
+                  className="button button-primary"
+                  style={{ fontSize: 12.5, padding: '8px 18px' }}
+                  onClick={() => handleDelete(announcement.id)}
+                >
+                  <i className="bi bi-trash"></i> {tx("Delete")}
+                </button>
+              </>
+            )}
           </div>
 
           {openComments[announcement.id] && (
             <AnnouncementComments
               announcementId={announcement.id}
               onCountChange={(delta) => changeCommentCount(announcement.id, delta)}
+              readOnly={archived}
             />
           )}
         </div>

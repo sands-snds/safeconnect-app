@@ -370,6 +370,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         victimOfEmergency,
         photoUrl,
         mediaType: photoUrl ? media.type : null,
+        mediaSource: photoUrl && media.fromCamera ? 'camera' : null,
         userId: currentUser.id || null,
         fullname: fullName,
         contact,

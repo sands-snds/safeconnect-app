@@ -96,9 +96,15 @@ const fileBuffer = (file) => (file.arrayBuffer
     reader.readAsArrayBuffer(file);
   }));
 
+// A photo from the form's "Take a photo" button that has no date in its
+// details (some phones' cameras leave it out) still counts as taken now when
+// the file was made in the last few minutes; staff are told it had no date.
+const CAMERA_FRESH_MS = 15 * 60 * 1000;
+
 // Returns { ok: false, reason } (noDate, future, tooOld, edited) or
-// { ok: true, takenAt, dayOld }.
-export async function checkMediaFile(file, isVideo, now = new Date()) {
+// { ok: true, takenAt, dayOld, fromCamera }.
+// fromCamera: the file came from the camera button, not the gallery.
+export async function checkMediaFile(file, isVideo, now = new Date(), { fromCamera = false } = {}) {
   let info;
   try {
     info = isVideo ? readVideo(await fileBuffer(file)) : await readImage(file);
@@ -106,6 +112,10 @@ export async function checkMediaFile(file, isVideo, now = new Date()) {
     info = { takenAt: null, editedBy: null };
   }
   if (info.editedBy) return { ok: false, reason: 'edited' };
+  if (!info.takenAt && fromCamera && Number.isFinite(file.lastModified)
+    && Math.abs(now - file.lastModified) <= CAMERA_FRESH_MS) {
+    return { ok: true, takenAt: new Date(file.lastModified), dayOld: false, fromCamera: true };
+  }
   if (!info.takenAt) return { ok: false, reason: 'noDate' };
   const age = daysBetween(dayKey(info.takenAt), dayKey(now));
   if (age < 0) return { ok: false, reason: 'future' };

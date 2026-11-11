@@ -14,7 +14,9 @@ import { tx } from "../../../i18n/adminText";
 const initialsOf = (name) =>
   (name || "R").trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
 
-const AnnouncementComments = ({ announcementId, onCountChange }) => {
+// readOnly: an archived announcement: comments can be read and deleted, but
+// not added to or replied to.
+const AnnouncementComments = ({ announcementId, onCountChange, readOnly = false }) => {
   const [comments, setComments] = useState(null); // null = loading
   const [loadError, setLoadError] = useState(false);
   const [draft, setDraft] = useState("");
@@ -142,7 +144,7 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
           {c.text}
         </p>
         <div className="ac-actions">
-          <button type="button" onClick={() => openReply(thread)}>{tx("Reply")}</button>
+          {!readOnly && <button type="button" onClick={() => openReply(thread)}>{tx("Reply")}</button>}
           <button type="button" className="ac-delete" onClick={() => handleDelete(c)}>{tx("Delete")}</button>
         </div>
       </div>
@@ -257,6 +259,11 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
 
       {error && <p className="ac-error">{error}</p>}
 
+      {readOnly ? (
+        <p className="ac-readonly" style={{ margin: "10px 0 0", fontSize: 12.5, color: "#6b7280" }}>
+          <i className="bi bi-archive" aria-hidden="true"></i> {tx("This announcement is archived: comments can be read and deleted, but not added. Unarchive it to comment again.")}
+        </p>
+      ) : (
       <form className="ac-form" onSubmit={handleComment}>
         <input
           type="text"
@@ -268,6 +275,7 @@ const AnnouncementComments = ({ announcementId, onCountChange }) => {
         />
         <button type="submit" disabled={!draft.trim() || busy}>Post</button>
       </form>
+      )}
     </div>
   );
 };

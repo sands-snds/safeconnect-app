@@ -14,7 +14,8 @@ const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPT = 'image/jpeg,image/jpg,video/mp4,video/quicktime,video/webm';
 // takenAt / dayOld: from the file's details (see mediaCheck.js).
-const EMPTY_MEDIA = { file: null, previewUrl: null, type: null, takenAt: null, dayOld: false };
+// fromCamera: taken with the form's camera button (see mediaCheck.js).
+const EMPTY_MEDIA = { file: null, previewUrl: null, type: null, takenAt: null, dayOld: false, fromCamera: false };
 
 export const readAsDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -41,7 +42,7 @@ export const useMediaAttachment = (t) => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleMediaChange = async (e) => {
+  const handleMediaChange = async (e, { fromCamera = false } = {}) => {
     const file = e.target.files[0];
     if (!file) {
       clearMedia();
@@ -59,13 +60,13 @@ export const useMediaAttachment = (t) => {
       return;
     }
     // Taken today (or yesterday, with a note), and not edited.
-    const check = await checkMediaFile(file, isVideo);
+    const check = await checkMediaFile(file, isVideo, new Date(), { fromCamera });
     if (!check.ok) {
       showPopup({ type: 'warning', title: t('reportForm.mediaCheck.title'), message: t(mediaCheckMessageKey(check.reason)) });
       clearMedia();
       return;
     }
-    setMedia({ file, previewUrl: URL.createObjectURL(file), type: isVideo ? 'video' : 'image', takenAt: check.takenAt, dayOld: check.dayOld });
+    setMedia({ file, previewUrl: URL.createObjectURL(file), type: isVideo ? 'video' : 'image', takenAt: check.takenAt, dayOld: check.dayOld, fromCamera: Boolean(check.fromCamera) });
   };
 
   return { media, fileInputRef, handleMediaChange, clearMedia };

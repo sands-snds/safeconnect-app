@@ -87,3 +87,17 @@ describe('videos', () => {
     expect(await checkMediaFile(file(Buffer.from('webm'), 'v.webm', 'video/webm'), true, NOW)).toEqual({ ok: false, reason: 'noDate' });
   });
 });
+
+describe('the "Take a photo" button', () => {
+  const undated = (lastModified) => new File([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], 'cam.jpg', { type: 'image/jpeg', lastModified });
+  test('a camera photo with no date, made just now: accepted as taken now', async () => {
+    const r = await checkMediaFile(undated(NOW.getTime() - 60 * 1000), false, NOW, { fromCamera: true });
+    expect(r).toMatchObject({ ok: true, dayOld: false, fromCamera: true });
+  });
+  test('the same file picked from the gallery: still refused', async () => {
+    expect(await checkMediaFile(undated(NOW.getTime() - 60 * 1000), false, NOW)).toEqual({ ok: false, reason: 'noDate' });
+  });
+  test('an undated "camera" file that is hours old: refused', async () => {
+    expect(await checkMediaFile(undated(NOW.getTime() - 3 * 3600 * 1000), false, NOW, { fromCamera: true })).toEqual({ ok: false, reason: 'noDate' });
+  });
+});

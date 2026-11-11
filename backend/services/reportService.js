@@ -30,7 +30,7 @@ class ReportService {
         }
 
         // The photo or video must be fresh and unedited (utils/mediaCheck.js).
-        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
 
         const reference = await generateReference(Report.getLatestReference);
@@ -83,7 +83,7 @@ class ReportService {
         if (data.people !== undefined && peopleCount(data.people) === null) {
             return { success: false, status: 400, message: PEOPLE_MESSAGE };
         }
-        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
         const affected = await Report.update(id, {
             emergencyType: data.emergencyType,

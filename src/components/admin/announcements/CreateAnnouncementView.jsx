@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchLinkPreview, createAnnouncement, updateAnnouncement, isSessionError } from "../../../Services/api";
-import { ANNOUNCEMENT_CATEGORIES } from "./constants";
+import { ANNOUNCEMENT_CATEGORIES, CATEGORY_COLORS } from "./constants";
 import ResultPopup from "../../shared/ResultPopup";
 import { tx } from "../../../i18n/adminText";
 
@@ -32,6 +32,8 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
   const [submitting, setSubmitting] = useState(false);
 
   const [saveError, setSaveError] = useState("");
+  // Which of the two optional extras shows: "photo" or "link" (both are kept).
+  const [mediaTab, setMediaTab] = useState(editingAnnouncement?.sourceUrl ? "link" : "photo");
   const debounceRef = useRef(null);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
 
       setDate(toInputDate(editingAnnouncement.rawDate) || today);
       setSourceUrl(editingAnnouncement.sourceUrl || "");
+      setMediaTab(editingAnnouncement.sourceUrl ? "link" : "photo");
       setExistingImageUrl(editingAnnouncement.imageUrl || "");
       setRemoveImage(false);
       setImageFile(null);
@@ -142,6 +145,7 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
     setLinkPreview(null);
     setPreviewError("");
     setImageError("");
+    setMediaTab("photo");
   };
 
   const handleSubmit = async (e) => {
@@ -192,8 +196,37 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
     }
   };
 
+  // Changing the category wipes what was typed (asks first), as before.
+  const chooseCategory = (newCategory) => {
+    if (newCategory === category) return;
+    const hasContent = title.trim() || message.trim() || imageFile || sourceUrl.trim();
+    if (hasContent) {
+      const confirmed = window.confirm(
+        "Changing the category will clear all the information you've entered. Continue?"
+      );
+      if (!confirmed) return;
+      setTitle("");
+      setMessage("");
+      setImageFile(null);
+      setImageError("");
+      setSourceUrl("");
+      setLinkPreview(null);
+      setDate(new Date().toISOString().split("T")[0]);
+    }
+    setCategory(newCategory);
+  };
+
+  // What residents will see: the new photo, else the current one, else the
+  // linked article's picture.
+  const previewImage = imagePreviewUrl
+    || (isEditMode && existingImageUrl && !removeImage ? existingImageUrl : "")
+    || linkPreview?.image
+    || "";
+  const pill = CATEGORY_COLORS[category] || CATEGORY_COLORS.General;
+  const ready = title.trim() && message.trim();
+
   return (
-    <div>
+    <>
       {saveError && (
         <ResultPopup
           type="error"
@@ -203,253 +236,264 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
         />
       )}
 
-      <div className="section" style={{ padding: "24px" }}>
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="form-field">
-              <label className="form-label">Title *</label>
+      <form className="anf" onSubmit={handleSubmit}>
+        <style>{FORM_STYLE}</style>
+        <div className="anf-body">
+          <div className="anf-fields">
+            <div className="anf-field">
+              <label htmlFor="anf-title" className="anf-label">{tx("Title")} <span className="anf-req">*</span></label>
               <input
+                id="anf-title"
                 type="text"
-                className="form-input"
-                placeholder="Announcement title"
+                className="anf-input"
+                placeholder={tx("Announcement title")}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
               />
             </div>
 
-            <div className="form-field">
-              <label className="form-label">Category *</label>
-
-              <select
-                className="form-select"
-                value={category}
-                onChange={(e) => {
-                  const newCategory = e.target.value;
-
-                  const hasContent =
-                    title.trim() ||
-                    message.trim() ||
-                    imageFile ||
-                    sourceUrl.trim();
-
-                  if (hasContent) {
-                    const confirmed = window.confirm(
-                      "Changing the category will clear all the information you've entered. Continue?"
-                    );
-
-                    if (!confirmed) {
-                      return;
-                    }
-
-                    // Reset form
-                    setTitle("");
-                    setMessage("");
-                    setImageFile(null);
-                    setImageError("");
-                    setSourceUrl("");
-                    setLinkPreview(null);
-
-                    // Keep today's date
-                    setDate(new Date().toISOString().split("T")[0]);
-                  }
-
-                  setCategory(newCategory);
-                }}
-              >
-                {ANNOUNCEMENT_CATEGORIES.map((option) => (
-                  <option key={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-field">
-              <label className="form-label">Date Posted</label>
-
-              <input
-                type="text"
-                className="form-input"
-                value={new Date(date).toLocaleDateString("en-US")}
-                readOnly
-                style={{
-                  background: "#f9fafb",
-                  cursor: "not-allowed"
-                }}
-              />
-
-              <small
-                style={{
-                  color: "#6b7280",
-                  display: "block",
-                  marginTop: "6px"
-                }}
-              >
-                Automatically uses today's date.
-              </small>
-            </div>
-          </div>
-
-          <div className="form-field">
-            <label className="form-label">Message *</label>
-            <textarea
-              rows={6}
-              className="form-textarea"
-              placeholder="Write the announcement details..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-grid">
-            <div className="form-field">
-              <label className="form-label">Upload Image (JPEG, PNG, or WEBP)</label>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="form-input"
-                onChange={handleImageChange}
-              />
-              {imageError && (
-                <span style={{ color: "red", fontSize: ".8rem" }}>{imageError}</span>
-              )}
-
-              {imagePreviewUrl && (
-                <div style={{ marginTop: "10px" }}>
-                  <div style={{ fontSize: ".75rem", fontWeight: 600, color: "#6b7280", marginBottom: "6px" }}>
-                    PREVIEW
-                  </div>
-                  <div style={{ position: "relative", display: "inline-block" }}>
-                    <img
-                      src={imagePreviewUrl}
-                      alt="Selected preview"
-                      style={{ width: "260px", height: "150px", objectFit: "cover", borderRadius: "10px", border: "1px solid #e5e7eb" }}
-                    />
+            <fieldset className="anf-field anf-fieldset">
+              <legend className="anf-label">{tx("Category")} <span className="anf-req">*</span></legend>
+              <div className="anf-chips">
+                {ANNOUNCEMENT_CATEGORIES.map((option) => {
+                  const on = option === category;
+                  const c = CATEGORY_COLORS[option] || CATEGORY_COLORS.General;
+                  return (
                     <button
+                      key={option}
                       type="button"
-                      onClick={() => {
-                        if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-                        setImagePreviewUrl(null);
-                        setImageFile(null);
-                      }}
-                      title="Remove selected image"
-                      style={{
-                        position: "absolute", top: "8px", right: "8px",
-                        width: "26px", height: "26px", borderRadius: "50%",
-                        border: "none", background: "rgba(17,24,39,0.7)", color: "#fff",
-                        cursor: "pointer", fontSize: "14px", lineHeight: "26px", padding: 0
-                      }}
+                      aria-pressed={on}
+                      className={`anf-chip${on ? " on" : ""}`}
+                      style={on ? { background: c.bg, color: c.color, borderColor: c.color } : undefined}
+                      onClick={() => chooseCategory(option)}
                     >
-                      ×
+                      {tx(option)}
                     </button>
-                  </div>
-                  <div style={{ fontSize: ".75rem", color: "#6b7280", marginTop: "4px" }}>
-                    {imageFile?.name}
-                  </div>
-                </div>
-              )}
+                  );
+                })}
+              </div>
+            </fieldset>
 
-              {isEditMode && existingImageUrl && !imageFile && !removeImage && (
-                <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "12px" }}>
-                  <img
-                    src={existingImageUrl}
-                    alt="Current"
-                    style={{ width: "56px", height: "56px", objectFit: "cover", borderRadius: "6px", border: "1px solid #e5e7eb" }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setRemoveImage(true)}
-                    style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", fontSize: ".8rem", padding: 0 }}
-                  >
-                    Remove current image
-                  </button>
-                </div>
-              )}
-
-              {isEditMode && removeImage && (
-                <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "10px", fontSize: ".8rem", color: "#6b7280" }}>
-                  Current image will be removed on save.
-                  <button
-                    type="button"
-                    onClick={() => setRemoveImage(false)}
-                    style={{ background: "none", border: "none", color: "#6B2C3E", cursor: "pointer", fontSize: ".8rem", padding: 0 }}
-                  >
-                    Undo
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="form-field">
-              <label className="form-label">News Article URL (optional)</label>
-              <input
-                type="url"
-                className="form-input"
-                placeholder="https://..."
-                value={sourceUrl}
-                onChange={(e) => setSourceUrl(e.target.value)}
+            <div className="anf-field">
+              <div className="anf-row">
+                <label htmlFor="anf-message" className="anf-label">{tx("Message")} <span className="anf-req">*</span></label>
+                <span className="anf-count">{tx("{{count}} characters", { count: message.length })}</span>
+              </div>
+              <textarea
+                id="anf-message"
+                rows={6}
+                className="anf-input anf-textarea"
+                placeholder={tx("Write the announcement details...")}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
               />
             </div>
-          </div>
 
-          {previewLoading && (
-            <div style={{ marginTop: "15px", color: "#6b7280", fontSize: ".9rem" }}>
-              Fetching article preview...
-            </div>
-          )}
-
-          {previewError && (
-            <div style={{ marginTop: "15px", color: "#dc2626", fontSize: ".9rem" }}>
-              {previewError}
-            </div>
-          )}
-
-          {linkPreview && (
-            <div style={{ marginTop: "20px", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "16px", display: "flex", gap: "16px", alignItems: "center", background: "#fafafa" }}>
-              {linkPreview.image && (
-                <img
-                  src={linkPreview.image}
-                  alt="Preview"
-                  style={{ width: "120px", height: "90px", objectFit: "cover", borderRadius: "8px", flexShrink: 0 }}
-                />
-              )}
-              <div>
-                <h5 style={{ margin: "0 0 6px", fontWeight: 600 }}>{linkPreview.title}</h5>
-                {linkPreview.site && (
-                  <p style={{ margin: 0, color: "#6b7280", fontSize: ".9rem" }}>{linkPreview.site}</p>
-                )}
+            <div className="anf-field">
+              <span className="anf-label">{tx("Add to it")} <span className="anf-optional">{tx("(optional)")}</span></span>
+              <div className="anf-tabs" role="tablist" aria-label={tx("Photo or link")}>
+                <button type="button" role="tab" aria-selected={mediaTab === "photo"} className={mediaTab === "photo" ? "on" : ""} onClick={() => setMediaTab("photo")}>
+                  <i className="bi bi-image" aria-hidden="true"></i> {tx("Photo")}
+                </button>
+                <button type="button" role="tab" aria-selected={mediaTab === "link"} className={mediaTab === "link" ? "on" : ""} onClick={() => setMediaTab("link")}>
+                  <i className="bi bi-link-45deg" aria-hidden="true"></i> {tx("News link")}
+                </button>
               </div>
-            </div>
-          )}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "25px", flexWrap: "wrap" }}>
-            {isEditMode && onArchiveToggle && (
-              <button
-                type="button"
-                className="button button-soft"
-                style={{ marginRight: "auto" }}
-                onClick={() => onArchiveToggle(editingAnnouncement)}
-                disabled={submitting}
-              >
-                <i className={`bi ${editingAnnouncement.archivedAt ? "bi-box-arrow-up" : "bi-archive"}`} style={{ marginRight: 6 }} />
-                {editingAnnouncement.archivedAt ? "Restore" : "Archive"}
-              </button>
-            )}
-            {onCancel && (
-              <button type="button" className="button button-secondary" onClick={onCancel} disabled={submitting}>
-                {tx("Cancel")}
-              </button>
-            )}
-            <button type="submit" className="button button-primary" disabled={submitting}>
-              {submitting
-                ? (isEditMode ? "Updating..." : "Saving...")
-                : (isEditMode ? "Update Announcement" : "Post Announcement")}
-            </button>
+              {mediaTab === "photo" ? (
+                <div role="tabpanel">
+                  {imagePreviewUrl ? (
+                    <div className="anf-picked">
+                      <img src={imagePreviewUrl} alt={tx("Selected photo")} />
+                      <div>
+                        <strong>{imageFile?.name}</strong>
+                        <button
+                          type="button"
+                          className="anf-link-btn danger"
+                          onClick={() => {
+                            if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+                            setImagePreviewUrl(null);
+                            setImageFile(null);
+                          }}
+                        >
+                          {tx("Remove photo")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : isEditMode && existingImageUrl && !removeImage ? (
+                    <div className="anf-picked">
+                      <img src={existingImageUrl} alt={tx("Current photo")} />
+                      <div>
+                        <strong>{tx("Current photo")}</strong>
+                        <span className="anf-actions">
+                          <label className="anf-link-btn">
+                            {tx("Replace")}
+                            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} hidden />
+                          </label>
+                          <button type="button" className="anf-link-btn danger" onClick={() => setRemoveImage(true)}>{tx("Remove")}</button>
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="anf-drop">
+                      <span className="anf-drop-icon"><i className="bi bi-image" aria-hidden="true"></i></span>
+                      <span>
+                        <strong>{tx("Choose a photo")}</strong>
+                        <small>{tx("JPEG, PNG or WEBP, up to 5 MB")}</small>
+                      </span>
+                      <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} hidden />
+                    </label>
+                  )}
+                  {isEditMode && removeImage && (
+                    <p className="anf-note">
+                      {tx("The current photo will be removed when you save.")}{" "}
+                      <button type="button" className="anf-link-btn" onClick={() => setRemoveImage(false)}>{tx("Undo")}</button>
+                    </p>
+                  )}
+                  {imageError && <p className="anf-error">{imageError}</p>}
+                </div>
+              ) : (
+                <div role="tabpanel">
+                  <input
+                    type="url"
+                    className="anf-input"
+                    placeholder="https://..."
+                    aria-label={tx("News article link")}
+                    value={sourceUrl}
+                    onChange={(e) => setSourceUrl(e.target.value)}
+                  />
+                  {previewLoading && <p className="anf-note">{tx("Fetching article preview...")}</p>}
+                  {previewError && <p className="anf-error">{previewError}</p>}
+                  {linkPreview && (
+                    <div className="anf-linkcard">
+                      {linkPreview.image && <img src={linkPreview.image} alt="" />}
+                      <div>
+                        <strong>{linkPreview.title}</strong>
+                        {linkPreview.site && <small>{linkPreview.site}</small>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+
+          <aside className="anf-preview" aria-label={tx("What residents will see")}>
+            <div className="anf-row">
+              <span className="anf-kicker">{tx("WHAT RESIDENTS WILL SEE")}</span>
+              <span className="anf-count">{new Date(date).toLocaleDateString("en-US")}</span>
+            </div>
+            <article className="anf-card">
+              {previewImage
+                ? <img src={previewImage} alt="" className="anf-card-img" />
+                : <div className="anf-card-img empty">{tx("No photo")}</div>}
+              <div className="anf-card-body">
+                <span className="anf-pill" style={{ background: pill.bg, color: pill.color }}>{tx(category)}</span>
+                <h3>{title.trim() || tx("Announcement title")}</h3>
+                <p>{message.trim() || tx("Write the announcement details...")}</p>
+                {linkPreview?.site && <span className="anf-source"><i className="bi bi-box-arrow-up-right" aria-hidden="true"></i> {linkPreview.site}</span>}
+                <div className="anf-card-actions"><span>{tx("Like")}</span><span>{tx("Comment")}</span><span>{tx("Share")}</span></div>
+              </div>
+            </article>
+            <p className="anf-note">{isEditMode ? tx("The preview updates as you type.") : tx("The preview updates as you type. Every active resident also gets this by email.")}</p>
+          </aside>
+        </div>
+
+        <footer className="anf-foot">
+          {isEditMode && onArchiveToggle && (
+            <button
+              type="button"
+              className="button button-soft"
+              onClick={() => onArchiveToggle(editingAnnouncement)}
+              disabled={submitting}
+            >
+              <i className={`bi ${editingAnnouncement.archivedAt ? "bi-box-arrow-up" : "bi-archive"}`} style={{ marginRight: 6 }} />
+              {editingAnnouncement.archivedAt ? tx("Restore") : tx("Archive")}
+            </button>
+          )}
+          <span className={`anf-status${ready ? " ok" : ""}`} role="status">
+            {ready ? (isEditMode ? tx("Ready to save") : tx("Ready to post")) : tx("Add a title and a message.")}
+          </span>
+          {onCancel && (
+            <button type="button" className="button button-secondary" onClick={onCancel} disabled={submitting}>
+              {tx("Cancel")}
+            </button>
+          )}
+          <button type="submit" className="button button-primary" disabled={submitting}>
+            {submitting
+              ? (isEditMode ? tx("Updating...") : tx("Saving..."))
+              : (isEditMode ? tx("Update Announcement") : tx("Post announcement"))}
+          </button>
+        </footer>
+      </form>
+    </>
   );
 };
+
+// The redesigned form: fields on the left, a live preview of the resident's
+// card on the right (below the fields on narrow screens), Cancel / Post fixed
+// at the bottom of the window.
+const FORM_STYLE = `
+  .anf { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+  .anf-body { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  .anf-fields { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; border-right: 1px solid #f0eaec; }
+  .anf-field { display: flex; flex-direction: column; gap: 6px; }
+  .anf-fieldset { border: 0; padding: 0; margin: 0; }
+  .anf-label { font-size: 13px; font-weight: 600; color: #374151; padding: 0; margin-bottom: 2px; }
+  .anf-req { color: #dc2626; }
+  .anf-optional { font-weight: 400; color: #6b7280; }
+  .anf-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .anf-count { font-size: 12px; color: #6b7280; }
+  .anf-input { width: 100%; height: 44px; border: 1px solid #d1d5db; border-radius: 10px; padding: 0 14px; font-size: 15px; font-family: inherit; background: #fff; box-sizing: border-box; }
+  .anf-input:focus { outline: none; border-color: #6B2C3E; box-shadow: 0 0 0 3px rgba(107, 44, 62, .12); }
+  .anf-textarea { height: auto; padding: 12px 14px; line-height: 1.5; resize: vertical; min-height: 140px; }
+  .anf-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .anf-chip { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #fff; color: #374151; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .anf-chip.on { border-width: 2px; font-weight: 700; }
+  .anf-tabs { display: flex; background: #f3f4f6; border-radius: 10px; padding: 4px; gap: 4px; }
+  .anf-tabs button { flex: 1; min-height: 38px; border: 0; border-radius: 8px; background: transparent; color: #374151; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .anf-tabs button.on { background: #fff; color: #6B2C3E; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .anf-drop { display: flex; align-items: center; gap: 14px; padding: 16px; border: 2px dashed #d8c3c9; border-radius: 12px; background: #fcf8f9; cursor: pointer; margin-top: 8px; }
+  .anf-drop strong { display: block; font-size: 14px; color: #1f2937; }
+  .anf-drop small { font-size: 12.5px; color: #6b7280; }
+  .anf-drop-icon { width: 48px; height: 48px; border-radius: 12px; background: #fff; border: 1px solid #ecdfe3; color: #6B2C3E; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .anf-picked { display: flex; align-items: center; gap: 14px; margin-top: 8px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 12px; }
+  .anf-picked img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+  .anf-picked strong { display: block; font-size: 13.5px; word-break: break-all; margin-bottom: 4px; }
+  .anf-actions { display: flex; gap: 14px; }
+  .anf-link-btn { background: none; border: 0; padding: 0; color: #6B2C3E; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .anf-link-btn.danger { color: #dc2626; }
+  .anf-linkcard { display: flex; gap: 12px; align-items: center; margin-top: 10px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fafafa; }
+  .anf-linkcard img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+  .anf-linkcard strong { display: block; font-size: 14px; }
+  .anf-linkcard small { color: #6b7280; font-size: 12.5px; }
+  .anf-note { margin: 8px 0 0; font-size: 12.5px; color: #6b7280; line-height: 1.5; }
+  .anf-error { margin: 8px 0 0; font-size: 12.5px; color: #dc2626; font-weight: 600; }
+  .anf-preview { padding: 22px 24px; background: #faf8f9; display: flex; flex-direction: column; gap: 12px; }
+  .anf-kicker { font-size: 12px; font-weight: 700; color: #6b7280; letter-spacing: .05em; }
+  .anf-card { background: #fff; border: 1px solid #ece4e6; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+  .anf-card-img { display: block; width: 100%; height: 190px; object-fit: cover; }
+  .anf-card-img.empty { display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #6b7280; font-size: 13px; }
+  .anf-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .anf-card-body h3 { margin: 0; font-size: 17px; font-weight: 700; color: #111827; word-break: break-word; }
+  .anf-card-body p { margin: 0; font-size: 13.5px; color: #4b5563; line-height: 1.5; white-space: pre-line; word-break: break-word; max-height: 12em; overflow: hidden; }
+  .anf-pill { align-self: flex-start; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+  .anf-source { font-size: 12.5px; color: #6B2C3E; font-weight: 600; }
+  .anf-card-actions { display: flex; gap: 16px; padding-top: 8px; border-top: 1px solid #f3f4f6; font-size: 13px; color: #6b7280; font-weight: 600; }
+  .anf-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 24px; border-top: 1px solid #f0eaec; background: #fff; }
+  .anf-status { margin-right: auto; font-size: 13px; color: #6b7280; font-weight: 600; }
+  .anf-status.ok { color: #15803d; }
+  @media (max-width: 860px) {
+    .anf-body { grid-template-columns: 1fr; }
+    .anf-fields { border-right: 0; padding: 16px; }
+    .anf-preview { padding: 16px; border-top: 1px solid #f0eaec; }
+    .anf-input { font-size: 16px; }
+    .anf-foot { padding: 12px 16px; }
+    .anf-foot .button { flex: 1; }
+    .anf-status { flex-basis: 100%; }
+  }
+`;
 
 export default CreateAnnouncementView;

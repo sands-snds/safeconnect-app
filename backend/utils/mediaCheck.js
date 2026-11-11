@@ -108,8 +108,11 @@ const REJECT_MESSAGES = {
 
 // dataUrl: the report's base64 photo or video. Returns
 // { ok: false, reason, message } or
-// { ok: true, takenAt, latitude, longitude, flags: [] | ["day_old"] }.
-const checkMedia = async (dataUrl, mediaType, now = new Date()) => {
+// { ok: true, takenAt, latitude, longitude, flags: [] | ["day_old"] | ["camera_no_date"] }.
+// fromCamera: the form says it came from its "Take a photo" button. Some
+// phones' cameras save no date; such a photo is let through (the form
+// already checked the file was just made) and flagged for staff.
+const checkMedia = async (dataUrl, mediaType, now = new Date(), { fromCamera = false } = {}) => {
     const match = /^data:([^;,]+)?(;base64)?,/.exec(String(dataUrl || ""));
     if (!match) return { ok: false, reason: "noDate", message: REJECT_MESSAGES.noDate };
     const buffer = Buffer.from(String(dataUrl).slice(match[0].length), "base64");
@@ -117,6 +120,9 @@ const checkMedia = async (dataUrl, mediaType, now = new Date()) => {
     const info = isVideo ? readVideo(buffer) : await readImage(buffer);
 
     if (info.editedBy) return { ok: false, reason: "edited", message: REJECT_MESSAGES.edited };
+    if (!info.takenAt && fromCamera && !isVideo) {
+        return { ok: true, takenAt: null, latitude: info.latitude, longitude: info.longitude, flags: ["camera_no_date"] };
+    }
     if (!info.takenAt) return { ok: false, reason: "noDate", message: REJECT_MESSAGES.noDate };
     const age = daysBetween(dayKey(info.takenAt), dayKey(now));
     if (age < 0) return { ok: false, reason: "future", message: REJECT_MESSAGES.future };

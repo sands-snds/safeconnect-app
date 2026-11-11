@@ -25,7 +25,7 @@ class PettyCrimeService {
 
         const isAnonymous = data.isAnonymous === true || data.isAnonymous === "true";
         // The photo or video must be fresh and unedited (utils/mediaCheck.js).
-        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
 
         const reference = await generateReference(PettyCrime.getLatestReference);
@@ -79,7 +79,7 @@ class PettyCrimeService {
             return { success: false, status: 400, message: PHOTO_REQUIRED_MESSAGE };
         }
 
-        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
         const affected = await PettyCrime.update(id, {
             crimeType: data.crimeType,

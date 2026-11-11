@@ -326,6 +326,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         suspectInfo: formData.suspectInfo || null,
         photoUrl,
         mediaType: photoUrl ? media.type : null,
+        mediaSource: photoUrl && media.fromCamera ? 'camera' : null,
         
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,

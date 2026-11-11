@@ -92,8 +92,19 @@ exports.getComments = async (req, res) => {
     }
 };
 
+// An archived announcement is read-only: its comments can be read and
+// deleted, but it can't be edited or commented on until it's unarchived.
+const ARCHIVED_MESSAGE = "This announcement is archived. Unarchive it first.";
+const isArchived = async (id) => {
+    const announcement = await Announcement.findById(id);
+    return Boolean(announcement && announcement.archived_at);
+};
+
 exports.createComment = async (req, res) => {
     try {
+        if (await isArchived(req.params.id)) {
+            return res.status(409).json({ success: false, code: "ANNOUNCEMENT_ARCHIVED", message: ARCHIVED_MESSAGE });
+        }
         const text = (req.body.text || "").trim();
         if (!text) {
             return res.status(400).json({ success: false, message: "Comment cannot be empty." });
@@ -192,6 +203,9 @@ exports.deleteComment = async (req, res) => {
 
 exports.updateAnnouncement = async (req, res) => {
     try {
+        if (await isArchived(req.params.id)) {
+            return res.status(409).json({ success: false, code: "ANNOUNCEMENT_ARCHIVED", message: ARCHIVED_MESSAGE });
+        }
         const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
         const removeImage = req.body.remove_image === "1";
         const result = await AnnouncementService.update(

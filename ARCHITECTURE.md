@@ -765,11 +765,11 @@ The only calls that bypass `api.js` are to **other** services (Nominatim, Open-M
 |---|---|
 | `AnnouncementsPage.jsx` | The tab wrapper. |
 | `AnnouncementsTable.jsx` | Manages itself: fetches (archived included), searches, sorts and paginates a card list, with an `ArchiveToolbar` (Active / Archived, auto-archive period), and handles edit, delete and archive / restore with a `ResultPopup`. It opens the create modal right away when reached from the dashboard shortcut. Each card also has **Comments** (with a count) and **Share**. |
-| `AnnouncementComments.jsx` | The comments panel under a card: residents' comments as YouTube-style threads, **Reply** (opens a reply box under the comment, with Cancel and Reply), a "N replies / Hide replies" toggle, **Delete** for moderation (removes replies too), and a box to comment as the barangay. Keeps the card's count in sync. |
+| `AnnouncementComments.jsx` | The comments panel under a card: residents' comments as YouTube-style threads, **Reply** (opens a reply box under the comment, with Cancel and Reply), a "N replies / Hide replies" toggle, **Delete** for moderation (removes replies too), and a box to comment as the barangay. Keeps the card's count in sync. `readOnly` (an archived announcement): comments can be read and deleted, but there's no comment box or Reply. |
 | `AnnouncementShareButton.jsx` | The **Share** menu: the device's share sheet (where the browser supports it), **Share on Facebook**, or **Copy announcement** (title, message and link). Links to the news article for link announcements, otherwise to the public SafeConnect site. |
-| `AnnouncementModal.jsx` | A popup around `CreateAnnouncementView` (Esc or clicking outside closes it). |
-| `CreateAnnouncementView.jsx` | The create and edit form: image upload with preview and remove, a **pasted link with automatic preview**, and multipart submission; in edit mode an **Archive** / **Restore** button. Form contents are kept if the session expires. |
-| `constants.js` | Announcement categories. |
+| `AnnouncementModal.jsx` | The window around `CreateAnnouncementView` (up to 1040 px wide): header with icon, title and a one-line note, then the form; Esc or clicking outside closes it. |
+| `CreateAnnouncementView.jsx` | The create and edit form, in two columns: fields (title, **category buttons** in each category's color, message with a character count, then a **Photo / News link** switch: photo pick with replace / remove, or a pasted link with its automatic preview) and a **live preview** of the resident's card; below 860 px the preview goes under the fields. Footer: Archive / Restore (edit), a ready line, Cancel and Post fixed at the bottom. Multipart submission as before; form contents are kept if the session expires. |
+| `constants.js` | Announcement categories. Also `CATEGORY_COLORS`, shared by the cards and the form. |
 
 #### Users, Logs, Modals
 | Component | What it does |

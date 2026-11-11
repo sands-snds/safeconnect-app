@@ -109,6 +109,11 @@ const ReportImage = ({ type, report }) => {
         </button>
       )}
 
+      {(report.mediaCheck?.flags || []).includes("camera_no_date") && (
+        <div style={{ marginTop: 6, fontSize: ".78rem", color: "#6b7280" }}>
+          <i className="bi bi-camera" aria-hidden="true"></i> {tx("Taken with the form's camera (the photo has no date in its details)")}
+        </div>
+      )}
       {takenAt && !Number.isNaN(takenAt.getTime()) && (
         <div style={{ marginTop: 6, fontSize: ".78rem", color: "#6b7280" }}>
           <i className="bi bi-camera" aria-hidden="true"></i>{" "}

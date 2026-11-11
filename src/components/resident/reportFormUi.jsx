@@ -152,6 +152,9 @@ export function PersonBox({ t, idPrefix, title, rel, onRel, relOther, onRelOther
 }
 
 const MEDIA_ACCEPT = 'image/jpeg,image/jpg,video/mp4,video/quicktime,video/webm';
+// The camera button asks for any image: with specific types or video in the
+// list, many Android phones open the file chooser / gallery instead.
+export const CAMERA_ACCEPT = 'image/*';
 
 // Take a photo / Gallery, then a preview with Change and Remove. Uses the
 // checks in useMediaAttachment (file type and size) through onChange.
@@ -160,14 +163,14 @@ export function MediaPicker({ t, id, label, required, optionalText, hint, media,
   // Cancelling the camera or file picker keeps the file already attached.
   const pick = (e) => {
     if (!e.target.files || !e.target.files[0]) return;
-    onChange(e);
+    onChange(e, { fromCamera: e.target === cameraRef.current });
     if (e.target !== fileInputRef.current) e.target.value = '';
   };
   return (
     <div>
       <Lbl id={id} icon="bi-camera-fill" req={required} optional={required ? null : optionalText}>{label}</Lbl>
       <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT} hidden onChange={pick} disabled={disabled} aria-labelledby={id} />
-      <input ref={cameraRef} type="file" accept={MEDIA_ACCEPT} capture="environment" hidden onChange={pick} disabled={disabled} aria-hidden="true" tabIndex={-1} />
+      <input ref={cameraRef} type="file" accept={CAMERA_ACCEPT} capture="environment" hidden onChange={pick} disabled={disabled} aria-hidden="true" tabIndex={-1} />
       {media.previewUrl ? (
         <div className="qr-preview">
           <span className="qr-ok"><i className="bi bi-check-lg" aria-hidden="true" /> {media.type === 'video' ? t('quickReport.videoAdded') : t('quickReport.photoAdded')}</span>

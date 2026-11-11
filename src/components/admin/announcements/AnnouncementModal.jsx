@@ -1,6 +1,10 @@
 import React, { useEffect } from "react";
 import CreateAnnouncementView from "./CreateAnnouncementView";
+import { tx } from "../../../i18n/adminText";
 
+// The create / edit announcement window: header, then the form
+// (CreateAnnouncementView: fields beside a live preview, with Cancel / Post
+// fixed at the bottom). Esc or a click outside closes it.
 const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved, onArchiveToggle }) => {
     const isEditMode = !!editingAnnouncement;
 
@@ -21,11 +25,8 @@ const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved, onArch
             onClick={onClose}
             style={{
                 position: "fixed",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                background: "rgba(0,0,0,0.5)",
+                inset: 0,
+                background: "rgba(17,17,17,0.55)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -34,48 +35,46 @@ const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved, onArch
             }}
         >
             <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="announcement-modal-title"
                 onClick={(e) => e.stopPropagation()}
                 style={{
                     background: "#fff",
-                    borderRadius: "16px",
+                    borderRadius: "18px",
                     width: "100%",
-                    maxWidth: "760px",
-                    maxHeight: "90vh",
-                    overflowY: "auto",
-                    boxShadow: "0 20px 50px rgba(0,0,0,0.25)"
+                    maxWidth: "1040px",
+                    maxHeight: "calc(100dvh - 32px)",
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                    boxShadow: "0 24px 64px rgba(0,0,0,0.35)"
                 }}
             >
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "20px 24px",
-                        borderBottom: "1px solid #f3f4f6",
-                        position: "sticky",
-                        top: 0,
-                        background: "#fff",
-                        borderRadius: "16px 16px 0 0",
-                        zIndex: 1
-                    }}
-                >
-                    <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "#111827" }}>
-                        {isEditMode ? "Edit Announcement" : "New Announcement"}
-                    </h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 24px", borderBottom: "1px solid #f0eaec", flexShrink: 0 }}>
+                    <span
+                        aria-hidden="true"
+                        style={{ width: 44, height: 44, borderRadius: 12, background: "#f5e9ec", color: "#6B2C3E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}
+                    >
+                        <i className={`bi ${isEditMode ? "bi-pencil-square" : "bi-megaphone-fill"}`} />
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <h2 id="announcement-modal-title" style={{ margin: 0, fontSize: "19px", fontWeight: 700, color: "#111827" }}>
+                            {isEditMode ? tx("Edit Announcement") : tx("New Announcement")}
+                        </h2>
+                        <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#6b7280" }}>
+                            {isEditMode
+                                ? tx("Changes show on the residents' News page when you save.")
+                                : tx("Shown on the residents' News page and emailed to every active resident.")}
+                        </p>
+                    </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        aria-label="Close"
-                        style={{
-                            background: "none",
-                            border: "none",
-                            fontSize: "24px",
-                            lineHeight: 1,
-                            cursor: "pointer",
-                            color: "#6b7280"
-                        }}
+                        aria-label={tx("Close")}
+                        style={{ width: 44, height: 44, border: 0, borderRadius: 10, background: "#f3f4f6", color: "#374151", fontSize: 18, cursor: "pointer", flexShrink: 0 }}
                     >
-                        &times;
+                        <i className="bi bi-x-lg" aria-hidden="true" />
                     </button>
                 </div>
 

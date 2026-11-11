@@ -26,7 +26,7 @@ class AssistanceRequestService {
         }
 
         // The photo or video must be fresh and unedited (utils/mediaCheck.js).
-        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
 
         const reference = await generateReference(AssistanceRequest.getLatestReference);
@@ -79,7 +79,7 @@ class AssistanceRequestService {
             return { success: false, status: 400, message: PROOF_REQUIRED_MESSAGE };
         }
 
-        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType) : null;
+        const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
         const affected = await AssistanceRequest.update(id, {
             assistanceType: data.type,
