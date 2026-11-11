@@ -479,15 +479,14 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
         .mr-wrap { max-width: 880px; margin: 0 auto; }
 
         /* Reports and the map, like the News page: the list on the left and
-           the map on the right (staying in view) on wide screens; one column,
-           the map first, on tablets and phones. */
+           the map on the right (scrolling with the page) on wide screens; one
+           column, the map first, on tablets and phones. */
         .mr-layout { max-width: 880px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
         .mr-layout > .mr-wrap { max-width: none; margin: 0; min-width: 0; }
         .mr-map-col { min-width: 0; }
         @media (max-width: 1099px) { .mr-map-col { order: -1; } }
         @media (min-width: 1100px) {
           .mr-layout { max-width: 1320px; grid-template-columns: minmax(0, 1fr) minmax(420px, 42%); gap: 28px; align-items: start; }
-          .mr-map-col { position: sticky; top: 0; }
         }
 
         /* ── Toolbar: underline tabs instead of pill buttons ── */

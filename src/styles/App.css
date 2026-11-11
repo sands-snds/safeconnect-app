@@ -63,7 +63,6 @@ section {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
 }
 
 .carousel-inner {
@@ -165,11 +164,17 @@ section {
   }
 }
 
-/* Landing page carousel: white arrows (src/App.css inverts the arrow icons
-   to black elsewhere). A soft shadow keeps them visible on light photos. */
+/* Landing page carousel, as on the resident page: white arrows and dots,
+   above the dark overlay (which otherwise greys them out and blocks clicks).
+   src/App.css inverts the arrow icons to black elsewhere. */
 #homeCarousel .carousel-control-prev-icon,
 #homeCarousel .carousel-control-next-icon {
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+  filter: none;
+}
+#homeCarousel .carousel-control-prev,
+#homeCarousel .carousel-control-next,
+#homeCarousel .carousel-indicators {
+  z-index: 3;
 }
 
 /* Carousel Controls */

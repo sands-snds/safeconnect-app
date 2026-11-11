@@ -84,7 +84,7 @@ const LocationPickerMap = ({
   const pinLng = Number(rawPin?.lng);
   const hasPin = rawPin != null && Number.isFinite(pinLat) && Number.isFinite(pinLng);
   const pin = useMemo(() => (hasPin ? { lat: pinLat, lng: pinLng } : null), [hasPin, pinLat, pinLng]);
-  const [basemap, setBasemap] = useState('map');
+  const [basemap, setBasemap] = useState('satellite'); // satellite first; Map is one tap away
   // Street View opens beside the map only when asked for (the button on the
   // map): Google's street photos cover only some of Santa Fe's roads.
   const [showStreet, setShowStreet] = useState(false);
@@ -152,7 +152,7 @@ const LocationPickerMap = ({
           )}
           {!readOnly && <ClickToPin onPick={onPick} disabled={!canPick} />}
           <FollowPin pin={pin} />
-          <LimitToSantaFe />
+          <LimitToSantaFe include={isOutside ? pin : null} />
         </MapContainer>
 
         

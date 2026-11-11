@@ -71,7 +71,7 @@ function FollowSelection({ selectedKey, markers }) {
 }
 
 export default function IncidentMap({ reports, selectedKey, onSelect, renderPopup, height = 470, label = 'Map of Barangay Santa Fe' }) {
-  const [basemap, setBasemap] = useState('map');
+  const [basemap, setBasemap] = useState('satellite'); // satellite first; Map is one tap away
   const [found, setFound] = useState({});
   const markers = useRef({});
   const tiles = BASEMAPS[basemap];

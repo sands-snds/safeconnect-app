@@ -36,6 +36,8 @@ const PHOTO_OPTIONAL_CRIME_TYPES = ['Theft', 'Suspicious Activity', 'Harassment'
 
 // "Other" asks for the kind of incident in its own box; that text is saved
 // as the report's crime type (as the Assistance form does with its emergency).
+// Text checks on step 2's boxes (its Next button waits for them).
+const DETAIL_TEXT_FIELDS = ['crimeOther', 'description', 'suspectInfo', 'relOther', 'name', 'details'];
 const OTHER_CRIME = 'Other';
 const LISTED_CRIMES = CRIME_TYPES.map((c) => c.value).filter((v) => v !== OTHER_CRIME);
 const crimeTypeOf = (form) => (form.crimeType === OTHER_CRIME ? form.crimeOther.trim() : form.crimeType);
@@ -374,15 +376,22 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         crimeType: formData.crimeType === OTHER_CRIME ? formData.crimeOther : '',
         victimRelationship: victimRelationshipOther, victimName, victimDetails
       });
-      if (textErrors) { setTextServerErrors(textErrors); return; }
+      if (textErrors) {
+        setTextServerErrors(textErrors);
+        // Only the address is on step 3; anything else is shown on step 2.
+        if (Object.keys(textErrors).some((k) => k !== 'location')) setStep(2);
+        return;
+      }
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('pettyCrimeModal.submitError') });
     } finally {
       setIsSubmitting(false);
     }
   };
   // The first thing still needed before sending (shown above Send), or null.
-  const whatIsMissing = () => {
-    if (textBlocked) return 'text';
+  // detailsOnly: only what step 2 asks for (its Next button); otherwise
+  // everything, for Send.
+  const whatIsMissing = (detailsOnly = false) => {
+    if (detailsOnly ? DETAIL_TEXT_FIELDS.some((k) => textWarn[k]) : textBlocked) return 'text';
     if (reportFor === 'others') {
       if (!victimRelationship) return 'rel';
       if (victimRelationship === 'Other' && !victimRelationshipOther.trim()) return 'relOther';
@@ -391,13 +400,13 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     }
     if (!formData.crimeType) return 'crimeType';
     if (formData.crimeType === OTHER_CRIME && !formData.crimeOther.trim()) return 'crimeOther';
-    if (isOutsideSantaFe) return 'outside';
-    if (isEditing ? !formData.location.trim() : (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim()))) {
+    if (!detailsOnly && isOutsideSantaFe) return 'outside';
+    if (!detailsOnly && (isEditing ? !formData.location.trim() : (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())))) {
       return isEditing ? 'location' : 'address';
     }
     if (!formData.description.trim()) return 'description';
     if (needsNewMedia && !media.file) return 'crimePhoto';
-    if (!formData.consent) return 'consent';
+    if (!detailsOnly && !formData.consent) return 'consent';
     return null;
   };
   const closeSuccessPopup = () => {
@@ -414,6 +423,8 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const chosenCrime = CRIME_TYPES.find((c) => c.value === formData.crimeType);
   const crimeNote = chosenCrime && ['publicDisturbance', 'other'].includes(chosenCrime.key) ? t(`reportShared.crimeNote.${chosenCrime.key}`) : '';
   const missingKey = whatIsMissing();
+  const detailsMissingKey = whatIsMissing(true);
+  const detailsMissingText = !detailsMissingKey ? '' : t(`reportShared.need.${detailsMissingKey}`);
   const missingText = !missingKey ? '' : missingKey === 'outside' ? t('reportForm.outsideSantaFe') : t(`reportShared.need.${missingKey}`);
   const mediaHint = hasExistingMedia
     ? t('reportForm.mediaHintEdit')
@@ -432,11 +443,19 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     title={t('pettyCrimeModal.title')}
     typeTitle={chosenCrime ? t(`reportShared.crimeShort.${chosenCrime.key}`) : ''}
     forOthers={reportFor === 'others'}
-    onBack={() => setStep(1)}
+    total={3}
+    onBack={() => setStep((n) => Math.max(1, n - 1))}
     onClose={onClose}
     disabled={isSubmitting}
   />
-  <form className="qr-form" onSubmit={handleSubmit}>
+  <form className="qr-form" onSubmit={(e) => {
+    if (step < 3) {
+      e.preventDefault();
+      if (step === 2 && !detailsMissingKey) setStep(3);
+      return;
+    }
+    handleSubmit(e);
+  }}>
     {step === 1 ? (
     <div className="qr-body">
       <WhoButtons
@@ -460,7 +479,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         disabled={isSubmitting}
       />
     </div>
-    ) : (
+    ) : step === 2 ? (
     <div className="qr-body">
       {/* No anonymous option for new reports; one filed anonymously before keeps it. */}
       {isEditing && editingReport.is_anonymous && (
@@ -564,6 +583,9 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         />
       </Section>
 
+    </div>
+    ) : (
+    <div className="qr-body">
       {isEditing ? (
         <Section id="pc-address" title={t('assistanceModal.currentAddress')} req>
           <div className="qr-edit-address">
@@ -625,6 +647,16 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     </div>
     )}
     {step === 2 && (
+    <SendFoot
+      type="button"
+      onClick={() => setStep(3)}
+      missing={detailsMissingText}
+      readyText={t('reportShared.readyNext')}
+      label={t('reportShared.next')}
+      icon="bi-arrow-right-circle-fill"
+    />
+    )}
+    {step === 3 && (
     <SendFoot
       missing={missingText}
       readyText={t('reportShared.ready')}

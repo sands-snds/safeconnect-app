@@ -34,25 +34,26 @@ export function ReportHead({ icon, title, titleId = 'qr-title', onClose, closeLa
   );
 }
 
-// The header of a two-step form, as on Report Emergency: step 1 shows the
-// form's icon and title; step 2 a back arrow, the chosen type in the form's
-// colour and, when it is for someone else, a "for someone" chip.
-export function StepHead({ t, step, icon, title, typeTitle, forOthers, onBack, onClose, disabled }) {
+// The header of a step-by-step form, as on Report Emergency: step 1 shows the
+// form's icon and title; later steps a back arrow, the chosen type in the
+// form's colour and, when it is for someone else, a "for someone" chip.
+// total: how many steps (2 or 3).
+export function StepHead({ t, step, total = 2, icon, title, typeTitle, forOthers, onBack, onClose, disabled }) {
   return (
     <ReportHead
       icon={icon}
-      title={step === 2 ? (
+      title={step > 1 ? (
         <>
           <span className="qr-type-title">{typeTitle}</span>
           {forOthers && <span className="qr-forchip"><i className="bi bi-people-fill" aria-hidden="true" /> {t('quickReport.forChip')}</span>}
         </>
       ) : title}
-      before={step === 2 ? (
+      before={step > 1 ? (
         <button type="button" className="qr-x" onClick={onBack} aria-label={t('quickReport.back')} disabled={disabled}>
           <i className="bi bi-arrow-left" aria-hidden="true" />
         </button>
       ) : null}
-      after={<span className="qr-step">{t('quickReport.step', { n: step })}</span>}
+      after={<span className="qr-step">{total === 3 ? t('reportShared.stepOf3', { n: step }) : t('quickReport.step', { n: step })}</span>}
       onClose={onClose}
       closeLabel={t('quickReport.close')}
       disabled={disabled}

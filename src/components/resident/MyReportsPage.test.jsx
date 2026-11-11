@@ -134,7 +134,11 @@ test.each([
   chooseFromMenu(title, 'Edit');
 
   
+  // Assistance and Petty Crime open on their details step; Next goes on to
+  // the step with the confirmation box and Save.
   const consent = await waitFor(() => {
+    const next = [...document.querySelectorAll('.qr-foot button')].find((b) => /^Next/.test(b.textContent.trim()));
+    if (next && !next.disabled) fireEvent.click(next);
     const box = document.querySelector('input[name="consent"]');
     if (!box) throw new Error('edit form not open');
     return box;

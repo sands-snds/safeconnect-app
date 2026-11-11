@@ -22,6 +22,8 @@ const EMERGENCY_OPTIONS = [
   { value: 'Typhoon', labelKey: 'emergencyModal.typeTyphoon', icon: 'bi-tropical-storm', color: '#0f766e' }
 ];
 // The saved values are unchanged; the tiles show short names.
+// Text checks on step 2's boxes (its Next button waits for them).
+const DETAIL_TEXT_FIELDS = ['emergencyOther', 'situation', 'relOther', 'name', 'details'];
 const ASSISTANCE_TYPES = [
   { value: 'Food and Water', key: 'foodWater', icon: 'bi-basket2-fill' },
   { value: 'Medical Aid', key: 'medicalAid', icon: 'bi-heart-pulse-fill' },
@@ -411,15 +413,22 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         victimOfEmergency: formData.emergencyOther, situation: formData.situation, location: formData.location,
         victimRelationship: victimRelationshipOther, victimName, victimDetails
       });
-      if (textErrors) { setTextServerErrors(textErrors); return; }
+      if (textErrors) {
+        setTextServerErrors(textErrors);
+        // Only the address is on step 3; anything else is shown on step 2.
+        if (Object.keys(textErrors).some((k) => k !== 'location')) setStep(2);
+        return;
+      }
       showPopup({ type: 'error', title: t('popup.submitFailedTitle'), message: t('assistanceModal.submitError') });
     } finally {
       setIsSubmitting(false);
     }
   };
   // The first thing still needed before sending (shown above Send), or null.
-  const whatIsMissing = () => {
-    if (textBlocked) return 'text';
+  // detailsOnly: only what step 2 asks for (its Next button); otherwise
+  // everything, for Send.
+  const whatIsMissing = (detailsOnly = false) => {
+    if (detailsOnly ? DETAIL_TEXT_FIELDS.some((k) => textWarn[k]) : textBlocked) return 'text';
     if (reportFor === 'others') {
       if (!victimRelationship) return 'rel';
       if (victimRelationship === 'Other' && !victimRelationshipOther.trim()) return 'relOther';
@@ -430,15 +439,15 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     if (!formData.emergency) return 'emergency';
     if (formData.emergency === OTHER_EMERGENCY && !formData.emergencyOther.trim()) return 'emergencyOther';
     if (needsNewMedia && !media.file) return 'proof';
-    if (isOutsideSantaFe) return 'outside';
-    if (isEditing ? !formData.location.trim() : (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim()))) {
+    if (!detailsOnly && isOutsideSantaFe) return 'outside';
+    if (!detailsOnly && (isEditing ? !formData.location.trim() : (!gpsCoords && (!formData.houseNumber.trim() || !formData.street.trim())))) {
       return isEditing ? 'location' : 'address';
     }
     if (!formData.situation.trim()) return 'situation';
     const people = Number(formData.people);
     if (!Number.isInteger(people) || people < 1 || people > MAX_PEOPLE_NEEDING_HELP) return 'people';
     if (missingSpecialCount(formData.special, formData.specialCounts)) return 'special';
-    if (!formData.consent) return 'consent';
+    if (!detailsOnly && !formData.consent) return 'consent';
     return null;
   };
   const closeSuccessPopup = () => {
@@ -458,6 +467,8 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     { value: OTHER_EMERGENCY, icon: 'bi-three-dots', color: '#6B2C3E', label: t('reportShared.crimeShort.other') }
   ];
   const missingKey = whatIsMissing();
+  const detailsMissingKey = whatIsMissing(true);
+  const detailsMissingText = !detailsMissingKey ? '' : t(`reportShared.need.${detailsMissingKey}`);
   const missingText = !missingKey ? '' : missingKey === 'outside' ? t('reportForm.outsideSantaFe') : t(`reportShared.need.${missingKey}`);
   const peopleNumber = Number(formData.people) || 0;
   const setPeople = (n) => setFormData((prev) => ({ ...prev, people: String(Math.min(MAX_PEOPLE_NEEDING_HELP, Math.max(1, n))) }));
@@ -473,11 +484,19 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     title={isEditing ? t('assistanceModal.editTitle') : t('assistanceModal.requestTitle')}
     typeTitle={chosenAssist ? chosenAssist.label : ''}
     forOthers={reportFor === 'others'}
-    onBack={() => setStep(1)}
+    total={3}
+    onBack={() => setStep((n) => Math.max(1, n - 1))}
     onClose={onClose}
     disabled={isSubmitting}
   />
-  <form className="qr-form" onSubmit={handleSubmit}>
+  <form className="qr-form" onSubmit={(e) => {
+    if (step < 3) {
+      e.preventDefault();
+      if (step === 2 && !detailsMissingKey) setStep(3);
+      return;
+    }
+    handleSubmit(e);
+  }}>
     {step === 1 ? (
     <div className="qr-body">
       <WhoButtons
@@ -501,7 +520,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         disabled={isSubmitting}
       />
     </div>
-    ) : (
+    ) : step === 2 ? (
     <div className="qr-body">
       {reportFor === 'others' && (
         <PersonBox
@@ -632,6 +651,9 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         />
       </Section>
 
+    </div>
+    ) : (
+    <div className="qr-body">
       {isEditing ? (
         <Section id="as-address" title={t('assistanceModal.currentAddress')} req>
           <div className="qr-edit-address">
@@ -694,6 +716,16 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     </div>
     )}
     {step === 2 && (
+    <SendFoot
+      type="button"
+      onClick={() => setStep(3)}
+      missing={detailsMissingText}
+      readyText={t('reportShared.readyNext')}
+      label={t('reportShared.next')}
+      icon="bi-arrow-right-circle-fill"
+    />
+    )}
+    {step === 3 && (
     <SendFoot
       missing={missingText}
       readyText={t('reportShared.ready')}

@@ -14,9 +14,8 @@ const STYLE = `
   .rdp { display: flex; flex-direction: column; gap: 14px; }
   .rdp-top { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
   .rdp-desc { flex: 1 1 360px; min-width: 0; background: #fff; border: 1px solid #f1e4e7; border-left: 4px solid var(--rdp-accent); border-radius: 10px; padding: 12px 16px 14px; }
-  /* Neutral labels (as .rdp-fact-label); the report type shows in the left border. */
-  .rdp-kicker { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; }
-  .rdp-kicker > .bi { color: #9ca3af; }
+  /* Plain black, not the report type's colour (that shows in the left border). */
+  .rdp-kicker { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #111827; margin-bottom: 6px; }
   .rdp-desc-text { margin: 0; font-size: 15.5px; line-height: 1.55; color: #111827; white-space: pre-wrap; word-break: break-word; }
   .rdp-desc-text.small { font-size: 14.5px; }
   .rdp-desc-text.empty { color: #9ca3af; font-style: italic; font-size: 14px; }
