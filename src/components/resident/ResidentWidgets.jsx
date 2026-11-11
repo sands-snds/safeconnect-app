@@ -10,6 +10,7 @@ import { OPEN_NEWS_EVENT, RAIN_ALERT_THRESHOLD, describeWeatherCode } from './Re
 const ARTICLES = 3;
 const AUTO_MS = 6000;
 const SWIPE_PX = 50;
+const PHONE_QUERY = '(max-width: 767px)';
 
 // Both widgets lead to the News page: an article opens there, the weather
 // opens the full forecast there.
@@ -19,6 +20,19 @@ const shortDate = (iso, language) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString(language === 'tl' ? 'fil-PH' : 'en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
+};
+
+const usePhone = () => {
+  const get = () => typeof window !== 'undefined' && !!window.matchMedia?.(PHONE_QUERY).matches;
+  const [phone, setPhone] = useState(get);
+  useEffect(() => {
+    const mq = window.matchMedia?.(PHONE_QUERY);
+    if (!mq) return undefined;
+    const onChange = () => setPhone(mq.matches);
+    if (mq.addEventListener) mq.addEventListener('change', onChange); else mq.addListener(onChange);
+    return () => { if (mq.removeEventListener) mq.removeEventListener('change', onChange); else mq.removeListener(onChange); };
+  }, []);
+  return phone;
 };
 
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -228,12 +242,123 @@ function WeatherCard({ weather }) {
   );
 }
 
-// Resident page, right under the top banner: the latest announcements first,
-// today's weather under them (the map comes after this section). Stacked the
-// same way on every screen; the announcements card rotates its articles and
-// can be swiped on touch screens.
+// Phones: the news widget and the weather widget taking turns, endlessly.
+// The track is [weather copy, news, weather, news copy]; after sliding onto
+// a copy it jumps (unseen) to the real widget, so it never reaches an end.
+// Each time the news widget comes round it shows the next article.
+function WidgetLoop({ articles, loading, weather }) {
+  const { t } = useLanguage();
+  const [pos, setPos] = useState(1);
+  const [animate, setAnimate] = useState(true);
+  const [turn, setTurn] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const trackRef = useRef(null);
+  const drag = useRef(null);
+  const swipedAt = useRef(0);
+  const isNews = (p) => p % 2 === 1;
+
+  const posRef = useRef(pos);
+  posRef.current = pos;
+  const go = (step) => {
+    const p = posRef.current;
+    // Still on a copy (a quick second swipe): jump to the real one first.
+    const from = p === 0 ? 2 : p === 3 ? 1 : p;
+    const target = from + step;
+    const move = () => {
+      setAnimate(!reducedMotion());
+      setPos(target);
+      if (isNews(target)) setTurn((n) => n + 1);
+    };
+    if (from !== p) {
+      setAnimate(false);
+      setPos(from);
+      requestAnimationFrame(() => requestAnimationFrame(move));
+    } else {
+      move();
+    }
+  };
+  const goRef = useRef(go);
+  goRef.current = go;
+  const settle = () => {
+    if (pos === 0 || pos === 3) { setAnimate(false); setPos(pos === 0 ? 2 : 1); }
+  };
+  useEffect(() => { if (!animate || reducedMotion()) settle(); });
+
+  useEffect(() => {
+    if (paused || reducedMotion()) return undefined;
+    const timer = setInterval(() => goRef.current(1), AUTO_MS);
+    return () => clearInterval(timer);
+  }, [paused]);
+
+  const place = (dx = 0) => {
+    const track = trackRef.current;
+    if (!track) return;
+    track.style.transition = dx || !animate ? 'none' : 'transform 0.4s ease';
+    track.style.transform = `translateX(calc(${-pos * 100}% + ${dx}px))`;
+  };
+  useEffect(() => { place(0); });
+
+  const onPointerDown = (e) => {
+    if (e.pointerType === 'mouse') return;
+    drag.current = { x: e.clientX, y: e.clientY, axis: null, id: e.pointerId, dx: 0 };
+    setPaused(true);
+  };
+  const onPointerMove = (e) => {
+    const d = drag.current;
+    if (!d || e.pointerId !== d.id) return;
+    const dx = e.clientX - d.x;
+    if (!d.axis) {
+      if (Math.abs(dx) < 8 && Math.abs(e.clientY - d.y) < 8) return;
+      d.axis = Math.abs(dx) > Math.abs(e.clientY - d.y) ? 'x' : 'y';
+    }
+    if (d.axis === 'x') { d.dx = dx; place(dx); }
+  };
+  const onPointerEnd = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || d.axis !== 'x') return;
+    if (Math.abs(d.dx) > SWIPE_PX) { swipedAt.current = Date.now(); go(d.dx < 0 ? 1 : -1); } else place(0);
+  };
+  const onClickCapture = (e) => {
+    if (Date.now() - swipedAt.current < 400) { e.preventDefault(); e.stopPropagation(); }
+  };
+
+  const article = articles.length ? articles[turn % articles.length] : null;
+  const news = <NewsCard articles={articles} loading={loading} single={article} />;
+  const sky = <WeatherCard weather={weather} />;
+  const track = [sky, news, sky, news];
+  const showingNews = isNews(pos);
+
+  return (
+    <div className="rw-mobile" aria-roledescription="carousel" aria-label={t('widgets.title')}>
+      <div className="rw-viewport" onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerEnd} onPointerCancel={onPointerEnd} onClickCapture={onClickCapture}>
+        <div className="rw-track" ref={trackRef} onTransitionEnd={(e) => { if (e.target === e.currentTarget) settle(); }}>
+          {track.map((slide, i) => (
+            <div key={i} aria-hidden={i !== pos} inert={i !== pos} aria-roledescription="slide">{slide}</div>
+          ))}
+        </div>
+      </div>
+      <div className="rw-mobile-controls">
+        <button type="button" className="rw-nav" onClick={() => { setPaused(true); go(-1); }} aria-label={t('widgets.previous')}>
+          <i className="bi bi-chevron-left" aria-hidden="true" />
+        </button>
+        <span className="rw-dots">
+          <button type="button" className={`rw-dot ${showingNews ? 'active' : ''}`} onClick={() => { setPaused(true); if (!showingNews) go(1); }} aria-label={t('widgets.newsTitle')} aria-current={showingNews ? 'true' : undefined} />
+          <button type="button" className={`rw-dot weather ${!showingNews ? 'active' : ''}`} onClick={() => { setPaused(true); if (showingNews) go(1); }} aria-label={t('widgets.weatherTitle')} aria-current={!showingNews ? 'true' : undefined} />
+        </span>
+        <button type="button" className="rw-nav" onClick={() => { setPaused(true); go(1); }} aria-label={t('widgets.next')}>
+          <i className="bi bi-chevron-right" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Resident page: the latest news and today's weather. Side by side on wider
+// screens; on phones one endless carousel of the two.
 export default function ResidentWidgets() {
   const { t } = useLanguage();
+  const phone = usePhone();
   const { announcements, announcementsLoading } = useAnnouncements();
   const { weather, loadWeather } = useWeather();
   const articles = announcements.slice(0, ARTICLES);
@@ -249,8 +374,8 @@ export default function ResidentWidgets() {
   return (
     <section className="resident-widgets">
       <style>{`
-        /* Starts white under the banner and ends in the pink the map below starts with. */
-        .rw-outer { padding: 64px 0 72px; background: linear-gradient(180deg, #ffffff 0%, #fbf7f8 100%); }
+        /* Fades into the report section below, which starts white. */
+        .rw-outer { padding: 64px 0 72px; background: linear-gradient(180deg, #fbf7f8 0%, #ffffff 100%); }
         .rw-inner { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
         .rw-intro { max-width: 600px; margin: 0 auto 28px; text-align: center; }
         .rw-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; color: #6B2C3E; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 14px; border-radius: 30px; border: 1.5px solid #f5c6d0; margin-bottom: 14px; }
@@ -319,19 +444,16 @@ export default function ResidentWidgets() {
         .rw-card:focus-visible, .rw-body:focus-visible, .rw-head-link:focus-visible, .rw-dot:focus-visible, .rw-nav:focus-visible { outline: 3px solid #6B2C3E; outline-offset: 2px; }
         .rw-weather:focus-visible { outline-color: #1d4ed8; }
 
-        /* Announcements on top, weather under them: one column, the same
-           width, on every screen. The news card gets a bigger picture. */
-        .rw-stack { grid-template-columns: minmax(0, 1fr); max-width: 760px; gap: 20px; }
-        .rw-stack .rw-news .rw-body { min-height: 150px; }
-        .rw-stack .rw-news .rw-thumb { min-height: 138px; flex-basis: 36%; }
-        .rw-stack .rw-news .rw-article-title { font-size: 1.02rem; }
+        /* Phones: one carousel, news and weather taking turns. */
+        .rw-mobile .rw-track > * { display: flex; padding: 0 1px; }
+        .rw-mobile .rw-card { box-shadow: none; }
+        .rw-mobile-controls { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 14px; }
+        .rw-nav { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #e5d9dc; background: #fff; color: #6B2C3E; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .rw-mobile-controls .rw-dot.weather { background: #bfdbfe; }
+        .rw-mobile-controls .rw-dot.weather.active { background: #1d4ed8; }
 
         @media (max-width: 767px) {
           .rw-outer { padding: 52px 0 64px; }
-          .rw-stack { gap: 16px; }
-          .rw-stack .rw-news .rw-body { min-height: 118px; }
-          .rw-stack .rw-news .rw-thumb { min-height: 104px; flex-basis: 38%; }
-          .rw-stack .rw-news .rw-article-title { font-size: 0.95rem; }
           .rw-body { min-height: 118px; }
           .rw-thumb { min-height: 104px; }
           .rw-temp { font-size: 2.1rem; }
@@ -351,12 +473,14 @@ export default function ResidentWidgets() {
             <p>{t('widgets.subtitle')}</p>
           </div>
 
-          <div className="rw-grid rw-stack">
-            <div onMouseEnter={() => desk.setPaused(true)} onMouseLeave={() => desk.setPaused(false)} onFocus={() => desk.setPaused(true)} onBlur={() => desk.setPaused(false)}>
+          {phone ? (
+            <WidgetLoop articles={articles} loading={announcementsLoading} weather={weather} />
+          ) : (
+            <div className="rw-grid" onMouseEnter={() => desk.setPaused(true)} onMouseLeave={() => desk.setPaused(false)} onFocus={() => desk.setPaused(true)} onBlur={() => desk.setPaused(false)}>
               <NewsCard articles={articles} loading={announcementsLoading} index={desk.index} onGo={desk.go} onTouch={() => desk.setPaused(true)} />
+              <WeatherCard weather={weather} />
             </div>
-            <WeatherCard weather={weather} />
-          </div>
+          )}
         </div>
       </div>
     </section>
