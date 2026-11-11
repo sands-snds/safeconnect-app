@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { fillHomeCoords } = require("../utils/homeCoords");
 const db = require("../config/db");
 const User = require("../models/User");
 const RememberedLogin = require("../models/RememberedLogin");
@@ -200,7 +201,9 @@ const verifySelfOrAnyAdmin = async (req, res, next) => {
 const reportAsSignedInUser = (req, res, next) => {
     const account = req.account;
     req.body = {
-        ...req.body,
+        // A report "at my home" with no map position takes the home pin, so
+        // every report shows on the map (utils/homeCoords.js).
+        ...fillHomeCoords(req.body || {}, account),
         userId: account.id,
         name: account.full_name,          // emergency_reports.reporter_name
         fullname: account.full_name,      // assistance / petty crime

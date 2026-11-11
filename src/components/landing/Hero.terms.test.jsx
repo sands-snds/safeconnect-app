@@ -72,7 +72,9 @@ const openSignUp = () => {
   });
   // Next, Next: on to the Account step, where the Terms box is.
   const next = () => fireEvent.click(document.querySelector('form button[type="submit"]'));
-  next(); next();
+  next();
+  fireEvent.click(screen.getByRole('button', { name: 'pin inside' })); // home pin, required on step 2
+  next();
   return {
     checkbox: screen.getByRole('checkbox', { name: /I have read and agree to the Terms and Conditions/ }),
     

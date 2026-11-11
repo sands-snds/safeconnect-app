@@ -137,7 +137,7 @@ class User {
                 address_house_number, address_street, address_area`;
         try {
             const [rows] = await db.query(
-                `SELECT ${columns}, DATE_FORMAT(birthdate, '%Y-%m-%d') AS birthdate
+                `SELECT ${columns}, DATE_FORMAT(birthdate, '%Y-%m-%d') AS birthdate, home_latitude, home_longitude
                  FROM registered_users WHERE id = ?`,
                 [id]
             );

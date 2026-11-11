@@ -19,6 +19,45 @@ export const registeredAddress = () => {
   }
 };
 
+// The home pin from the sign-up map, when the address boxes still hold the
+// registered home address (house and street, ignoring case and spacing).
+// Reports made at home use it as their map position.
+const tidy = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+export const registeredHomePin = (formData) => {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    const user = raw && raw.user ? raw.user : raw;
+    const pin = user && user.homeLocation;
+    const address = user && user.address;
+    const lat = Number(pin && pin.lat);
+    const lng = Number(pin && pin.lng);
+    if (!pin || !address || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    if (!formData || tidy(formData.houseNumber) !== tidy(address.houseNumber) || tidy(formData.street) !== tidy(address.street)) return null;
+    return { lat, lng };
+  } catch {
+    return null;
+  }
+};
+
+// The home pin for a saved report's address text, when that address is the
+// resident's registered home (an older report saved without a position).
+export const homePinForLocation = (location) => {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    const user = raw && raw.user ? raw.user : raw;
+    const pin = user && user.homeLocation;
+    const address = user && user.address;
+    const lat = Number(pin && pin.lat);
+    const lng = Number(pin && pin.lng);
+    const text = tidy(location);
+    if (!pin || !address || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    if (!tidy(address.houseNumber) || !tidy(address.street)) return null;
+    return text.includes(tidy(address.houseNumber)) && text.includes(tidy(address.street)) ? { lat, lng } : null;
+  } catch {
+    return null;
+  }
+};
+
 const sameAddress = (a, b) => a.houseNumber === b.houseNumber && a.street === b.street && (a.area || '') === (b.area || '');
 
 // For a new report: while the incident is at the resident's home (reporting

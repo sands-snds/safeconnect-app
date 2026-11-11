@@ -2,6 +2,7 @@ import React from 'react';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import { forwardGeocode } from '../shared/location/geocode';
 import { TextWarning } from './textWarnings';
+import { registeredHomePin } from './useRegisteredAddress';
 
 // The address of a new report, in the same parts as the sign-up form's home
 // address: House / Lot / Block No., Street and the fixed Barangay Santa Fe
@@ -29,11 +30,19 @@ export const composeLocation = (formData, gpsCoords) => {
     + (landmark ? ` (Landmark: ${landmark})` : '');
 };
 
-// The coordinates sent with a report. With the map, the pin. Without it (the
-// incident is at home), the typed address is looked up so staff still see it
-// on their map; if that fails or takes too long the report goes without.
+// The coordinates sent with a report, so it shows on the maps:
+//   1. the pin on the map, when there is one;
+//   2. at home, the resident's home pin from sign-up (while the address
+//      boxes still hold their registered address);
+//   3. otherwise the typed address, looked up (given up after 4 seconds).
+// The server also fills in the home pin for an "at my home" report that
+// still has none (backend/utils/homeCoords.js).
 export const coordsForSubmit = async (formData, gpsCoords, showMap) => {
-  if (showMap) return gpsCoords || null;
+  if (gpsCoords) return gpsCoords;
+  if (!showMap) {
+    const home = registeredHomePin(formData);
+    if (home) return home;
+  }
   try {
     return await Promise.race([
       forwardGeocode(formData),

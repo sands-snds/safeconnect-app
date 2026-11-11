@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { fetchMyReports } from '../../Services/api';
 import IncidentMap from '../shared/location/IncidentMap';
-import { MAP_TYPES, LEGEND_TYPES, fromMyReport, isOpenStatus, timeAgo } from '../shared/location/mapReports';
+import { MAP_TYPES, LEGEND_TYPES, RESOLVED_COLOR, fromMyReport, timeAgo } from '../shared/location/mapReports';
 import { REPORTS_CHANGED_EVENT } from './useCallAccess';
 import { useReportArchive } from './reportArchive';
+import { homePinForLocation } from './useRegisteredAddress';
 
 // "Your Reports on the Map", beside the list on the My Reports page (panel).
 // Only the resident's own reports
@@ -45,7 +46,11 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
     if (!userId) return;
     try {
       const data = await fetchMyReports(userId);
-      if (Array.isArray(data)) setReports(data.map(fromMyReport).filter((r) => !r.archived && r.status !== 'Dismissed'));
+      // Every report, as in the My Reports list. One saved without a position
+      // (made at home before home pins) goes on the resident's home pin.
+      if (Array.isArray(data)) {
+        setReports(data.map(fromMyReport).map((r) => (r.position ? r : { ...r, position: homePinForLocation(r.location) })));
+      }
     } catch {
       // keep what is showing
     }
@@ -58,11 +63,12 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
     return () => { window.removeEventListener(REPORTS_CHANGED_EVENT, load); clearInterval(tick); };
   }, [load]);
 
-  // Only reports still being worked on; a resolved one leaves the map, and so
-  // does one the resident archived (My Reports → Archived).
+  // All their reports: open ones blink in their colour, resolved or dismissed
+  // ones are grey. Only those the resident archived (My Reports → Archived)
+  // are left off.
   const isArchived = useReportArchive();
   const active = useMemo(
-    () => reports.filter((r) => isOpenStatus(r.status) && !isArchived(r.reportType, r.id)),
+    () => reports.filter((r) => !isArchived(r.reportType, r.id)),
     [reports, isArchived]
   );
 
@@ -132,6 +138,7 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
               selectedKey={selectedKey}
               onSelect={setSelectedKey}
               renderPopup={renderPopup}
+              placeAll
               height={height || (phone ? 330 : 420)}
               label={t('reportsMap.mapLabel')}
             />
@@ -144,6 +151,10 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
                     {t(`reportsMap.types.${k}`)}
                   </li>
                 ))}
+                <li>
+                  <span className="rm-mk" style={{ '--c': RESOLVED_COLOR }} aria-hidden="true"><i className="bi bi-check-lg" /></span>
+                  {t('reportsMap.legendDone')}
+                </li>
               </ul>
               <p className="rm-legend-blink"><span className="rm-blink" aria-hidden="true" />{t('reportsMap.legendBlink')}</p>
             </div>

@@ -39,7 +39,13 @@ beforeEach(() => {
 const renderHero = () => render(<LanguageProvider><Hero /></LanguageProvider>);
 const submit = () => fireEvent.click(document.querySelector('form button[type="submit"]'));
 // Sign Up: Next, Next, Create Account (each click re-finds the button).
-const submitAll = () => { submit(); submit(); submit(); };
+// The home pin is required on step 2 (the map shows only there): pin inside
+// Santa Fe when none is set yet, then go on.
+const pinHomeIfNeeded = () => {
+  const pin = screen.queryByRole('button', { name: 'pin inside' });
+  if (pin && !screen.queryByRole('button', { name: /Remove pin/ })) fireEvent.click(pin);
+};
+const submitAll = () => { submit(); pinHomeIfNeeded(); submit(); pinHomeIfNeeded(); submit(); };
 const field = (id) => document.getElementById(id);
 const errorOf = (id) => document.getElementById(`${id}-error`)?.textContent;
 // The proof-of-residency ID every sign-up now needs.
@@ -99,7 +105,7 @@ describe('Sign Up', () => {
     type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suBirth', '2000-05-15'); type('suContact', '9171234567');
     type('suEmail', 'juan@example.com');
   };
-  const fillStep2 = () => { fillAddress(); attachId(); };
+  const fillStep2 = () => { fillAddress(); attachId(); pinHomeIfNeeded(); };
   const fillStep3 = () => {
     type('suUsername', 'juandc'); type('suPassword', 'Secret123!'); type('suConfirm', 'Secret123!');
     fireEvent.click(field('suAgree'));
@@ -340,13 +346,13 @@ describe('Sign Up: proof of residency', () => {
     expect(errorOf('suIdFile')).toMatch(/larger than 5 MB/);
   });
 
-  describe('home pin on the map (step 2, optional)', () => {
+  describe('home pin on the map (step 2, required)', () => {
     const toStep2 = () => {
       openSignUp();
       const type = (id, value) => fireEvent.change(field(id), { target: { value } });
       type('suFirst', 'Juan'); type('suLast', 'Dela Cruz'); type('suBirth', '2000-05-15'); type('suContact', '9171234567');
       type('suEmail', 'juan@example.com');
-      submitAll();
+      submit(); // on to step 2, with no pin yet
     };
 
     test('the map and Use my current location are on step 2', () => {
@@ -372,12 +378,22 @@ describe('Sign Up: proof of residency', () => {
       fillAddress();
       attachId();
       fireEvent.click(screen.getByRole('button', { name: 'pin outside' }));
-      submitAll();
+      submit();
       expect(errorOf('suHomePin')).toMatch(/outside Barangay Sta. Fe/);
       expect(document.querySelector('.auth-step.current .auth-step-l').textContent).toBe('Address & ID');
-      fireEvent.click(screen.getByRole('button', { name: /Remove pin/ }));
-      submitAll();
+      fireEvent.click(screen.getByRole('button', { name: 'pin inside' }));
+      submit();
       expect(document.querySelector('.auth-step.current .auth-step-l').textContent).toBe('Account');
+    });
+
+    test('the pin is required: without one the form stays on step 2 and says so', () => {
+      toStep2();
+      fillAddress();
+      attachId();
+      submit();
+      expect(errorOf('suHomePin')).toBe('Please pin your home on the map. Use your current location or tap the map.');
+      expect(document.querySelector('.auth-step.current .auth-step-l').textContent).toBe('Address & ID');
+      expect(screen.getByText('Your home on the map')).not.toHaveTextContent(/optional/i);
     });
   });
 
@@ -417,7 +433,7 @@ describe('Sign Up: proof of residency', () => {
     const body = JSON.parse(options.body);
     expect(body.address).toEqual({ houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.' });
     expect(body.birthdate).toBe('2000-05-15');
-    expect(body.homeLocation).toBeNull(); // the map pin is optional
+    expect(body.homeLocation).toEqual({ lat: 14.3203, lng: 120.9648 }); // the home pin (required)
     expect(body.validId.idType).toBe('Barangay ID');
     expect(body.validId.fileName).toBe('barangay-id.pdf');
     expect(body.validId.dataUrl).toMatch(/^data:application\/pdf;base64,/);

@@ -70,7 +70,9 @@ function FollowSelection({ selectedKey, markers }) {
   return null;
 }
 
-export default function IncidentMap({ reports, selectedKey, onSelect, renderPopup, height = 470, label = 'Map of Barangay Santa Fe' }) {
+// placeAll: also look up the address of finished reports without a pin (the
+// resident's own map shows every report; the staff map only the open ones).
+export default function IncidentMap({ reports, selectedKey, onSelect, renderPopup, height = 470, label = 'Map of Barangay Santa Fe', placeAll = false }) {
   const [basemap, setBasemap] = useState('satellite'); // satellite first; Map is one tap away
   const [found, setFound] = useState({});
   const markers = useRef({});
@@ -80,14 +82,14 @@ export default function IncidentMap({ reports, selectedKey, onSelect, renderPopu
   useEffect(() => {
     let cancelled = false;
     reports
-      .filter((r) => !r.position && isOpenStatus(r.status) && r.location && !(r.key in found))
+      .filter((r) => !r.position && (placeAll || isOpenStatus(r.status)) && r.location && !(r.key in found))
       .forEach((r) => {
         geocodeInSantaFe(r.location).then((pos) => {
           if (!cancelled) setFound((prev) => (r.key in prev ? prev : { ...prev, [r.key]: pos }));
         });
       });
     return () => { cancelled = true; };
-  }, [reports, found]);
+  }, [reports, found, placeAll]);
 
   const placed = useMemo(() => reports
     .map((r) => ({ ...r, position: r.position || found[r.key] || null }))

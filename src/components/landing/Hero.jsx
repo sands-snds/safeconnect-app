@@ -178,7 +178,7 @@ function Hero() {
     // Home address in Barangay Santa Fe
     const [suAddrHouse,   setSuAddrHouse]   = useState('');
     const [suAddrStreet,  setSuAddrStreet]  = useState('');
-    // Their home on the map (optional): Use my current location (with the
+    // Their home on the map (required): Use my current location (with the
     // browser's permission) or a tap on the map, and the pin can be dragged.
     // Pinning fills the address boxes only while they are still empty.
     const fillAddressFromPin = useCallback(({ houseNumber, street }) => {
@@ -446,7 +446,8 @@ function Hero() {
         else if (!EMAIL_REGEX.test(suEmail.trim())) problems.suEmail = t('auth.emailInvalid');
         if (!suAddrHouse.trim()) problems.suAddrHouse = t('signUp.addressHouseRequired');
         if (!suAddrStreet.trim()) problems.suAddrStreet = t('signUp.addressStreetRequired');
-        if (homePin.isOutsideSantaFe) problems.suHomePin = t('signUp.homePinOutside');
+        if (!homePin.gpsCoords) problems.suHomePin = t('signUp.homePinRequired');
+        else if (homePin.isOutsideSantaFe) problems.suHomePin = t('signUp.homePinOutside');
         if (!suIdType) problems.suIdType = t('signUp.idTypeRequired');
         if (!suIdFile) problems.suIdFile = t('signUp.idRequired');
         if (!suUsername.trim()) problems.suUsername = t('auth.usernameRequired');
@@ -792,7 +793,7 @@ function Hero() {
 
                         <div className={`auth-field auth-pin${fieldErrors.suHomePin ? ' has-error' : ''}`} role="group" aria-labelledby="suHomePin-label">
                             <div className="auth-pin-head">
-                                <span className="auth-label" id="suHomePin-label">{t('signUp.homePin')} <span className="optional">{t('signUp.optional')}</span></span>
+                                <span className="auth-label" id="suHomePin-label">{t('signUp.homePin')}</span>
                                 <button type="button" id="suHomePin" className="auth-pin-locate" onClick={homePin.handleUseCurrentLocation} disabled={homePin.isLocating || isSubmitting}>
                                     <i className={`bi ${homePin.isLocating ? 'bi-arrow-repeat auth-pin-spin' : 'bi-crosshair'}`} aria-hidden="true"></i>
                                     {homePin.isLocating ? t('reportForm.locating') : t('reportForm.useCurrentLocation')}

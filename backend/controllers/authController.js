@@ -20,6 +20,7 @@ const { parseIdUpload } = require("../utils/idDocument");
 const { parseAddress, addressOf } = require("../utils/address");
 const { parseBirthdate } = require("../utils/birthdate");
 const { parseHomePin } = require("../utils/homePin");
+const { homePinOf } = require("../utils/homeCoords");
 
 
 
@@ -66,7 +67,7 @@ exports.requestOtp = async (req, res) => {
         const birth = parseBirthdate(req.body.birthdate);
         if (birth.error) return res.json({ success: false, code: "INVALID_BIRTHDATE", message: birth.error });
 
-        // Their home on the map (optional), inside Barangay Santa Fe.
+        // Their home on the map (required), inside Barangay Santa Fe.
         const home_pin = parseHomePin(req.body.homeLocation);
         if (home_pin.error) return res.json({ success: false, code: "INVALID_HOME_PIN", message: home_pin.error });
 
@@ -527,6 +528,7 @@ function toPublicUser(user) {
         photoUrl,
         address:  addressOf(user),
         birthdate: user.birthdate || null,
+        homeLocation: homePinOf(user),
     };
 }
 
