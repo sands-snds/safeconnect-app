@@ -5,7 +5,6 @@ import ListView, { allOption } from "../../shared/ListView";
 import PettyCrimeReportDetails from "./PettyCrimeReportDetails";
 import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
-import DismissalNote from "../shared/DismissalNote";
 import ReportsTable, { StatusPill, PersonCell } from "../shared/ReportsTable";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
@@ -73,10 +72,9 @@ const PettyCrimeReportsTable = ({
         </>
       )}
       renderDetails={(report) => (
-        <>
-          <DismissalNote report={report} />
-          <PettyCrimeReportDetails report={report} />
-          <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
+        <PettyCrimeReportDetails
+          report={report}
+          actions={(
             <StatusSelect
               value={report.status}
               reportId={report.id}
@@ -85,8 +83,8 @@ const PettyCrimeReportsTable = ({
               showBadge={false}
               showAdvance={false}
             />
-          </div>
-        </>
+          )}
+        />
       )}
     />
   );

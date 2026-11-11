@@ -13,7 +13,7 @@ const ReportLocationMap = ({ latitude, longitude }) => {
   const outside = !isWithinSantaFe(lat, lng);
 
   return (
-    <div style={{ marginTop: "20px", width: "100%" }}>
+    <div style={{ width: "100%" }}>
       <div
         style={{
           display: "flex",

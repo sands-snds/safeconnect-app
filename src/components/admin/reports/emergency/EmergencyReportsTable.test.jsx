@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import EmergencyReportsTable from './EmergencyReportsTable';
 
-jest.mock('./EmergencyReportDetails', () => () => <p>Report details here</p>);
+jest.mock('./EmergencyReportDetails', () => ({ actions }) => <div><p>Report details here</p>{actions}</div>);
 jest.mock('../../../shared/useReportMedia', () => () => ({ media: null, loading: false, failed: false }));
 
 const REPORTS = [

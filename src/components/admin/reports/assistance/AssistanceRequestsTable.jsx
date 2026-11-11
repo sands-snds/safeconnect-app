@@ -5,7 +5,6 @@ import ListView, { allOption } from "../../shared/ListView";
 import AssistanceRequestDetails from "./AssistanceRequestDetails";
 import StatusSelect, { statusBadge } from "../../shared/StatusSelect";
 import ArchiveButton from "../shared/ArchiveButton";
-import DismissalNote from "../shared/DismissalNote";
 import ReportsTable, { StatusPill, PersonCell } from "../shared/ReportsTable";
 import { ReportForTag, ReportForFilter } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
@@ -82,10 +81,9 @@ const AssistanceRequestsTable = ({
         </>
       )}
       renderDetails={(request) => (
-        <>
-          <DismissalNote report={request} />
-          <AssistanceRequestDetails request={request} />
-          <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
+        <AssistanceRequestDetails
+          request={request}
+          actions={(
             <StatusSelect
               value={request.status}
               reportId={request.id}
@@ -94,8 +92,8 @@ const AssistanceRequestsTable = ({
               showBadge={false}
               showAdvance={false}
             />
-          </div>
-        </>
+          )}
+        />
       )}
     />
   );

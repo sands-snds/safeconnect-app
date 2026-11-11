@@ -1,79 +1,34 @@
 import React from "react";
 
-import DetailField from "../../shared/DetailField";
-import ReportImage from "../shared/ReportImage";
-import ReportLocationMap from "../shared/ReportLocationMap";
-import { ReportForDetails, isForOthers } from "../shared/ReportFor";
+import ReportDetailsPanel from "../shared/ReportDetailsPanel";
+import { isForOthers } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
-const EmergencyReportDetails = ({ report }) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: "24px",
-        flexWrap: "wrap"
-      }}
-    >
-      <div
-        style={{
-          flex: "1 1 280px",
-          minWidth: "260px"
-        }}
-      >
-        <ReportForDetails report={report} personLabel={tx("Person Affected")} />
-
-        <DetailField
-          label={isForOthers(report) ? "Reported By" : "Reporter Name"}
-          value={report.reporter}
-        />
-
-        <DetailField
-          label={isForOthers(report) ? "Reporter Contact" : "Contact Number"}
-          value={report.phone}
-        />
-
-        <DetailField
-          label={tx("Emergency Type")}
-          value={tx(report.emergency)}
-        />
-
-        <DetailField
-          label={tx("People Affected")}
-          value={report.peopleAffected && report.peopleAffected !== "0" ? report.peopleAffected : null}
-        />
-
-        <DetailField
-          label={tx("Special Needs")}
-          value={report.specialNeeds || "None"}
-        />
-
-        <DetailField
-          label={tx("Location")}
-          value={report.location}
-        />
-
-        <DetailField
-          label={tx("Description")}
-          value={report.description}
-        />
-
-        <DetailField
-          label={tx("Date")}
-          value={report.date}
-        />
-
-        <DetailField
-          label={tx("Status")}
-          value={report.status}
-        />
-      </div>
-
-      <ReportImage type="emergency" report={report} />
-
-      <ReportLocationMap latitude={report.latitude} longitude={report.longitude} />
-    </div>
-  );
-};
+// An emergency report's opened row. The reporter, type, location, people,
+// date and status are already in the table row, so only the rest is here.
+const EmergencyReportDetails = ({ report, actions }) => (
+  <ReportDetailsPanel
+    type="emergency"
+    report={report}
+    accentColor="#dc2626"
+    personLabel={tx("Person Affected")}
+    actions={actions}
+    facts={[
+      {
+        icon: "bi-telephone-fill",
+        label: isForOthers(report) ? tx("Reporter Contact") : tx("Contact Number"),
+        value: report.phone || tx("Not provided"),
+        muted: !report.phone
+      },
+      {
+        icon: "bi-heart-pulse-fill",
+        label: tx("Special Needs"),
+        value: report.specialNeeds || tx("None"),
+        muted: !report.specialNeeds,
+        warn: Boolean(report.specialNeeds)
+      }
+    ]}
+  />
+);
 
 export default EmergencyReportDetails;

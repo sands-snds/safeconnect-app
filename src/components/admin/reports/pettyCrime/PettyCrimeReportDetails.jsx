@@ -1,88 +1,40 @@
 import React from "react";
 
-import DetailField from "../../shared/DetailField";
-import ReportImage from "../shared/ReportImage";
-import ReportLocationMap from "../shared/ReportLocationMap";
-import { ReportForDetails, isForOthers } from "../shared/ReportFor";
+import ReportDetailsPanel from "../shared/ReportDetailsPanel";
+import { isForOthers } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
-const PettyCrimeReportDetails = ({ report }) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: "24px",
-        flexWrap: "wrap"
-      }}
-    >
-      <div
-        style={{
-          flex: "1 1 280px",
-          minWidth: "260px"
-        }}
-      >
-        <ReportForDetails report={report} personLabel="Victim" />
-
-        {report.isAnonymous ? (
-          <DetailField
-            label={isForOthers(report) ? "Reported By" : "Reporter"}
-            value={
-              <span>
-                <i className="bi bi-incognito" style={{ marginRight: "6px" }}></i>
-                {tx("Anonymous: the reporter chose to hide their name and contact number")}
-              </span>
-            }
-          />
-        ) : (
-          <>
-            <DetailField
-              label={isForOthers(report) ? "Reported By" : "Reporter Name"}
-              value={report.reporter}
-            />
-
-            <DetailField
-              label={isForOthers(report) ? "Reporter Contact" : "Contact Number"}
-              value={report.phone}
-            />
-          </>
-        )}
-
-        <DetailField
-          label={tx("Crime Type")}
-          value={tx(report.crimeType)}
-        />
-
-        <DetailField
-          label={tx("Location")}
-          value={report.location}
-        />
-
-        <DetailField
-          label={tx("Description")}
-          value={report.description}
-        />
-
-        <DetailField
-          label={tx("Suspect Information")}
-          value={report.suspectInfo || "None"}
-        />
-
-        <DetailField
-          label={tx("Report Date")}
-          value={report.date}
-        />
-
-        <DetailField
-          label={tx("Status")}
-          value={report.status}
-        />
-      </div>
-
-      <ReportImage type="pettyCrime" report={report} />
-
-      <ReportLocationMap latitude={report.latitude} longitude={report.longitude} />
-    </div>
-  );
-};
+// A petty crime report's opened row. The reporter, crime type, location, date
+// and status are already in the table row, so only the rest is here.
+const PettyCrimeReportDetails = ({ report, actions }) => (
+  <ReportDetailsPanel
+    type="pettyCrime"
+    report={report}
+    accentColor="#b45309"
+    personLabel={tx("Victim")}
+    actions={actions}
+    facts={[
+      report.isAnonymous
+        ? {
+            icon: "bi-incognito",
+            label: isForOthers(report) ? tx("Reported By") : tx("Reporter"),
+            value: tx("Anonymous: the reporter chose to hide their name and contact number")
+          }
+        : {
+            icon: "bi-telephone-fill",
+            label: isForOthers(report) ? tx("Reporter Contact") : tx("Contact Number"),
+            value: report.phone || tx("Not provided"),
+            muted: !report.phone
+          },
+      {
+        icon: "bi-person-bounding-box",
+        label: tx("Suspect Information"),
+        value: report.suspectInfo || tx("None"),
+        muted: !report.suspectInfo,
+        warn: Boolean(report.suspectInfo)
+      }
+    ]}
+  />
+);
 
 export default PettyCrimeReportDetails;

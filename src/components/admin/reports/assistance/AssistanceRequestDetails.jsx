@@ -1,91 +1,43 @@
 import React from "react";
 
-import DetailField from "../../shared/DetailField";
-import ReportImage from "../shared/ReportImage";
-import ReportLocationMap from "../shared/ReportLocationMap";
-import { ReportForDetails, isForOthers } from "../shared/ReportFor";
+import ReportDetailsPanel from "../shared/ReportDetailsPanel";
+import { isForOthers } from "../shared/ReportFor";
 import { tx } from "../../../../i18n/adminText";
 
-const AssistanceRequestDetails = ({ request }) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: "24px",
-        flexWrap: "wrap"
-      }}
-    >
-      <div
-        style={{
-          flex: "1 1 280px",
-          minWidth: "260px"
-        }}
-      >
-        <ReportForDetails report={request} personLabel="Person Needing Help" />
-
-        <DetailField
-          label={isForOthers(request) ? "Requested By" : "Requester Name"}
-          value={request.requester}
-        />
-
-        <DetailField
-          label={isForOthers(request) ? "Requester Contact" : "Contact Number"}
-          value={request.phone}
-        />
-
-        <DetailField
-          label={tx("Email")}
-          value={request.email}
-        />
-
-        <DetailField
-          label={tx("Assistance Type")}
-          value={tx(request.assistanceType)}
-        />
-
-        <DetailField
-          label={tx("Victim of Emergency")}
-          value={tx(request.victimOfEmergency)}
-        />
-
-        {request.urgency && (
-          <DetailField
-            label={tx("Urgency Level")}
-            value={request.urgency}
-          />
-        )}
-
-        <DetailField
-          label={tx("People Needing Help")}
-          value={request.peopleAffected}
-        />
-
-        <DetailField
-          label={tx("Location")}
-          value={request.location}
-        />
-
-        <DetailField
-          label={tx("Situation / Description")}
-          value={request.description}
-        />
-
-        <DetailField
-          label={tx("Special Needs")}
-          value={request.specialNeeds || "None"}
-        />
-
-        <DetailField
-          label={tx("Date")}
-          value={request.date}
-        />
-      </div>
-
-      <ReportImage type="assistance" report={request} />
-
-      <ReportLocationMap latitude={request.latitude} longitude={request.longitude} />
-    </div>
-  );
-};
+// An assistance request's opened row. The requester, help needed, location,
+// people, date and status are already in the table row, so only the rest is
+// here.
+const AssistanceRequestDetails = ({ request, actions }) => (
+  <ReportDetailsPanel
+    type="assistance"
+    report={request}
+    accentColor="#6B2C3E"
+    descriptionLabel="Situation / Description"
+    personLabel={tx("Person Needing Help")}
+    actions={actions}
+    facts={[
+      request.urgency && {
+        icon: "bi-speedometer2",
+        label: tx("Urgency Level"),
+        value: tx(request.urgency),
+        warn: /high|critical|urgent/i.test(request.urgency)
+      },
+      {
+        icon: "bi-telephone-fill",
+        label: isForOthers(request) ? tx("Requester Contact") : tx("Contact Number"),
+        value: request.phone || tx("Not provided"),
+        muted: !request.phone
+      },
+      request.email && { icon: "bi-envelope-fill", label: tx("Email"), value: request.email },
+      {
+        icon: "bi-heart-pulse-fill",
+        label: tx("Special Needs"),
+        value: request.specialNeeds || tx("None"),
+        muted: !request.specialNeeds,
+        warn: Boolean(request.specialNeeds)
+      }
+    ]}
+  />
+);
 
 export default AssistanceRequestDetails;

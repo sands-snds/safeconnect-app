@@ -44,7 +44,7 @@ export const ReportForDetails = ({ report, personLabel = "Person Affected" }) =>
                 border: "1px solid #ddd6fe",
                 borderRadius: 10,
                 padding: "12px 14px",
-                marginBottom: 14
+                marginBottom: 4
             }}
         >
             <div
@@ -62,10 +62,10 @@ export const ReportForDetails = ({ report, personLabel = "Person Affected" }) =>
                 {tx("Filed on behalf of someone else")}
             </div>
 
-            <DetailField label={personLabel} value={report.victimName} />
-            <DetailField label={tx("Their Contact")} value={report.victimContact || "Not provided"} />
-            <DetailField label={tx("Relationship")} value={tx(report.victimRelationship)} />
-            {report.victimDetails && <DetailField label={tx("Additional Details")} value={report.victimDetails} />}
+            <DetailField width="110px" label={personLabel} value={report.victimName} />
+            <DetailField width="110px" label={tx("Their Contact")} value={report.victimContact || "Not provided"} />
+            <DetailField width="110px" label={tx("Relationship")} value={tx(report.victimRelationship)} />
+            {report.victimDetails && <DetailField width="110px" label={tx("Additional Details")} value={report.victimDetails} />}
         </div>
     );
 };
