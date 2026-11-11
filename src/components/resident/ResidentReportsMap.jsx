@@ -5,7 +5,8 @@ import IncidentMap from '../shared/location/IncidentMap';
 import { MAP_TYPES, LEGEND_TYPES, fromMyReport, isOpenStatus, timeAgo } from '../shared/location/mapReports';
 import { REPORTS_CHANGED_EVENT } from './useCallAccess';
 
-// Resident home: "Your Reports on the Map". Only the resident's own reports
+// "Your Reports on the Map", beside the list on the My Reports page (panel).
+// Only the resident's own reports
 // (the Privacy Policy keeps everyone else's private), each where it was
 // pinned, blinking until the barangay resolves it. Reloads whenever the
 // reports change (submit, edit, delete, or a status update pushed live).
@@ -30,7 +31,8 @@ const currentUserId = () => {
   }
 };
 
-export default function ResidentReportsMap() {
+// panel: the map card alone (no section heading), for the My Reports page.
+export default function ResidentReportsMap({ panel = false, height } = {}) {
   const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [selectedKey, setSelectedKey] = useState(null);
@@ -69,14 +71,13 @@ export default function ResidentReportsMap() {
         <p className="rm-pop-title"><i className={`bi ${type.icon}`} style={{ color: type.color }} aria-hidden="true" /> {typeName(r)}</p>
         <p className="rm-pop-meta">{r.reference}{r.at ? ` · ${timeAgo(r.at)}` : ''} <span className="rm-pill" style={STATUS_STYLE[r.status]}>{statusText(r.status)}</span></p>
         <p className="rm-pop-addr">{r.location}</p>
-        <button type="button" className="rm-pop-btn" onClick={() => openInMyReports(r)}>{t('reportsMap.openInMyReports')}</button>
+        <button type="button" className="rm-pop-btn" onClick={() => openInMyReports(r)}>{t(panel ? 'reportsMap.showInList' : 'reportsMap.openInMyReports')}</button>
       </div>
     );
   };
 
-  return (
-    <section className="resident-reports-map" aria-labelledby="rm-title">
-      <style>{`
+  const style = (
+    <style>{`
         /* Padding is on .rm-outer: styles/App.css zeroes every <section>'s padding. */
         .rm-outer { padding: 64px 0 72px; background: linear-gradient(180deg, #ffffff 0%, #fbf7f8 100%); }
         .rm-inner { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
@@ -101,6 +102,9 @@ export default function ResidentReportsMap() {
         @media (prefers-reduced-motion: reduce) { .rm-blink::after { animation: none; opacity: .5; } }
         .rm-pill { display: inline-block; font-size: 0.7rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
         .rm-note { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 0 0; color: #6b7280; font-size: 0.82rem; text-align: center; }
+        .rm-panel .rm-note { margin-top: 12px; }
+        .rm-panel-title { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 1rem; font-weight: 700; color: #1f2937; }
+        .rm-panel-title .bi { color: #6B2C3E; }
         .rm-pop-title { margin: 0 22px 4px 0; font-size: 14px; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 6px; }
         .rm-pop-meta { margin: 0 0 8px; font-size: 12px; color: #6b7280; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
         .rm-pop-addr { margin: 0 0 10px; font-size: 12.5px; color: #374151; line-height: 1.45; }
@@ -113,21 +117,16 @@ export default function ResidentReportsMap() {
           .rm-legend-items { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
         }
       `}</style>
-      <div className="rm-outer">
-        <div className="rm-inner">
-          <div className="rm-intro">
-            <div className="rm-badge"><i className="bi bi-geo-alt-fill" aria-hidden="true" /> {t('reportsMap.badge')}</div>
-            <h2 id="rm-title">{t('reportsMap.title')}</h2>
-            <p>{t('reportsMap.subtitle')}</p>
-          </div>
-
+  );
+  const card = (
+    <>
           <div className="rm-card">
             <IncidentMap
               reports={active}
               selectedKey={selectedKey}
               onSelect={setSelectedKey}
               renderPopup={renderPopup}
-              height={phone ? 330 : 420}
+              height={height || (phone ? 330 : 420)}
               label={t('reportsMap.mapLabel')}
             />
             <div className="rm-legend">
@@ -144,6 +143,31 @@ export default function ResidentReportsMap() {
             </div>
           </div>
           <p className="rm-note"><i className="bi bi-shield-lock-fill" aria-hidden="true" /> {t('reportsMap.privateNote')}</p>
+    </>
+  );
+
+  if (panel) {
+    return (
+      <div className="rm-panel" role="region" aria-labelledby="rm-panel-title">
+        {style}
+        <h3 className="rm-panel-title" id="rm-panel-title"><i className="bi bi-geo-alt-fill" aria-hidden="true" /> {t('reportsMap.title')}</h3>
+        {card}
+      </div>
+    );
+  }
+
+  return (
+    <section className="resident-reports-map" aria-labelledby="rm-title">
+      {style}
+      <div className="rm-outer">
+        <div className="rm-inner">
+          <div className="rm-intro">
+            <div className="rm-badge"><i className="bi bi-geo-alt-fill" aria-hidden="true" /> {t('reportsMap.badge')}</div>
+            <h2 id="rm-title">{t('reportsMap.title')}</h2>
+            <p>{t('reportsMap.subtitle')}</p>
+          </div>
+
+          {card}
         </div>
       </div>
     </section>

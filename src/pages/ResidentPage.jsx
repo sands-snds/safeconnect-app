@@ -3,7 +3,6 @@ import ResidentNavbar from '../components/resident/ResidentNavbar';
 import ResidentHero from '../components/resident/ResidentHero';
 import EmergencyReportSection from '../components/resident/EmergencyReportSection';
 import ResidentWidgets from '../components/resident/ResidentWidgets';
-import ResidentReportsMap from '../components/resident/ResidentReportsMap';
 import Footer from '../components/shared/DonationFooter';
 import QuickEmergencyReport from '../components/resident/QuickEmergencyReport';
 import ResidentAssistanceModal from '../components/resident/ResidentAssistanceModal';
@@ -65,10 +64,7 @@ function ResidentPage() {
         />
       </section>
 
-      {/* Announcements and weather first, then the map. */}
       <ResidentWidgets />
-
-      <ResidentReportsMap />
 
       <section id="emergency-report">
         <EmergencyReportSection

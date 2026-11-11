@@ -619,6 +619,17 @@ export const ADMIN_TL = {
   "just now": "ngayon lang",
   "See on map": "Tingnan sa mapa",
   "New report sound": "Tunog para sa bagong ulat",
+  "Alert sound for new reports": "Tunog ng alerto para sa mga bagong ulat",
+  "On: each kind of report has its own sound.": "Naka-on: may sariling tunog ang bawat uri ng ulat.",
+  "Off: new reports show a notice without sound.": "Naka-off: may abiso pa rin ang bagong ulat, pero walang tunog.",
+  "Your browser is holding back sound until you allow it.": "Pinipigilan ng browser ang tunog hangga't hindi mo pinapayagan.",
+  "Enable sound": "Payagan ang tunog",
+  "This browser can't play sound; new reports still show a notice.": "Hindi makapagpatunog ang browser na ito; may abiso pa rin ang mga bagong ulat.",
+  "Listen:": "Pakinggan:",
+  "siren": "sirena",
+  "chime": "kampana",
+  "beeps": "mga beep",
+  "Turn on sound": "I-on ang tunog",
   "New report sound is on": "Naka-on ang tunog para sa bagong ulat",
   "Turn on the new report sound": "I-on ang tunog para sa bagong ulat"
 };

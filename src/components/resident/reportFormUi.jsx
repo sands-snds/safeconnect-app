@@ -34,6 +34,62 @@ export function ReportHead({ icon, title, titleId = 'qr-title', onClose, closeLa
   );
 }
 
+// The header of a two-step form, as on Report Emergency: step 1 shows the
+// form's icon and title; step 2 a back arrow, the chosen type in the form's
+// colour and, when it is for someone else, a "for someone" chip.
+export function StepHead({ t, step, icon, title, typeTitle, forOthers, onBack, onClose, disabled }) {
+  return (
+    <ReportHead
+      icon={icon}
+      title={step === 2 ? (
+        <>
+          <span className="qr-type-title">{typeTitle}</span>
+          {forOthers && <span className="qr-forchip"><i className="bi bi-people-fill" aria-hidden="true" /> {t('quickReport.forChip')}</span>}
+        </>
+      ) : title}
+      before={step === 2 ? (
+        <button type="button" className="qr-x" onClick={onBack} aria-label={t('quickReport.back')} disabled={disabled}>
+          <i className="bi bi-arrow-left" aria-hidden="true" />
+        </button>
+      ) : null}
+      after={<span className="qr-step">{t('quickReport.step', { n: step })}</span>}
+      onClose={onClose}
+      closeLabel={t('quickReport.close')}
+      disabled={disabled}
+    />
+  );
+}
+
+// Step 1's big type buttons (Report Emergency's tiles, in the form's colour).
+// Tapping one chooses it and goes on to step 2.
+export function TypeTiles({ labelledBy, items, value, onPick, disabled, cols = 4 }) {
+  return (
+    <div className={`qr-tiles qr-tiles-${cols}`} role="group" aria-labelledby={labelledBy}>
+      {items.map((x) => (
+        <button key={x.value} type="button" className="qr-tile" style={{ '--c': 'var(--tone)' }} aria-pressed={value === x.value} onClick={() => onPick(x.value)} disabled={disabled}>
+          <span className="qr-ti"><i className={`bi ${x.icon}`} aria-hidden="true" /></span>
+          <b>{x.label}</b>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// A titled part of step 2 (Report Emergency's bold lead line and grey hint).
+export function Section({ id, title, hint, req, optional, children }) {
+  return (
+    <div className="qr-sec" role="group" aria-labelledby={id}>
+      <p className="qr-lead" id={id}>
+        {title}
+        {req && <span className="qr-req" aria-hidden="true"> *</span>}
+        {optional && <small className="qr-opt"> {optional}</small>}
+      </p>
+      {hint && <p className="qr-hint">{hint}</p>}
+      <div className="qr-sec-body">{children}</div>
+    </div>
+  );
+}
+
 // A section heading: small icon, label, * or (optional).
 export function Lbl({ id, icon, children, req, optional, as: Tag = 'p' }) {
   return (
@@ -158,7 +214,8 @@ export const CAMERA_ACCEPT = 'image/*';
 
 // Take a photo / Gallery, then a preview with Change and Remove. Uses the
 // checks in useMediaAttachment (file type and size) through onChange.
-export function MediaPicker({ t, id, label, required, optionalText, hint, media, fileInputRef, onChange, onRemove, disabled }) {
+// hideLabel: inside a Section whose title (with the same id) labels it.
+export function MediaPicker({ t, id, label, required, optionalText, hint, media, fileInputRef, onChange, onRemove, disabled, hideLabel }) {
   const cameraRef = useRef(null);
   // Cancelling the camera or file picker keeps the file already attached.
   const pick = (e) => {
@@ -168,7 +225,7 @@ export function MediaPicker({ t, id, label, required, optionalText, hint, media,
   };
   return (
     <div>
-      <Lbl id={id} icon="bi-camera-fill" req={required} optional={required ? null : optionalText}>{label}</Lbl>
+      {!hideLabel && <Lbl id={id} icon="bi-camera-fill" req={required} optional={required ? null : optionalText}>{label}</Lbl>}
       <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT} hidden onChange={pick} disabled={disabled} aria-labelledby={id} />
       <input ref={cameraRef} type="file" accept={CAMERA_ACCEPT} capture="environment" hidden onChange={pick} disabled={disabled} aria-hidden="true" tabIndex={-1} />
       {media.previewUrl ? (
@@ -383,31 +440,15 @@ export const REPORT_FORM_STYLE = `
   .qr :is(button, input, textarea, summary):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .qr-tile, .qr-choice, .qr-who button, .qr-rel button { transition: none; } }
 
-  /* Request Assistance and Report Petty Crime: more room between sections,
-     fields and buttons so the longer forms are easier to follow. */
-  .qr:is(.qr-assist, .qr-crime) .qr-head { padding: 18px 24px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-body { padding: 24px 24px 28px; gap: 28px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-lbl { margin-bottom: 12px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-lbl.red { margin: 0; }
-  .qr:is(.qr-assist, .qr-crime) .qr-field label.qr-lbl { margin-bottom: 12px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-q { margin-bottom: 10px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-who,
-  .qr:is(.qr-assist, .qr-crime) .qr-choices { gap: 12px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-rel { gap: 10px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-forbox { padding: 18px; gap: 18px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-two { gap: 14px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-field label { margin-bottom: 7px; }
-  .qr:is(.qr-assist, .qr-crime) :is(.qr-help, .qr-note, .qr-err) { margin-top: 8px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-photo-row { gap: 12px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-count-row { gap: 16px; }
-  .qr:is(.qr-assist, .qr-crime) .rl-section .rl-label-row { margin-bottom: 12px; }
-  .qr:is(.qr-assist, .qr-crime) .rl-section .rl-grid { gap: 12px; }
-  .qr:is(.qr-assist, .qr-crime) .rl-section .rl-gap { margin-top: 12px; }
-  .qr:is(.qr-assist, .qr-crime) .rl-section .rl-note { margin-top: 10px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-addr { margin-top: 16px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-sub { margin-top: 12px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-consent { padding: 14px 16px; }
-  .qr:is(.qr-assist, .qr-crime) .qr-foot { padding: 16px 24px 18px; gap: 10px; }
+  /* Request Assistance and Report Petty Crime: Report Emergency's two steps. */
+  .qr-tiles.qr-tiles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .qr-tile[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 6%, #fff); }
+  .qr-tile:disabled { cursor: not-allowed; opacity: .6; }
+  .qr-type-title { color: var(--tone); }
+  .qr-lead .qr-opt { font-weight: 400; color: #6b7280; font-size: .8rem; }
+  .qr-sec-body { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+  .qr-addr { margin-top: 12px; }
+  .qr-sub { margin-top: 10px; }
 
   /* Tablet and phone: still a card with the page around it, sized to its content. */
   @media (max-width: 767px) {
@@ -446,14 +487,9 @@ export const REPORT_FORM_STYLE = `
     .qr-rel.qr-grid3 { gap: 6px; }
     .qr-rel.qr-grid3 button { min-height: 44px; padding: 4px 6px; font-size: .8rem; }
     .qr .qr-field input[type="text"], .qr .qr-field input[type="tel"], .qr .qr-field textarea, .qr .rl-section .rl-input, .qr .qr-edit-address input, .qr .qr-count input[type="text"] { font-size: 16px; }
-    .qr:is(.qr-assist, .qr-crime) .qr-head { padding: 14px 16px; }
-    .qr:is(.qr-assist, .qr-crime) .qr-body { padding: 18px 16px 22px; gap: 24px; }
-    .qr:is(.qr-assist, .qr-crime) .qr-lbl,
-    .qr:is(.qr-assist, .qr-crime) .qr-field label.qr-lbl { margin-bottom: 10px; }
-    .qr:is(.qr-assist, .qr-crime) .qr-who,
-    .qr:is(.qr-assist, .qr-crime) .qr-choices { gap: 10px; }
-    .qr:is(.qr-assist, .qr-crime) .qr-rel { gap: 8px; }
-    .qr:is(.qr-assist, .qr-crime) .qr-forbox { padding: 14px; gap: 16px; }
-    .qr:is(.qr-assist, .qr-crime) .qr-foot { padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
+    .qr-tiles.qr-tiles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .qr-tiles.qr-tiles-3 .qr-tile b { font-size: .8rem; text-align: center; line-height: 1.25; }
+    .qr-tiles.qr-tiles-4 .qr-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .qr-tiles:is(.qr-tiles-3, .qr-tiles-4) .qr-tile b { text-align: center; line-height: 1.25; }
   }
 `;

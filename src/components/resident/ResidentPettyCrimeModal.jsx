@@ -10,7 +10,7 @@ import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
-import { ReportFormShell, ReportHead, Lbl, WhoButtons, PairButtons, ChoiceTiles, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
+import { ReportFormShell, StepHead, TypeTiles, Section, Lbl, WhoButtons, PairButtons, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
 const CRIME_TYPES = [
   { key: 'theft', value: 'Theft' },
   { key: 'vandalism', value: 'Vandalism' },
@@ -246,6 +246,13 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     if (!show) resetRef.current();
   }, [show]);
 
+  // Two steps, as on Report Emergency: 1 who and what happened, 2 the rest.
+  // Editing a report opens on step 2 (Back changes the crime type).
+  const [step, setStep] = useState(1);
+  useEffect(() => {
+    if (show) setStep(editingReport ? 2 : 1);
+  }, [show, editingReport]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (textBlocked) return; // the warnings under the fields say what to fix
@@ -418,14 +425,19 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
 <>
 {show && (
 <ReportFormShell tone="crime">
-  <ReportHead
+  <StepHead
+    t={t}
+    step={step}
     icon="bi-shield-fill-exclamation"
     title={t('pettyCrimeModal.title')}
+    typeTitle={chosenCrime ? t(`reportShared.crimeShort.${chosenCrime.key}`) : ''}
+    forOthers={reportFor === 'others'}
+    onBack={() => setStep(1)}
     onClose={onClose}
-    closeLabel={t('quickReport.close')}
     disabled={isSubmitting}
   />
   <form className="qr-form" onSubmit={handleSubmit}>
+    {step === 1 ? (
     <div className="qr-body">
       <WhoButtons
         id="pc-who"
@@ -435,6 +447,21 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         labels={{ self: t('quickReport.who.self'), others: t('quickReport.who.others') }}
         disabled={isSubmitting}
       />
+      <div>
+        <p className="qr-lead" id="pc-type">{t('reportShared.whatHappened')} <span className="qr-req" aria-hidden="true">*</span></p>
+        <p className="qr-hint">{t('reportShared.tapToContinue')}</p>
+      </div>
+      <TypeTiles
+        cols={4}
+        labelledBy="pc-type"
+        items={crimeItems}
+        value={formData.crimeType}
+        onPick={(v) => { setFormData((prev) => ({ ...prev, crimeType: v, crimeOther: v === OTHER_CRIME ? prev.crimeOther : '' })); setStep(2); }}
+        disabled={isSubmitting}
+      />
+    </div>
+    ) : (
+    <div className="qr-body">
       {/* No anonymous option for new reports; one filed anonymously before keeps it. */}
       {isEditing && editingReport.is_anonymous && (
         <div className="qr-info"><i className="bi bi-incognito" aria-hidden="true" /> {t('pettyCrimeModal.anonymousOnEdit')}</div>
@@ -460,19 +487,10 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
         />
       )}
 
-      <div>
-        <Lbl id="pc-type" icon="bi-list-check" req>{t('reportShared.whatHappened')}</Lbl>
-        <ChoiceTiles
-          wide
-          labelledBy="pc-type"
-          items={crimeItems}
-          value={formData.crimeType}
-          onChange={(v) => setFormData((prev) => ({ ...prev, crimeType: v, crimeOther: v === OTHER_CRIME ? prev.crimeOther : '' }))}
-          disabled={isSubmitting}
-        />
-        {crimeNote && <p className="qr-help">{crimeNote}</p>}
+      <Section id="pc-about" title={t('reportShared.sectionIncident')} hint={t('reportShared.sectionIncidentHint')}>
+        {crimeNote && <p className="qr-help" style={{ margin: 0 }}>{crimeNote}</p>}
         {formData.crimeType === OTHER_CRIME && (
-          <div className="qr-field qr-sub">
+          <div className="qr-field">
             <label htmlFor="pc-crime-other">{t('pettyCrimeModal.crimeOther')} <span className="qr-req">*</span></label>
             <input
               id="pc-crime-other"
@@ -489,111 +507,124 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
             <TextWarning t={t} reason={textWarn.crimeOther} />
           </div>
         )}
-      </div>
+
+        <div className="qr-field">
+          <Lbl id="pc-description" icon="bi-chat-left-text-fill" req as="label">{t('pettyCrimeModal.description')}</Lbl>
+          <textarea
+            name="description"
+            aria-labelledby="pc-description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={4}
+            maxLength={2000}
+            required
+            placeholder={t('pettyCrimeModal.descriptionPlaceholder')}
+            disabled={isSubmitting}
+            aria-invalid={Boolean(textWarn.description) || undefined}
+          />
+          <TextWarning t={t} reason={textWarn.description} />
+        </div>
+
+        <div className="qr-field">
+          <Lbl id="pc-suspect" icon="bi-person-bounding-box" optional={t('reportForm.optional')} as="label">{t('pettyCrimeModal.suspectInfo')}</Lbl>
+          <textarea
+            name="suspectInfo"
+            aria-labelledby="pc-suspect"
+            value={formData.suspectInfo}
+            onChange={handleChange}
+            rows={3}
+            maxLength={1000}
+            placeholder={t('pettyCrimeModal.suspectInfoPlaceholder')}
+            disabled={isSubmitting}
+            aria-invalid={Boolean(textWarn.suspectInfo) || undefined}
+          />
+          <TextWarning t={t} reason={textWarn.suspectInfo} />
+        </div>
+      </Section>
+
+      <Section
+        id="pc-media"
+        title={t('reportShared.photoTitle')}
+        req={needsNewMedia}
+        optional={!needsNewMedia && formData.crimeType ? t('reportForm.optional') : null}
+        hint={mediaHint}
+      >
+        <MediaPicker
+          t={t}
+          id="pc-media"
+          hideLabel
+          label={t('reportShared.photoTitle')}
+          required={needsNewMedia}
+          optionalText={formData.crimeType ? t('reportForm.optional') : null}
+          media={media}
+          fileInputRef={fileInputRef}
+          onChange={handleMediaChange}
+          onRemove={clearMedia}
+          disabled={isSubmitting}
+        />
+      </Section>
 
       {isEditing ? (
-        <div className="qr-edit-address">
-          <Lbl id="pc-address" icon="bi-geo-alt-fill" req as="label">{t('assistanceModal.currentAddress')}</Lbl>
-          <input
-            type="text"
-            name="location"
-            aria-labelledby="pc-address"
-            required
-            value={formData.location}
-            onChange={handleChange}
-            placeholder={t('reportForm.fullAddress')}
-            disabled={isSubmitting}
-            aria-invalid={Boolean(textWarn.location) || undefined}
-          />
-          <TextWarning t={t} reason={textWarn.location} />
-          {locationError && <p className="qr-err"><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {locationError}</p>}
-          <p className="qr-note">{t('reportForm.serviceAreaNote')}</p>
-          <div ref={locationSectionRef}>
-            <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={isSubmitting} />
-          </div>
-        </div>
-      ) : (
-        <div>
-          <Lbl id="pc-where" icon="bi-geo-alt-fill" req>{t('pettyCrimeModal.whereHappened')}</Lbl>
-          <PairButtons
-            id="pc-where"
-            value={incidentPlace}
-            onChange={setIncidentPlace}
-            disabled={isSubmitting}
-            options={[
-              { value: 'home', icon: 'bi-house-door-fill', label: t('pettyCrimeModal.atHome') },
-              { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
-            ]}
-          />
-          <div className="qr-addr">
-            <ReportLocationFields
-              t={t}
-              formData={formData}
+        <Section id="pc-address" title={t('assistanceModal.currentAddress')} req>
+          <div className="qr-edit-address">
+            <input
+              type="text"
+              name="location"
+              aria-labelledby="pc-address"
+              required
+              value={formData.location}
               onChange={handleChange}
+              placeholder={t('reportForm.fullAddress')}
               disabled={isSubmitting}
-              showMap={showMap}
-              location={location}
-              sectionRef={locationSectionRef}
-              addressPrefilled={addressPrefilled}
-              warnings={textWarn}
+              aria-invalid={Boolean(textWarn.location) || undefined}
             />
+            <TextWarning t={t} reason={textWarn.location} />
+            {locationError && <p className="qr-err"><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {locationError}</p>}
+            <p className="qr-note">{t('reportForm.serviceAreaNote')}</p>
+            <div ref={locationSectionRef}>
+              <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={isSubmitting} />
+            </div>
           </div>
-        </div>
+        </Section>
+      ) : (
+        <Section id="pc-where" title={t('pettyCrimeModal.whereHappened')} req>
+          <div>
+            <PairButtons
+              id="pc-where"
+              value={incidentPlace}
+              onChange={setIncidentPlace}
+              disabled={isSubmitting}
+              options={[
+                { value: 'home', icon: 'bi-house-door-fill', label: t('pettyCrimeModal.atHome') },
+                { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
+              ]}
+            />
+            <div className="qr-addr">
+              <ReportLocationFields
+                t={t}
+                formData={formData}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                showMap={showMap}
+                location={location}
+                sectionRef={locationSectionRef}
+                addressPrefilled={addressPrefilled}
+                warnings={textWarn}
+              />
+            </div>
+          </div>
+        </Section>
       )}
 
-      <div className="qr-field">
-        <Lbl id="pc-description" icon="bi-chat-left-text-fill" req as="label">{t('pettyCrimeModal.description')}</Lbl>
-        <textarea
-          name="description"
-          aria-labelledby="pc-description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={4}
-          maxLength={2000}
-          required
-          placeholder={t('pettyCrimeModal.descriptionPlaceholder')}
-          disabled={isSubmitting}
-          aria-invalid={Boolean(textWarn.description) || undefined}
-        />
-        <TextWarning t={t} reason={textWarn.description} />
-      </div>
-
-      <div className="qr-field">
-        <Lbl id="pc-suspect" icon="bi-person-bounding-box" optional={t('reportForm.optional')} as="label">{t('pettyCrimeModal.suspectInfo')}</Lbl>
-        <textarea
-          name="suspectInfo"
-          aria-labelledby="pc-suspect"
-          value={formData.suspectInfo}
-          onChange={handleChange}
-          rows={3}
-          maxLength={1000}
-          placeholder={t('pettyCrimeModal.suspectInfoPlaceholder')}
-          disabled={isSubmitting}
-          aria-invalid={Boolean(textWarn.suspectInfo) || undefined}
-        />
-        <TextWarning t={t} reason={textWarn.suspectInfo} />
-      </div>
-
-      <MediaPicker
-        t={t}
-        id="pc-media"
-        label={t('reportShared.photoTitle')}
-        required={needsNewMedia}
-        optionalText={formData.crimeType ? t('reportForm.optional') : null}
-        hint={mediaHint}
-        media={media}
-        fileInputRef={fileInputRef}
-        onChange={handleMediaChange}
-        onRemove={clearMedia}
-        disabled={isSubmitting}
-      />
-
-      <ConsentBox checked={formData.consent} onChange={handleChange} disabled={isSubmitting}>{t('pettyCrimeModal.consent')}</ConsentBox>
-
-      {!isEditing && cooldownRemaining > 0 && (
-        <div className="qr-banner"><i className="bi bi-clock-history" aria-hidden="true" /> {t('pettyCrimeModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}</div>
-      )}
+      <Section id="pc-confirm" title={t('reportShared.sectionConfirm')}>
+        <ConsentBox checked={formData.consent} onChange={handleChange} disabled={isSubmitting}>{t('pettyCrimeModal.consent')}</ConsentBox>
+        {!isEditing && cooldownRemaining > 0 && (
+          <div className="qr-banner"><i className="bi bi-clock-history" aria-hidden="true" /> {t('pettyCrimeModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}</div>
+        )}
+      </Section>
     </div>
+    )}
+    {step === 2 && (
     <SendFoot
       missing={missingText}
       readyText={t('reportShared.ready')}
@@ -603,6 +634,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       disabled={!isEditing && cooldownRemaining > 0}
       icon={isEditing ? 'bi-check-lg' : 'bi-send-fill'}
     />
+    )}
   </form>
 </ReportFormShell>
 )}

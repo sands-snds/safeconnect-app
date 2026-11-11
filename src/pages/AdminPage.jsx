@@ -7,7 +7,8 @@ import UsersPage from "../components/admin/users/UsersPage";
 import AccountVerificationPage from "../components/admin/users/AccountVerificationPage";
 import IncidentMapPage from "../components/admin/map/IncidentMapPage";
 import NewReportAlerts from "../components/admin/map/NewReportAlerts";
-import { readReportSound, saveReportSound, playReportChime } from "../components/shared/location/mapReports";
+import { readReportSound, saveReportSound } from "../components/shared/location/mapReports";
+import { playReportSound, unlockAudio, unlockOnFirstGesture } from "../components/admin/map/reportSounds";
 import LogsPage from "../components/admin/logs/LogsPage";
 import SiteContactsPage from "../components/admin/settings/SiteContactsPage";
 import SiteContentsPage from "../components/admin/settings/SiteContentsPage";
@@ -95,14 +96,19 @@ const AdminPage = () => {
 
   const [showDemo, setShowDemo] = useState(false);
 
-  // The new report chime (speaker button in the header), remembered per device.
+  // The new report sounds (speaker button in the header, and on the Incident
+  // Map), remembered per device. Turning them on is a click, which also lets
+  // the browser play sound; a short chime confirms it.
   const [soundOn, setSoundOn] = useState(readReportSound);
   const toggleSound = () => {
     const next = !soundOn;
     saveReportSound(next);
-    if (next) playReportChime("flood");
+    if (next) unlockAudio().then((ok) => ok && playReportSound("assistance"));
     setSoundOn(next);
   };
+  // Browsers block sound until the page is clicked: the first click or key
+  // press switches it on, so alerts can play after that.
+  useEffect(() => { if (soundOn) unlockOnFirstGesture(); }, [soundOn]);
 
   const handleCreateAnnouncementShortcut = () => {
     setPendingCreateAnnouncement(true);
@@ -331,6 +337,8 @@ useEffect(() => {
                   onNavigate={handleNavigation}
                   focusKey={focus && focus.view === "incident-map" ? focus.id : null}
                   onClearFocus={clearFocus}
+                  soundOn={soundOn}
+                  onToggleSound={toggleSound}
               />
           );
       case "account-verification":

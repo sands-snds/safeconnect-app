@@ -45,8 +45,10 @@ const renderModal = () => {
       <ResidentPettyCrimeModal show onClose={() => {}} />
     </LanguageProvider>
   );
-  const form = utils.container.querySelector('form');
-  const fileInput = utils.container.querySelector('input[type="file"]');
+  const $ = (sel) => utils.container.querySelector(sel);
+  // Step 1: tapping a crime type goes on to step 2.
+  const pick = (crimeType) => fireEvent.click(screen.getByRole('button', { name: new RegExp('^' + crimeType) }));
+  const back = () => fireEvent.click(screen.getByRole('button', { name: 'Back' }));
   const fill = (crimeType) => {
     fireEvent.click(screen.getByRole('button', { name: new RegExp('^' + crimeType) }));
     if (crimeType === 'Other') {
@@ -55,7 +57,11 @@ const renderModal = () => {
     fireEvent.change(utils.container.querySelector('textarea[name="description"]'), { target: { value: 'Something happened' } });
     fireEvent.click(utils.container.querySelector('input[name="consent"]'));
   };
-  return { ...utils, form, fileInput, fill };
+  return {
+    ...utils, $, pick, back, fill,
+    get form() { return $('form'); },
+    get fileInput() { return $('input[type="file"]'); }
+  };
 };
 
 
@@ -64,10 +70,11 @@ beforeEach(() => {
 });
 
 test.each(['Theft', 'Suspicious Activity', 'Harassment'])('%s: photo is optional and the report submits without one', async (type) => {
-  const { form, fileInput, fill } = renderModal();
-  fill(type);
+  const view = renderModal();
+  view.fill(type);
+  const { form, fileInput } = view;
   expect(fileInput.required).toBe(false);
-  expect(screen.getByText('Photo or video').closest('.qr-lbl')).toHaveTextContent('(optional)');
+  expect(screen.getByText('Photo or video').closest('.qr-lead')).toHaveTextContent('(optional)');
   expect(screen.getByText(/Optional for this crime type/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Send report/ })).not.toBeDisabled();
   fireEvent.submit(form);
@@ -77,10 +84,11 @@ test.each(['Theft', 'Suspicious Activity', 'Harassment'])('%s: photo is optional
 });
 
 test.each(['Vandalism', 'Public Disturbance', 'Trespassing', 'Other'])('%s: photo is required and submitting without one is blocked', async (type) => {
-  const { form, fileInput, fill } = renderModal();
-  fill(type);
+  const view = renderModal();
+  view.fill(type);
+  const { form, fileInput } = view;
   expect(fileInput).toBeTruthy();
-  expect(screen.getByText('Photo or video').closest('.qr-lbl')).toHaveTextContent('*');
+  expect(screen.getByText('Photo or video').closest('.qr-lead')).toHaveTextContent('*');
   expect(screen.getByRole('button', { name: /Send report/ })).toBeDisabled();
   expect(screen.getByText('Add a photo or video. It is required for this crime type.')).toBeInTheDocument();
   fireEvent.submit(form);
@@ -99,25 +107,30 @@ describe('Other: the kind of incident in its own box', () => {
   };
 
   test('the box shows only for Other, and goes (emptied) when another type is picked', () => {
-    const { container } = renderModal();
-    const box = () => container.querySelector('input[name="crimeOther"]');
-    fireEvent.click(screen.getByRole('button', { name: /^Theft/ }));
+    const { $, pick, back } = renderModal();
+    const box = () => $('input[name="crimeOther"]');
+    pick('Theft');
     expect(box()).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /^Other/ }));
+    back();
+    pick('Other');
     expect(screen.getByLabelText(/Type of incident/)).toBe(box());
     expect(box()).toBeRequired();
     fireEvent.change(box(), { target: { value: 'Stray dogs' } });
-    fireEvent.click(screen.getByRole('button', { name: /^Vandalism/ }));
+    back();
+    pick('Vandalism');
     expect(box()).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /^Other/ }));
+    back();
+    pick('Other');
     expect(box().value).toBe('');
   });
 
   test('left empty: Send stays off and says what is missing; nothing is sent', async () => {
-    const { container, form, fileInput } = renderModal();
-    fireEvent.click(screen.getByRole('button', { name: /^Other/ }));
+    const view = renderModal();
+    const { container, pick } = view;
+    pick('Other');
     fireEvent.change(container.querySelector('textarea[name="description"]'), { target: { value: 'Something happened' } });
     fireEvent.click(container.querySelector('input[name="consent"]'));
+    const { form, fileInput } = view;
     attachPhoto(fileInput);
     await screen.findByAltText('Selected attachment preview');
     expect(screen.getByText('Say what kind of incident it was.')).toBeInTheDocument();
@@ -128,8 +141,9 @@ describe('Other: the kind of incident in its own box', () => {
   });
 
   test('the typed kind of incident is saved as the crime type', async () => {
-    const { form, fileInput, fill } = renderModal();
-    fill('Other');
+    const view = renderModal();
+    view.fill('Other');
+    const { form, fileInput } = view;
     attachPhoto(fileInput);
     await screen.findByAltText('Selected attachment preview');
     fireEvent.submit(form);
@@ -144,16 +158,17 @@ describe('Other: the kind of incident in its own box', () => {
         <ResidentPettyCrimeModal show onClose={() => {}} editingReport={{ id: 3, title: 'Illegal gambling', description: 'Cards at night', location: 'Blk 1, Barangay Sta. Fe' }} />
       </LanguageProvider>
     );
-    expect(screen.getByRole('button', { name: /^Other/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('heading', { name: /^Other/ })).toBeInTheDocument(); // opens on step 2
     expect(container.querySelector('input[name="crimeOther"]').value).toBe('Illegal gambling');
   });
 });
 
 test('required type: attaching a JPG submits it as a base64 image', async () => {
-  const { form, fileInput, fill } = renderModal();
+  const view = renderModal();
   global.URL.createObjectURL = jest.fn(() => 'blob:preview');
   global.URL.revokeObjectURL = jest.fn();
-  fill('Vandalism');
+  view.fill('Vandalism');
+  const { form, fileInput } = view;
   const file = new File(['fake-jpeg'], 'wall.jpg', { type: 'image/jpeg' });
   fireEvent.change(fileInput, { target: { files: [file] } });
   expect(await screen.findByAltText('Selected attachment preview')).toBeInTheDocument();
@@ -166,17 +181,33 @@ test('required type: attaching a JPG submits it as a base64 image', async () => 
 });
 
 test('rejects files that are not JPG or a supported video', () => {
-  const { fileInput, fill } = renderModal();
-  fill('Vandalism');
-  fireEvent.change(fileInput, { target: { files: [new File(['x'], 'shot.png', { type: 'image/png' })] } });
+  const view = renderModal();
+  view.fill('Vandalism');
+  fireEvent.change(view.fileInput, { target: { files: [new File(['x'], 'shot.png', { type: 'image/png' })] } });
   expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning' }));
   expect(screen.queryByAltText('Selected attachment preview')).not.toBeInTheDocument();
 });
 
-test('before a crime type is picked, the hint explains which types need a photo', () => {
-  renderModal();
-  expect(screen.getByText('Choose what happened.')).toBeInTheDocument();
-  expect(screen.getByText(/Optional for Theft, Suspicious Activity and Harassment; required for all other/)).toBeInTheDocument();
+test('two steps, as on Report Emergency: who and what happened, then the rest in sections', () => {
+  const { $, pick, back } = renderModal();
+  expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Me' })).toHaveAttribute('aria-pressed', 'true');
+  // nothing else to fill in, and no Send, until a crime type is chosen
+  expect($('textarea[name="description"]')).toBeNull();
+  expect(screen.queryByRole('button', { name: /Send report/ })).not.toBeInTheDocument();
+
+  pick('Vandalism');
+  expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /Vandalism/ })).toBeInTheDocument();
+  const titles = [...document.querySelectorAll('.qr-sec > .qr-lead')].map((n) => n.firstChild.textContent);
+  expect(titles).toEqual(['About the incident', 'Photo or video', 'Where did the incident happen?', 'Confirm and send']);
+
+  // Back keeps what was typed and the chosen type stays marked
+  fireEvent.change($('textarea[name="description"]'), { target: { value: 'Paint on the wall' } });
+  back();
+  expect(screen.getByRole('button', { name: /^Vandalism/ })).toHaveAttribute('aria-pressed', 'true');
+  pick('Trespassing');
+  expect($('textarea[name="description"]').value).toBe('Paint on the wall');
 });
 
 test('there is no anonymous option; new reports carry the reporter', async () => {
@@ -203,6 +234,7 @@ describe('where the incident happened', () => {
 
   test('"At my home" fills in the registered address, without the map', async () => {
     const { $ } = renderWithAddress();
+    fireEvent.click(screen.getByRole('button', { name: /^Theft/ }));
     expect(screen.getByRole('button', { name: /At my home/i })).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
     expect($('input[name="street"]').value).toBe('Sampaguita St.');
@@ -211,6 +243,7 @@ describe('where the incident happened', () => {
 
   test('"Somewhere else" empties the address and shows the map tools', async () => {
     const { $ } = renderWithAddress();
+    fireEvent.click(screen.getByRole('button', { name: /^Theft/ }));
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
     fireEvent.click(screen.getByRole('button', { name: /Somewhere else/i }));
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe(''));
@@ -228,6 +261,7 @@ test('closing the form clears it; reopening starts fresh with the registered add
   );
   const { container, rerender } = render(view(true));
   const $ = (sel) => container.querySelector(sel);
+  fireEvent.click(screen.getByRole('button', { name: /^Theft/ }));
   await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
 
   fireEvent.click(screen.getByRole('button', { name: /Somewhere else/i }));
@@ -236,6 +270,8 @@ test('closing the form clears it; reopening starts fresh with the registered add
 
   rerender(view(false));
   rerender(view(true));
+  expect(screen.getByText('Step 1 of 2')).toBeInTheDocument(); // starts over
+  fireEvent.click(screen.getByRole('button', { name: /^Theft/ }));
   await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
   expect($('input[name="street"]').value).toBe('Sampaguita St.');
   expect($('textarea[name="description"]').value).toBe('');
@@ -257,17 +293,20 @@ test('a photo or video too large for the server gets its own message', async () 
 
 test('seven crime types as buttons, in the saved order', () => {
   renderModal();
-  const names = Array.from(document.querySelectorAll('.qr-choice b')).map((b) => b.textContent);
+  const names = Array.from(document.querySelectorAll('.qr-tile b')).map((b) => b.textContent);
   expect(names).toEqual(['Theft', 'Vandalism', 'Public Disturbance', 'Suspicious Activity', 'Trespassing', 'Harassment', 'Other']);
 });
 
-test('no crime type chosen: submitting is blocked', async () => {
-  const { form, container } = renderModal();
-  fireEvent.change(container.querySelector('textarea[name="description"]'), { target: { value: 'Something happened' } });
-  fireEvent.click(container.querySelector('input[name="consent"]'));
-  fireEvent.submit(form);
-  await waitFor(() => expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning', message: 'Choose what happened.' })));
-  expect(createPettyCrimeReport).not.toHaveBeenCalled();
+test('editing opens on step 2 with the saved type', () => {
+  sessionStorage.setItem('currentUser', JSON.stringify({ id: 7, fullName: 'Juan Dela Cruz' }));
+  render(
+    <LanguageProvider>
+      <ResidentPettyCrimeModal show onClose={() => {}} editingReport={{ id: 3, title: 'Theft', description: 'Bike', location: 'Blk 1, Barangay Sta. Fe' }} />
+    </LanguageProvider>
+  );
+  expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /Theft/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Save changes/ })).toBeInTheDocument();
 });
 
 describe('text checks', () => {

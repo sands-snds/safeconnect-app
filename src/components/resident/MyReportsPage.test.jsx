@@ -19,6 +19,10 @@ jest.mock('../shared/media/mediaCheck', () => ({
 
 
 jest.mock('../shared/location/LocationPickerMap', () => () => null);
+// The map beside the list (Leaflet doesn't load under Jest).
+jest.mock('./ResidentReportsMap', () => function MockReportsMap(props) {
+  return require('react').createElement('div', { 'data-testid': 'reports-map', 'data-panel': String(props.panel) });
+});
 jest.mock('../shared/location/useLocationPin', () => {
   const pin = {
     gpsCoords: { lat: 14.32, lng: 120.96 },
@@ -100,6 +104,20 @@ const chooseFromMenu = (title, option) => {
   openMenu(title);
   fireEvent.click(within(cardFor(title)).getByRole('menuitem', { name: option }));
 };
+
+test('the map of your reports sits beside the list (moved here from the home page)', async () => {
+  const { container } = await renderPage();
+  const map = screen.getByTestId('reports-map');
+  expect(map).toHaveAttribute('data-panel', 'true');
+  expect(map.closest('.mr-layout > .mr-map-col')).toBeInTheDocument();
+  expect(container.querySelector('.mr-layout > .mr-wrap .mr-list')).toBeInTheDocument();
+});
+
+test('assistance requests are orange, as on the Request Assistance card', async () => {
+  await renderPage();
+  const icon = cardFor('Medical Aid').querySelector('.mr-card-icon');
+  expect(icon).toHaveStyle({ color: '#ea580c' });
+});
 
 test('no "Total Reports" status bar', async () => {
   const { container } = await renderPage();

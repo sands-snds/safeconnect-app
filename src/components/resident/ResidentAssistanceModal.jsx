@@ -11,7 +11,7 @@ import useRegisteredAddressFill from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
 import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
-import { ReportFormShell, ReportHead, Lbl, WhoButtons, PairButtons, ChoiceTiles, Pills, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
+import { ReportFormShell, StepHead, TypeTiles, Section, Lbl, WhoButtons, PairButtons, Pills, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
 
 
 
@@ -256,6 +256,13 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     if (!show) resetRef.current();
   }, [show]);
 
+  // Two steps, as on Report Emergency: 1 who and what kind of help, 2 the
+  // rest. Editing a request opens on step 2 (Back changes the kind of help).
+  const [step, setStep] = useState(1);
+  useEffect(() => {
+    if (show) setStep(editingReport ? 2 : 1);
+  }, [show, editingReport]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (textBlocked) return; // the warnings under the fields say what to fix
@@ -445,6 +452,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     icon: x.icon,
     label: t(`reportShared.assistShort.${x.key}`)
   }));
+  const chosenAssist = assistItems.find((x) => x.value === formData.assistanceType);
   const emergencyItems = [
     ...EMERGENCY_OPTIONS.map((o) => ({ value: o.value, icon: o.icon, color: o.color, label: t(o.labelKey) })),
     { value: OTHER_EMERGENCY, icon: 'bi-three-dots', color: '#6B2C3E', label: t('reportShared.crimeShort.other') }
@@ -458,14 +466,19 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
 <>
 {show && (
 <ReportFormShell tone="assist">
-  <ReportHead
+  <StepHead
+    t={t}
+    step={step}
     icon="bi-life-preserver"
     title={isEditing ? t('assistanceModal.editTitle') : t('assistanceModal.requestTitle')}
+    typeTitle={chosenAssist ? chosenAssist.label : ''}
+    forOthers={reportFor === 'others'}
+    onBack={() => setStep(1)}
     onClose={onClose}
-    closeLabel={t('quickReport.close')}
     disabled={isSubmitting}
   />
   <form className="qr-form" onSubmit={handleSubmit}>
+    {step === 1 ? (
     <div className="qr-body">
       <WhoButtons
         id="as-who"
@@ -475,6 +488,21 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         labels={{ self: t('quickReport.who.self'), others: t('quickReport.who.others') }}
         disabled={isSubmitting}
       />
+      <div>
+        <p className="qr-lead" id="as-type">{t('reportShared.whatHelp')} <span className="qr-req" aria-hidden="true">*</span></p>
+        <p className="qr-hint">{t('reportShared.tapToContinue')}</p>
+      </div>
+      <TypeTiles
+        cols={3}
+        labelledBy="as-type"
+        items={assistItems}
+        value={formData.assistanceType}
+        onPick={(v) => { setFormData((prev) => ({ ...prev, assistanceType: v })); setStep(2); }}
+        disabled={isSubmitting}
+      />
+    </div>
+    ) : (
+    <div className="qr-body">
       {reportFor === 'others' && (
         <PersonBox
           t={t}
@@ -496,172 +524,176 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         />
       )}
 
-      <div>
-        <Lbl id="as-type" icon="bi-list-check" req>{t('reportShared.whatHelp')}</Lbl>
-        <ChoiceTiles
-          labelledBy="as-type"
-          items={assistItems}
-          value={formData.assistanceType}
-          onChange={(v) => setFormData((prev) => ({ ...prev, assistanceType: v }))}
-          disabled={isSubmitting}
-        />
-      </div>
+      <Section id="as-about" title={t('reportShared.sectionRequest')} hint={t('reportShared.sectionRequestHint')}>
+        <div>
+          <Lbl id="as-emergency" icon="bi-exclamation-circle-fill" req>{t('reportShared.victimOf')}</Lbl>
+          <Pills
+            labelledBy="as-emergency"
+            items={emergencyItems}
+            value={formData.emergency}
+            onChange={(v) => setFormData((prev) => ({ ...prev, emergency: v, emergencyOther: '' }))}
+            disabled={isSubmitting}
+          />
+          {formData.emergency === OTHER_EMERGENCY && (
+            <div className="qr-field qr-sub">
+              <label htmlFor="as-emergency-other">{t('assistanceModal.emergencyOther')} <span className="qr-req">*</span></label>
+              <input
+                id="as-emergency-other"
+                type="text"
+                name="emergencyOther"
+                value={formData.emergencyOther}
+                onChange={handleChange}
+                required
+                maxLength={100}
+                disabled={isSubmitting}
+                placeholder={t('assistanceModal.emergencyOtherPlaceholder')}
+                aria-invalid={Boolean(textWarn.emergencyOther) || undefined}
+              />
+              <TextWarning t={t} reason={textWarn.emergencyOther} />
+            </div>
+          )}
+        </div>
 
-      <div>
-        <Lbl id="as-emergency" icon="bi-exclamation-circle-fill" req>{t('reportShared.victimOf')}</Lbl>
-        <Pills
-          labelledBy="as-emergency"
-          items={emergencyItems}
-          value={formData.emergency}
-          onChange={(v) => setFormData((prev) => ({ ...prev, emergency: v, emergencyOther: '' }))}
-          disabled={isSubmitting}
-        />
-        {formData.emergency === OTHER_EMERGENCY && (
-          <div className="qr-field qr-sub">
-            <label htmlFor="as-emergency-other">{t('assistanceModal.emergencyOther')} <span className="qr-req">*</span></label>
-            <input
-              id="as-emergency-other"
-              type="text"
-              name="emergencyOther"
-              value={formData.emergencyOther}
-              onChange={handleChange}
-              required
-              maxLength={100}
-              disabled={isSubmitting}
-              placeholder={t('assistanceModal.emergencyOtherPlaceholder')}
-              aria-invalid={Boolean(textWarn.emergencyOther) || undefined}
-            />
-            <TextWarning t={t} reason={textWarn.emergencyOther} />
+        <div>
+          <Lbl id="as-people-label" icon="bi-people-fill" req as="label">{t('reportShared.people')}</Lbl>
+          <div className="qr-count-row">
+            <div className="qr-count">
+              <button type="button" onClick={() => setPeople(peopleNumber - 1)} disabled={isSubmitting || peopleNumber <= 1} aria-label={t('reportShared.fewer')}>
+                <i className="bi bi-dash-lg" aria-hidden="true" />
+              </button>
+              <input
+                id="as-people"
+                type="text"
+                name="people"
+                inputMode="numeric"
+                aria-labelledby="as-people-label"
+                value={formData.people}
+                onChange={(e) => setFormData((prev) => ({ ...prev, people: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                disabled={isSubmitting}
+              />
+              <button type="button" onClick={() => setPeople(peopleNumber + 1)} disabled={isSubmitting || peopleNumber >= MAX_PEOPLE_NEEDING_HELP} aria-label={t('reportShared.more')}>
+                <i className="bi bi-plus-lg" aria-hidden="true" />
+              </button>
+            </div>
+            <p>{t('assistanceModal.peopleHint')}</p>
           </div>
-        )}
-      </div>
+        </div>
 
-      <MediaPicker
-        t={t}
-        id="as-media"
-        label={t('reportShared.proofTitle')}
-        required={needsNewMedia}
-        optionalText={t('reportForm.optional')}
-        hint={hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}
-        media={media}
-        fileInputRef={fileInputRef}
-        onChange={handleMediaChange}
-        onRemove={clearMedia}
-        disabled={isSubmitting}
-      />
+        <div className="form-group" style={{ margin: 0 }}>
+          <Lbl icon="bi-info-circle-fill" optional={t('reportForm.optional')}>{t('emergencyModal.specialNeeds')}</Lbl>
+          <SpecialNeedsPicker
+            idPrefix="as-special"
+            selected={formData.special}
+            counts={formData.specialCounts}
+            onToggle={handleSpecialToggle}
+            onCountChange={handleSpecialCount}
+            disabled={isSubmitting}
+            invalidKey={specialInvalid}
+          />
+        </div>
 
-      {isEditing ? (
-        <div className="qr-edit-address">
-          <Lbl id="as-address" icon="bi-geo-alt-fill" req as="label">{t('assistanceModal.currentAddress')}</Lbl>
-          <input
-            type="text"
-            name="location"
-            aria-labelledby="as-address"
-            value={formData.location}
+        <div className="qr-field">
+          <Lbl id="as-situation" icon="bi-chat-left-text-fill" req as="label">{t('reportShared.describeSituation')}</Lbl>
+          <textarea
+            name="situation"
+            aria-labelledby="as-situation"
+            value={formData.situation}
             onChange={handleChange}
-            placeholder={t('reportForm.fullAddress')}
+            rows={4}
+            maxLength={2000}
+            placeholder={t('assistanceModal.situationPlaceholder')}
             required
             disabled={isSubmitting}
-            aria-invalid={Boolean(textWarn.location) || undefined}
+            aria-invalid={Boolean(textWarn.situation) || undefined}
           />
-          <TextWarning t={t} reason={textWarn.location} />
-          {locationError && <p className="qr-err"><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {locationError}</p>}
-          <p className="qr-note">{t('assistanceModal.serviceAreaNote')}</p>
-          <div ref={locationSectionRef}>
-            <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={isSubmitting} />
-          </div>
+          <TextWarning t={t} reason={textWarn.situation} />
         </div>
-      ) : (
-        <div>
-          <Lbl id="as-where" icon="bi-geo-alt-fill" req>{t('reportShared.whereHelp')}</Lbl>
-          <PairButtons
-            id="as-where"
-            value={helpPlace}
-            onChange={setHelpPlace}
-            disabled={isSubmitting}
-            options={[
-              { value: 'home', icon: 'bi-house-door-fill', label: t('pettyCrimeModal.atHome') },
-              { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
-            ]}
-          />
-          <div className="qr-addr">
-            <ReportLocationFields
-              t={t}
-              formData={formData}
-              onChange={handleChange}
-              disabled={isSubmitting}
-              showMap={showMap}
-              location={location}
-              sectionRef={locationSectionRef}
-              addressPrefilled={addressPrefilled}
-              serviceAreaNote={t('assistanceModal.serviceAreaNote')}
-              warnings={textWarn}
-            />
-          </div>
-        </div>
-      )}
+      </Section>
 
-      <div>
-        <Lbl id="as-people-label" icon="bi-people-fill" req as="label">{t('reportShared.people')}</Lbl>
-        <div className="qr-count-row">
-          <div className="qr-count">
-            <button type="button" onClick={() => setPeople(peopleNumber - 1)} disabled={isSubmitting || peopleNumber <= 1} aria-label={t('reportShared.fewer')}>
-              <i className="bi bi-dash-lg" aria-hidden="true" />
-            </button>
+      <Section
+        id="as-media"
+        title={t('reportShared.proofTitle')}
+        req={needsNewMedia}
+        optional={needsNewMedia ? null : t('reportForm.optional')}
+        hint={hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}
+      >
+        <MediaPicker
+          t={t}
+          id="as-media"
+          hideLabel
+          label={t('reportShared.proofTitle')}
+          required={needsNewMedia}
+          optionalText={t('reportForm.optional')}
+          media={media}
+          fileInputRef={fileInputRef}
+          onChange={handleMediaChange}
+          onRemove={clearMedia}
+          disabled={isSubmitting}
+        />
+      </Section>
+
+      {isEditing ? (
+        <Section id="as-address" title={t('assistanceModal.currentAddress')} req>
+          <div className="qr-edit-address">
             <input
-              id="as-people"
               type="text"
-              name="people"
-              inputMode="numeric"
-              aria-labelledby="as-people-label"
-              value={formData.people}
-              onChange={(e) => setFormData((prev) => ({ ...prev, people: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+              name="location"
+              aria-labelledby="as-address"
+              value={formData.location}
+              onChange={handleChange}
+              placeholder={t('reportForm.fullAddress')}
+              required
               disabled={isSubmitting}
+              aria-invalid={Boolean(textWarn.location) || undefined}
             />
-            <button type="button" onClick={() => setPeople(peopleNumber + 1)} disabled={isSubmitting || peopleNumber >= MAX_PEOPLE_NEEDING_HELP} aria-label={t('reportShared.more')}>
-              <i className="bi bi-plus-lg" aria-hidden="true" />
-            </button>
+            <TextWarning t={t} reason={textWarn.location} />
+            {locationError && <p className="qr-err"><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {locationError}</p>}
+            <p className="qr-note">{t('assistanceModal.serviceAreaNote')}</p>
+            <div ref={locationSectionRef}>
+              <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={isSubmitting} />
+            </div>
           </div>
-          <p>{t('assistanceModal.peopleHint')}</p>
-        </div>
-      </div>
-
-      <div className="form-group" style={{ margin: 0 }}>
-        <Lbl icon="bi-info-circle-fill" optional={t('reportForm.optional')}>{t('emergencyModal.specialNeeds')}</Lbl>
-        <SpecialNeedsPicker
-          idPrefix="as-special"
-          selected={formData.special}
-          counts={formData.specialCounts}
-          onToggle={handleSpecialToggle}
-          onCountChange={handleSpecialCount}
-          disabled={isSubmitting}
-          invalidKey={specialInvalid}
-        />
-      </div>
-
-      <div className="qr-field">
-        <Lbl id="as-situation" icon="bi-chat-left-text-fill" req as="label">{t('reportShared.describeSituation')}</Lbl>
-        <textarea
-          name="situation"
-          aria-labelledby="as-situation"
-          value={formData.situation}
-          onChange={handleChange}
-          rows={4}
-          maxLength={2000}
-          placeholder={t('assistanceModal.situationPlaceholder')}
-          required
-          disabled={isSubmitting}
-          aria-invalid={Boolean(textWarn.situation) || undefined}
-        />
-        <TextWarning t={t} reason={textWarn.situation} />
-      </div>
-
-      <ConsentBox checked={formData.consent} onChange={handleChange} disabled={isSubmitting}>{t('reportForm.consent')}</ConsentBox>
-
-      {!isEditing && cooldownRemaining > 0 && (
-        <div className="qr-banner"><i className="bi bi-clock-history" aria-hidden="true" /> {t('assistanceModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}</div>
+        </Section>
+      ) : (
+        <Section id="as-where" title={t('reportShared.whereHelp')} req>
+          <div>
+            <PairButtons
+              id="as-where"
+              value={helpPlace}
+              onChange={setHelpPlace}
+              disabled={isSubmitting}
+              options={[
+                { value: 'home', icon: 'bi-house-door-fill', label: t('pettyCrimeModal.atHome') },
+                { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
+              ]}
+            />
+            <div className="qr-addr">
+              <ReportLocationFields
+                t={t}
+                formData={formData}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                showMap={showMap}
+                location={location}
+                sectionRef={locationSectionRef}
+                addressPrefilled={addressPrefilled}
+                serviceAreaNote={t('assistanceModal.serviceAreaNote')}
+                warnings={textWarn}
+              />
+            </div>
+          </div>
+        </Section>
       )}
+
+      <Section id="as-confirm" title={t('reportShared.sectionConfirm')}>
+        <ConsentBox checked={formData.consent} onChange={handleChange} disabled={isSubmitting}>{t('reportForm.consent')}</ConsentBox>
+        {!isEditing && cooldownRemaining > 0 && (
+          <div className="qr-banner"><i className="bi bi-clock-history" aria-hidden="true" /> {t('assistanceModal.cooldownBanner', { time: formatRemaining(cooldownRemaining) })}</div>
+        )}
+      </Section>
     </div>
+    )}
+    {step === 2 && (
     <SendFoot
       missing={missingText}
       readyText={t('reportShared.ready')}
@@ -671,6 +703,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       disabled={!isEditing && cooldownRemaining > 0}
       icon={isEditing ? 'bi-check-lg' : 'bi-send-fill'}
     />
+    )}
   </form>
 </ReportFormShell>
 )}

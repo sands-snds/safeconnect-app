@@ -119,32 +119,7 @@ export const geocodeInSantaFe = (location) => {
 };
 
 // ── New report alert (admin) ────────────────────────────────────────────────
-// A short soft chime: two notes, three for a fire. Browsers allow sound only
-// after the page has been clicked, so the first chime may be skipped.
-let audio = null;
-export const playReportChime = (type) => {
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return;
-    if (!audio) audio = new Ctx();
-    if (audio.state === 'suspended') audio.resume();
-    const notes = type === 'fire' ? [784, 1047, 1319] : [784, 1047];
-    notes.forEach((f, i) => {
-      const t = audio.currentTime + i * 0.16;
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = f;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.16, t + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
-      osc.connect(gain).connect(audio.destination);
-      osc.start(t);
-      osc.stop(t + 0.5);
-    });
-  } catch { /* no audio */ }
-};
-
+// Whether the new-report sounds are on (admin/map/reportSounds.js plays them).
 const SOUND_KEY = 'sf_reportSound';
 export const readReportSound = () => { try { return localStorage.getItem(SOUND_KEY) === 'on'; } catch { return false; } };
 export const saveReportSound = (on) => { try { localStorage.setItem(SOUND_KEY, on ? 'on' : 'off'); } catch { /* blocked */ } };

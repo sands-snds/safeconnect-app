@@ -165,6 +165,13 @@ section {
   }
 }
 
+/* Landing page carousel: white arrows (src/App.css inverts the arrow icons
+   to black elsewhere). A soft shadow keeps them visible on light photos. */
+#homeCarousel .carousel-control-prev-icon,
+#homeCarousel .carousel-control-next-icon {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+}
+
 /* Carousel Controls */
 .carousel-control-prev,
 .carousel-control-next {

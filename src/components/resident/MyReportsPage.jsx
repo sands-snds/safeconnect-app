@@ -15,6 +15,7 @@ import ResidentPettyCrimeModal from "./ResidentPettyCrimeModal";
 import { announceReportsChanged } from "./useCallAccess";
 import useReportMedia from "../shared/useReportMedia";
 import MediaLightbox from "../shared/media/MediaLightbox";
+import ResidentReportsMap from "./ResidentReportsMap";
 
 const TYPE_LABEL_KEYS = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYPE_LABEL_KEYS[type]}`) : type);
@@ -61,7 +62,8 @@ const pageItems = (page, count) => {
 
 const TYPE_THEME = {
   Emergency: { accent: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)', icon: 'bi-exclamation-triangle-fill' },
-  Assistance: { accent: '#0d9488', bg: 'rgba(13, 148, 136, 0.1)', icon: 'bi-life-preserver' },
+  // Orange, as on the Request Assistance card in the report section.
+  Assistance: { accent: '#ea580c', bg: 'rgba(234, 88, 12, 0.1)', icon: 'bi-life-preserver' },
   'Petty Crime': { accent: '#7c3aed', bg: 'rgba(124, 58, 237, 0.1)', icon: 'bi-shield-exclamation' }
 };
 const getTypeTheme = (type) => TYPE_THEME[type] || { accent: '#6B2C3E', bg: 'rgba(107, 44, 62, 0.1)', icon: 'bi-file-earmark-text-fill' };
@@ -170,7 +172,16 @@ const FILTER_LABEL_KEYS = { All: 'all', Emergency: 'emergency', Assistance: 'ass
 
 
 
+// The map beside the list: tall enough to use, shorter on phones.
+const mapHeightFor = () => {
+  if (typeof window === 'undefined' || !window.matchMedia) return 460;
+  if (window.matchMedia('(max-width: 767px)').matches) return 340;
+  if (window.matchMedia('(min-width: 1100px)').matches) return 460;
+  return 400;
+};
+
 function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }) {
+  const [mapHeight] = useState(mapHeightFor);
   const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -466,6 +477,18 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
         }
 
         .mr-wrap { max-width: 880px; margin: 0 auto; }
+
+        /* Reports and the map, like the News page: the list on the left and
+           the map on the right (staying in view) on wide screens; one column,
+           the map first, on tablets and phones. */
+        .mr-layout { max-width: 880px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+        .mr-layout > .mr-wrap { max-width: none; margin: 0; min-width: 0; }
+        .mr-map-col { min-width: 0; }
+        @media (max-width: 1099px) { .mr-map-col { order: -1; } }
+        @media (min-width: 1100px) {
+          .mr-layout { max-width: 1320px; grid-template-columns: minmax(0, 1fr) minmax(420px, 42%); gap: 28px; align-items: start; }
+          .mr-map-col { position: sticky; top: 0; }
+        }
 
         /* ── Toolbar: underline tabs instead of pill buttons ── */
         .mr-toolbar { margin-bottom: 1.5rem; }
@@ -1033,6 +1056,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
       </div>
 
       <div className="myreports-body">
+        <div className="mr-layout">
         <div className="mr-wrap">
 
           <div className="mr-toolbar">
@@ -1354,6 +1378,12 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
             </nav>
           )}
 
+        </div>
+
+        {/* Mounted only while the page is open, so the map sizes itself to a visible box. */}
+        <aside className="mr-map-col">
+          {isOpen && <ResidentReportsMap panel height={mapHeight} />}
+        </aside>
         </div>
 
         

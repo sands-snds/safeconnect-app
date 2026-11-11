@@ -4,6 +4,7 @@ import { MAP_TYPES, LEGEND_TYPES, MAIN_TYPES, RESOLVED_COLOR, fromAdminReport, i
 import StatusConfirmModal from "../shared/StatusConfirmModal";
 import { statusBadge } from "../shared/StatusSelect";
 import { tx } from "../../../i18n/adminText";
+import { SOUND_KINDS, playReportSound, unlockAudio, useAudioState } from "./reportSounds";
 
 // General → Incident Map: every open report at the spot it was pinned,
 // blinking until it is resolved. Uses the lists useAdminData already loads
@@ -20,6 +21,56 @@ const FILTERS = [
     { key: "quake", label: "Earthquake", color: MAP_TYPES.quake.color },
     { key: "other", label: "Other reports", color: "#6b7280" }
 ];
+// The new-report sounds: on / off, whether the browser allows them yet, and
+// a button to hear each one. The same setting as the header's speaker button.
+const SOUND_LABEL = { emergency: "Emergency", assistance: "Assistance", pettyCrime: "Petty crime" };
+const SOUND_HINT = { emergency: "siren", assistance: "chime", pettyCrime: "beeps" };
+const SOUND_ICON = { emergency: "bi-exclamation-triangle-fill", assistance: "bi-life-preserver", pettyCrime: "bi-shield-fill-exclamation" };
+const SOUND_COLOR = { emergency: "#dc2626", assistance: "#ea580c", pettyCrime: "#7c3aed" };
+
+export function SoundAlerts({ soundOn, onToggle }) {
+    const audio = useAudioState();
+    const hear = (kind) => unlockAudio().then((ok) => ok && playReportSound(kind));
+    return (
+        <div className="im-sound" role="group" aria-labelledby="im-sound-title">
+            <div className="im-sound-main">
+                <span className="im-sound-ic" aria-hidden="true"><i className={`bi ${soundOn ? "bi-volume-up-fill" : "bi-volume-mute-fill"}`} /></span>
+                <span className="im-sound-text">
+                    <b id="im-sound-title">{tx("Alert sound for new reports")}</b>
+                    <span>{soundOn
+                        ? tx("On: each kind of report has its own sound.")
+                        : tx("Off: new reports show a notice without sound.")}</span>
+                </span>
+                <button type="button" className="im-switch" role="switch" aria-checked={Boolean(soundOn)} aria-labelledby="im-sound-title" onClick={onToggle}>
+                    <span className="im-switch-knob" aria-hidden="true" />
+                    <span className="im-switch-label" aria-hidden="true">{soundOn ? tx("On") : tx("Off")}</span>
+                </button>
+            </div>
+            {soundOn && audio === "blocked" && (
+                <div className="im-sound-warn" role="status">
+                    <i className="bi bi-exclamation-triangle-fill" aria-hidden="true" />
+                    <span>{tx("Your browser is holding back sound until you allow it.")}</span>
+                    <button type="button" className="button button-soft" onClick={() => unlockAudio()}>{tx("Enable sound")}</button>
+                </div>
+            )}
+            {audio === "unsupported" && (
+                <div className="im-sound-warn" role="status">
+                    <i className="bi bi-info-circle-fill" aria-hidden="true" />
+                    <span>{tx("This browser can't play sound; new reports still show a notice.")}</span>
+                </div>
+            )}
+            <div className="im-sound-try">
+                <span className="im-sound-try-label">{tx("Listen:")}</span>
+                {SOUND_KINDS.map((k) => (
+                    <button key={k} type="button" className="im-sound-btn" style={{ "--c": SOUND_COLOR[k] }} onClick={() => hear(k)} disabled={audio === "unsupported"}>
+                        <i className={`bi ${SOUND_ICON[k]}`} aria-hidden="true" /> {tx(SOUND_LABEL[k])} <small>{tx(SOUND_HINT[k])}</small>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 const matchesFilter = (r, f) => f === "all" || r.type === f || (f === "other" && !MAIN_TYPES.includes(r.type));
 
 const Pill = ({ status }) => {
@@ -50,7 +101,7 @@ export const MAP_PAGE_STYLE = `
     .im-pop-acts .button { padding: 6px 10px; font-size: 12.5px; }
 `;
 
-export default function IncidentMapPage({ emergencyReports = [], assistanceRequests = [], pettyCrimeReports = [], onUpdateStatus, onNavigate, focusKey, onClearFocus }) {
+export default function IncidentMapPage({ emergencyReports = [], assistanceRequests = [], pettyCrimeReports = [], onUpdateStatus, onNavigate, focusKey, onClearFocus, soundOn, onToggleSound }) {
     const [filter, setFilter] = useState("all");
     const [showResolved, setShowResolved] = useState(false);
     const [selectedKey, setSelectedKey] = useState(null);
@@ -147,6 +198,29 @@ export default function IncidentMapPage({ emergencyReports = [], assistanceReque
                 .im-row-title { font-size: 14px; font-weight: 600; color: #111827; }
                 .im-row-sub { display: block; font-size: 12.5px; color: #6b7280; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                 .im-empty { margin: 8px; color: #6b7280; font-size: 13.5px; }
+                .im-sound { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+                .im-sound-main { display: flex; align-items: center; gap: 12px; }
+                .im-sound-ic { width: 36px; height: 36px; border-radius: 10px; background: #f6eef0; color: #6B2C3E; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+                .im-sound-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+                .im-sound-text b { font-size: 14px; font-weight: 600; color: #111827; }
+                .im-sound-text span { font-size: 12.5px; color: #6b7280; }
+                .im-switch { flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 4px; cursor: pointer; font: inherit; }
+                .im-switch-knob { position: relative; width: 40px; height: 22px; border-radius: 999px; background: #d1d5db; transition: background .15s; }
+                .im-switch-knob::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .25); transition: transform .15s; }
+                .im-switch[aria-checked="true"] .im-switch-knob { background: #6B2C3E; }
+                .im-switch[aria-checked="true"] .im-switch-knob::after { transform: translateX(18px); }
+                .im-switch-label { font-size: 13px; font-weight: 600; color: #374151; min-width: 24px; text-align: left; }
+                .im-switch:focus-visible { outline: 2px solid #6B2C3E; outline-offset: 2px; border-radius: 8px; }
+                .im-sound-warn { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; padding: 8px 12px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; font-size: 13px; }
+                .im-sound-warn .button { padding: 5px 12px; font-size: 12.5px; margin-left: auto; }
+                .im-sound-try { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+                .im-sound-try-label { font-size: 12.5px; color: #6b7280; font-weight: 600; }
+                .im-sound-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; font-size: 12.5px; font-weight: 600; color: #374151; cursor: pointer; }
+                .im-sound-btn .bi { color: var(--c); }
+                .im-sound-btn small { font-weight: 400; color: #6b7280; }
+                .im-sound-btn:hover:not(:disabled) { border-color: var(--c); }
+                .im-sound-btn:disabled { opacity: .5; cursor: not-allowed; }
+                @media (prefers-reduced-motion: reduce) { .im-switch-knob, .im-switch-knob::after { transition: none; } }
                 @media (max-width: 768px) {
                     .im-page { gap: 12px; }
                     .im-grid { grid-template-columns: 1fr; }
@@ -157,6 +231,8 @@ export default function IncidentMapPage({ emergencyReports = [], assistanceReque
             `}</style>
 
             <p className="im-intro">{tx("Every open report in Barangay Santa Fe, at the spot the reporter pinned. Markers blink until the report is resolved.")}</p>
+
+            {onToggleSound && <SoundAlerts soundOn={soundOn} onToggle={onToggleSound} />}
 
             <div className="im-chips">
                 {FILTERS.map((f) => (

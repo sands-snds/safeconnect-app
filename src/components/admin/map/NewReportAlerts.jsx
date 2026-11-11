@@ -1,17 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MAP_TYPES, fromAdminReport, playReportChime } from "../../shared/location/mapReports";
+import { MAP_TYPES, fromAdminReport } from "../../shared/location/mapReports";
+import { playReportSounds, playReportSound, unlockAudio, useAudioState } from "./reportSounds";
 import { tx } from "../../../i18n/adminText";
 
-// A notice (and, when turned on, a chime) for each report that arrives
+// A notice (and, when turned on, a sound) for each report that arrives
 // while the admin panel is open. Works from the lists useAdminData keeps
 // current through the live channel; the first load only records what is
-// already there.
+// already there, and each report is announced once.
+// Each kind of report has its own sound (reportSounds.js). When the browser
+// is still blocking sound, the notice offers to turn it on.
 
 const SHOW_MS = 8000;
 
 export default function NewReportAlerts({ emergencyReports, assistanceRequests, pettyCrimeReports, loaded, soundOn, onOpen }) {
     const known = useRef(null);
     const [alerts, setAlerts] = useState([]);
+    const audio = useAudioState();
 
     useEffect(() => {
         if (!loaded) return;
@@ -27,7 +31,7 @@ export default function NewReportAlerts({ emergencyReports, assistanceRequests, 
         const fresh = now.filter((r) => !known.current.has(r.key));
         fresh.forEach((r) => known.current.add(r.key));
         if (!fresh.length) return;
-        if (soundOn) playReportChime(fresh.some((r) => r.type === "fire") ? "fire" : fresh[0].type);
+        if (soundOn) playReportSounds(fresh.map((r) => r.kind));
         setAlerts((list) => [...fresh.map((r) => ({ ...r, shownAt: Date.now() })), ...list].slice(0, 4));
     }, [emergencyReports, assistanceRequests, pettyCrimeReports, loaded, soundOn]);
 
@@ -49,6 +53,8 @@ export default function NewReportAlerts({ emergencyReports, assistanceRequests, 
                 .nra span.nra-sub { display: block; font-size: 12.5px; color: #6b7280; overflow-wrap: anywhere; }
                 .nra-see { border: 0; background: none; padding: 0; font-size: 12.5px; font-weight: 600; color: #6B2C3E; cursor: pointer; }
                 .nra-x { border: 0; background: none; color: #9ca3af; font-size: 14px; cursor: pointer; padding: 2px; }
+                .nra-acts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 2px; }
+                .nra-sound { border: 0; background: none; padding: 0; font-size: 12.5px; font-weight: 600; color: #b45309; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
                 @keyframes nra-in { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
                 @media (prefers-reduced-motion: reduce) { .nra { animation: none; } }
                 @media (max-width: 768px) { .nra-area { top: 72px; right: 10px; left: 10px; width: auto; } }
@@ -61,9 +67,16 @@ export default function NewReportAlerts({ emergencyReports, assistanceRequests, 
                         <span className="nra-text">
                             <b>{tx("New {{type}}", { type: tx(a.title) })}</b>
                             <span className="nra-sub">{a.location} · {tx("just now")}</span>
-                            <button type="button" className="nra-see" onClick={() => { onOpen(a.key); setAlerts((l) => l.filter((x) => x.key !== a.key)); }}>
-                                {tx("See on map")}
-                            </button>
+                            <span className="nra-acts">
+                                <button type="button" className="nra-see" onClick={() => { onOpen(a.key); setAlerts((l) => l.filter((x) => x.key !== a.key)); }}>
+                                    {tx("See on map")}
+                                </button>
+                                {soundOn && audio === "blocked" && (
+                                    <button type="button" className="nra-sound" onClick={() => unlockAudio().then((ok) => ok && playReportSound(a.kind))}>
+                                        <i className="bi bi-volume-up-fill" aria-hidden="true" /> {tx("Turn on sound")}
+                                    </button>
+                                )}
+                            </span>
                         </span>
                         <button type="button" className="nra-x" aria-label={tx("Close")} onClick={() => setAlerts((l) => l.filter((x) => x.key !== a.key))}>
                             <i className="bi bi-x-lg" aria-hidden="true" />
