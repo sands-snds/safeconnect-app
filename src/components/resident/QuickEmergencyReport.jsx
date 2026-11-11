@@ -6,7 +6,6 @@ import { useTextWarnings, serverTextErrors, TextWarning } from './textWarnings';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { translations } from '../../i18n/translations';
 import { announceReportsChanged } from './useCallAccess';
 import { registeredAddress } from './useRegisteredAddress';
 import { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
@@ -68,7 +67,7 @@ const EMPTY = {
 };
 
 export default function QuickEmergencyReport({ show, onClose, onRequestAssistance }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [form, setForm] = useState(EMPTY);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(null); // { reference, type, forWhom, submittedLocation }
@@ -123,8 +122,6 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
 
   const type = QUICK_TYPES.find((x) => x.key === form.type);
   const typeName = (x) => t(`quickReport.types.${x.key}`);
-  // The type's name in the other language, small under the tile
-  const otherName = (x) => translations[language === 'tl' ? 'en' : 'tl']?.quickReport?.types?.[x.key] || '';
 
   const pickMedia = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -304,7 +301,6 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                     <button key={x.key} type="button" className="qr-tile" style={{ '--c': x.color }} onClick={() => set({ type: x.key, step: 2 })}>
                       <span className="qr-ti"><i className={`bi ${x.icon}`} aria-hidden="true" /></span>
                       <b>{typeName(x)}</b>
-                      <small>{otherName(x)}</small>
                     </button>
                   ))}
                 </div>
@@ -316,10 +312,10 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                     <p className="qr-lbl red"><i className="bi bi-person-exclamation" aria-hidden="true" /> {t('quickReport.forTitle')}</p>
                     <div>
                       <p className="qr-q" id="qr-rel">{t('quickReport.relLabel')} <span className="qr-req">*</span></p>
-                      <div className="qr-rel" role="group" aria-labelledby="qr-rel">
+                      <div className="qr-rel qr-grid3" role="group" aria-labelledby="qr-rel">
                         {RELATIONSHIPS.map((r) => (
                           <button key={r.value} type="button" aria-pressed={form.rel === r.value} onClick={() => set({ rel: r.value })}>
-                            {t(`reportForm.relationshipOptions.${r.key}`)}
+                            {r.key === 'other' ? t('reportShared.crimeShort.other') : t(`reportForm.relationshipOptions.${r.key}`)}
                           </button>
                         ))}
                       </div>

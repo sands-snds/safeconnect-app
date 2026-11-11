@@ -11,16 +11,15 @@ import useRegisteredAddressFill from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
 import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
-import { translations } from '../../i18n/translations';
 import { ReportFormShell, ReportHead, Lbl, WhoButtons, PairButtons, ChoiceTiles, Pills, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
 
 
 
 const EMERGENCY_OPTIONS = [
-  { value: 'Fire Emergency', labelKey: 'emergencyModal.typeFire', icon: 'bi-fire' },
-  { value: 'Flood Emergency', labelKey: 'emergencyModal.typeFlood', icon: 'bi-water' },
-  { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake', icon: 'bi-activity' },
-  { value: 'Typhoon', labelKey: 'emergencyModal.typeTyphoon', icon: 'bi-tropical-storm' }
+  { value: 'Fire Emergency', labelKey: 'emergencyModal.typeFire', icon: 'bi-fire', color: '#dc2626' },
+  { value: 'Flood Emergency', labelKey: 'emergencyModal.typeFlood', icon: 'bi-water', color: '#2563eb' },
+  { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake', icon: 'bi-activity', color: '#b45309' },
+  { value: 'Typhoon', labelKey: 'emergencyModal.typeTyphoon', icon: 'bi-tropical-storm', color: '#0f766e' }
 ];
 // The saved values are unchanged; the tiles show short names.
 const ASSISTANCE_TYPES = [
@@ -74,7 +73,7 @@ const formatRemaining = (ms) => {
 
 
 function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport, onUpdated, prefill }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     assistanceType: '',
@@ -441,16 +440,14 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   };
   if (!show && !showSuccessPopup) return null;
 
-  const otherLang = translations[language === 'tl' ? 'en' : 'tl'] || {};
   const assistItems = ASSISTANCE_TYPES.map((x) => ({
     value: x.value,
     icon: x.icon,
-    label: t(`reportShared.assistShort.${x.key}`),
-    sub: otherLang.reportShared?.assistShort?.[x.key] || ''
+    label: t(`reportShared.assistShort.${x.key}`)
   }));
   const emergencyItems = [
-    ...EMERGENCY_OPTIONS.map((o) => ({ value: o.value, icon: o.icon, label: t(o.labelKey) })),
-    { value: OTHER_EMERGENCY, icon: 'bi-three-dots', label: t('reportShared.crimeShort.other') }
+    ...EMERGENCY_OPTIONS.map((o) => ({ value: o.value, icon: o.icon, color: o.color, label: t(o.labelKey) })),
+    { value: OTHER_EMERGENCY, icon: 'bi-three-dots', color: '#6B2C3E', label: t('reportShared.crimeShort.other') }
   ];
   const missingKey = whatIsMissing();
   const missingText = !missingKey ? '' : missingKey === 'outside' ? t('reportForm.outsideSantaFe') : t(`reportShared.need.${missingKey}`);

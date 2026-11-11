@@ -91,11 +91,12 @@ export function ChoiceTiles({ labelledBy, items, value, onChange, disabled, wide
   );
 }
 
-export function Pills({ labelledBy, items, value, onChange, disabled }) {
+export function Pills({ labelledBy, items, value, onChange, disabled, grid }) {
   return (
-    <div className="qr-rel" role="group" aria-labelledby={labelledBy}>
+    <div className={`qr-rel${grid ? ' qr-grid3' : ''}`} role="group" aria-labelledby={labelledBy}>
       {items.map((x) => (
-        <button key={x.value} type="button" aria-pressed={value === x.value} onClick={() => onChange(x.value)} disabled={disabled}>
+        <button key={x.value} type="button" aria-pressed={value === x.value} onClick={() => onChange(x.value)} disabled={disabled}
+          className={x.color ? 'qr-tinted' : undefined} style={x.color ? { '--c': x.color } : undefined}>
           {x.icon && <i className={`bi ${x.icon}`} aria-hidden="true" />}{x.label}
         </button>
       ))}
@@ -120,7 +121,7 @@ export function PersonBox({ t, idPrefix, title, rel, onRel, relOther, onRelOther
       <p className="qr-lbl red"><i className="bi bi-person-exclamation" aria-hidden="true" /> <span>{title}</span></p>
       <div>
         <p className="qr-q" id={`${idPrefix}-rel`}>{t('quickReport.relLabel')} <span className="qr-req">*</span></p>
-        <Pills labelledBy={`${idPrefix}-rel`} value={rel} onChange={onRel} disabled={disabled}
+        <Pills grid labelledBy={`${idPrefix}-rel`} value={rel} onChange={onRel} disabled={disabled}
           items={FULL_RELATIONSHIPS.map((r) => ({ value: r.value, label: r.key === 'other' ? t('reportShared.crimeShort.other') : t(`reportForm.relationshipOptions.${r.key}`) }))} />
       </div>
       {rel === 'Other' && (
@@ -181,7 +182,7 @@ export function MediaPicker({ t, id, label, required, optionalText, hint, media,
         </div>
       ) : (
         <div className="qr-photo-row">
-          <button type="button" className="qr-btn ghost" onClick={() => cameraRef.current?.click()} disabled={disabled}><i className="bi bi-camera-fill" aria-hidden="true" /> {t('quickReport.takePhoto')}</button>
+          <button type="button" className="qr-btn primary" onClick={() => cameraRef.current?.click()} disabled={disabled}><i className="bi bi-camera-fill" aria-hidden="true" /> {t('quickReport.takePhoto')}</button>
           <button type="button" className="qr-btn ghost" onClick={() => fileInputRef.current?.click()} disabled={disabled}><i className="bi bi-images" aria-hidden="true" /> {t('quickReport.gallery')}</button>
         </div>
       )}
@@ -289,6 +290,14 @@ export const REPORT_FORM_STYLE = `
   .qr-rel button:hover:not(:disabled) { border-color: #d1d5db; }
   .qr-rel button[aria-pressed="true"] { border-color: var(--tone); background: var(--tone-soft); color: var(--tone-ink); font-weight: 600; }
   .qr-rel button[aria-pressed="true"] .bi { color: var(--tone); }
+  /* Choices in a grid: three per row, all the same size */
+  .qr-rel.qr-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .qr-rel.qr-grid3 button { width: 100%; min-height: 44px; padding: 6px 8px; border-radius: 12px; justify-content: center; text-align: center; line-height: 1.25; }
+  /* Choices with their own colour (the emergency types) */
+  .qr-rel button.qr-tinted .bi { color: var(--c); }
+  .qr-rel button.qr-tinted:hover:not(:disabled) { border-color: color-mix(in srgb, var(--c) 45%, #fff); }
+  .qr-rel button.qr-tinted[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 9%, #fff); color: var(--c); }
+  .qr-rel button.qr-tinted[aria-pressed="true"] .bi { color: var(--c); }
 
   .qr-forbox { border: 1px solid #fecaca; background: #fff7f7; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
   .qr-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -352,6 +361,7 @@ export const REPORT_FORM_STYLE = `
   .qr-needs { margin: 0; font-size: .78rem; color: #6b7280; text-align: center; }
   .qr-btn { min-height: 48px; border-radius: 12px; border: 0; padding: 0 18px; font-size: .92rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s; }
   .qr-btn.primary { background: #dc2626; color: #fff; box-shadow: 0 6px 16px rgba(220,38,38,.25); }
+  .qr-btn.primary:hover:not(:disabled) { background: #b91c1c; }
   .qr-btn.send { width: 100%; min-height: 50px; font-size: .98rem; background: var(--tone); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--tone) 25%, transparent); }
   .qr-btn.send:hover:not(:disabled) { background: var(--tone-dark); }
   .qr-btn.send:disabled { background: #e5e7eb; color: #9ca3af; box-shadow: none; cursor: not-allowed; }
@@ -404,6 +414,8 @@ export const REPORT_FORM_STYLE = `
     .qr-choices.wide .qr-tick { top: 50%; transform: translateY(-50%); right: 10px; }
     .qr-two { grid-template-columns: 1fr; }
     .qr-rel button { min-height: 38px; padding: 0 12px; font-size: .82rem; }
+    .qr-rel.qr-grid3 { gap: 6px; }
+    .qr-rel.qr-grid3 button { min-height: 44px; padding: 4px 6px; font-size: .8rem; }
     .qr .qr-field input[type="text"], .qr .qr-field input[type="tel"], .qr .qr-field textarea, .qr .rl-section .rl-input, .qr .qr-edit-address input, .qr .qr-count input[type="text"] { font-size: 16px; }
   }
 `;

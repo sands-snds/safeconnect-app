@@ -63,8 +63,8 @@ test('step 1: who needs help (Me already chosen) and four emergency types; no Me
   expect(tiles).toEqual(['Fire', 'Flood', 'Earthquake', 'Typhoon']);
   expect(screen.queryByText(/Medical/)).not.toBeInTheDocument();
   expect(screen.queryByText(/Other emergency/)).not.toBeInTheDocument();
-  // the Filipino name under each tile
-  expect(screen.getByText('Sunog')).toBeInTheDocument();
+  // English only: no Filipino name under the tiles
+  expect(screen.queryByText('Sunog')).not.toBeInTheDocument();
 });
 
 test('for me: tap Fire, add a photo, send (3 taps)', async () => {
@@ -175,4 +175,13 @@ test('only the X closes the form: a tap outside it or Escape does nothing', () =
   expect(onClose).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Close' }));
   expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+test('in Tagalog the tiles and buttons are in Tagalog', () => {
+  localStorage.setItem('sf_language', 'tl');
+  renderForm();
+  const tiles = [...document.querySelectorAll('.qr-tile b')].map((b) => b.textContent);
+  expect(tiles).toEqual(['Sunog', 'Baha', 'Lindol', 'Bagyo']);
+  expect(screen.getByRole('button', { name: 'Ako' })).toBeInTheDocument();
+  expect(screen.queryByText('Fire')).not.toBeInTheDocument();
 });

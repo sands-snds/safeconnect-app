@@ -10,7 +10,6 @@ import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
-import { translations } from '../../i18n/translations';
 import { ReportFormShell, ReportHead, Lbl, WhoButtons, PairButtons, ChoiceTiles, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
 const CRIME_TYPES = [
   { key: 'theft', value: 'Theft' },
@@ -87,7 +86,7 @@ const formatRemaining = (ms) => {
   return `${minutes}m`;
 };
 function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const isEditing = Boolean(editingReport);
   const [formData, setFormData] = useState({
     ...EMPTY_LOCATION,
@@ -383,12 +382,10 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   };
   if (!show && !showSuccessPopup) return null;
 
-  const otherLang = translations[language === 'tl' ? 'en' : 'tl'] || {};
   const crimeItems = CRIME_TYPES.map((c) => ({
     value: c.value,
     icon: CRIME_ICONS[c.key],
-    label: t(`reportShared.crimeShort.${c.key}`),
-    sub: otherLang.reportShared?.crimeShort?.[c.key] || ''
+    label: t(`reportShared.crimeShort.${c.key}`)
   }));
   const chosenCrime = CRIME_TYPES.find((c) => c.value === formData.crimeType);
   const crimeNote = chosenCrime && ['publicDisturbance', 'other'].includes(chosenCrime.key) ? t(`reportShared.crimeNote.${chosenCrime.key}`) : '';
