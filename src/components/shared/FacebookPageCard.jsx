@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchFacebookCard } from '../../Services/api';
+import { useLiveEvent } from './liveBus';
 
 // The barangay's Facebook page, as a small card pinned above the
 // announcements: a square picture, a line about the page, and a button that
@@ -8,15 +9,19 @@ import { fetchFacebookCard } from '../../Services/api';
 
 // The card's settings ({ enabled, imageUrl, pageUrl }), or null while loading
 // or when they can't be read.
+// Switched on / off or given a new picture by staff: open pages follow
+// (the server sends "announcements" when the card changes).
 export function useFacebookCard() {
   const [card, setCard] = useState(null);
+  const [version, setVersion] = useState(0);
+  useLiveEvent(['announcements', 'reconnected'], () => setVersion((v) => v + 1));
   useEffect(() => {
     let cancelled = false;
     fetchFacebookCard()
       .then((c) => { if (!cancelled) setCard(c); })
-      .catch(() => { if (!cancelled) setCard(null); });
+      .catch(() => { if (!cancelled && version === 0) setCard(null); });
     return () => { cancelled = true; };
-  }, []);
+  }, [version]);
   return [card, setCard];
 }
 
