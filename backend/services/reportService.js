@@ -33,7 +33,7 @@ class ReportService {
         const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
 
-        const reference = await generateReference(Report.getLatestReference);
+        const reference = await generateReference(Report.getLatestReference, "emergency");
 
         const report = {
             reportReference: reference,

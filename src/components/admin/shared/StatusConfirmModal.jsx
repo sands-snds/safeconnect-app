@@ -73,7 +73,7 @@ const StatusConfirmModal = ({ show, fromStatus, toStatus, onConfirm, onCancel, i
                             onChange={(e) => setReason(e.target.value.slice(0, REASON_MAX))}
                             rows={3}
                             autoFocus
-                            placeholder="e.g. This incident was already reported (SC-2026-000021)."
+                            placeholder="e.g. This incident was already reported (EM-2026-000021)."
                             style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
                         />
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "#6b7280", marginTop: 4 }}>

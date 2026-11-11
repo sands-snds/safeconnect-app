@@ -59,7 +59,7 @@ CREATE TABLE resident_id_documents (
 -- --------------------------------------------------------
 CREATE TABLE emergency_reports (
   id INT(11) NOT NULL AUTO_INCREMENT,
-  report_reference VARCHAR(50) DEFAULT NULL,
+  report_reference VARCHAR(50) DEFAULT NULL, -- report ID: EM- / AR- / PC-<year>-<6 digits> (utils/reference.js)
   reporter_id INT(11) DEFAULT NULL,
   time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   emergency_type VARCHAR(255) NOT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE emergency_reports (
 -- --------------------------------------------------------
 CREATE TABLE assistance_requests (
   id INT(11) NOT NULL AUTO_INCREMENT,
-  report_reference VARCHAR(50) DEFAULT NULL,
+  report_reference VARCHAR(50) DEFAULT NULL, -- report ID: EM- / AR- / PC-<year>-<6 digits> (utils/reference.js)
   reporter_id INT(11) DEFAULT NULL,
   timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   request_assistance_type VARCHAR(255) NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE assistance_requests (
 -- --------------------------------------------------------
 CREATE TABLE petty_crimes (
   id INT(11) NOT NULL AUTO_INCREMENT,
-  report_reference VARCHAR(50) DEFAULT NULL,
+  report_reference VARCHAR(50) DEFAULT NULL, -- report ID: EM- / AR- / PC-<year>-<6 digits> (utils/reference.js)
   reporter_id INT(11) DEFAULT NULL,
   timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   crime_type VARCHAR(100) NOT NULL,

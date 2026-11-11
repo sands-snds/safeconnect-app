@@ -28,7 +28,7 @@ class PettyCrimeService {
         const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
 
-        const reference = await generateReference(PettyCrime.getLatestReference);
+        const reference = await generateReference(PettyCrime.getLatestReference, "pettyCrime");
 
         
         

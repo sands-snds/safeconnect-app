@@ -144,6 +144,12 @@ require("./models/ResidentActivity").ensureTable().catch((err) =>
   console.error("Could not create resident_activity_logs:", err.message)
 );
 
+// Old "SC-" report IDs → EM- / AR- / PC- (utils/reference.js), once both
+// activity log tables exist.
+Promise.all([AdminActivity.ensureTable(), require("./models/ResidentActivity").ensureTable()])
+  .then(() => require("./utils/reference").renameOldReferences())
+  .catch((err) => console.error("Could not rename old report IDs:", err.message));
+
 // Resident ID verification: the columns first, then the table that points at registered_users.
 require("./models/User").ensureVerificationColumns()
   .then(() => require("./models/ResidentIdDocument").ensureTable())

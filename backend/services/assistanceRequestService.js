@@ -29,7 +29,7 @@ class AssistanceRequestService {
         const media = data.photoUrl ? await checkMedia(data.photoUrl, data.mediaType, new Date(), { fromCamera: data.mediaSource === "camera" }) : null;
         if (media && !media.ok) return mediaRejected(media);
 
-        const reference = await generateReference(AssistanceRequest.getLatestReference);
+        const reference = await generateReference(AssistanceRequest.getLatestReference, "assistance");
 
         const requestId = await AssistanceRequest.create({
             reportReference: reference,

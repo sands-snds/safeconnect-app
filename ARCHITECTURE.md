@@ -195,7 +195,7 @@ For example, **`PATCH /api/petty-crimes/42/status`** with body `{ "status": "In 
    - runs `PettyCrime.updateStatus()`
    - creates a `Notification` for the reporter
    - responds `{ success: true }`
-6. When the response finishes, `logActivity` writes "Updated report status: Petty crime report SC-2026-000042 → In Progress" to `admin_activity_logs`.
+6. When the response finishes, `logActivity` writes "Updated report status: Petty crime report PC-2026-000042 → In Progress" to `admin_activity_logs`.
 
 ### 3.3 Config
 
@@ -220,7 +220,7 @@ For example, **`PATCH /api/petty-crimes/42/status`** with body `{ "status": "In 
 
 #### `middleware/activityLogger.js`
 - **`logActivity(action, describe)`** returns middleware for admin routes. `describe(req)` runs **before** the controller, so it can still read, for example, the title of an announcement that is about to be deleted. The log entry is written to `admin_activity_logs` only **after** a successful response (a 2xx/3xx status and a body without `success: false`).
-- **`describeStatusChange(table, label)`** builds text such as "Emergency report SC-2026-000007 → Resolved".
+- **`describeStatusChange(table, label)`** builds text such as "Emergency report EM-2026-000007 → Resolved".
 
 The actions recorded are: Logged in, Logged out, Updated report status (a dismissal includes its reason), Archived report, Restored archived report, Changed archive settings, Created / Edited / Deleted / Archived / Restored announcement, Changed user status, Changed user role, Archived account, Restored archived account, Updated page contacts / contents, and Generated report.
 
@@ -436,7 +436,7 @@ Each model is a class of `static async` methods that run parameterized SQL throu
 | `utils/mediaCheck.js` | `checkMedia(dataUrl, mediaType)`: reads a report's photo (EXIF via `exifr`: DateTimeOriginal, Software, ModifyDate, GPS) or video (MP4/MOV `mvhd` creation time, ISO 6709 location, encoder names) and applies the rules: taken today OK; yesterday OK with flag `day_old`; older, future, no date or edited (an editing app's name, or saved again over 2 minutes after it was taken) → `{ ok: false, reason }`. `mediaRejected()` turns that into a 422 `MEDIA_REJECTED` result; `mediaColumns()` gives what `models/ReportMedia.js` saves (`media_taken_at`, `media_latitude`, `media_longitude`, `media_flags`). The three report services call it on create and on edits with new media. |
 | `utils/textCheck.js` | The report text check, the same rules as the forms' `shared/textCheck.js` (generated from it; keep them the same): `checkText(text, kind)` → `offensive` / `spam` / `meaningless` / null, for kinds `description`, `short` and `number`. Gibberish (`meaningless`, descriptions and short fields) is judged per word, on its letter stretches between digits: no vowels, six consonants in a row, or a home-row mash with bunched consonants; or digits and letters switching four or more times. Offensive words are matched as whole words after undoing doubled letters, number/symbol stand-ins and spelled-out letters, with Tagalog/English endings (gagong, fucking) and two-word insults (tang ina). `REPORT_TEXT_FIELDS` lists each report type's text fields; `textProblems(type, data)` gives a 400 `{ code: "TEXT_INVALID", fields: { details: "spam" }, message }`, which the three report services return on create and edit before saving anything. |
 | `utils/mediaErrors.js` | `isMediaTooLarge(err)` (MySQL packet too large, or the body parser's `entity.too.large`) and `sendIfMediaTooLarge(res, err)`, which answers 413 `MEDIA_TOO_LARGE` from the report controllers' catch blocks |
-| `utils/reference.js` | `generateReference(getLatestFn)` returns `SC-<year>-<6-digit number>`, which restarts at 1 each year. Each report table has its own sequence. |
+| `utils/reference.js` | `generateReference(getLatestFn, type)` returns the report ID `<prefix>-<year>-<6-digit number>`: **EM** emergency, **AR** assistance, **PC** petty crime (e.g. `EM-2026-000041`). It restarts at 1 each year; each report table has its own sequence. `renameOldReferences()` runs at startup and renames the old `SC-` IDs to their type's prefix, in the report tables and where the admin and resident activity logs mention them. |
 | `utils/signinContext.js` | Works out the client's IP (Azure's `X-Client-IP` header, then the last `X-Forwarded-For` entry, then the socket address). Turns the User-Agent and optional browser hints into text such as "Phone · Samsung SM-S918B · Android 14 · Chrome". `lookupLocation(ip)` asks ipapi.co for "City, Region, Country · ISP" (skipped for private IPs). |
 
 ### 3.10 Background work and in-memory state
@@ -487,7 +487,7 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
 `id`, `user_id` (unique, ON DELETE CASCADE), `id_type`, `file_name`, `mime_type`, `file_size`, `data` (`MEDIUMBLOB`), `uploaded_at`. Only sent to Officials and Admins through `GET /users/:id/valid-id`; deleted when a registration is rejected.
 
 **`emergency_reports`**
-`id`, `report_reference` (`SC-YYYY-NNNNNN`), `reporter_id`, `time` (submitted), `emergency_type`, `severity`, `reporter_name`, `contact_number`, `location`, `latitude`, `longitude`, `incident_details`, `number_of_people_affected`, `special_needs`, `photo_url` (base64 data URL, `LONGTEXT`), `media_type` (image / video), `status` (`Received` / `In Progress` / `Resolved` / `Dismissed`), `assigned_to`, `assigned_at`, `resolved_at` (when it was closed), `archived_at`, `dismissal_reason`, plus the report-for-someone-else fields: `report_for` (`self` / `others`), `victim_name`, `victim_contact`, `victim_relationship`, `victim_details`. All three report tables also have `media_taken_at`, `media_latitude`, `media_longitude` and `media_flags` (what the media check found; see `utils/mediaCheck.js`).
+`id`, `report_reference` (the report ID: `EM-YYYY-NNNNNN`; `AR-` / `PC-` in the other two tables), `reporter_id`, `time` (submitted), `emergency_type`, `severity`, `reporter_name`, `contact_number`, `location`, `latitude`, `longitude`, `incident_details`, `number_of_people_affected`, `special_needs`, `photo_url` (base64 data URL, `LONGTEXT`), `media_type` (image / video), `status` (`Received` / `In Progress` / `Resolved` / `Dismissed`), `assigned_to`, `assigned_at`, `resolved_at` (when it was closed), `archived_at`, `dismissal_reason`, plus the report-for-someone-else fields: `report_for` (`self` / `others`), `victim_name`, `victim_contact`, `victim_relationship`, `victim_details`. All three report tables also have `media_taken_at`, `media_latitude`, `media_longitude` and `media_flags` (what the media check found; see `utils/mediaCheck.js`).
 
 **`assistance_requests`**
 `id`, `report_reference`, `reporter_id`, `timestamp`, `request_assistance_type`, `full_name`, `contact_number`, `email_address`, `current_location`, `latitude`, `longitude`, `number_of_people_needing_help`, `urgency_level` (no longer asked), `describe_your_situation`, `special_needs`, `status`, `resolved_at`, `archived_at`, `dismissal_reason`, plus the same report-for fields.
@@ -555,7 +555,7 @@ Deleting a user keeps their reports, which become anonymous, but deletes their p
    - The form checks the **1-hour per-account cooldown** kept in `localStorage`.
 2. It calls `createEmergencyReport({...})`, which sends `POST /api/emergency-reports` with the JWT.
 3. **Backend:** `verifyToken`, then `reportController.createReport`, then **`ReportService.create`**:
-   - `generateReference(Report.getLatestReference)` returns, for example, `SC-2026-000015`
+   - `generateReference(Report.getLatestReference)` returns, for example, `EM-2026-000015`
    - `Report.create(...)` inserts the row with status **Received**
    - `NotificationService.create({ notificationType: "emergency" })` creates a staff notification
    - responds `{ success, id, reportReference }`
