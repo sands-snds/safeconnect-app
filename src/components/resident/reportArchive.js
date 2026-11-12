@@ -6,8 +6,8 @@ import { useSyncedReadItems, markSyncedRead, unmarkSynced } from '../shared/useS
 // notifications), so it follows the resident to their other devices.
 //
 // A report goes to Archived on its own 7 days after it was resolved or
-// dismissed (open reports never do). The resident can still archive one by
-// hand from its menu, and restoring an automatically archived report keeps it
+// dismissed (open reports never do). The resident can also archive a finished
+// one by hand from its menu (not Received / In Progress ones), and restoring an automatically archived report keeps it
 // in the list for good ("report-kept:" marker).
 
 const KIND = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
@@ -25,6 +25,10 @@ export const restoreReport = (type, id) => {
   unmarkSynced([reportArchiveKey(type, id)]);
   markSyncedRead([reportKeptKey(type, id)]);
 };
+
+// Only finished reports (Resolved or Dismissed) can be archived. Received and
+// In Progress ones always stay in the list, even if archived before this rule.
+export const isClosedReport = (report) => CLOSED.includes(report?.status);
 
 // When the report was resolved or dismissed (ms), or null while it is open.
 // Reports closed before resolved_at was recorded count from when they were
@@ -49,7 +53,7 @@ export const isAutoArchived = (report, now = Date.now()) => {
 export function useReportArchive() {
   const items = useSyncedReadItems();
   return (report) => {
-    if (!report) return false;
+    if (!report || !isClosedReport(report)) return false;
     const type = report.reportType || report.type;
     if (items.has(reportArchiveKey(type, report.id))) return true;
     return isAutoArchived(report) && !items.has(reportKeptKey(type, report.id));

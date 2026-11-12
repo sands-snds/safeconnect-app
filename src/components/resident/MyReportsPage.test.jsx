@@ -12,7 +12,7 @@ import {
   saveLanguagePreference
 } from '../../Services/api';
 import { showPopup, confirmPopup } from '../shared/popup';
-import { __resetSyncedState } from '../shared/useSyncedState';
+import { __resetSyncedState, markSyncedRead } from '../shared/useSyncedState';
 
 // The photo / video date check has its own tests (mediaCheck.test.js); here
 // every attachment counts as taken today.
@@ -220,13 +220,13 @@ describe('Three-dot menu', () => {
     expect(screen.getAllByRole('button', { name: 'More options' })).toHaveLength(3);
   });
 
-  test('clicking it shows Edit, Archive and Delete', async () => {
+  test('a Received report shows Edit and Delete, but not Archive', async () => {
     await renderPage();
     openMenu('Theft');
     const btn = within(cardFor('Theft')).getByRole('button', { name: 'More options' });
     expect(btn).toHaveAttribute('aria-expanded', 'true');
     const menu = within(cardFor('Theft')).getByRole('menu');
-    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent.trim())).toEqual(['Edit', 'Archive', 'Delete']);
+    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent.trim())).toEqual(['Edit', 'Delete']);
   });
 
   test('closes when clicking the button again, clicking outside, or pressing Esc', async () => {
@@ -260,17 +260,41 @@ describe('Three-dot menu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  test('reports that can no longer be edited can only be archived', async () => {
+  test('an In Progress report has no options at all, so no ⋯ button', async () => {
     fetchMyReports.mockResolvedValue([{ ...REPORTS[2], status: 'In Progress' }]);
     render(<LanguageProvider><MyReportsPage isOpen userId={7} onClose={() => {}} /></LanguageProvider>);
     await screen.findByText('Theft');
-    openMenu('Theft');
-    const menu = within(cardFor('Theft')).getByRole('menu');
-    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent.trim())).toEqual(['Archive']);
+    expect(within(cardFor('Theft')).queryByRole('button', { name: 'More options' })).toBeNull();
+  });
+
+  test('a resolved or dismissed report can only be archived', async () => {
+    const now = new Date().toISOString();
+    fetchMyReports.mockResolvedValue([
+      { ...REPORTS[2], status: 'Resolved', resolved_at: now },
+      { ...REPORTS[1], status: 'Dismissed', resolved_at: now }
+    ]);
+    render(<LanguageProvider><MyReportsPage isOpen userId={7} onClose={() => {}} /></LanguageProvider>);
+    await screen.findByText('Theft');
+    for (const title of ['Theft', 'Medical Aid']) {
+      openMenu(title);
+      const menu = within(cardFor(title)).getByRole('menu');
+      expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent.trim())).toEqual(['Archive']);
+      fireEvent.keyDown(document, { key: 'Escape' });
+    }
+  });
+
+  test('a report archived while still open (before this rule) is back in the list', async () => {
+    markSyncedRead(['report-archived:pettyCrime-33']);
+    await renderPage();
+    expect(cardFor('Theft')).toBeTruthy();
   });
 });
 
 describe('Archive', () => {
+  beforeEach(() => {
+    const now = new Date().toISOString();
+    fetchMyReports.mockResolvedValue(REPORTS.map((r) => ({ ...r, status: 'Resolved', resolved_at: now })));
+  });
   const titles = () => [...document.querySelectorAll('.mr-list > *')].map((c) => c.querySelector('.mr-card-heading')?.textContent || '');
   const box = (name) => screen.getByRole('button', { name: new RegExp('^' + name) });
 

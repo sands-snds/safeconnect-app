@@ -16,7 +16,7 @@ import { announceReportsChanged } from "./useCallAccess";
 import useReportMedia from "../shared/useReportMedia";
 import MediaLightbox from "../shared/media/MediaLightbox";
 import ResidentReportsMap from "./ResidentReportsMap";
-import { archiveReport, restoreReport, useReportArchive, AUTO_ARCHIVE_DAYS } from "./reportArchive";
+import { archiveReport, restoreReport, useReportArchive, isClosedReport, AUTO_ARCHIVE_DAYS } from "./reportArchive";
 
 const TYPE_LABEL_KEYS = { Emergency: 'emergency', Assistance: 'assistance', 'Petty Crime': 'pettyCrime' };
 const typeLabel = (type, t) => (TYPE_LABEL_KEYS[type] ? t(`myReports.types.${TYPE_LABEL_KEYS[type]}`) : type);
@@ -1246,6 +1246,8 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                 const description = r.description || '';
                 const hasCoords = r.latitude != null && r.longitude != null;
                 const canEditOrDelete = r.status === 'Pending' || r.status === 'Received';
+                // Only finished reports can be archived; any archived one can be restored.
+                const canArchive = showArchived || isClosedReport(r);
 
                 const detailItems = [];
                 if (r.contact_number) detailItems.push({ label: t('myReports.detail.contactNumber'), value: r.contact_number });
@@ -1381,7 +1383,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                         </button>
                       ) : <span />}
 
-                      {(
+                      {(canEditOrDelete || canArchive) && (
                         <div className="mr-menu-wrap" data-menu-key={key}>
                           <button
                             type="button"
@@ -1406,6 +1408,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                                 <i className="bi bi-pencil"></i> {t('myReports.edit')}
                               </button>
                               )}
+                              {canArchive && (
                               <button
                                 type="button"
                                 role="menuitem"
@@ -1417,6 +1420,7 @@ function MyReportsPage({ isOpen, onClose, userId, focusReport, liveVersion = 0 }
                                   ? <><i className="bi bi-arrow-counterclockwise"></i> {t('myReports.restore')}</>
                                   : <><i className="bi bi-archive"></i> {t('myReports.archive')}</>}
                               </button>
+                              )}
                               {canEditOrDelete && (
                               <button
                                 type="button"
