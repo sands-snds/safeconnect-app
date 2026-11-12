@@ -54,6 +54,50 @@ export const savedHomePin = () => {
   }
 };
 
+// Two pins at the same spot (within about 10 cm).
+export const samePin = (a, b) => Boolean(a && b)
+  && Math.abs(Number(a.lat) - Number(b.lat)) < 1e-6 && Math.abs(Number(a.lng) - Number(b.lng)) < 1e-6;
+
+// A report form's map, for a report made at home: the resident's saved home
+// pin (sign-up / Settings) is put on the map as soon as the form opens or
+// "at home" is chosen, so they never pin it again. Moving it (drag, tap,
+// "Use my current location") means the report is somewhere else: onMovedAway
+// is called, and the form switches over. Leaving "at home" takes the home pin
+// off again. Returns the saved home pin, or null (older accounts).
+export function useHomePinOnMap({ active, atHome, gpsCoords, setGpsCoords, onMovedAway }) {
+  const home = savedHomePin();
+  const homeKey = home ? `${home.lat},${home.lng}` : '';
+  const gpsRef = useRef(gpsCoords);
+  gpsRef.current = gpsCoords;
+  const movedRef = useRef(onMovedAway);
+  movedRef.current = onMovedAway;
+  // Read through a ref: a setter that changes identity must not re-run this.
+  const setRef = useRef(setGpsCoords);
+  setRef.current = setGpsCoords;
+
+  useEffect(() => {
+    if (!active) return;
+    const saved = savedHomePin();
+    if (!saved) return;
+    if (atHome) setRef.current(saved);
+    else if (samePin(gpsRef.current, saved)) setRef.current(null);
+  }, [active, atHome, homeKey]);
+
+  // Runs only when the pin itself moves (not when "at home" is chosen again,
+  // while the home pin is still on its way back).
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const atHomeRef = useRef(atHome);
+  atHomeRef.current = atHome;
+  useEffect(() => {
+    if (!activeRef.current || !atHomeRef.current || !gpsCoords) return;
+    const saved = savedHomePin();
+    if (saved && !samePin(gpsCoords, saved) && movedRef.current) movedRef.current();
+  }, [gpsCoords]);
+
+  return home;
+}
+
 // The home pin for a saved report's address text, when that address is the
 // resident's registered home (an older report saved without a position).
 export const homePinForLocation = (location) => {
