@@ -3,9 +3,8 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { fetchMyReports } from '../../Services/api';
 import IncidentMap, { HOME_COLOR } from '../shared/location/IncidentMap';
 import { useLiveEvent } from '../shared/liveBus';
-import { MAP_TYPES, LEGEND_TYPES, RESOLVED_COLOR, fromMyReport, timeAgo } from '../shared/location/mapReports';
+import { MAP_TYPES, LEGEND_TYPES, fromMyReport, isOpenStatus, timeAgo } from '../shared/location/mapReports';
 import { REPORTS_CHANGED_EVENT } from './useCallAccess';
-import { useReportArchive } from './reportArchive';
 import { homePinForLocation, savedHomePin } from './useRegisteredAddress';
 
 // "Your Reports on the Map", beside the list on the My Reports page (panel).
@@ -64,19 +63,16 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
     return () => { window.removeEventListener(REPORTS_CHANGED_EVENT, load); clearInterval(tick); };
   }, [load]);
 
-  // All their reports: open ones blink in their colour, resolved or dismissed
-  // ones are grey. Only those the resident archived (My Reports → Archived)
-  // are left off.
-  // The resident's home pin (sign-up / Settings), read each time the map is
-  // drawn; a change on another device arrives with the "profile" update.
+  // Only reports the barangay is still handling (Received, In Progress): a
+  // marker goes away as soon as its report is resolved or dismissed. (Only
+  // closed reports can be archived, so none of these is.)
   const [, setProfileVersion] = useState(0);
   useLiveEvent(['profile'], () => setProfileVersion((v) => v + 1));
   const homePin = savedHomePin();
 
-  const isArchived = useReportArchive();
   const active = useMemo(
-    () => reports.filter((r) => !isArchived(r)),
-    [reports, isArchived]
+    () => reports.filter((r) => isOpenStatus(r.status)),
+    [reports]
   );
 
   const typeName = (r) => t(`reportsMap.types.${r.type}`);
@@ -146,7 +142,6 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
               selectedKey={selectedKey}
               onSelect={setSelectedKey}
               renderPopup={renderPopup}
-              placeAll
               home={homePin ? { ...homePin, label: t('reportsMap.yourHome') } : null}
               height={height || (phone ? 330 : 420)}
               label={t('reportsMap.mapLabel')}
@@ -160,10 +155,6 @@ export default function ResidentReportsMap({ panel = false, height } = {}) {
                     {t(`reportsMap.types.${k}`)}
                   </li>
                 ))}
-                <li>
-                  <span className="rm-mk" style={{ '--c': RESOLVED_COLOR }} aria-hidden="true"><i className="bi bi-check-lg" /></span>
-                  {t('reportsMap.legendDone')}
-                </li>
                 {homePin && (
                   <li>
                     <span className="rm-mk rm-home" style={{ '--c': HOME_COLOR }} aria-hidden="true"><i className="bi bi-house-heart-fill" /></span>

@@ -5,7 +5,7 @@ import ResidentReportsMap from './ResidentReportsMap';
 import { LanguageProvider } from '../../i18n/LanguageContext';
 import { fetchMyReports, saveLanguagePreference } from '../../Services/api';
 import { forwardGeocode } from '../shared/location/geocode';
-import { archiveReport } from './reportArchive';
+import { REPORTS_CHANGED_EVENT } from './useCallAccess';
 import { __resetSyncedState } from '../shared/useSyncedState';
 
 // Every report a resident sends has a place on "Your Reports on the Map":
@@ -79,34 +79,28 @@ describe('Your Reports on the Map', () => {
   ];
   const renderMap = () => render(<LanguageProvider><ResidentReportsMap panel /></LanguageProvider>);
 
-  test('every report of every type is on the map, open or finished, at its saved place', async () => {
+  test('only reports still being handled are on the map, each at its saved place', async () => {
     fetchMyReports.mockResolvedValue(REPORTS);
     renderMap();
-    await waitFor(() => expect(within(screen.getByTestId('map')).getAllByRole('listitem')).toHaveLength(4));
+    await waitFor(() => expect(within(screen.getByTestId('map')).getAllByRole('listitem')).toHaveLength(2));
     const items = Object.fromEntries(within(screen.getByTestId('map')).getAllByRole('listitem').map((li) => [li.textContent, li.dataset]));
     expect(items['Fire Emergency'].pos).toBe('14.321,120.965');
     expect(items['Medical Aid'].pos).toBe('14.3203,120.9648'); // saved without a position, at home: the home pin
-    expect(items.Theft.status).toBe('Resolved');
-    expect(items.Vandalism.status).toBe('Dismissed');
-    expect(screen.getByTestId('map').dataset.placeAll).toBe('true'); // any still without a place is looked up
-    expect(screen.getByText('Resolved or dismissed')).toBeInTheDocument();
+    expect(items.Theft).toBeUndefined(); // resolved: off the map
+    expect(items.Vandalism).toBeUndefined(); // dismissed: off the map
+    expect(screen.queryByText('Resolved or dismissed')).not.toBeInTheDocument();
+    expect(screen.getByText(/It disappears from the map once resolved/)).toBeInTheDocument();
     expect(screen.getByTestId('map').dataset.home).toBe('14.3203,120.9648'); // the saved home pin
     expect(screen.getByText('Your home')).toBeInTheDocument();
   });
 
-  test('reports closed 7+ days ago are archived on their own, so they leave the map too', async () => {
-    const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
-    fetchMyReports.mockResolvedValue(REPORTS.map((r) => (r.id === 4 ? { ...r, resolved_at: eightDaysAgo } : r)));
-    renderMap();
-    await waitFor(() => expect(within(screen.getByTestId('map')).getAllByRole('listitem')).toHaveLength(3));
-    expect(screen.queryByText('Vandalism')).not.toBeInTheDocument();
-  });
-
-  test('only the reports the resident archived are left off', async () => {
+  test('a report leaves the map as soon as it is marked resolved', async () => {
     fetchMyReports.mockResolvedValue(REPORTS);
-    archiveReport('Petty Crime', 3);
     renderMap();
-    await waitFor(() => expect(within(screen.getByTestId('map')).getAllByRole('listitem')).toHaveLength(3));
-    expect(screen.queryByText('Theft')).not.toBeInTheDocument();
+    await waitFor(() => expect(within(screen.getByTestId('map')).getAllByRole('listitem')).toHaveLength(2));
+    fetchMyReports.mockResolvedValue(REPORTS.map((r) => (r.id === 1 ? { ...r, status: 'Resolved' } : r)));
+    window.dispatchEvent(new Event(REPORTS_CHANGED_EVENT)); // what a live status update triggers
+    await waitFor(() => expect(within(screen.getByTestId('map')).getAllByRole('listitem')).toHaveLength(1));
+    expect(within(screen.getByTestId('map')).queryByText('Fire Emergency')).not.toBeInTheDocument();
   });
 });
