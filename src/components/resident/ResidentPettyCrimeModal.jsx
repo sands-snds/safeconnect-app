@@ -7,7 +7,7 @@ import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
-import useRegisteredAddressFill from './useRegisteredAddress';
+import useRegisteredAddressFill, { useHomePinOnMap } from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 import { ReportFormShell, StepHead, TypeTiles, Section, Lbl, WhoButtons, PairButtons, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
@@ -139,10 +139,15 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: incidentPlace === 'home', formData, setFormData });
   const showMap = incidentPlace === 'elsewhere';
 
-  // Back to "At my home": the hidden map's pin no longer applies.
-  useEffect(() => {
-    if (!isEditing && !showMap) setGpsCoords(null);
-  }, [isEditing, showMap, setGpsCoords]);
+  // The map shows the resident's saved home pin while the report is at home;
+  // moving the pin makes it "Somewhere else" (useHomePinOnMap).
+  useHomePinOnMap({
+    active: show && !isEditing,
+    atHome: incidentPlace === 'home',
+    gpsCoords,
+    setGpsCoords,
+    onMovedAway: () => setIncidentPlace('elsewhere')
+  });
   const [victimName, setVictimName] = useState('');
   const [victimContact, setVictimContact] = useState('');
   const [victimRelationship, setVictimRelationship] = useState('');
@@ -628,6 +633,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
                 onChange={handleChange}
                 disabled={isSubmitting}
                 showMap={showMap}
+                alwaysShowMap
                 location={location}
                 sectionRef={locationSectionRef}
                 addressPrefilled={addressPrefilled}

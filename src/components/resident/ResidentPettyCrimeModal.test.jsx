@@ -242,13 +242,13 @@ describe('where the incident happened (step 3)', () => {
     return { ...utils, $, toStep3 };
   };
 
-  test('"At my home" fills in the registered address, without the map', async () => {
+  test('"At my home" fills in the registered address, and the map is there to adjust the spot', async () => {
     const { $, toStep3 } = renderWithAddress();
     toStep3();
     expect(screen.getByRole('button', { name: /At my home/i })).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() => expect($('input[name="houseNumber"]').value).toBe('Blk 5 Lot 12'));
     expect($('input[name="street"]').value).toBe('Sampaguita St.');
-    expect(screen.queryByRole('button', { name: /Use my current location/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Use my current location/i })).toBeInTheDocument();
   });
 
   test('"Somewhere else" empties the address and shows the map tools', async () => {

@@ -7,7 +7,7 @@ import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
-import { registeredAddress, registeredHomePin } from './useRegisteredAddress';
+import { registeredAddress, savedHomePin, samePin, useHomePinOnMap } from './useRegisteredAddress';
 import { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import SpecialNeedsPicker, { formatSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
 import { ReportFormShell, SendFoot, CAMERA_ACCEPT } from './reportFormUi';
@@ -105,7 +105,9 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
     setSpecialInvalid(null);
     pinRef.current.setGpsCoords(null);
     pinRef.current.setLocationError('');
-    pinRef.current.handleUseCurrentLocation();
+    // For yourself the saved home pin goes on the map (below); the phone's
+    // location is asked for only when there is none.
+    if (!savedHomePin()) pinRef.current.handleUseCurrentLocation();
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     requestAnimationFrame(() => dialogRef.current?.querySelector('[data-autofocus]')?.focus());
@@ -113,6 +115,17 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   }, [show]);
 
   useEffect(() => () => { if (form.mediaUrl) URL.revokeObjectURL(form.mediaUrl); }, [form.mediaUrl]);
+
+  // "Me": the saved home pin is on the map; moving it uses the new spot (its
+  // address is filled in from the map). "Someone else": the phone's location.
+  const homePin = useHomePinOnMap({ active: show, atHome: form.who === 'self', gpsCoords, setGpsCoords: pin.setGpsCoords });
+  useEffect(() => {
+    if (!show || form.who !== 'others' || !savedHomePin()) return;
+    // The home pin is on its way off the map (useHomePinOnMap): ask for the
+    // phone's location instead, unless another spot was already pinned.
+    const current = pinRef.current.gpsCoords;
+    if (!current || samePin(current, savedHomePin())) pinRef.current.handleUseCurrentLocation();
+  }, [show, form.who]);
 
   // Only the X closes the form: a tap outside it (or Escape) does nothing, so
   // a half-filled report is never lost by accident.
@@ -150,6 +163,8 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   // Fe; otherwise, for yourself, your registered home.
   // A pin outside Santa Fe must be moved first (no quiet fallback to home).
   const usingHome = form.who === 'self' && !pinned && !isOutsideSantaFe && Boolean(home);
+  // The pin on the map is the saved home pin: the report is at the home address.
+  const atHomePin = form.who === 'self' && pinned && Boolean(home) && samePin(gpsCoords, homePin);
   const hasLocation = pinned || usingHome;
   const missing = [
     isOutsideSantaFe && 'outside',
@@ -177,7 +192,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
     setSending(true);
     try {
       const user = currentUser();
-      const address = usingHome ? { ...EMPTY_LOCATION, ...home } : form.address;
+      const address = (usingHome || atHomePin) ? { ...EMPTY_LOCATION, ...home } : form.address;
       const location = composeLocation(address, pinned ? gpsCoords : null);
       const coords = pinned ? gpsCoords : await coordsForSubmit(address, null, false);
       const photoUrl = await readAsDataUrl(form.media);
@@ -233,15 +248,19 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
     if (isLocating && !pinned) {
       return <div className="qr-loc"><span className="spinner-border spinner-border-sm" aria-hidden="true" /><div><b>{t('quickReport.locLocating')}</b></div></div>;
     }
-    const title = form.who === 'others' ? t('quickReport.locWhere') : pinned ? t('quickReport.locUsing') : t('quickReport.locHome');
-    const where = pinned
+    const title = form.who === 'others' ? t('quickReport.locWhere') : atHomePin ? t('quickReport.locHome') : pinned ? t('quickReport.locUsing') : t('quickReport.locHome');
+    const where = atHomePin
+      ? [home.houseNumber, home.street].filter(Boolean).join(', ')
+      : pinned
       ? (composeLocation(form.address, gpsCoords).split(', Barangay')[0] || t('quickReport.locPinned'))
       : usingHome ? [home.houseNumber, home.street].filter(Boolean).join(', ') : t('quickReport.locNeedPin');
     return (
       <div className={`qr-loc${hasLocation ? '' : ' warn'}`}>
         <i className="bi bi-geo-alt-fill" aria-hidden="true" />
         <div><b>{title}</b><span>{where}</span></div>
-        <button type="button" onClick={() => set({ showMap: !form.showMap })}>{form.showMap ? t('quickReport.locDone') : t('quickReport.locChange')}</button>
+        <button type="button" onClick={pin.handleUseCurrentLocation} disabled={isLocating || sending}>
+          <i className="bi bi-crosshair" aria-hidden="true" /> {t('reportForm.useCurrentLocation')}
+        </button>
       </div>
     );
   };
@@ -359,12 +378,10 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                 )}
 
                 {locationChip()}
-                {(form.showMap || isOutsideSantaFe || (!hasLocation && !isLocating)) && (
-                  <div className="qr-map">
-                    {(locationError || isOutsideSantaFe) && <p className="qr-maperr">{isOutsideSantaFe ? t('reportForm.outsideSantaFe') : locationError}</p>}
-                    <LocationPickerMap pin={gpsCoords || (usingHome ? registeredHomePin(home) : null)} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={sending} height={220} />
-                  </div>
-                )}
+                <div className="qr-map">
+                  {(locationError || isOutsideSantaFe) && <p className="qr-maperr">{isOutsideSantaFe ? t('reportForm.outsideSantaFe') : locationError}</p>}
+                  <LocationPickerMap pin={gpsCoords} onPick={handlePickOnMap} isOutside={isOutsideSantaFe} outsideMessage={outsideMessage} disabled={sending} height={220} />
+                </div>
 
                 <details className="qr-more">
                   <summary>{t('quickReport.moreTitle')}</summary>

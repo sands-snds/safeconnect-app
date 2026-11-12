@@ -71,7 +71,10 @@ export default function ReportLocationFields({
   sectionRef,
   addressPrefilled,
   serviceAreaNote,
-  warnings = {} // { houseNumber, street, landmark }: text-check reasons
+  warnings = {}, // { houseNumber, street, landmark }: text-check reasons
+  // alwaysShowMap: the map shows even for a report at home (with the home
+  // pin on it); typed addresses only move the pin when showMap (elsewhere).
+  alwaysShowMap = false
 }) {
   const {
     gpsCoords,
@@ -93,8 +96,9 @@ export default function ReportLocationFields({
     }
   };
 
+  const mapVisible = showMap || alwaysShowMap;
   // With a pin, the house number and street are optional.
-  const needsTypedAddress = !(showMap && gpsCoords);
+  const needsTypedAddress = !(mapVisible && gpsCoords);
   const searchNote = showMap ? SEARCH_NOTES[addressSearch] : null;
 
   return (
@@ -132,7 +136,7 @@ export default function ReportLocationFields({
           <i className="bi bi-geo-alt-fill" style={{ color: '#6b7280', fontSize: '14px' }}></i>
           {t('reportForm.address')} <span className="rl-required">*</span>
         </label>
-        {showMap && (
+        {mapVisible && (
           <button type="button" className="rl-locate" onClick={handleUseCurrentLocation} disabled={isLocating || disabled}>
             {isLocating ? (
               <><i className="bi bi-arrow-repeat loading-spinner"></i> {t('reportForm.locating')}</>
@@ -211,7 +215,7 @@ export default function ReportLocationFields({
       )}
       <div className="rl-note">{serviceAreaNote || t('reportForm.serviceAreaNote')}</div>
 
-      {showMap && (
+      {mapVisible && (
         <div ref={sectionRef}>
           {searchNote && (
             <div className="rl-note" style={{ color: searchNote.color }} role="status">

@@ -11,22 +11,34 @@ jest.mock('../shared/media/mediaCheck', () => ({
   checkMediaFile: () => Promise.resolve({ ok: true, takenAt: new Date(), dayOld: false })
 }));
 
-jest.mock('../shared/location/LocationPickerMap', () => ({ pin }) => <div data-testid="map" data-pin={pin ? `${pin.lat},${pin.lng}` : 'none'} />);
-// GPS: a pin inside Santa Fe unless a test turns it off.
+// The map: shows its pin; "move pin" drags it somewhere else in Santa Fe.
+jest.mock('../shared/location/LocationPickerMap', () => ({ pin, onPick }) => (
+  <div data-testid="map" data-pin={pin ? `${pin.lat},${pin.lng}` : 'none'}>
+    <button type="button" onClick={() => onPick(14.3210, 120.9645)}>move pin</button>
+  </div>
+));
+// GPS: the phone's location is inside Santa Fe unless a test turns it off.
+// Holds its pin like the real hook (set by GPS, the map, or the home pin).
 let mockPinned = true;
-jest.mock('../shared/location/useLocationPin', () => () => ({
-  gpsCoords: mockPinned ? { lat: 14.32, lng: 120.965 } : null,
-  setGpsCoords: () => {},
-  isLocating: false,
-  locationError: '',
-  setLocationError: () => {},
-  isOutsideSantaFe: false,
-  outsideMessage: '',
-  handleUseCurrentLocation: () => {},
-  handlePickOnMap: () => {},
-  pinFromAddress: () => {},
-  addressSearch: 'idle'
-}));
+jest.mock('../shared/location/useLocationPin', () => () => {
+  const React = require('react');
+  const [coords, setCoords] = React.useState(null);
+  // Same functions on every render, like the real hook.
+  const setGpsCoords = React.useCallback((c) => setCoords(c ? { lat: Number(c.lat), lng: Number(c.lng) } : null), []);
+  return {
+    gpsCoords: coords,
+    setGpsCoords,
+    isLocating: false,
+    locationError: '',
+    setLocationError: () => {},
+    isOutsideSantaFe: false,
+    outsideMessage: '',
+    handleUseCurrentLocation: () => { if (mockPinned) setCoords({ lat: 14.32, lng: 120.965 }); },
+    handlePickOnMap: (lat, lng) => setCoords({ lat, lng }),
+    pinFromAddress: () => {},
+    addressSearch: 'idle'
+  };
+});
 jest.mock('./ReportLocationFields', () => ({
   EMPTY_LOCATION: { houseNumber: '', street: '', area: '', landmark: '' },
   composeLocation: (a) => [a.houseNumber, a.street].filter(Boolean).join(', ') || 'Pinned location',
@@ -120,16 +132,52 @@ test('no GPS: for me, the registered home address is used', async () => {
   expect(createEmergencyReport.mock.calls[0][0]).toMatchObject({ location: 'Blk 5 Lot 12, Sampaguita St.', latitude: 14.321, longitude: 120.964 });
 });
 
-test('no GPS, for me: the map shows the saved home pin (the same one as sign-up and Settings)', () => {
-  mockPinned = false;
-  sessionStorage.setItem('currentUser', JSON.stringify({
-    id: 7, fullName: 'Juan Dela Cruz', contact: '09171234567',
-    address: { houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.' }, homeLocation: { lat: 14.3195, lng: 120.964 }
-  }));
-  renderForm();
-  fireEvent.click(screen.getByText('Earthquake').closest('button'));
-  fireEvent.click(screen.getByRole('button', { name: 'Change' }));
-  expect(screen.getByTestId('map')).toHaveAttribute('data-pin', '14.3195,120.964');
+describe('for me, with a saved home pin (from sign-up or Settings)', () => {
+  beforeEach(() => {
+    sessionStorage.setItem('currentUser', JSON.stringify({
+      id: 7, fullName: 'Juan Dela Cruz', contact: '09171234567',
+      address: { houseNumber: 'Blk 5 Lot 12', street: 'Sampaguita St.' }, homeLocation: { lat: 14.3195, lng: 120.964 }
+    }));
+  });
+
+  test('the map shows the home pin straight away; sent as it is, the report is at home', async () => {
+    const { container } = renderForm();
+    fireEvent.click(screen.getByText('Earthquake').closest('button'));
+    expect(screen.getByTestId('map')).toHaveAttribute('data-pin', '14.3195,120.964');
+    expect(screen.getByText('Your home address')).toBeInTheDocument();
+    attach(container);
+    await screen.findByText('Photo added');
+    fireEvent.click(sendButton());
+    await waitFor(() => expect(createEmergencyReport).toHaveBeenCalledTimes(1));
+    expect(createEmergencyReport.mock.calls[0][0]).toMatchObject({ location: 'Blk 5 Lot 12, Sampaguita St.', latitude: 14.3195, longitude: 120.964 });
+  });
+
+  test('moving the pin sends the new spot instead', async () => {
+    const { container } = renderForm();
+    fireEvent.click(screen.getByText('Fire').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: 'move pin' }));
+    expect(screen.getByTestId('map')).toHaveAttribute('data-pin', '14.321,120.9645');
+    expect(screen.getByText('Using your location')).toBeInTheDocument();
+    attach(container);
+    await screen.findByText('Photo added');
+    fireEvent.click(sendButton());
+    await waitFor(() => expect(createEmergencyReport).toHaveBeenCalledTimes(1));
+    expect(createEmergencyReport.mock.calls[0][0]).toMatchObject({ latitude: 14.321, longitude: 120.9645 });
+  });
+
+  test('"Use my current location" puts the phone\'s location on the map', () => {
+    renderForm();
+    fireEvent.click(screen.getByText('Flood').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /Use my current location/ }));
+    expect(screen.getByTestId('map')).toHaveAttribute('data-pin', '14.32,120.965');
+  });
+
+  test('for someone else the home pin is not used: the phone\'s location is', () => {
+    renderForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Someone else' }));
+    fireEvent.click(screen.getByText('Typhoon').closest('button'));
+    expect(screen.getByTestId('map')).toHaveAttribute('data-pin', '14.32,120.965');
+  });
 });
 
 test('no GPS and reporting for someone else: the map opens to pin the spot', () => {
