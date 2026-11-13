@@ -392,7 +392,7 @@ export const REPORT_FORM_STYLE = `
 
   .qr-photo-row { display: flex; gap: 10px; }
   .qr-photo-row .qr-btn { flex: 1; }
-  .qr-preview { position: relative; border-radius: 14px; overflow: hidden; background: #111; }
+  .qr-preview { position: relative; border-radius: 14px; overflow: hidden; background: #111; flex-shrink: 0; } /* never squeezed by the scrolling step body */
   /* The whole photo, not a cropped strip (ZoomableMedia; tap to open it full size). */
   .qr-ok { position: absolute; left: 10px; top: 10px; z-index: 1; background: #16a34a; color: #fff; border-radius: 999px; padding: 4px 10px; font-size: .74rem; font-weight: 600; display: inline-flex; gap: 5px; align-items: center; }
   .qr-redo { position: absolute; right: 10px; bottom: 10px; background: rgba(17,24,39,.85); color: #fff; border: 0; border-radius: 999px; padding: 7px 13px; font-size: .78rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
