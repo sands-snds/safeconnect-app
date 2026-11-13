@@ -70,7 +70,7 @@ const renderModal = (props = {}) => {
     fireEvent.change($('input[type="file"]'), {
       target: { files: [new File(['jpeg'], 'house.jpg', { type: 'image/jpeg' })] }
     });
-    await screen.findByAltText('Selected attachment preview');
+    await screen.findByAltText('Attached evidence');
   };
   // Step 2 → 3, then the confirmation box.
   const next = () => fireEvent.click(screen.getByRole('button', { name: /^Next/ }));
@@ -157,7 +157,7 @@ test('Back goes one step back and keeps what was typed; another kind of help can
   pick('Food & Water');
   expect(screen.getByRole('heading', { name: /Food & Water/ })).toBeInTheDocument();
   expect($('textarea[name="situation"]').value).toBe('We need help');
-  expect(screen.getByAltText('Selected attachment preview')).toBeInTheDocument();
+  expect(screen.getByAltText('Attached evidence')).toBeInTheDocument();
 });
 
 test('Enter in a step 2 box does not send the request', async () => {
@@ -239,7 +239,7 @@ test('attached photo is sent as base64', async () => {
   const { form, fill, finish, $ } = renderModal();
   fill('Fire Emergency');
   fireEvent.change($('input[type="file"]'), { target: { files: [new File(['jpeg'], 'house.jpg', { type: 'image/jpeg' })] } });
-  expect(await screen.findByAltText('Selected attachment preview')).toBeInTheDocument();
+  expect(await screen.findByAltText('Attached evidence')).toBeInTheDocument();
   finish();
   fireEvent.submit(form);
   await waitFor(() => expect(createAssistanceRequest).toHaveBeenCalledTimes(1));
@@ -345,7 +345,7 @@ describe('registered address', () => {
       fireEvent.change($('#as-vdetails'), { target: { value: 'Needs a ride' } });
     }
     fireEvent.change($('input[type="file"]'), { target: { files: [new File(['jpeg'], 'house.jpg', { type: 'image/jpeg' })] } });
-    await screen.findByAltText('Selected attachment preview');
+    await screen.findByAltText('Attached evidence');
     fireEvent.click(screen.getByRole('button', { name: /^Next/ }));
   };
   const backToStep1 = () => {
@@ -411,4 +411,45 @@ describe('registered address', () => {
     expect($('input[name="houseNumber"]').value).toBe('');
     expect(screen.queryByText(HINT)).not.toBeInTheDocument();
   });
+});
+
+describe('for someone else: their name depends on the relationship', () => {
+  const nameLabel = () => document.querySelector('label[for="as-vname"]');
+  test.each(['Neighbor', 'Stranger'])('%s: the name is optional', (rel) => {
+    const { pick } = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: /Someone Else/i }));
+    pick();
+    fireEvent.click(screen.getByRole('button', { name: rel }));
+    expect(nameLabel()).toHaveTextContent('(optional)');
+  });
+  test.each(['Family Member', 'Friend', 'Colleague'])('%s: the name is required', (rel) => {
+    const { pick } = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: /Someone Else/i }));
+    pick();
+    fireEvent.click(screen.getByRole('button', { name: rel }));
+    expect(nameLabel()).not.toHaveTextContent('(optional)');
+    expect(nameLabel().querySelector('.qr-req')).toBeInTheDocument();
+  });
+});
+
+test('the sent screen shows the request\'s reference number', async () => {
+  createAssistanceRequest.mockResolvedValue({ success: true, id: 1, reportReference: 'AR-2026-000123' });
+  const { form, fill, attachPhoto, finish } = renderModal();
+  fill('Flood Emergency');
+  await attachPhoto();
+  finish();
+  fireEvent.submit(form);
+  expect(await screen.findByText('Request Submitted')).toBeInTheDocument();
+  expect(screen.getByText('AR-2026-000123')).toBeInTheDocument();
+});
+
+test('tapping the attached photo opens it full size', async () => {
+  const { fill, attachPhoto } = renderModal();
+  fill('Flood Emergency');
+  await attachPhoto();
+  fireEvent.click(screen.getByAltText('Attached evidence'));
+  const big = screen.getByRole('dialog', { name: 'Attached evidence' });
+  expect(big.querySelector('img')).toHaveAttribute('src', 'blob:preview');
+  fireEvent.click(within(big).getByRole('button', { name: 'Close' }));
+  expect(screen.queryByRole('dialog', { name: 'Attached evidence' })).toBeNull();
 });

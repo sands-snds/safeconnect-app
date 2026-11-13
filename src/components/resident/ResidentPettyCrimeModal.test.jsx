@@ -61,7 +61,7 @@ const renderModal = () => {
     global.URL.createObjectURL = jest.fn(() => 'blob:preview');
     global.URL.revokeObjectURL = jest.fn();
     fireEvent.change($('input[type="file"]'), { target: { files: [new File(['fake-jpeg'], 'scene.jpg', { type: 'image/jpeg' })] } });
-    await screen.findByAltText('Selected attachment preview');
+    await screen.findByAltText('Attached evidence');
   };
   // Step 2 → 3, then the confirmation box.
   const next = () => fireEvent.click(screen.getByRole('button', { name: /^Next/ }));
@@ -178,7 +178,7 @@ test('rejects files that are not JPG or a supported video', () => {
   view.fill('Vandalism');
   fireEvent.change(view.fileInput, { target: { files: [new File(['x'], 'shot.png', { type: 'image/png' })] } });
   expect(showPopup).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning' }));
-  expect(screen.queryByAltText('Selected attachment preview')).not.toBeInTheDocument();
+  expect(screen.queryByAltText('Attached evidence')).not.toBeInTheDocument();
 });
 
 test('three steps, as on Report Emergency: who and what happened, the details, then where and confirm', async () => {
@@ -355,4 +355,37 @@ describe('text checks', () => {
     expect(await screen.findByText('Please provide meaningful information about your report.')).toBeInTheDocument();
     expect(screen.getByText('Step 2 of 3')).toBeInTheDocument();
   });
+});
+
+describe('reporting for someone else', () => {
+  test('the place is set to Somewhere else, and At my home is switched off', async () => {
+    const view = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: /Someone Else/i }));
+    view.fill('Theft');
+    fireEvent.click(screen.getByRole('button', { name: 'Neighbor' }));
+    fireEvent.change(view.$('#pc-vdetails'), { target: { value: 'My neighbor was robbed' } });
+    view.next();
+    expect(screen.getByRole('button', { name: /Somewhere else/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /At my home/i })).toBeDisabled();
+  });
+
+  test('back to yourself, the place returns to At my home', async () => {
+    const view = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: /Someone Else/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Me$/i }));
+    view.fill('Theft');
+    view.next();
+    expect(screen.getByRole('button', { name: /At my home/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /At my home/i })).not.toBeDisabled();
+  });
+});
+
+test('the sent screen shows the report\'s reference number', async () => {
+  createPettyCrimeReport.mockResolvedValueOnce({ success: true, id: 1, reportReference: 'PC-2026-000045' });
+  const view = renderModal();
+  view.fill('Theft');
+  view.finish();
+  fireEvent.submit(view.form);
+  expect(await screen.findByText('Report Submitted')).toBeInTheDocument();
+  expect(screen.getByText('PC-2026-000045')).toBeInTheDocument();
 });

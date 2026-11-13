@@ -13,6 +13,7 @@ import SpecialNeedsPicker, { formatSpecialNeeds, missingSpecialCount } from './S
 import { ReportFormShell, SendFoot, CAMERA_ACCEPT } from './reportFormUi';
 import { checkMediaFile, mediaCheckMessageKey } from '../shared/media/mediaCheck';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
+import ZoomableMedia from '../shared/media/ZoomableMedia';
 
 // Report an Emergency, the quick way (design Option A): who needs help, what
 // is happening (one tap), a photo, Send. The location fills itself in: the
@@ -364,9 +365,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                 {form.media ? (
                   <div className="qr-preview">
                     <span className="qr-ok"><i className="bi bi-check-lg" aria-hidden="true" /> {form.mediaType === 'video' ? t('quickReport.videoAdded') : t('quickReport.photoAdded')}</span>
-                    {form.mediaType === 'video'
-                      ? <video src={form.mediaUrl} controls playsInline />
-                      : <img src={form.mediaUrl} alt={t('quickReport.photoAlt')} />}
+                    <ZoomableMedia src={form.mediaUrl} isVideo={form.mediaType === 'video'} labels={{ open: t('myReports.viewFullSize'), close: t('myReports.closeMedia'), alt: t('quickReport.photoAlt') }} />
                     <DayOldNote t={t} takenAt={form.mediaTakenAt} dayOld={form.mediaDayOld} />
                     <button type="button" className="qr-redo" onClick={() => cameraRef.current?.click()} disabled={sending}><i className="bi bi-arrow-repeat" aria-hidden="true" /> {t('quickReport.retake')}</button>
                   </div>
