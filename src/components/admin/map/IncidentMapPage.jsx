@@ -6,11 +6,6 @@ import { statusBadge } from "../shared/StatusSelect";
 import { tx } from "../../../i18n/adminText";
 import { SOUND_KINDS, playReportSound, unlockAudio, useAudioState } from "./reportSounds";
 
-// General → Incident Map: every open report at the spot it was pinned,
-// blinking until it is resolved. Uses the lists useAdminData already loads
-// (refreshed by the live channel), so new reports and status changes show
-// up without a reload.
-
 const VIEW_FOR_KIND = { emergency: "emergency-reports", assistance: "assistance-requests", pettyCrime: "petty-crime-reports" };
 const NEXT_STATUS = { Received: "In Progress", "In Progress": "Resolved" };
 const NEXT_CLASS = { "In Progress": "button-status-progress", Resolved: "button-status-resolved" };
@@ -21,8 +16,6 @@ const FILTERS = [
     { key: "quake", label: "Earthquake", color: MAP_TYPES.quake.color },
     { key: "other", label: "Other reports", color: "#6b7280" }
 ];
-// The new-report sounds: on / off, whether the browser allows them yet, and
-// a button to hear each one. The same setting as the header's speaker button.
 const SOUND_LABEL = { emergency: "Emergency", assistance: "Assistance", pettyCrime: "Petty crime" };
 const SOUND_HINT = { emergency: "siren", assistance: "chime", pettyCrime: "beeps" };
 const SOUND_ICON = { emergency: "bi-exclamation-triangle-fill", assistance: "bi-life-preserver", pettyCrime: "bi-shield-fill-exclamation" };
@@ -109,7 +102,6 @@ export default function IncidentMapPage({ emergencyReports = [], assistanceReque
     const [saving, setSaving] = useState(false);
     const [, setTick] = useState(0);
 
-    // "x min ago" stays current.
     useEffect(() => {
         const t = setInterval(() => setTick((n) => n + 1), 30000);
         return () => clearInterval(t);
