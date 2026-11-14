@@ -106,7 +106,7 @@ describe('Request Assistance', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Flood' }));
     fireEvent.change($('textarea[name="situation"]'), { target: { value: 'Water inside the house' } });
     fireEvent.change($('input[type="file"]'), { target: { files: [new File(['jpeg'], 'house.jpg', { type: 'image/jpeg' })] } });
-    await screen.findByAltText('Selected attachment preview');
+    await screen.findByAltText('Attached evidence');
     fireEvent.click(screen.getByRole('button', { name: /^Next/ }));
     return view;
   };

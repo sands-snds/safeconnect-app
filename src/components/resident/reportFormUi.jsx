@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
+import ZoomableMedia from '../shared/media/ZoomableMedia';
 import { TextWarning } from './textWarnings';
 
 // The look shared by the three resident report forms (Report Emergency,
@@ -124,7 +125,7 @@ export function PairButtons({ id, options, value, onChange, disabled }) {
   return (
     <div className="qr-who" role="group" aria-labelledby={id}>
       {options.map((o) => (
-        <button key={o.value} type="button" aria-pressed={value === o.value} onClick={() => onChange(o.value)} disabled={disabled}>
+        <button key={o.value} type="button" aria-pressed={value === o.value} onClick={() => onChange(o.value)} disabled={disabled || o.disabled} title={o.title}>
           <span className="qr-wi"><i className={`bi ${o.icon}`} aria-hidden="true" /></span>
           <span>{o.label}</span>
         </button>
@@ -232,9 +233,7 @@ export function MediaPicker({ t, id, label, required, optionalText, hint, media,
       {media.previewUrl ? (
         <div className="qr-preview">
           <span className="qr-ok"><i className="bi bi-check-lg" aria-hidden="true" /> {media.type === 'video' ? t('quickReport.videoAdded') : t('quickReport.photoAdded')}</span>
-          {media.type === 'video'
-            ? <video src={media.previewUrl} controls playsInline />
-            : <img src={media.previewUrl} alt="Selected attachment preview" />}
+          <ZoomableMedia src={media.previewUrl} isVideo={media.type === 'video'} labels={{ open: t('myReports.viewFullSize'), close: t('myReports.closeMedia'), alt: t('myReports.attachedEvidence') }} />
           <DayOldNote t={t} takenAt={media.takenAt} dayOld={media.dayOld} />
           <div className="qr-preview-actions">
             <button type="button" className="qr-redo" onClick={() => fileInputRef.current?.click()} disabled={disabled}><i className="bi bi-arrow-repeat" aria-hidden="true" /> {t('reportShared.change')}</button>
@@ -393,8 +392,8 @@ export const REPORT_FORM_STYLE = `
 
   .qr-photo-row { display: flex; gap: 10px; }
   .qr-photo-row .qr-btn { flex: 1; }
-  .qr-preview { position: relative; border-radius: 14px; overflow: hidden; background: #111; }
-  .qr-preview img, .qr-preview video { display: block; width: 100%; height: 190px; object-fit: cover; }
+  .qr-preview { position: relative; border-radius: 14px; overflow: hidden; background: #111; flex-shrink: 0; } /* never squeezed by the scrolling step body */
+  /* The whole photo, not a cropped strip (ZoomableMedia; tap to open it full size). */
   .qr-ok { position: absolute; left: 10px; top: 10px; z-index: 1; background: #16a34a; color: #fff; border-radius: 999px; padding: 4px 10px; font-size: .74rem; font-weight: 600; display: inline-flex; gap: 5px; align-items: center; }
   .qr-redo { position: absolute; right: 10px; bottom: 10px; background: rgba(17,24,39,.85); color: #fff; border: 0; border-radius: 999px; padding: 7px 13px; font-size: .78rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
   .qr-preview-actions { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 8px; }
@@ -468,7 +467,6 @@ export const REPORT_FORM_STYLE = `
     .qr-wi { width: 30px; height: 30px; font-size: 14px; }
     .qr-btn { min-height: 46px; }
     .qr-btn.send { min-height: 48px; }
-    .qr-preview img, .qr-preview video { height: 150px; }
     .qr-sent { padding: 24px 16px 20px; }
     .qr-sent-ic { width: 58px; height: 58px; font-size: 30px; }
     .qr-choices { gap: 8px; }

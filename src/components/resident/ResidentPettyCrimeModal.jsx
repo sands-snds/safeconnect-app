@@ -93,6 +93,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [sentReference, setSentReference] = useState('');
   const { media, fileInputRef, handleMediaChange, clearMedia } = useMediaAttachment(t);
   
   
@@ -154,6 +155,9 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   }, textServerErrors);
   const chooseWho = (who) => {
     setReportFor(who);
+    // Someone else's incident isn't at the resident's home: the place
+    // switches to Somewhere else (and back to At my home for yourself).
+    setIncidentPlace(who === 'others' ? 'elsewhere' : 'home');
     if (who === 'self') {
       setVictimName(''); setVictimContact(''); setVictimRelationship(''); setVictimRelationshipOther(''); setVictimDetails('');
     }
@@ -353,6 +357,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
       announceReportsChanged();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
       resetForm();
+      setSentReference(result.reportReference || '');
       setShowSuccessPopup(true);
     } catch (error) {
       console.log(error);
@@ -603,7 +608,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
               onChange={setIncidentPlace}
               disabled={isSubmitting}
               options={[
-                { value: 'home', icon: 'bi-house-door-fill', label: t('pettyCrimeModal.atHome') },
+                { value: 'home', icon: 'bi-house-door-fill', label: t('pettyCrimeModal.atHome'), disabled: forOthers, title: forOthers ? t('pettyCrimeModal.othersElsewhere') : undefined },
                 { value: 'elsewhere', icon: 'bi-signpost-split-fill', label: t('pettyCrimeModal.elsewhere') }
               ]}
             />
@@ -665,6 +670,7 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
     actions={<button type="button" className="qr-btn soft" onClick={closeSuccessPopup}>{t('assistanceModal.done')}</button>}
   >
     <p>{t('pettyCrimeModal.reportSubmittedBody')}</p>
+    {sentReference && <p className="qr-ref">{t('quickReport.reference')} <b>{sentReference}</b></p>}
   </SentScreen>
 </ReportFormShell>
 )}

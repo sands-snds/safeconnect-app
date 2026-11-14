@@ -1209,6 +1209,7 @@ export const translations = {
       proofRequired: 'Please attach a photo or video of your situation. It is required so the barangay can verify your request.'
     },
     pettyCrimeModal: {
+      othersElsewhere: "Someone else's incident is reported as Somewhere else.",
       whereHappened: 'Where did the incident happen?',
       atHome: 'At my home',
       crimeOther: 'Type of incident',
@@ -2661,6 +2662,7 @@ export const translations = {
       proofRequired: 'Maglagay ng larawan o video ng iyong sitwasyon. Kinakailangan ito para maberipika ng barangay ang iyong kahilingan.'
     },
     pettyCrimeModal: {
+      othersElsewhere: 'Ang insidente ng ibang tao ay iniuulat bilang Sa ibang lugar.',
       whereHappened: 'Saan nangyari ang insidente?',
       atHome: 'Sa aking bahay',
       crimeOther: 'Uri ng insidente',

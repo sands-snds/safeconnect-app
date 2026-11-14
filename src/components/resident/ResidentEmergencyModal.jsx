@@ -5,6 +5,7 @@ import { resultError, showIfMediaProblem } from './reportErrors';
 import { useTextWarnings, serverTextErrors, TextWarning } from './textWarnings';
 import { checkMediaFile, mediaCheckMessageKey } from '../shared/media/mediaCheck';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
+import ZoomableMedia from '../shared/media/ZoomableMedia';
 import LocationPickerMap from '../shared/location/LocationPickerMap';
 import useLocationPin from '../shared/location/useLocationPin';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -943,6 +944,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         }
  
         .media-preview {
+          position: relative;
           margin-top: 10px;
           border-radius: 8px;
           overflow: hidden;
@@ -1399,11 +1401,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                   {formData.mediaPreviewUrl && (
                     <>
                       <div className="media-preview">
-                        {formData.mediaType === 'video' ? (
-                          <video src={formData.mediaPreviewUrl} controls />
-                        ) : (
-                          <img src={formData.mediaPreviewUrl} alt="Selected attachment preview" />
-                        )}
+                        <ZoomableMedia src={formData.mediaPreviewUrl} isVideo={formData.mediaType === 'video'} labels={{ open: t('myReports.viewFullSize'), close: t('myReports.closeMedia'), alt: t('myReports.attachedEvidence') }} />
                       </div>
                       <DayOldNote t={t} takenAt={formData.mediaTakenAt} dayOld={formData.mediaDayOld} />
                       <button

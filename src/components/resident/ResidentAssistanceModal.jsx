@@ -94,6 +94,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const needsNewMedia = !hasExistingMedia;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [sentReference, setSentReference] = useState('');
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   
   
@@ -402,6 +403,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       announceReportsChanged();
       setCooldownRemaining(REPORT_COOLDOWN_MS);
       resetForm();
+      setSentReference(result.reportReference || '');
       setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -745,6 +747,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     actions={<button type="button" className="qr-btn soft" onClick={closeSuccessPopup}>{t('assistanceModal.done')}</button>}
   >
     <p>{t('assistanceModal.requestSubmittedBody')}</p>
+    {sentReference && <p className="qr-ref">{t('quickReport.reference')} <b>{sentReference}</b></p>}
   </SentScreen>
 </ReportFormShell>
 )}
