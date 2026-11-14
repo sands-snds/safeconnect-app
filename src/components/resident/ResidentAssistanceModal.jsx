@@ -21,8 +21,7 @@ const EMERGENCY_OPTIONS = [
   { value: 'Earthquake', labelKey: 'emergencyModal.typeEarthquake', icon: 'bi-activity', color: '#b45309' },
   { value: 'Typhoon', labelKey: 'emergencyModal.typeTyphoon', icon: 'bi-tropical-storm', color: '#0f766e' }
 ];
-// The saved values are unchanged; the tiles show short names.
-// Text checks on step 2's boxes (its Next button waits for them).
+
 const DETAIL_TEXT_FIELDS = ['emergencyOther', 'situation', 'relOther', 'name', 'details'];
 const ASSISTANCE_TYPES = [
   { value: 'Food and Water', key: 'foodWater', icon: 'bi-basket2-fill' },
@@ -115,15 +114,11 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   } = location;
   const locationSectionRef = useRef(null);
   const [reportFor, setReportFor] = useState('self');
-  // Where help should go: "At my home" fills in the registered address,
-  // "Somewhere else" shows the map. Choosing "Someone else" starts on
-  // "Somewhere else"; the resident can still change it.
+  
   const [helpPlace, setHelpPlace] = useState('home');
   const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: helpPlace === 'home', formData, setFormData });
   const showMap = helpPlace === 'elsewhere';
 
-  // The map shows the resident's saved home pin while the report is at home;
-  // moving the pin makes it "Somewhere else" (useHomePinOnMap).
   useHomePinOnMap({
     active: show && !isEditing,
     atHome: helpPlace === 'home',
@@ -138,8 +133,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
 
-  // Spam, gibberish or offensive text: a warning under the field, and Send
-  // stays off until it's fixed (textWarnings.jsx; the backend checks again).
   const [textServerErrors, setTextServerErrors] = useState({});
   const forOthers = reportFor === 'others';
   const { warnings: textWarn, blocked: textBlocked } = useTextWarnings({
@@ -189,7 +182,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     setHelpPlace('elsewhere');
     if (prefill.address) setFormData((prev) => ({ ...prev, ...prefill.address }));
     if (prefill.latitude != null && prefill.longitude != null) {
-      // After the "Myself" reset above has run for this render.
       setTimeout(() => setGpsCoords({ lat: prefill.latitude, lng: prefill.longitude }), 0);
     }
   }, [show, prefill, editingReport, setGpsCoords]);

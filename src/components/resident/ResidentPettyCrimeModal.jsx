@@ -11,6 +11,7 @@ import useRegisteredAddressFill, { useHomePinOnMap } from './useRegisteredAddres
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
 import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 import { ReportFormShell, StepHead, TypeTiles, Section, Lbl, WhoButtons, PairButtons, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
+
 const CRIME_TYPES = [
   { key: 'theft', value: 'Theft' },
   { key: 'vandalism', value: 'Vandalism' },
@@ -34,26 +35,15 @@ const CRIME_ICONS = {
 
 const PHOTO_OPTIONAL_CRIME_TYPES = ['Theft', 'Suspicious Activity', 'Harassment'];
 
-// "Other" asks for the kind of incident in its own box; that text is saved
-// as the report's crime type (as the Assistance form does with its emergency).
-// Text checks on step 2's boxes (its Next button waits for them).
+
 const DETAIL_TEXT_FIELDS = ['crimeOther', 'description', 'suspectInfo', 'relOther', 'name', 'details'];
 const OTHER_CRIME = 'Other';
 const LISTED_CRIMES = CRIME_TYPES.map((c) => c.value).filter((v) => v !== OTHER_CRIME);
 const crimeTypeOf = (form) => (form.crimeType === OTHER_CRIME ? form.crimeOther.trim() : form.crimeType);
 
 const REPORT_COOLDOWN_KEY = 'sf_lastReportTimestamp_pettycrime';
-
 const REPORT_COOLDOWN_MS = 0;
-
-
-
 const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
-
-
-
-
-
 const getCurrentUser = () => {
   let raw = {};
   try {
@@ -71,10 +61,6 @@ const getCurrentUser = () => {
     null;
   return { ...source, id };
 };
-
-
-
-
 
 const getCooldownStorageKey = () => {
   const currentUser = getCurrentUser();
@@ -133,14 +119,11 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   } = location;
   const locationSectionRef = useRef(null);
   const [reportFor, setReportFor] = useState('self');
-  // Where it happened: "At my home" fills in the registered address,
-  // "Somewhere else" shows the map.
+  
   const [incidentPlace, setIncidentPlace] = useState('home');
   const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: incidentPlace === 'home', formData, setFormData });
   const showMap = incidentPlace === 'elsewhere';
 
-  // The map shows the resident's saved home pin while the report is at home;
-  // moving the pin makes it "Somewhere else" (useHomePinOnMap).
   useHomePinOnMap({
     active: show && !isEditing,
     atHome: incidentPlace === 'home',
@@ -155,8 +138,6 @@ function ResidentPettyCrimeModal({ show, type, onClose, editingReport, onUpdated
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
 
-  // Spam, gibberish or offensive text: a warning under the field, and Send
-  // stays off until it's fixed (textWarnings.jsx; the backend checks again).
   const [textServerErrors, setTextServerErrors] = useState({});
   const forOthers = reportFor === 'others';
   const { warnings: textWarn, blocked: textBlocked } = useTextWarnings({

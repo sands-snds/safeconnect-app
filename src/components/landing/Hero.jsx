@@ -27,8 +27,6 @@ const getMissingRequirements = (pw) =>
     PASSWORD_REQUIREMENTS.filter(r => !r.test(pw)).map(r => r.key);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// The valid ID asked for at sign-up; the values match ID_TYPES in
-// backend/utils/idDocument.js, which checks the file again.
 const ID_TYPES = [
     { value: 'Barangay ID', key: 'barangayId' },
     { value: 'Barangay Certificate of Residency', key: 'residency' },
@@ -40,15 +38,13 @@ const ID_TYPES = [
     { value: 'School ID', key: 'school' },
     { value: 'Other government-issued ID', key: 'other' },
 ];
-// Sign Up in three steps; Next checks only the fields on the current one.
 const SIGNUP_PARTS = ['details', 'address', 'account'];
 const SIGNUP_FIELD_PART = {
     suFirst: 1, suMiddle: 1, suLast: 1, suBirth: 1, suContact: 1, suEmail: 1,
     suAddrHouse: 2, suAddrStreet: 2, suHomePin: 2, suIdType: 2, suIdFile: 2,
     suUsername: 3, suPassword: 3, suConfirm: 3, suAgree: 3,
 };
-// Sign-up text boxes take at most 20 characters (email excepted; the
-// contact number keeps its own 10-digit limit).
+
 const SIGNUP_TEXT_MAX = 20;
 const SIGNUP_PART_FIRST_FIELD = ['suFirst', 'suAddrHouse', 'suUsername'];
 const ID_ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
@@ -62,9 +58,6 @@ const readAsDataUrl = (file) => new Promise((resolve, reject) => {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
 });
-
-
-
 
 const fieldForMessage = (message, pairs) => {
     const text = String(message || '');
@@ -90,6 +83,7 @@ const apiPost = async (path, body) => {
     });
     return res.json();
 };
+
 
 // ── Shared OTP input box row ──────────────────────────────────────────────────
 function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs }) {

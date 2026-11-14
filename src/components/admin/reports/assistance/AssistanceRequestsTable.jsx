@@ -16,8 +16,6 @@ const STATUS_OPTIONS = [
   "Dismissed"
 ];
 
-// The person first, with the report ID small above the name. Location takes
-// whatever width is left (flex), so the table always fits.
 const COLUMNS = [
   {
     key: "requester", label: "Requester", width: 190,

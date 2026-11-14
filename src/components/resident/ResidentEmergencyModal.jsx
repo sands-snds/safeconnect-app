@@ -111,8 +111,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [submittedLocation, setSubmittedLocation] = useState(null);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [reportFor, setReportFor] = useState('self');
-  // Reporting for yourself fills in your registered address; the map is only
-  // for reporting someone else's emergency.
+  
   const addressPrefilled = useRegisteredAddressFill({ active: show && !isEditing, atHome: reportFor === 'self', formData, setFormData });
   const showMap = reportFor === 'others';
   const [victimName, setVictimName] = useState('');
@@ -122,8 +121,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   const [victimDetails, setVictimDetails] = useState('');
   const isVictimNameOptional = NAME_OPTIONAL_RELATIONSHIPS.includes(victimRelationship);
 
-  // Spam, gibberish or offensive text: a warning under the field, and Save
-  // stays off until it's fixed (textWarnings.jsx; the backend checks again).
+
   const [textServerErrors, setTextServerErrors] = useState({});
   const forOthers = reportFor === 'others';
   const { warnings: textWarn, blocked: textBlocked } = useTextWarnings({
@@ -155,7 +153,6 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   } = location;
   const locationSectionRef = useRef(null);
 
-  // Back to "Myself": the hidden map's pin no longer applies.
   useEffect(() => {
     if (!isEditing && !showMap) setGpsCoords(null);
   }, [isEditing, showMap, setGpsCoords]);

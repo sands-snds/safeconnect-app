@@ -8,8 +8,6 @@ import useCallAccess from './useCallAccess';
 import { confirmPopup } from '../shared/popup';
 import { formatMobile } from '../shared/EmergencyContactList';
 
-// open / setOpen come from the section, so the "call button is ready"
-// notice can open the contact list too.
 function EmergencyCallButton({ open, setOpen }) {
   const { t } = useLanguage();
 
@@ -138,8 +136,7 @@ function EmergencyReportSection({ onReportClick, onAssistanceClick, onPettyCrime
   const [showAssistanceModal, setShowAssistanceModal] = useState(false);
   const [showPettyCrimeModal, setShowPettyCrimeModal] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
-  // When a report's wait ends: a notice in the middle of the screen.
-  // Call Now opens the emergency contacts (as the red button does).
+ 
   const noticeOpen = useRef(false);
   const callAvailable = useCallAccess({
     onReady: async () => {

@@ -28,13 +28,7 @@ const STATUS_LABEL_KEYS = {
 const statusLabel = (status, t) => (STATUS_LABEL_KEYS[status] ? t(`myReports.status.${STATUS_LABEL_KEYS[status]}`) : status);
 
 const STAGE_KEYS = ['received', 'inProgress', 'resolved'];
-
-
-
 const STATUS_FILTERS = ['Received', 'In Progress', 'Resolved', 'Dismissed'];
-
-
-
 const STATUS_MESSAGES = {
   Received: { key: 'received', icon: 'bi-inbox-fill' },
   Pending: { key: 'received', icon: 'bi-inbox-fill' },
@@ -63,7 +57,6 @@ const pageItems = (page, count) => {
 
 const TYPE_THEME = {
   Emergency: { accent: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)', icon: 'bi-exclamation-triangle-fill' },
-  // Orange, as on the Request Assistance card in the report section.
   Assistance: { accent: '#ea580c', bg: 'rgba(234, 88, 12, 0.1)', icon: 'bi-life-preserver' },
   'Petty Crime': { accent: '#7c3aed', bg: 'rgba(124, 58, 237, 0.1)', icon: 'bi-shield-exclamation' }
 };
@@ -127,8 +120,6 @@ const getRelativeTime = (dateStr) => {
   return `${Math.floor(diffDay / 365)}y ago`;
 };
 
-// The attached photo or video, loaded when the report's details are opened
-// (the My Reports list only says has_media).
 function ReportMediaPreview({ report, t }) {
   const { media, loading, failed } = useReportMedia(TYPE_LABEL_KEYS[report.type], report.id, true);
   const [open, setOpen] = useState(false);
@@ -140,7 +131,7 @@ function ReportMediaPreview({ report, t }) {
     );
   }
   const isVideo = (media.mediaType || report.media_type) === 'video';
-  // Tapping opens it full size on this page (a new tab can't show it).
+ 
   return (
     <div className="mr-media-preview">
       {isVideo ? (
