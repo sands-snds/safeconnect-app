@@ -306,6 +306,7 @@ export const ADMIN_TL = {
   'Action': 'Aksyon',
   'Loading archived sign-ins...': 'Nilo-load ang mga naka-archive na pag-sign in...',
   'Show less': 'Ipakita nang kaunti',
+  'Read more': 'Basahin pa',
   'Show {{n}} more': 'Ipakita ang {{n}} pa',
 
   // Page Contacts

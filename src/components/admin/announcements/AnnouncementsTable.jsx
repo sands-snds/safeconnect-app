@@ -9,7 +9,6 @@ import FacebookCardControl from "./FacebookCardControl";
 import { CATEGORY_COLORS } from "./constants";
 import MediaLightbox from "../../shared/media/MediaLightbox";
 import AnnouncementShareButton from "./AnnouncementShareButton";
-import AnnouncementDetails from "./AnnouncementDetails";
 import FormattedText, { stripFormatting } from "../../shared/FormattedText";
 import {
   fetchAnnouncements,
@@ -77,7 +76,7 @@ const AnnouncementsTable = ({
 
   const [popup, setPopup] = useState(null);
   // Announcements expanded to show everything (click the card or
-  // View Details; click again or Hide Details to fold it back).
+  // Read more; click again or Show less to fold it back).
   const [expanded, setExpanded] = useState({});
   const toggleExpanded = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -312,7 +311,6 @@ const AnnouncementsTable = ({
 
           <div id={detailsId}>
             <FormattedText className="announcement-admin-card-message" text={announcement.message} />
-            {isExpanded && <AnnouncementDetails announcement={announcement} />}
           </div>
 
           {announcement.sourceUrl && (
@@ -338,7 +336,7 @@ const AnnouncementsTable = ({
                 aria-controls={detailsId}
               >
                 <i className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`}></i>{" "}
-                {isExpanded ? tx("Hide Details") : tx("View Details")}
+                {isExpanded ? tx("Show less") : tx("Read more")}
               </button>
 
               <button
@@ -463,7 +461,7 @@ const AnnouncementsTable = ({
           color: #6b7280;
           line-height: 1.65;
           margin: 0 0 14px;
-          /* A short look; expanding the card shows all of it. */
+          /* A short look; Read more shows all of it. */
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 4;
@@ -494,52 +492,6 @@ const AnnouncementsTable = ({
 
         .announcement-admin-card-comments {
           cursor: default;
-        }
-
-        .announcement-admin-details {
-          margin: 0 0 14px;
-          padding: 14px 16px;
-          border-radius: 12px;
-          background: #faf8f9;
-          border: 1px solid #f0e6e9;
-          cursor: default;
-        }
-
-        .announcement-admin-details-kicker {
-          font-size: 11.5px;
-          font-weight: 700;
-          color: #6b7280;
-          letter-spacing: 0.05em;
-        }
-
-        .announcement-admin-details dl {
-          margin: 8px 0 0;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          column-gap: 24px;
-        }
-
-        .announcement-admin-details dl > div {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 8px 0;
-          border-bottom: 1px solid #efe7e9;
-        }
-
-        .announcement-admin-details dt {
-          font-size: 13px;
-          color: #6b7280;
-          font-weight: 600;
-        }
-
-        .announcement-admin-details dd {
-          margin: 0;
-          font-size: 13.5px;
-          color: #111827;
-          font-weight: 600;
-          text-align: right;
-          overflow-wrap: anywhere;
         }
 
         .announcement-admin-card-message strong {
