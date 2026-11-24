@@ -885,6 +885,20 @@ export const translations = {
         "consent": "Tick the confirmation box to send."
       }
     },
+    camera: {
+      preview: "Camera preview",
+      captured: "The photo you took",
+      starting: "Starting the camera…",
+      capture: "Capture",
+      use: "Use this photo",
+      cancel: "Cancel",
+      switch: "Switch camera",
+      tryAgain: "Try again",
+      denied: "Camera access is blocked. Allow the camera for this site (the camera icon in the address bar), then tap Try again.",
+      none: "No camera was found on this device. Use Gallery to attach a photo instead.",
+      busy: "The camera is being used by another app. Close that app, then tap Try again.",
+      failed: "The camera could not be started. Tap Try again, or use Gallery instead."
+    },
     quickReport: {
       title: "Report an Emergency",
       step: "Step {{n}} of 2",
@@ -934,6 +948,7 @@ export const translations = {
         text: "Fix the text marked in red to send.",
         photo: "Add a photo or video to send.",
         rel: "Choose how you know them to send.",
+        name: "Enter their name to send.",
         location: "Pin the location on the map to send."
       },
       sentTitle: "Report sent",
@@ -2338,6 +2353,20 @@ export const translations = {
         "consent": "I-tsek ang kahon ng kumpirmasyon para maipadala."
       }
     },
+    camera: {
+      preview: "Preview ng camera",
+      captured: "Ang larawang kinuha mo",
+      starting: "Binubuksan ang camera…",
+      capture: "Kunan",
+      use: "Gamitin ang larawang ito",
+      cancel: "Kanselahin",
+      switch: "Palitan ang camera",
+      tryAgain: "Subukan muli",
+      denied: "Naka-block ang camera. Payagan ang camera para sa site na ito (ang icon ng camera sa address bar), saka pindutin ang Subukan muli.",
+      none: "Walang nakitang camera sa device na ito. Gamitin ang Gallery para maglakip ng larawan.",
+      busy: "Ginagamit ng ibang app ang camera. Isara ang app na iyon, saka pindutin ang Subukan muli.",
+      failed: "Hindi mabuksan ang camera. Pindutin ang Subukan muli, o gamitin ang Gallery."
+    },
     quickReport: {
       title: "Mag-report ng Emergency",
       step: "Hakbang {{n}} ng 2",
@@ -2387,6 +2416,7 @@ export const translations = {
         text: "Ayusin ang tekstong may pulang babala para maipadala.",
         photo: "Magdagdag ng larawan o video para maipadala.",
         rel: "Piliin kung ano mo siya para maipadala.",
+        name: "Ilagay ang kanilang pangalan para maipadala.",
         location: "I-pin ang lokasyon sa mapa para maipadala."
       },
       sentTitle: "Naipadala ang report",

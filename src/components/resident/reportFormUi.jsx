@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
 import ZoomableMedia from '../shared/media/ZoomableMedia';
 import { TextWarning } from './textWarnings';
+import { useCamera } from '../shared/media/WebcamCapture';
 
 // The look shared by the three resident report forms (Report Emergency,
 // Request Assistance, Report Petty Crime): one card, a round colour icon in
@@ -218,18 +219,18 @@ export const CAMERA_ACCEPT = 'image/*';
 // checks in useMediaAttachment (file type and size) through onChange.
 // hideLabel: inside a Section whose title (with the same id) labels it.
 export function MediaPicker({ t, id, label, required, optionalText, hint, media, fileInputRef, onChange, onRemove, disabled, hideLabel }) {
-  const cameraRef = useRef(null);
   // Cancelling the camera or file picker keeps the file already attached.
   const pick = (e) => {
     if (!e.target.files || !e.target.files[0]) return;
-    onChange(e, { fromCamera: e.target === cameraRef.current });
-    if (e.target !== fileInputRef.current) e.target.value = '';
+    onChange(e, { fromCamera: false });
   };
+  // The phone's camera, or the webcam on a PC (WebcamCapture.jsx).
+  const camera = useCamera({ t, accept: CAMERA_ACCEPT, disabled, onFile: (file) => onChange({ target: { files: [file] } }, { fromCamera: true }) });
   return (
     <div>
       {!hideLabel && <Lbl id={id} icon="bi-camera-fill" req={required} optional={required ? null : optionalText}>{label}</Lbl>}
       <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT} hidden onChange={pick} disabled={disabled} aria-labelledby={id} />
-      <input ref={cameraRef} type="file" accept={CAMERA_ACCEPT} capture="environment" hidden onChange={pick} disabled={disabled} aria-hidden="true" tabIndex={-1} />
+      {camera.node}
       {media.previewUrl ? (
         <div className="qr-preview">
           <span className="qr-ok"><i className="bi bi-check-lg" aria-hidden="true" /> {media.type === 'video' ? t('quickReport.videoAdded') : t('quickReport.photoAdded')}</span>
@@ -242,7 +243,7 @@ export function MediaPicker({ t, id, label, required, optionalText, hint, media,
         </div>
       ) : (
         <div className="qr-photo-row">
-          <button type="button" className="qr-btn primary" onClick={() => cameraRef.current?.click()} disabled={disabled}><i className="bi bi-camera-fill" aria-hidden="true" /> {t('quickReport.takePhoto')}</button>
+          <button type="button" className="qr-btn primary" onClick={camera.open} disabled={disabled}><i className="bi bi-camera-fill" aria-hidden="true" /> {t('quickReport.takePhoto')}</button>
           <button type="button" className="qr-btn ghost" onClick={() => fileInputRef.current?.click()} disabled={disabled}><i className="bi bi-images" aria-hidden="true" /> {t('quickReport.gallery')}</button>
         </div>
       )}

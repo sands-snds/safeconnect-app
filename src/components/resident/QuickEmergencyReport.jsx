@@ -14,6 +14,7 @@ import { ReportFormShell, SendFoot, CAMERA_ACCEPT } from './reportFormUi';
 import { checkMediaFile, mediaCheckMessageKey } from '../shared/media/mediaCheck';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
 import ZoomableMedia from '../shared/media/ZoomableMedia';
+import { useCamera } from '../shared/media/WebcamCapture';
 
 // Report an Emergency, the quick way (design Option A): who needs help, what
 // is happening (one tap), a photo, Send. The location fills itself in: the
@@ -36,6 +37,9 @@ const RELATIONSHIPS = [
   { value: 'Stranger', key: 'stranger' },
   { value: 'Other', key: 'other' }
 ];
+// Their name may be left out only when you might not know it; for family
+// and friends it is required (as on the other report forms).
+const NAME_OPTIONAL_RELATIONSHIPS = ['Neighbor', 'Stranger', 'Other'];
 const MEDIA_ACCEPT = 'image/jpeg,image/jpg,video/mp4,video/quicktime,video/webm';
 const ALLOWED_MEDIA_TYPES = MEDIA_ACCEPT.split(',');
 const ALLOWED_MEDIA_EXTENSIONS = /\.(jpe?g|mp4|mov|webm)$/i;
@@ -73,7 +77,6 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(null); // { reference, type, forWhom, submittedLocation }
   const [specialInvalid, setSpecialInvalid] = useState(null);
-  const cameraRef = useRef(null);
   const galleryRef = useRef(null);
   const dialogRef = useRef(null);
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
@@ -96,6 +99,9 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
 
   // Opening: start fresh, ask for the phone's location once. (Only when
   // "show" changes; the pin helpers are read through a ref.)
+  // "Take a photo": the phone's camera, or the webcam on a PC (WebcamCapture.jsx).
+  const camera = useCamera({ t, accept: CAMERA_ACCEPT, disabled: sending, onFile: (file) => pickMedia(file, true) });
+
   const pinRef = useRef(pin);
   pinRef.current = pin;
   useEffect(() => {
@@ -137,11 +143,13 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   const type = QUICK_TYPES.find((x) => x.key === form.type);
   const typeName = (x) => t(`quickReport.types.${x.key}`);
 
-  const pickMedia = async (e) => {
-    const fromCamera = e.target === cameraRef.current;
+  const pickFromGallery = (e) => {
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
-    if (!file) return;
+    if (file) pickMedia(file, false);
+  };
+
+  async function pickMedia(file, fromCamera) {
     if (!(ALLOWED_MEDIA_TYPES.includes(file.type) || ALLOWED_MEDIA_EXTENSIONS.test(file.name))) {
       showPopup({ type: 'warning', message: t('reportForm.mediaTypeError') });
       return;
@@ -158,7 +166,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
       return;
     }
     set({ media: file, mediaUrl: URL.createObjectURL(file), mediaType: isVideo ? 'video' : 'image', mediaTakenAt: check.takenAt, mediaDayOld: check.dayOld, mediaFromCamera: Boolean(check.fromCamera) });
-  };
+  }
 
   // Where the report is: the GPS / map pin when there is one inside Santa
   // Fe; otherwise, for yourself, your registered home.
@@ -167,10 +175,12 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   // The pin on the map is the saved home pin: the report is at the home address.
   const atHomePin = form.who === 'self' && pinned && Boolean(home) && samePin(gpsCoords, homePin);
   const hasLocation = pinned || usingHome;
+  const nameOptional = !form.rel || NAME_OPTIONAL_RELATIONSHIPS.includes(form.rel);
   const missing = [
     isOutsideSantaFe && 'outside',
     !form.media && 'photo',
     form.who === 'others' && !form.rel && 'rel',
+    form.who === 'others' && !nameOptional && !form.victimName.trim() && 'name',
     !hasLocation && 'location',
     textBlocked && 'text'
   ].filter(Boolean);
@@ -344,8 +354,8 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                     </div>
                     <div className="qr-two">
                       <div className="qr-field">
-                        <label htmlFor="qr-vname">{t('quickReport.theirName')} <small>{t('reportForm.optional')}</small></label>
-                        <input id="qr-vname" type="text" maxLength={100} value={form.victimName} onChange={(e) => set({ victimName: e.target.value })} placeholder={t('quickReport.namePlaceholder')} aria-invalid={Boolean(textWarn.victimName) || undefined} />
+                        <label htmlFor="qr-vname">{t('quickReport.theirName')} {nameOptional ? <small>{t('reportForm.optional')}</small> : <span className="qr-req">*</span>}</label>
+                        <input id="qr-vname" type="text" maxLength={100} value={form.victimName} required={!nameOptional} onChange={(e) => set({ victimName: e.target.value })} placeholder={nameOptional ? t('quickReport.namePlaceholder') : t('reportForm.namePlaceholder')} aria-invalid={Boolean(textWarn.victimName) || undefined} />
                         <TextWarning t={t} reason={textWarn.victimName} />
                       </div>
                       <div className="qr-field">
@@ -360,18 +370,18 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                   <p className="qr-lead">{t('quickReport.photoTitle')}</p>
                   <p className="qr-hint">{t('quickReport.photoHint')}</p>
                 </div>
-                <input ref={cameraRef} type="file" accept={CAMERA_ACCEPT} capture="environment" hidden onChange={pickMedia} aria-hidden="true" tabIndex={-1} />
-                <input ref={galleryRef} type="file" accept={MEDIA_ACCEPT} hidden onChange={pickMedia} aria-hidden="true" tabIndex={-1} />
+                {camera.node}
+                <input ref={galleryRef} type="file" accept={MEDIA_ACCEPT} hidden onChange={pickFromGallery} aria-hidden="true" tabIndex={-1} />
                 {form.media ? (
                   <div className="qr-preview">
                     <span className="qr-ok"><i className="bi bi-check-lg" aria-hidden="true" /> {form.mediaType === 'video' ? t('quickReport.videoAdded') : t('quickReport.photoAdded')}</span>
                     <ZoomableMedia src={form.mediaUrl} isVideo={form.mediaType === 'video'} labels={{ open: t('myReports.viewFullSize'), close: t('myReports.closeMedia'), alt: t('quickReport.photoAlt') }} />
                     <DayOldNote t={t} takenAt={form.mediaTakenAt} dayOld={form.mediaDayOld} />
-                    <button type="button" className="qr-redo" onClick={() => cameraRef.current?.click()} disabled={sending}><i className="bi bi-arrow-repeat" aria-hidden="true" /> {t('quickReport.retake')}</button>
+                    <button type="button" className="qr-redo" onClick={camera.open} disabled={sending}><i className="bi bi-arrow-repeat" aria-hidden="true" /> {t('quickReport.retake')}</button>
                   </div>
                 ) : (
                   <div className="qr-photo-row">
-                    <button type="button" className="qr-btn primary" onClick={() => cameraRef.current?.click()} data-autofocus><i className="bi bi-camera-fill" aria-hidden="true" /> {t('quickReport.takePhoto')}</button>
+                    <button type="button" className="qr-btn primary" onClick={camera.open} data-autofocus><i className="bi bi-camera-fill" aria-hidden="true" /> {t('quickReport.takePhoto')}</button>
                     <button type="button" className="qr-btn ghost" onClick={() => galleryRef.current?.click()}><i className="bi bi-images" aria-hidden="true" /> {t('quickReport.gallery')}</button>
                   </div>
                 )}

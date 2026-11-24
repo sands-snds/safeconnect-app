@@ -119,6 +119,83 @@ test('for someone else: how you know them is required; name and number are optio
   expect(await screen.findByText(/for Neighbor/)).toBeInTheDocument();
 });
 
+test('for someone else: family and friends need their name; Neighbor, Stranger and Other do not', async () => {
+  const { container } = renderForm();
+  fireEvent.click(screen.getByRole('button', { name: 'Someone else' }));
+  fireEvent.click(screen.getByText('Fire').closest('button'));
+  attach(container);
+  await screen.findByText('Photo added');
+  const nameLabel = () => container.querySelector('label[for="qr-vname"]');
+  for (const rel of ['Family Member', 'Friend']) {
+    fireEvent.click(screen.getByRole('button', { name: rel }));
+    expect(sendButton()).toBeDisabled();
+    expect(screen.getByText('Enter their name to send.')).toBeInTheDocument();
+    expect(nameLabel()).not.toHaveTextContent('(optional)');
+  }
+  for (const rel of ['Neighbor', 'Stranger', 'Other']) {
+    fireEvent.click(screen.getByRole('button', { name: rel }));
+    expect(sendButton()).not.toBeDisabled();
+    expect(nameLabel()).toHaveTextContent('(optional)');
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Family Member' }));
+  fireEvent.change(screen.getByLabelText(/Their name/), { target: { value: 'Maria Santos' } });
+  expect(sendButton()).not.toBeDisabled();
+  fireEvent.click(sendButton());
+  await waitFor(() => expect(createEmergencyReport).toHaveBeenCalledTimes(1));
+  expect(createEmergencyReport.mock.calls[0][0]).toMatchObject({ victimRelationship: 'Family Member', victimName: 'Maria Santos' });
+});
+
+describe('Take a photo on a PC: the webcam opens inside the page', () => {
+  let track;
+  beforeEach(() => {
+    track = { stop: jest.fn(), getSettings: () => ({ deviceId: 'cam1' }) };
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: jest.fn().mockResolvedValue({ getTracks: () => [track], getVideoTracks: () => [track] }),
+        enumerateDevices: jest.fn().mockResolvedValue([{ kind: 'videoinput', deviceId: 'cam1' }])
+      }
+    });
+    window.matchMedia = jest.fn(() => ({ matches: false }));
+    jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    Object.defineProperty(HTMLVideoElement.prototype, 'videoWidth', { configurable: true, get: () => 640 });
+    Object.defineProperty(HTMLVideoElement.prototype, 'videoHeight', { configurable: true, get: () => 480 });
+    jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: jest.fn() });
+    jest.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((cb) => cb(new Blob(['jpeg'], { type: 'image/jpeg' })));
+  });
+  afterEach(() => {
+    delete navigator.mediaDevices;
+    jest.restoreAllMocks();
+  });
+
+  test('capture, then Use this photo attaches it as a camera photo', async () => {
+    renderForm();
+    fireEvent.click(screen.getByText('Fire').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /Take a photo/ }));
+    expect(await screen.findByRole('dialog', { name: 'Take a photo' })).toBeInTheDocument();
+    const capture = screen.getByRole('button', { name: /Capture/ });
+    await waitFor(() => expect(capture).not.toBeDisabled());
+    fireEvent.click(capture);
+    fireEvent.click(await screen.findByRole('button', { name: /Use this photo/ }));
+    expect(track.stop).toHaveBeenCalled();
+    await screen.findByText('Photo added');
+    fireEvent.click(sendButton());
+    await waitFor(() => expect(createEmergencyReport).toHaveBeenCalledTimes(1));
+    expect(createEmergencyReport.mock.calls[0][0]).toMatchObject({ mediaType: 'image' });
+  });
+
+  test('camera blocked: says how to allow it', async () => {
+    navigator.mediaDevices.getUserMedia.mockRejectedValue(Object.assign(new Error('denied'), { name: 'NotAllowedError' }));
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    renderForm();
+    fireEvent.click(screen.getByText('Fire').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /Take a photo/ }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Camera access is blocked/);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog', { name: 'Take a photo' })).not.toBeInTheDocument();
+  });
+});
+
 test('no GPS: for me, the registered home address is used', async () => {
   mockPinned = false;
   const { container } = renderForm();
