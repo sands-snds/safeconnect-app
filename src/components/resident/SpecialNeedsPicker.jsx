@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 // Special needs / considerations for the Emergency and Request Assistance
@@ -42,6 +42,58 @@ export const parseSpecialNeeds = (text) => {
   });
   return { selected, counts };
 };
+
+// How many people the ticked categories add up to. Pets aren't people, so
+// they don't count toward "Number of People Needing Help".
+export const NOT_PEOPLE = ['Pets'];
+export const specialPeopleTotal = (selected = [], counts = {}) =>
+  SPECIAL_NEEDS_OPTIONS
+    .filter((o) => selected.includes(o.value) && !NOT_PEOPLE.includes(o.value))
+    .reduce((sum, o) => sum + (validCount(counts[o.value]) ? Number(counts[o.value]) : 0), 0);
+
+// Keeps "Number of People Needing Help" in step with the special needs.
+// The people with special needs are part of that number, never added on top
+// of it (no double counting): the number is the larger of what the resident
+// entered and the special-needs total. Adding, removing or changing a
+// special-needs count updates it right away; taking them away brings it
+// back to what the resident entered. A number typed below the total is
+// raised to it when the box is left (and on submit, through `atLeast`).
+//   people / setPeople: the form's value (a string) and a setter for it.
+export function useSpecialNeedsPeople({ people, selected, counts, setPeople, min = 0 }) {
+  const total = specialPeopleTotal(selected, counts);
+  const entered = useRef(Number(people) || 0); // what the resident (or a loaded report) set
+  const written = useRef(null);                // what this hook last wrote
+
+  // Any change not made here is the resident's own number (typing, the
+  // +/- buttons, a reset, an edited report being loaded).
+  useEffect(() => {
+    if (people !== written.current) entered.current = Number(people) || 0;
+    written.current = null;
+  }, [people]);
+
+  useEffect(() => {
+    const target = Math.max(entered.current, total);
+    const next = target > 0 ? String(target) : (min > 0 ? String(min) : '');
+    if (next === people || (target === 0 && (Number(people) || 0) <= min)) return;
+    written.current = next;
+    setPeople(next);
+    // Only a change in the special-needs total moves the number.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
+  return {
+    total,
+    // The count to save: never below the special-needs total.
+    atLeast: (value) => Math.max(Number(value) || 0, total),
+    // onBlur for the people box.
+    raiseToTotal: () => {
+      if (total > 0 && (Number(people) || 0) < total) {
+        written.current = String(total);
+        setPeople(String(total));
+      }
+    }
+  };
+}
 
 // The first ticked category without a valid count, or null.
 export const missingSpecialCount = (selected, counts = {}) =>

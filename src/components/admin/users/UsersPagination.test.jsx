@@ -39,13 +39,39 @@ const renderUsers = (residents, staff) => render(
 const sectionOf = (titleText) => screen.getByRole('heading', { name: titleText }).closest('.admin-section');
 
 describe('Users tab', () => {
-  test('each table shows 5 accounts at a time, with no rows-per-page choice', () => {
+  test('Residents: rows per page and filter by date registered', () => {
+    const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
+    const residents = Array.from({ length: 12 }, (_, i) => ({ ...user(i + 1), registeredAt: daysAgo(i < 3 ? 1 : 60) }));
+    const filters = { users: { search: '', status: 'All Items' } };
+    const setFilters = jest.fn((update) => Object.assign(filters, update(filters)));
+    const props = { staff: [], setFilters, onUpdateStatus: jest.fn(), onUpdateRole: jest.fn(), currentAdminId: 'none' };
+    const { rerender } = render(<RegisteredUsersTable residents={residents} filters={{ ...filters }} {...props} />);
+
+    // Rows per page: only on the Residents table.
+    const rowsPerPage = screen.getByLabelText('Rows per page');
+    expect(rowsPerPage).toHaveValue('5');
+    fireEvent.change(rowsPerPage, { target: { value: '10' } });
+    expect(screen.getByText('Showing 1–10 of 12 residents')).toBeInTheDocument();
+
+    // Date registered: the last 7 days leaves the 3 recent ones.
+    fireEvent.change(screen.getByLabelText('Filter by date registered'), { target: { value: '7' } });
+    rerender(<RegisteredUsersTable residents={residents} filters={{ ...filters }} {...props} />);
+    expect(screen.getByRole('heading', { name: 'Residents (3)' })).toBeInTheDocument();
+
+    // A custom range shows From / To.
+    fireEvent.change(screen.getByLabelText('Filter by date registered'), { target: { value: 'custom' } });
+    rerender(<RegisteredUsersTable residents={residents} filters={{ ...filters }} {...props} />);
+    expect(screen.getByLabelText('From')).toBeInTheDocument();
+    expect(screen.getByLabelText('To')).toBeInTheDocument();
+  });
+
+  test('each table shows 5 accounts at a time; only Residents has a rows-per-page choice', () => {
     renderUsers(Array.from({ length: 12 }, (_, i) => user(i + 1)), Array.from({ length: 7 }, (_, i) => user(i + 1, 'official')));
     const residents = sectionOf('Residents (12)');
     expect(within(residents).getAllByRole('row')).toHaveLength(6); // header + 5
     expect(screen.getByText('Showing 1–5 of 12 residents')).toBeInTheDocument();
     expect(screen.getByText('Showing 1–5 of 7 accounts')).toBeInTheDocument();
-    expect(screen.queryByText('Rows per page')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Rows per page')).toHaveLength(1);
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Next page' })[0]);
     expect(screen.getByText('Showing 6–10 of 12 residents')).toBeInTheDocument();

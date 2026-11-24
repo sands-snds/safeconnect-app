@@ -9,7 +9,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill, { useHomePinOnMap } from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
-import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
+import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount, useSpecialNeedsPeople } from './SpecialNeedsPicker';
 import { useMediaAttachment, readAsDataUrl } from '../shared/media/MediaAttachmentField';
 import { ReportFormShell, StepHead, TypeTiles, Section, Lbl, WhoButtons, PairButtons, Pills, PersonBox, MediaPicker, ConsentBox, SendFoot, SentScreen } from './reportFormUi';
 
@@ -219,6 +219,14 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
     });
   };
   const [specialInvalid, setSpecialInvalid] = useState(null);
+  // Number of People Needing Help follows the special needs entered below it.
+  const specialPeople = useSpecialNeedsPeople({
+    people: formData.people,
+    selected: formData.special,
+    counts: formData.specialCounts,
+    setPeople: (people) => setFormData((prev) => ({ ...prev, people })),
+    min: 1
+  });
   const handleSpecialCount = (option, value) => {
     setSpecialInvalid(null);
     setFormData((prev) => ({ ...prev, specialCounts: { ...prev.specialCounts, [option]: value } }));
@@ -318,7 +326,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       showPopup({ type: 'warning', message: t('assistanceModal.specifyEmergency') });
       return;
     }
-    const peopleNeedingHelp = Number(formData.people);
+    const peopleNeedingHelp = specialPeople.atLeast(formData.people);
     if (!Number.isInteger(peopleNeedingHelp) || peopleNeedingHelp < 1 || peopleNeedingHelp > MAX_PEOPLE_NEEDING_HELP) {
       showPopup({ type: 'warning', message: t('assistanceModal.peopleRequired', { max: MAX_PEOPLE_NEEDING_HELP }) });
       document.getElementById('as-people')?.focus();
@@ -354,7 +362,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
           situation: formData.situation,
-          people: Number(formData.people),
+          people: specialPeople.atLeast(formData.people),
           special: formatSpecialNeeds(formData.special, formData.specialCounts),
           urgency: null
         });
@@ -386,7 +394,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         latitude: coords ? coords.lat : null,
         longitude: coords ? coords.lng : null,
         situation: formData.situation,
-        people: Number(formData.people),
+        people: specialPeople.atLeast(formData.people),
         special: formatSpecialNeeds(formData.special, formData.specialCounts),
         reportFor,
         victimName: reportFor === 'others' ? victimName.trim() : null,
@@ -443,7 +451,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
       return isEditing ? 'location' : 'address';
     }
     if (!formData.situation.trim()) return 'situation';
-    const people = Number(formData.people);
+    const people = specialPeople.atLeast(formData.people);
     if (!Number.isInteger(people) || people < 1 || people > MAX_PEOPLE_NEEDING_HELP) return 'people';
     if (missingSpecialCount(formData.special, formData.specialCounts)) return 'special';
     if (!detailsOnly && !formData.consent) return 'consent';
@@ -470,7 +478,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
   const detailsMissingText = !detailsMissingKey ? '' : t(`reportShared.need.${detailsMissingKey}`);
   const missingText = !missingKey ? '' : missingKey === 'outside' ? t('reportForm.outsideSantaFe') : t(`reportShared.need.${missingKey}`);
   const peopleNumber = Number(formData.people) || 0;
-  const setPeople = (n) => setFormData((prev) => ({ ...prev, people: String(Math.min(MAX_PEOPLE_NEEDING_HELP, Math.max(1, n))) }));
+  const setPeople = (n) => setFormData((prev) => ({ ...prev, people: String(Math.min(MAX_PEOPLE_NEEDING_HELP, Math.max(1, specialPeople.total, n))) }));
 
   return (
 <>
@@ -576,7 +584,7 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           <Lbl id="as-people-label" icon="bi-people-fill" req as="label">{t('reportShared.people')}</Lbl>
           <div className="qr-count-row">
             <div className="qr-count">
-              <button type="button" onClick={() => setPeople(peopleNumber - 1)} disabled={isSubmitting || peopleNumber <= 1} aria-label={t('reportShared.fewer')}>
+              <button type="button" onClick={() => setPeople(peopleNumber - 1)} disabled={isSubmitting || peopleNumber <= Math.max(1, specialPeople.total)} aria-label={t('reportShared.fewer')}>
                 <i className="bi bi-dash-lg" aria-hidden="true" />
               </button>
               <input
@@ -587,13 +595,21 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
                 aria-labelledby="as-people-label"
                 value={formData.people}
                 onChange={(e) => setFormData((prev) => ({ ...prev, people: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                onBlur={specialPeople.raiseToTotal}
                 disabled={isSubmitting}
               />
               <button type="button" onClick={() => setPeople(peopleNumber + 1)} disabled={isSubmitting || peopleNumber >= MAX_PEOPLE_NEEDING_HELP} aria-label={t('reportShared.more')}>
                 <i className="bi bi-plus-lg" aria-hidden="true" />
               </button>
             </div>
-            <p>{t('assistanceModal.peopleHint')}</p>
+            <p>
+              {t('assistanceModal.peopleHint')}
+              {specialPeople.total > 0 && (
+                <span role="status" style={{ display: 'block', color: '#6B2C3E', fontWeight: 600 }}>
+                  {t('reportForm.specialNeedsIncluded', { n: specialPeople.total })}
+                </span>
+              )}
+            </p>
           </div>
         </div>
 

@@ -28,7 +28,9 @@ const STYLE = `
   .im-icon { background: none; border: 0; }
   .im-home { width: 30px; height: 30px; border-radius: 8px; background: #fff; color: var(--c); border: 2.5px solid var(--c); display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
   .im-popup .leaflet-popup-content-wrapper { border-radius: 12px; }
-  .im-popup .leaflet-popup-content { margin: 12px 14px; min-width: 220px; font-family: inherit; }
+  .im-popup .leaflet-popup-content { margin: 12px 14px; min-width: 200px; font-family: inherit; overflow-y: auto; overscroll-behavior: contain; }
+  .im-popup.im-popup-below .leaflet-popup-tip-container { position: absolute; top: -20px; left: 50%; margin-left: -20px; transform: rotate(180deg); }
+  .im-popup .leaflet-popup-tip-container { left: 50%; margin-left: -20px; }
 `;
 
 const markerIcon = (report, selected) => {
@@ -64,6 +66,105 @@ function FitSantaFe() {
     // The container may still be settling (a page or panel just opened).
     const t = setTimeout(() => map.invalidateSize(), 250);
     return () => clearTimeout(t);
+  }, [map]);
+  return null;
+}
+
+// Keeps every report popup fully inside the map. The map can't be dragged
+// past the Santa Fe edge (LimitToSantaFe), so Leaflet's own auto-pan can't
+// make room for a popup on a pin near the top boundary, and the popup was
+// cut off. Instead each popup places itself: above the pin when it fits,
+// otherwise below it (the arrow flips to point up), slid sideways to stay
+// clear of the left / right edges, and, when it's taller than the room on
+// either side, capped to that room with its own scroll. It's worked out again
+// whenever the map moves, zooms or resizes, or the popup's content changes.
+const EDGE = 8;        // px kept free along the map's edges
+const PIN_HALF = 18;   // the report marker's popupAnchor
+const TIP = 12;        // visible height of the popup's arrow
+export function placePopup(map, popup) {
+  const container = popup.getElement && popup.getElement();
+  if (!map || !container || !popup.getLatLng()) return;
+  const wrapper = container.querySelector('.leaflet-popup-content-wrapper');
+  const content = container.querySelector('.leaflet-popup-content');
+  const tip = container.querySelector('.leaflet-popup-tip-container');
+  if (!wrapper || !content) return;
+
+  // Measure at the natural size.
+  container.classList.remove('im-popup-below');
+  content.style.maxHeight = '';
+  if (tip) tip.style.marginLeft = '';
+  const size = map.getSize();
+  const pin = map.latLngToContainerPoint(popup.getLatLng());
+  const height = wrapper.offsetHeight;
+  const width = container.offsetWidth;
+  const above = pin.y - PIN_HALF - TIP - EDGE;
+  const below = size.y - pin.y - PIN_HALF - TIP - EDGE;
+
+  let putBelow = false;
+  let room = null;
+  if (height > above) {
+    if (height <= below) putBelow = true;
+    else { putBelow = below > above; room = Math.max(80, putBelow ? below : above); }
+  }
+  if (room !== null) {
+    const chrome = wrapper.offsetHeight - content.offsetHeight; // the wrapper's padding / margins
+    content.style.maxHeight = `${Math.max(40, room - chrome)}px`;
+  }
+  if (putBelow) container.classList.add('im-popup-below');
+  const shownHeight = wrapper.offsetHeight;
+
+  // Slide sideways to stay inside the map; the arrow stays on the pin.
+  let dx = 0;
+  if (width < size.x - 2 * EDGE) {
+    const left = pin.x - width / 2;
+    if (left < EDGE) dx = EDGE - left;
+    else if (left + width > size.x - EDGE) dx = size.x - EDGE - (left + width);
+  }
+  if (tip) tip.style.marginLeft = dx ? `${-20 - dx}px` : '';
+
+  // Leaflet sets the popup's bottom at (pin anchor - offset.y); below the pin
+  // that is the full pin height, the arrow and the popup itself further down.
+  const dy = putBelow ? 2 * PIN_HALF + TIP + shownHeight : 7;
+  popup.options.offset = L.point(Math.round(dx), Math.round(dy));
+  if (typeof popup._updatePosition === 'function') popup._updatePosition();
+  else popup.update();
+}
+
+function KeepPopupsInView() {
+  const map = useMap();
+  useEffect(() => {
+    let open = null;
+    let observer = null;
+    let frame = 0;
+    const replace = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => open && placePopup(map, open));
+    };
+    const onOpen = (e) => {
+      open = e.popup;
+      replace();
+      if (observer) observer.disconnect();
+      const body = open.getElement()?.querySelector('.leaflet-popup-content > *');
+      if (body && typeof ResizeObserver !== 'undefined') {
+        observer = new ResizeObserver(replace);
+        observer.observe(body);
+      }
+    };
+    const onClose = (e) => {
+      if (e.popup !== open) return;
+      open = null;
+      if (observer) { observer.disconnect(); observer = null; }
+    };
+    map.on('popupopen', onOpen);
+    map.on('popupclose', onClose);
+    map.on('moveend zoomend resize', replace);
+    return () => {
+      cancelAnimationFrame(frame);
+      if (observer) observer.disconnect();
+      map.off('popupopen', onOpen);
+      map.off('popupclose', onClose);
+      map.off('moveend zoomend resize', replace);
+    };
   }, [map]);
   return null;
 }
@@ -145,7 +246,7 @@ export default function IncidentMap({ reports, selectedKey, onSelect, renderPopu
             eventHandlers={{ click: () => onSelect && onSelect(r.key) }}
           >
             {renderPopup && (
-              <Popup className="im-popup" eventHandlers={{ remove: () => onSelect && selectedKey === r.key && onSelect(null) }}>
+              <Popup className="im-popup" autoPan={false} maxWidth={Math.max(220, Math.min(320, window.innerWidth - 48))} eventHandlers={{ remove: () => onSelect && selectedKey === r.key && onSelect(null) }}>
                 {renderPopup(r)}
               </Popup>
             )}
@@ -154,6 +255,7 @@ export default function IncidentMap({ reports, selectedKey, onSelect, renderPopu
         <FitSantaFe />
         <LimitToSantaFe />
         <FollowSelection selectedKey={selectedKey} markers={markers} />
+        <KeepPopupsInView />
       </MapContainer>
 
       <MapTypeSwitch basemap={basemap} onChange={setBasemap} />

@@ -45,6 +45,8 @@ const Pagination = ({
   onPageChange,
   onPageSizeChange,
   itemLabel = 'items',
+  // The "Rows per page" choices (default 10 / 25 / 50).
+  pageSizeOptions = PAGE_SIZE_OPTIONS,
   style
 }) => {
   if (!totalItems) return null;
@@ -87,7 +89,7 @@ const Pagination = ({
                 borderRadius: 8
               }}
             >
-              {PAGE_SIZE_OPTIONS.map(size => (
+              {pageSizeOptions.map(size => (
                 <option key={size} value={size}>{size}</option>
               ))}
             </select>

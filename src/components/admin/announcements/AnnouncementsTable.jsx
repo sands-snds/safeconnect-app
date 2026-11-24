@@ -9,7 +9,7 @@ import FacebookCardControl from "./FacebookCardControl";
 import { CATEGORY_COLORS } from "./constants";
 import MediaLightbox from "../../shared/media/MediaLightbox";
 import AnnouncementShareButton from "./AnnouncementShareButton";
-import AnnouncementDetailsModal from "./AnnouncementDetailsModal";
+import AnnouncementDetails from "./AnnouncementDetails";
 import FormattedText, { stripFormatting } from "../../shared/FormattedText";
 import {
   fetchAnnouncements,
@@ -76,9 +76,19 @@ const AnnouncementsTable = ({
   const [showArchived, setShowArchived] = useState(false);
 
   const [popup, setPopup] = useState(null);
-  // The announcement open in View Details.
-  const [detailsFor, setDetailsFor] = useState(null);
-  const closeDetails = useCallback(() => setDetailsFor(null), []);
+  // Announcements expanded to show everything (click the card or
+  // View Details; click again or Hide Details to fold it back).
+  const [expanded, setExpanded] = useState({});
+  const toggleExpanded = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  // A click anywhere on the card expands / folds it, except on its buttons,
+  // links and comments, or when the admin is selecting text to copy.
+  const onCardClick = (e, id) => {
+    if (e.target.closest("button, a, input, select, textarea, label, [contenteditable], .announcement-admin-card-comments")) return;
+    const selected = window.getSelection && String(window.getSelection() || "");
+    if (selected.trim()) return;
+    toggleExpanded(id);
+  };
 
   const filterType = "announcements";
   const currentFilters = filters[filterType] || { status: "All Items", search: "" };
@@ -252,9 +262,15 @@ const AnnouncementsTable = ({
     // unarchived. No editing, sharing or new comments.
     const archived = Boolean(announcement.archivedAt);
     const categoryStyle = CATEGORY_COLORS[announcement.category] || CATEGORY_COLORS["General"];
+    const isExpanded = !!expanded[announcement.id];
+    const detailsId = `announcement-details-${announcement.id}`;
 
     return (
-      <div key={announcement.id} className="announcement-admin-card">
+      <div
+        key={announcement.id}
+        className={`announcement-admin-card${isExpanded ? " is-expanded" : ""}`}
+        onClick={(e) => onCardClick(e, announcement.id)}
+      >
         {image && (
           <button
             type="button"
@@ -294,7 +310,10 @@ const AnnouncementsTable = ({
             {announcement.title}
           </h3>
 
-          <FormattedText className="announcement-admin-card-message" text={announcement.message} />
+          <div id={detailsId}>
+            <FormattedText className="announcement-admin-card-message" text={announcement.message} />
+            {isExpanded && <AnnouncementDetails announcement={announcement} />}
+          </div>
 
           {announcement.sourceUrl && (
             <a
@@ -314,9 +333,12 @@ const AnnouncementsTable = ({
                 type="button"
                 className="button button-soft"
                 style={{ fontSize: 12.5, padding: '8px 18px' }}
-                onClick={() => setDetailsFor(announcement.id)}
+                onClick={() => toggleExpanded(announcement.id)}
+                aria-expanded={isExpanded}
+                aria-controls={detailsId}
               >
-                <i className="bi bi-eye"></i> {tx("View Details")}
+                <i className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`}></i>{" "}
+                {isExpanded ? tx("Hide Details") : tx("View Details")}
               </button>
 
               <button
@@ -368,11 +390,13 @@ const AnnouncementsTable = ({
           </div>
 
           {openComments[announcement.id] && (
-            <AnnouncementComments
-              announcementId={announcement.id}
-              onCountChange={(delta) => changeCommentCount(announcement.id, delta)}
-              readOnly={archived}
-            />
+            <div className="announcement-admin-card-comments">
+              <AnnouncementComments
+                announcementId={announcement.id}
+                onCountChange={(delta) => changeCommentCount(announcement.id, delta)}
+                readOnly={archived}
+              />
+            </div>
           )}
         </div>
       </div>
@@ -439,12 +463,83 @@ const AnnouncementsTable = ({
           color: #6b7280;
           line-height: 1.65;
           margin: 0 0 14px;
-          /* A short look; View Details shows all of it. */
+          /* A short look; expanding the card shows all of it. */
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 4;
           line-clamp: 4;
           overflow: hidden;
+        }
+
+        .announcement-admin-card {
+          cursor: pointer;
+        }
+
+        .announcement-admin-card.is-expanded {
+          cursor: default;
+          box-shadow: 0 0 0 2px rgba(107, 44, 62, 0.25), 0 12px 28px rgba(0,0,0,0.1);
+        }
+
+        .announcement-admin-card.is-expanded:hover {
+          transform: none;
+        }
+
+        .announcement-admin-card.is-expanded .announcement-admin-card-message {
+          display: block;
+          -webkit-line-clamp: unset;
+          line-clamp: none;
+          overflow: visible;
+          color: #4b5563;
+        }
+
+        .announcement-admin-card-comments {
+          cursor: default;
+        }
+
+        .announcement-admin-details {
+          margin: 0 0 14px;
+          padding: 14px 16px;
+          border-radius: 12px;
+          background: #faf8f9;
+          border: 1px solid #f0e6e9;
+          cursor: default;
+        }
+
+        .announcement-admin-details-kicker {
+          font-size: 11.5px;
+          font-weight: 700;
+          color: #6b7280;
+          letter-spacing: 0.05em;
+        }
+
+        .announcement-admin-details dl {
+          margin: 8px 0 0;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          column-gap: 24px;
+        }
+
+        .announcement-admin-details dl > div {
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 8px 0;
+          border-bottom: 1px solid #efe7e9;
+        }
+
+        .announcement-admin-details dt {
+          font-size: 13px;
+          color: #6b7280;
+          font-weight: 600;
+        }
+
+        .announcement-admin-details dd {
+          margin: 0;
+          font-size: 13.5px;
+          color: #111827;
+          font-weight: 600;
+          text-align: right;
+          overflow-wrap: anywhere;
         }
 
         .announcement-admin-card-message strong {
@@ -574,15 +669,6 @@ const AnnouncementsTable = ({
         onClose={closeModal}
         onSaved={handleSaved}
         onArchiveToggle={handleArchiveToggle}
-      />
-
-      <AnnouncementDetailsModal
-        announcement={detailsFor != null ? data.find((a) => a.id === detailsFor) || null : null}
-        onClose={closeDetails}
-        onEdit={(a) => {
-          setDetailsFor(null);
-          if (setEditingAnnouncement) setEditingAnnouncement(a);
-        }}
       />
 
       {popup && (

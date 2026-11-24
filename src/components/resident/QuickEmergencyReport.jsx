@@ -9,7 +9,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
 import { registeredAddress, savedHomePin, samePin, useHomePinOnMap } from './useRegisteredAddress';
 import { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
-import SpecialNeedsPicker, { formatSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
+import SpecialNeedsPicker, { formatSpecialNeeds, missingSpecialCount, useSpecialNeedsPeople } from './SpecialNeedsPicker';
 import { ReportFormShell, SendFoot, CAMERA_ACCEPT } from './reportFormUi';
 import { checkMediaFile, mediaCheckMessageKey } from '../shared/media/mediaCheck';
 import { DayOldNote } from '../shared/media/MediaAttachmentField';
@@ -80,6 +80,13 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
   const galleryRef = useRef(null);
   const dialogRef = useRef(null);
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
+  // Number of people follows the special needs entered below it.
+  const specialPeople = useSpecialNeedsPeople({
+    people: form.people,
+    selected: form.special,
+    counts: form.specialCounts,
+    setPeople: (people) => set({ people })
+  });
 
   const fillFromPin = useCallback(({ houseNumber, street, area }) => {
     setForm((f) => ({ ...f, address: { ...f.address, houseNumber: houseNumber || '', street: street || '', area: area || '' } }));
@@ -188,7 +195,7 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
 
   const send = async () => {
     if (missing.length || sending) return;
-    const people = form.people === '' ? null : Number(form.people);
+    const people = form.people === '' && !specialPeople.total ? null : specialPeople.atLeast(form.people);
     if (people !== null && (!Number.isInteger(people) || people < 1 || people > MAX_PEOPLE)) {
       showPopup({ type: 'warning', message: t('emergencyModal.peopleRequired', { max: MAX_PEOPLE }) });
       document.getElementById('qr-people')?.focus();
@@ -397,7 +404,12 @@ export default function QuickEmergencyReport({ show, onClose, onRequestAssistanc
                   <div className="qr-more-body form-group">
                     <div className="qr-field">
                       <label htmlFor="qr-people">{t('quickReport.people')}</label>
-                      <input id="qr-people" type="text" inputMode="numeric" value={form.people} onChange={(e) => set({ people: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="0" style={{ maxWidth: 160 }} />
+                      <input id="qr-people" type="text" inputMode="numeric" value={form.people} onChange={(e) => set({ people: e.target.value.replace(/\D/g, '').slice(0, 3) })} onBlur={specialPeople.raiseToTotal} placeholder="0" style={{ maxWidth: 160 }} />
+                      {specialPeople.total > 0 && (
+                        <small role="status" style={{ display: 'block', marginTop: 4, color: '#6B2C3E', fontWeight: 600 }}>
+                          {t('reportForm.specialNeedsIncluded', { n: specialPeople.total })}
+                        </small>
+                      )}
                     </div>
                     <div>
                       <p className="qr-q">{t('emergencyModal.specialNeeds')}</p>

@@ -317,6 +317,7 @@ export const fetchRegisteredUsers = async () => {
         
         isMainAccount: Boolean(u.is_main_account),
         dateRegistered: u.created_at ? new Date(u.created_at).toLocaleDateString() : '',
+        registeredAt: u.created_at || null,
         // Closed accounts moved to the Archived tab.
         archivedAt: u.archived_at || null
     }));

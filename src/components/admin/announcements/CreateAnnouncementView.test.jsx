@@ -2,6 +2,16 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CreateAnnouncementView from './CreateAnnouncementView';
 import { createAnnouncement } from '../../../Services/api';
 
+// Types into the Message box (an editable area, not a textarea).
+const typeMessage = (html) => {
+  const box = screen.getByLabelText(/Message/);
+  box.innerHTML = html;
+  fireEvent.input(box);
+  return box;
+};
+
+beforeEach(() => localStorage.clear());
+
 jest.mock('../../../Services/api', () => ({
   fetchLinkPreview: jest.fn(),
   createAnnouncement: jest.fn(),
@@ -19,7 +29,7 @@ test('category buttons, a live preview, and posting sends the same fields as bef
   expect(screen.getByRole('button', { name: 'Weather Advisory' })).toHaveAttribute('aria-pressed', 'true');
 
   fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Class suspension' } });
-  fireEvent.change(screen.getByLabelText(/Message/), { target: { value: 'Walang pasok bukas.' } });
+  typeMessage('Walang pasok bukas.');
   expect(screen.getByRole('heading', { name: 'Class suspension' })).toBeInTheDocument(); // the preview card
   expect(screen.getByRole('status')).toHaveTextContent('Ready to post');
 
@@ -43,24 +53,29 @@ test('Photo / News link switch shows one at a time', () => {
 test('what was typed is kept when the form is closed and opened again, until Start over', () => {
   const first = render(<CreateAnnouncementView onCreated={() => {}} onCancel={() => {}} />);
   fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Draft title' } });
-  fireEvent.change(screen.getByLabelText(/Message/), { target: { value: 'Line one\n\nLine two' } });
+  typeMessage('Line one<br><br>Line two');
   first.unmount();
 
   render(<CreateAnnouncementView onCreated={() => {}} onCancel={() => {}} />);
   expect(screen.getByLabelText(/Title/)).toHaveValue('Draft title');
-  expect(screen.getByLabelText(/Message/)).toHaveValue('Line one\n\nLine two');
+  expect(screen.getByLabelText(/Message/).innerHTML).toBe('Line one<br><br>Line two');
   expect(screen.getByText('Your unsaved draft was restored.')).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: 'Start over' }));
   expect(screen.getByLabelText(/Title/)).toHaveValue('');
 });
 
-test('Bold wraps the selected message text', () => {
+test('Bold makes the selected text bold in the Message box itself, not with symbols', () => {
   render(<CreateAnnouncementView onCreated={() => {}} onCancel={() => {}} />);
-  const box = screen.getByLabelText(/Message/);
-  fireEvent.change(box, { target: { value: 'Stay safe' } });
-  box.setSelectionRange(0, 4);
+  const box = typeMessage('Stay safe');
+  const range = document.createRange();
+  range.setStart(box.firstChild, 0);
+  range.setEnd(box.firstChild, 4);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
   fireEvent.click(screen.getByRole('button', { name: 'Bold' }));
-  expect(box).toHaveValue('**Stay** safe');
-  expect(screen.getByText('Stay', { selector: 'strong' })).toBeInTheDocument(); // the preview
+
+  expect(box.querySelector('strong, b').textContent).toBe('Stay');
+  expect(box.textContent).toBe('Stay safe'); // no ** in the box
+  expect(screen.getByText('Stay', { selector: '.anf-card-text strong' })).toBeInTheDocument(); // the preview
 });

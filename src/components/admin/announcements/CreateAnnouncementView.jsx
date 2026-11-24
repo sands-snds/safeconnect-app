@@ -3,7 +3,8 @@ import { fetchLinkPreview, createAnnouncement, updateAnnouncement, isSessionErro
 import { ANNOUNCEMENT_CATEGORIES, CATEGORY_COLORS } from "./constants";
 import ResultPopup from "../../shared/ResultPopup";
 import { tx } from "../../../i18n/adminText";
-import FormattedText from "../../shared/FormattedText";
+import FormattedText, { stripFormatting } from "../../shared/FormattedText";
+import RichMessageEditor from "./RichMessageEditor";
 
 // Local-time YYYY-MM-DD for <input type="date">.
 const toInputDate = (value) => {
@@ -48,9 +49,6 @@ const clearDraft = (key) => {
   try { localStorage.removeItem(STORED_DRAFT_KEY); } catch { /* ignore */ }
 };
 
-// Bold / italic: wraps the selected text in the markers FormattedText reads,
-// or removes them when the selection is already wrapped.
-const MARKERS = { bold: "**", italic: "_" };
 
 const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onArchiveToggle }) => {
   const isEditMode = !!editingAnnouncement;
@@ -76,7 +74,6 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
   // Which of the two optional extras shows: "photo" or "link" (both are kept).
   const [mediaTab, setMediaTab] = useState(editingAnnouncement?.sourceUrl ? "link" : "photo");
   const debounceRef = useRef(null);
-  const messageRef = useRef(null);
   // The draft key whose values are loaded (saving waits for it), and whether
   // a kept draft was brought back.
   const [draftReady, setDraftReady] = useState(null);
@@ -133,56 +130,6 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
     clearDraft(draftKey);
     setDraftRestored(false);
     applyOriginal();
-  };
-
-  // Wrap (or unwrap) the selected message text in bold / italic markers.
-  const applyFormat = (kind) => {
-    const el = messageRef.current;
-    if (!el) return;
-    const mark = MARKERS[kind];
-    const start = el.selectionStart ?? message.length;
-    const end = el.selectionEnd ?? message.length;
-    const before = message.slice(0, start);
-    const selected = message.slice(start, end);
-    const after = message.slice(end);
-    const n = mark.length;
-
-    let next;
-    let selStart;
-    let selEnd;
-    if (selected.length > 2 * n && selected.startsWith(mark) && selected.endsWith(mark)) {
-      // The selection includes its markers: remove them.
-      next = before + selected.slice(n, -n) + after;
-      selStart = start;
-      selEnd = end - 2 * n;
-    } else if (before.endsWith(mark) && after.startsWith(mark) && selected) {
-      // The markers sit just outside the selection: remove them.
-      next = before.slice(0, -n) + selected + after.slice(n);
-      selStart = start - n;
-      selEnd = end - n;
-    } else {
-      // Keep spaces picked up by a double-click outside the markers.
-      const lead = selected.match(/^\s*/)[0];
-      const trail = selected.slice(lead.length).match(/\s*$/)[0];
-      const core = selected.slice(lead.length, selected.length - trail.length);
-      next = before + lead + mark + core + mark + trail + after;
-      selStart = start + lead.length + n;
-      selEnd = selStart + core.length;
-    }
-    setMessage(next);
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(selStart, selEnd);
-    });
-  };
-
-  const handleMessageKeyDown = (e) => {
-    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
-    const key = e.key.toLowerCase();
-    if (key === "b" || key === "i") {
-      e.preventDefault();
-      applyFormat(key === "b" ? "bold" : "italic");
-    }
   };
 
   // The announcement as it is (edit) or an empty form (new).
@@ -299,6 +246,12 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // The Message box isn't a form field, so check it here.
+    if (!message.trim()) {
+      document.getElementById("anf-message")?.focus();
+      setSaveError(tx("Please write the announcement message."));
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -435,43 +388,17 @@ const CreateAnnouncementView = ({ editingAnnouncement, onCreated, onCancel, onAr
 
             <div className="anf-field">
               <div className="anf-row">
-                <label htmlFor="anf-message" className="anf-label">{tx("Message")} <span className="anf-req">*</span></label>
-                <span className="anf-count">{tx("{{count}} characters", { count: message.length })}</span>
+                <span id="anf-message-label" className="anf-label">{tx("Message")} <span className="anf-req">*</span></span>
+                <span className="anf-count">{tx("{{count}} characters", { count: stripFormatting(message).length })}</span>
               </div>
-              <div className="anf-editor">
-                <div className="anf-toolbar" role="toolbar" aria-label={tx("Text formatting")}>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => applyFormat("bold")}
-                    aria-label={tx("Bold")}
-                    title={`${tx("Bold")} (Ctrl+B)`}
-                  >
-                    <i className="bi bi-type-bold" aria-hidden="true"></i>
-                  </button>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => applyFormat("italic")}
-                    aria-label={tx("Italic")}
-                    title={`${tx("Italic")} (Ctrl+I)`}
-                  >
-                    <i className="bi bi-type-italic" aria-hidden="true"></i>
-                  </button>
-                  <span className="anf-toolbar-hint">{tx("Select text, then tap B or I")}</span>
-                </div>
-                <textarea
-                  id="anf-message"
-                  ref={messageRef}
-                  rows={6}
-                  className="anf-input anf-textarea"
-                  placeholder={tx("Write the announcement details...")}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={handleMessageKeyDown}
-                  required
-                />
-              </div>
+              <RichMessageEditor
+                id="anf-message"
+                labelledBy="anf-message-label"
+                value={message}
+                onChange={setMessage}
+                placeholder={tx("Write the announcement details...")}
+                disabled={submitting}
+              />
             </div>
 
             <div className="anf-field">
@@ -671,6 +598,12 @@ const FORM_STYLE = `
   .anf-toolbar button:hover, .anf-toolbar button:focus-visible { background: #f5e9ec; color: #6B2C3E; outline: none; }
   .anf-toolbar-hint { margin-left: auto; padding-right: 6px; font-size: 12px; color: #6b7280; }
   .anf-editor .anf-textarea { border-radius: 0 0 10px 10px; }
+  .anf-toolbar button.on { background: #6B2C3E; color: #fff; }
+  .anf-toolbar button:disabled { opacity: .5; cursor: default; }
+  .anf-rich { min-height: 160px; max-height: 420px; overflow-y: auto; white-space: pre-wrap; overflow-wrap: anywhere; text-align: justify; text-justify: inter-word; color: #111827; cursor: text; -webkit-user-select: text; user-select: text; }
+  .anf-rich.is-empty::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; }
+  .anf-rich strong, .anf-rich b { font-weight: 700; }
+  .anf-rich div, .anf-rich p { margin: 0; }
   .anf-draft { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; border-radius: 10px; background: #fdf6e3; border: 1px solid #f3e2b3; color: #78350f; font-size: 13px; }
   .anf-draft .anf-link-btn { margin-left: auto; }
   .anf-pill { align-self: flex-start; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }

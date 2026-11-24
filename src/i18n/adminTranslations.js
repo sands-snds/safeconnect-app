@@ -658,5 +658,14 @@ export const ADMIN_TL = {
   "From the news link": "Mula sa link ng balita",
   "View article": "Tingnan ang artikulo",
   "Archived: residents can't see it.": "Naka-archive: hindi ito nakikita ng mga residente.",
-  "Shown on the residents' News page.": "Ipinapakita sa News page ng mga residente."
+  "Shown on the residents' News page.": "Ipinapakita sa News page ng mga residente.",
+  "Hide Details": "Itago ang Detalye",
+  "Please write the announcement message.": "Pakisulat ang mensahe ng anunsyo.",
+
+  // Users: date registered filter
+  "Filter by date registered": "I-filter ayon sa petsa ng pagrehistro",
+  "Any time": "Kahit kailan",
+  "Today": "Ngayong araw",
+  "This year": "Ngayong taon",
+  "Custom range": "Pumili ng petsa"
 };

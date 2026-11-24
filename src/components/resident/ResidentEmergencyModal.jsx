@@ -12,7 +12,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { announceReportsChanged } from './useCallAccess';
 import useRegisteredAddressFill from './useRegisteredAddress';
 import ReportLocationFields, { EMPTY_LOCATION, composeLocation, coordsForSubmit } from './ReportLocationFields';
-import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount } from './SpecialNeedsPicker';
+import SpecialNeedsPicker, { formatSpecialNeeds, parseSpecialNeeds, missingSpecialCount, useSpecialNeedsPeople } from './SpecialNeedsPicker';
  
  
 
@@ -358,6 +358,13 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
   }, [show]);
 
   const [specialInvalid, setSpecialInvalid] = useState(null);
+  // Number of People Affected follows the special needs entered below it.
+  const specialPeople = useSpecialNeedsPeople({
+    people: formData.people,
+    selected: formData.special,
+    counts: formData.specialCounts,
+    setPeople: (people) => setFormData((prev) => ({ ...prev, people }))
+  });
   const handleSpecialCount = (option, value) => {
     setSpecialInvalid(null);
     setFormData((prev) => ({ ...prev, specialCounts: { ...prev.specialCounts, [option]: value } }));
@@ -399,7 +406,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
       return;
     }
 
-    const peopleAffected = Number(formData.people);
+    const peopleAffected = specialPeople.atLeast(formData.people);
     if (!Number.isInteger(peopleAffected) || peopleAffected < 1 || peopleAffected > MAX_PEOPLE_AFFECTED) {
       showPopup({ type: 'warning', message: t('emergencyModal.peopleRequired', { max: MAX_PEOPLE_AFFECTED }) });
       document.getElementById('em-people')?.focus();
@@ -463,7 +470,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
           latitude: gpsCoords ? gpsCoords.lat : null,
           longitude: gpsCoords ? gpsCoords.lng : null,
           details: formData.details,
-          people: Number(formData.people),
+          people: specialPeople.atLeast(formData.people),
           special: formatSpecialNeeds(formData.special, formData.specialCounts),
           
           ...(mediaUrl ? { photoUrl: mediaUrl, mediaType: formData.mediaType || null } : {})
@@ -502,7 +509,7 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
         latitude: coords ? coords.lat : null,
         longitude: coords ? coords.lng : null,
         details: formData.details,
-        people: Number(formData.people),
+        people: specialPeople.atLeast(formData.people),
         special: formatSpecialNeeds(formData.special, formData.specialCounts),
 
         photoUrl: mediaUrl || null,
@@ -1371,12 +1378,18 @@ function ResidentEmergencyModal({ show, type, onClose, onRequestAssistance, edit
                     step={1}
                     value={formData.people}
                     onChange={(e) => setFormData((prev) => ({ ...prev, people: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                    onBlur={specialPeople.raiseToTotal}
                     placeholder={t('assistanceModal.peoplePlaceholder')}
                     required
                     disabled={isSubmitting}
                     className="form-input"
                   />
                   <div className="media-hint">{t('emergencyModal.peopleHint')}</div>
+                  {specialPeople.total > 0 && (
+                    <div className="media-hint" role="status" style={{ color: '#6B2C3E', fontWeight: 600 }}>
+                      {t('reportForm.specialNeedsIncluded', { n: specialPeople.total })}
+                    </div>
+                  )}
                 </div>
                 <div className="form-group">
                   <label className="form-label">

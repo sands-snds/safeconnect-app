@@ -49,9 +49,35 @@ export const stripFormatting = (text) =>
         .replace(/\*\*([\s\S]+?)\*\*/g, "$1")
         .replace(/(^|[^\w])_([^_\n](?:[^_\n]*[^_\n])?)_(?![\w])/g, "$1$2");
 
+// The message as HTML for the admin's Message box (RichMessageEditor), so
+// bold / italic show as bold / italic while typing. Everything is escaped
+// first; only <strong>, <em> and <br> are added.
+const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+));
+export const messageToHtml = (text) => {
+    const value = String(text || "");
+    const html = escapeHtml(value)
+        .replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^\w])_([^_\n](?:[^_\n]*[^_\n])?)_(?![\w])/g, "$1<em>$2</em>")
+        .replace(/\n/g, "<br>");
+    // A last line break only shows (and keeps its empty line) with one more.
+    return value.endsWith("\n") ? `${html}<br>` : html;
+};
+
+// Announcement paragraphs: justified, with spaces, line breaks and blank
+// lines kept, the same in the admin's preview, the admin cards and the
+// residents' News page.
+export const MESSAGE_STYLE = {
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
+    textAlign: "justify",
+    textJustify: "inter-word"
+};
+
 // <FormattedText as="p" className="..." text={message} />
 const FormattedText = ({ text, as: Tag = "p", className, style }) => (
-    <Tag className={className} style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", ...style }}>
+    <Tag className={className} style={{ ...MESSAGE_STYLE, ...style }}>
         {formatMessage(text)}
     </Tag>
 );

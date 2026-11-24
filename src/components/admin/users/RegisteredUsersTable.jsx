@@ -5,9 +5,12 @@ import UserRoleSelect from './UserRoleSelect';
 import UserChangeConfirmModal from './UserChangeConfirmModal';
 import { confirmPopup } from '../../shared/popup';
 import { tx } from "../../../i18n/adminText";
+import RegisteredDateFilter, { registeredInRange } from './RegisteredDateFilter';
 
-// Each table shows 5 accounts at a time.
+// Each table starts at 5 accounts a page; the Residents table has a
+// "Rows per page" choice and a date registered filter.
 const USERS_PER_PAGE = 5;
+const RESIDENT_PAGE_SIZES = [5, 10, 25, 50, 100];
 
 const badgeStyle = (bg, color) => ({
   marginLeft: 6,
@@ -121,24 +124,26 @@ const RegisteredUsersTable = ({
   };
 
   const headers = ['NAME', 'ROLE', 'DATE REGISTERED', 'STATUS'];
+  const shownResidents = residents.filter((u) => registeredInRange(u, filters.users?.registered));
 
   return (
     <>
       <ListView
-        data={residents}
+        data={shownResidents}
         filterType="users"
         filters={filters}
         setFilters={setFilters}
         headers={headers}
         renderRow={renderRow}
-        sectionTitle={`${tx("Residents")} (${residents.length})`}
+        sectionTitle={`${tx("Residents")} (${shownResidents.length})`}
         statusOptions={[allOption('All Statuses'), ...USER_STATUSES]}
+        extraFilters={<RegisteredDateFilter filters={filters} setFilters={setFilters} />}
         exportType="users"
         exportWithOptions
         exportTitle={tx("Registered Users")}
         itemLabel={tx("residents")}
         defaultPageSize={USERS_PER_PAGE}
-        fixedPageSize
+        pageSizeOptions={RESIDENT_PAGE_SIZES}
         collapsible
         collapseKey="users-residents"
       />

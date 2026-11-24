@@ -63,6 +63,8 @@ const ListView = ({
   // page" choice (Users: 5 at a time).
   defaultPageSize = DEFAULT_PAGE_SIZE,
   fixedPageSize = false,
+  // The "Rows per page" choices (Pagination's default when left out).
+  pageSizeOptions,
   // Table layout: a Show / Hide table button beside the section title.
   // collapseKey: remembers the choice in this browser.
   collapsible = false,
@@ -234,6 +236,7 @@ const ListView = ({
         pageSize={effectivePageSize}
         onPageChange={goToPage}
         onPageSizeChange={handlePageSizeChange}
+        pageSizeOptions={pageSizeOptions}
         itemLabel={itemLabel}
       />}
     </div>
