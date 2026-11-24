@@ -8,6 +8,7 @@ import { LOG_PERIOD_OPTIONS } from './logArchive';
 import { timeAgo, formatDateTime } from '../shared/timeUtils';
 import Pagination from '../shared/Pagination';
 import { tx } from "../../../i18n/adminText";
+import { useCollapsed, CollapseButton } from '../shared/Collapsible';
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -86,6 +87,9 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [showArchived, setShowArchived] = useState(false);
   const [archivedActivity, setArchivedActivity] = useState(null); // null = not loaded yet
+  // Each table can be hidden (remembered in this browser).
+  const [accountsCollapsed, toggleAccounts] = useCollapsed('logs-admin-accounts');
+  const [activityCollapsed, toggleActivity] = useCollapsed('logs-admin-activity');
 
   const loadArchived = useCallback(() => {
     fetchAdminLogs({ archived: true })
@@ -143,12 +147,15 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
               {admins.length}
             </span>
           </div>
-          <span style={{ fontSize: 13, opacity: 0.9 }}>
-            {onlineCount} online now
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 13, opacity: 0.9 }}>
+              {onlineCount} online now
+            </span>
+            <CollapseButton light collapsed={accountsCollapsed} onToggle={toggleAccounts} controls="admin-logs-accounts" label="Admin & Official Accounts" />
+          </div>
         </div>
 
-        <div className="table-container">
+        <div className="table-container" id="admin-logs-accounts" hidden={accountsCollapsed}>
           <table className="data-table">
             <thead className="table-header">
               <tr>
@@ -243,7 +250,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
       />
 
       <div className="section">
-        <div className="section-header">
+        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="bi bi-clock-history"></i>
             <span>{showArchived ? 'Archived Activity' : 'Activity Log'}</span>
@@ -251,8 +258,10 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
               {filteredActivity.length}
             </span>
           </div>
+          <CollapseButton light collapsed={activityCollapsed} onToggle={toggleActivity} controls="admin-logs-activity" label={showArchived ? 'Archived Activity' : 'Activity Log'} />
         </div>
 
+        <div id="admin-logs-activity" hidden={activityCollapsed}>
         <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <input
             type="text"
@@ -350,6 +359,7 @@ const AdminLogsTable = ({ admins = [], activity = [], filters, setFilters, isSup
           itemLabel={tx("entries")}
           style={{ margin: 0, padding: '12px 16px', background: '#f9fafb', borderTop: '1px solid #e5e7eb' }}
         />
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { fetchVerifications, fetchValidIdBlob, decideVerification } from "../../
 import { confirmPopup, showPopup } from "../../shared/popup";
 import { tx } from "../../../i18n/adminText";
 import { useLiveEvent } from "../../shared/liveBus";
+import Pagination from "../shared/Pagination";
 
 // Residents who signed up with a valid ID wait here until an Official or
 // Admin checks that they live in Barangay Santa Fe. Approving activates the
@@ -10,6 +11,8 @@ import { useLiveEvent } from "../../shared/liveBus";
 
 const TABS = ["Pending", "Approved", "Rejected"];
 const REFRESH_MS = 30 * 1000;
+// Registrations shown at a time.
+const PER_PAGE = 6;
 const REASON_MIN = 5;
 const REASON_MAX = 500;
 const QUICK_REASONS = [
@@ -250,6 +253,8 @@ export default function AccountVerificationPage({ focusId, onClearFocus, onChang
     const [tab, setTab] = useState("Pending");
     const [search, setSearch] = useState("");
     const [reviewingId, setReviewingId] = useState(null);
+    const [page, setPage] = useState(1);
+    const listTopRef = useRef(null);
 
     const load = useCallback(async () => {
         try {
@@ -294,6 +299,15 @@ export default function AccountVerificationPage({ focusId, onClearFocus, onChang
             .filter((r) => !q || [r.fullName, r.username, r.email, r.contact, r.idType].some((v) => String(v || "").toLowerCase().includes(q)));
     }, [registrations, tab, search]);
     const reviewing = registrations.find((r) => r.id === reviewingId) || null;
+    // Back to the first page when the tab or the search changes.
+    useEffect(() => { setPage(1); }, [tab, search]);
+    const totalPages = Math.max(1, Math.ceil(shown.length / PER_PAGE));
+    const currentPage = Math.min(page, totalPages);
+    const pageItems = shown.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+    const goToPage = (next) => {
+        setPage(Math.max(1, Math.min(totalPages, next)));
+        listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
 
     const handleDecided = async (changed) => {
         await load();
@@ -393,7 +407,7 @@ export default function AccountVerificationPage({ focusId, onClearFocus, onChang
                 {tx("Residents upload a valid ID when they sign up. Check that each one lives in Barangay Santa Fe, then approve the account so they can sign in, or reject it with a reason.")}
             </p>
 
-            <div className="av-toolbar">
+            <div className="av-toolbar" ref={listTopRef} style={{ scrollMarginTop: 96 }}>
                 <div className="av-tabs" role="tablist" aria-label={tx("Registrations")}>
                     {TABS.map((s) => (
                         <button key={s} type="button" role="tab" aria-selected={tab === s}
@@ -424,8 +438,9 @@ export default function AccountVerificationPage({ focusId, onClearFocus, onChang
                         : tx("No {{status}} registrations yet.", { status: tx(tab).toLowerCase() })}
                 </div>
             ) : (
+                <>
                 <div className="av-list">
-                    {shown.map((r) => (
+                    {pageItems.map((r) => (
                         <article key={r.id} className={`av-card ${r.verificationStatus.toLowerCase()}`}>
                             <div className="av-card-head">
                                 <div style={{ minWidth: 0 }}>
@@ -449,6 +464,15 @@ export default function AccountVerificationPage({ focusId, onClearFocus, onChang
                         </article>
                     ))}
                 </div>
+                <Pagination
+                    page={currentPage}
+                    totalPages={totalPages}
+                    totalItems={shown.length}
+                    pageSize={PER_PAGE}
+                    onPageChange={goToPage}
+                    itemLabel="registrations"
+                />
+                </>
             )}
 
             {reviewing && (

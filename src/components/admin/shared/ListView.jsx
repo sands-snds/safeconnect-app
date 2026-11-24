@@ -3,6 +3,7 @@ import Section from './Section';
 import Table from './Table';
 import GenerateReportButton from './GenerateReportButton';
 import Pagination from './Pagination';
+import { useCollapsed } from './Collapsible';
 import { tx } from "../../../i18n/adminText";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -56,12 +57,23 @@ const ListView = ({
 
   sectionTitle,
 
-  showFilters = true
+  showFilters = true,
+
+  // Rows per page when not controlled; fixedPageSize hides the "Rows per
+  // page" choice (Users: 5 at a time).
+  defaultPageSize = DEFAULT_PAGE_SIZE,
+  fixedPageSize = false,
+  // Table layout: a Show / Hide table button beside the section title.
+  // collapseKey: remembers the choice in this browser.
+  collapsible = false,
+  collapseKey
 }) => {
   const isControlled = typeof page === 'number';
 
   const [internalPage, setInternalPage] = useState(1);
-  const [internalPageSize, setInternalPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [internalPageSize, setInternalPageSize] = useState(defaultPageSize);
+  const [collapsed, toggleCollapsed] = useCollapsed(collapsible ? collapseKey : null);
+  const tableHidden = collapsible && collapsed && layout === 'table';
   const listTopRef = useRef(null);
 
   const filterKey = JSON.stringify(filters?.[filterType] || {});
@@ -92,7 +104,9 @@ const ListView = ({
     listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handlePageSizeChange = isControlled
+  const handlePageSizeChange = fixedPageSize
+    ? undefined
+    : isControlled
     ? onPageSizeChange
     : (size) => {
         setInternalPageSize(size);
@@ -200,7 +214,7 @@ const ListView = ({
           )}
         </div>
       ) : (
-        <Section title={sectionTitle ?? (title ? `All ${title}` : undefined)}>
+        <Section title={sectionTitle ?? (title ? `All ${title}` : undefined)} collapsible={collapsible} collapsed={collapsed} onToggle={toggleCollapsed}>
           <Table headers={headers}>
             {visibleData.map(item => renderRow(item))}
           </Table>
@@ -213,7 +227,7 @@ const ListView = ({
         </Section>
       )}
 
-      <Pagination
+      {!tableHidden && <Pagination
         page={currentPage}
         totalPages={effectiveTotalPages}
         totalItems={effectiveTotalItems}
@@ -221,7 +235,7 @@ const ListView = ({
         onPageChange={goToPage}
         onPageSizeChange={handlePageSizeChange}
         itemLabel={itemLabel}
-      />
+      />}
     </div>
   );
 };

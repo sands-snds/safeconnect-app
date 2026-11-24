@@ -6,6 +6,9 @@ import UserChangeConfirmModal from './UserChangeConfirmModal';
 import { confirmPopup } from '../../shared/popup';
 import { tx } from "../../../i18n/adminText";
 
+// Each table shows 5 accounts at a time.
+const USERS_PER_PAGE = 5;
+
 const badgeStyle = (bg, color) => ({
   marginLeft: 6,
   fontSize: 10.5,
@@ -134,6 +137,10 @@ const RegisteredUsersTable = ({
         exportWithOptions
         exportTitle={tx("Registered Users")}
         itemLabel={tx("residents")}
+        defaultPageSize={USERS_PER_PAGE}
+        fixedPageSize
+        collapsible
+        collapseKey="users-residents"
       />
 
       <div style={{ marginTop: 28 }}>
@@ -148,6 +155,10 @@ const RegisteredUsersTable = ({
           statusOptions={[]}
           showFilters={false}
           itemLabel={tx("accounts")}
+          defaultPageSize={USERS_PER_PAGE}
+          fixedPageSize
+          collapsible
+          collapseKey="users-staff"
         />
       </div>
 
