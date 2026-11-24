@@ -1,28 +1,20 @@
-import React, { useEffect } from "react";
+import React from "react";
 import CreateAnnouncementView from "./CreateAnnouncementView";
 import { tx } from "../../../i18n/adminText";
 
 // The create / edit announcement window: header, then the form
 // (CreateAnnouncementView: fields beside a live preview, with Cancel / Post
-// fixed at the bottom). Esc or a click outside closes it.
+// fixed at the bottom). Only the X or Cancel closes it: a click outside, a
+// text selection dragged past its edge, or Esc leave it open. What was
+// entered is kept as a draft (CreateAnnouncementView) for the next time.
 const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved, onArchiveToggle }) => {
     const isEditMode = !!editingAnnouncement;
-
-    useEffect(() => {
-        if (!show) return;
-        const handleKeyDown = (e) => {
-            if (e.key === "Escape") onClose();
-        };
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [show, onClose]);
 
     if (!show) return null;
 
     return (
         <div
             className="announcement-modal-overlay"
-            onClick={onClose}
             style={{
                 position: "fixed",
                 inset: 0,
@@ -38,7 +30,6 @@ const AnnouncementModal = ({ show, editingAnnouncement, onClose, onSaved, onArch
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="announcement-modal-title"
-                onClick={(e) => e.stopPropagation()}
                 style={{
                     background: "#fff",
                     borderRadius: "18px",

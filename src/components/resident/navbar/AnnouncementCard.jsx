@@ -5,6 +5,7 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 import { flashHighlight } from "../../shared/highlight";
 import CommentAvatar from "../../shared/CommentAvatar";
 import MediaLightbox from "../../shared/media/MediaLightbox";
+import FormattedText, { stripFormatting } from "../../shared/FormattedText";
 import {
     toggleAnnouncementLike,
     fetchAnnouncementComments,
@@ -357,7 +358,7 @@ export default function AnnouncementCard({
         const shareUrl = announcement.sourceUrl || window.location.href;
         const shareData = {
             title: announcement.title,
-            text: announcement.message,
+            text: stripFormatting(announcement.message),
             url: shareUrl
         };
         if (navigator.share) {
@@ -368,7 +369,7 @@ export default function AnnouncementCard({
             return;
         }
         try {
-            await navigator.clipboard.writeText(`${announcement.title}\n\n${announcement.message}\n\n${shareUrl}`);
+            await navigator.clipboard.writeText(`${announcement.title}\n\n${stripFormatting(announcement.message)}\n\n${shareUrl}`);
             setShareFeedback(true);
             setTimeout(() => setShareFeedback(false), 1800);
         } catch {
@@ -421,9 +422,7 @@ export default function AnnouncementCard({
                     {announcement.title}
                 </h3>
 
-                <p>
-                    {announcement.message}
-                </p>
+                <FormattedText className="news-card-message" text={announcement.message} />
 
                 {announcement.sourceUrl && (
                     <a

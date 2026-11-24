@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { stripFormatting } from "../../shared/FormattedText";
 
 const AnnouncementShareButton = ({ announcement }) => {
   const [open, setOpen] = useState(false);
@@ -6,7 +7,7 @@ const AnnouncementShareButton = ({ announcement }) => {
   const wrapRef = useRef(null);
 
   const shareUrl = announcement.sourceUrl || `${window.location.origin}/`;
-  const shareText = `${announcement.title}\n\n${announcement.message}\n\n${shareUrl}`;
+  const shareText = `${announcement.title}\n\n${stripFormatting(announcement.message)}\n\n${shareUrl}`;
   const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   useEffect(() => {
@@ -26,7 +27,7 @@ const AnnouncementShareButton = ({ announcement }) => {
   const nativeShare = async () => {
     setOpen(false);
     try {
-      await navigator.share({ title: announcement.title, text: announcement.message, url: shareUrl });
+      await navigator.share({ title: announcement.title, text: stripFormatting(announcement.message), url: shareUrl });
     } catch {
       // Cancelled -- nothing to do.
     }

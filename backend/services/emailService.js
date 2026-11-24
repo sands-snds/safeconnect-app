@@ -163,6 +163,16 @@ const sendSigninNotification = async (toEmail, fullName) => {
     });
 };
 
+// The announcement message as email HTML, matching the News page
+// (src/components/shared/FormattedText.jsx): **bold**, _italic_, and line
+// breaks / blank lines kept as <br> (mail apps often ignore
+// white-space). Everything else is escaped.
+const formatAnnouncementHtml = (text) =>
+    escapeHtml(text)
+        .replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^\w])_([^_\n](?:[^_\n]*[^_\n])?)_(?![\w])/g, "$1<em>$2</em>")
+        .replace(/\r?\n/g, "<br>");
+
 // ── 4. Announcement notification ────────────────────────────────────────────
 const sendAnnouncementEmail = async (toEmail, fullName, announcement) => {
     const html = wrap(`
@@ -170,7 +180,7 @@ const sendAnnouncementEmail = async (toEmail, fullName, announcement) => {
             New announcement from Barangay Santa Fe
         </h2>
         <p style="margin:0 0 20px;font-size:14px;color:#666;line-height:1.7;">
-            Hi <strong>${fullName}</strong>, your barangay has posted a new announcement.
+            Hi <strong>${escapeHtml(fullName)}</strong>, your barangay has posted a new announcement.
         </p>
         <div style="border:1.5px solid #f0e4e7;border-radius:12px;overflow:hidden;margin-bottom:24px;">
             <div style="background:#6B2C3E;padding:14px 20px;">
@@ -180,11 +190,9 @@ const sendAnnouncementEmail = async (toEmail, fullName, announcement) => {
             </div>
             <div style="padding:20px;">
                 <h3 style="margin:0 0 10px;font-size:17px;font-weight:800;color:#111;line-height:1.3;">
-                    ${announcement.title}
+                    ${escapeHtml(announcement.title)}
                 </h3>
-                <p style="margin:0;font-size:14px;color:#555;line-height:1.7;">
-                    ${announcement.message}
-                </p>
+                <p style="margin:0;font-size:14px;color:#555;line-height:1.7;">${formatAnnouncementHtml(announcement.message)}</p>
             </div>
         </div>
         <p style="margin:0;font-size:13px;color:#aaa;line-height:1.6;">

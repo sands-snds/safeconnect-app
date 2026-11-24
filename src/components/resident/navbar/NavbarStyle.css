@@ -926,6 +926,17 @@ a.news-card-placeholder:hover .news-card-placeholder-cta {
     margin: 0 0 1rem;
 }
 
+/* The announcement message (FormattedText): spaces, line breaks and blank
+   lines show as the admin typed them, as in the admin's preview. */
+.news-card-message {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.news-card-message strong {
+    color: #374151;
+}
+
 .news-card-source-link {
     display: inline-flex;
     align-items: center;

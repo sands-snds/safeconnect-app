@@ -709,7 +709,9 @@ export const fetchAnnouncements = async ({ includeArchived = false } = {}) => {
         likeCount: a.likeCount || 0,
         commentCount: a.commentCount || 0,
         likedByMe: !!a.likedByMe,
-        archivedAt: a.archived_at || null
+        archivedAt: a.archived_at || null,
+        updatedAt: a.updated_at || null,
+        postedBy: a.posted_by_name || null
     }));
 };
 

@@ -5,6 +5,7 @@ import WeatherCard from "./WeatherCard";
 import DemoVideoCard from "./DemoVideoCard";
 import FacebookPageCard, { useFacebookCard } from "../../shared/FacebookPageCard";
 import { useSiteMedia, hasVideo } from "../../shared/useSiteContent";
+import { stripFormatting } from "../../shared/FormattedText";
 
 
 
@@ -55,7 +56,7 @@ const NewsOverlay = ({
         const q = query.trim().toLowerCase();
         return announcements.filter((a) =>
             (category === "all" || a.category === category) &&
-            (!q || `${a.title} ${a.message}`.toLowerCase().includes(q))
+            (!q || `${a.title} ${stripFormatting(a.message)}`.toLowerCase().includes(q))
         );
     }, [announcements, category, query]);
 

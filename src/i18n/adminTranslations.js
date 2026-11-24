@@ -634,5 +634,29 @@ export const ADMIN_TL = {
   "beeps": "mga beep",
   "Turn on sound": "I-on ang tunog",
   "New report sound is on": "Naka-on ang tunog para sa bagong ulat",
-  "Turn on the new report sound": "I-on ang tunog para sa bagong ulat"
+  "Turn on the new report sound": "I-on ang tunog para sa bagong ulat",
+
+  // Announcements: formatting, drafts, View Details
+  "View Details": "Tingnan ang Detalye",
+  "Start over": "Magsimula muli",
+  "Bold": "Bold",
+  "Italic": "Italic",
+  "Text formatting": "Pag-format ng teksto",
+  "Select text, then tap B or I": "Pumili ng teksto, saka pindutin ang B o I",
+  "Your unsaved draft was restored.": "Naibalik ang iyong hindi pa nai-save na draft.",
+  "Announcement Details": "Detalye ng Anunsyo",
+  "Announcement information": "Impormasyon ng anunsyo",
+  "INFORMATION": "IMPORMASYON",
+  "Announcement date": "Petsa ng anunsyo",
+  "Posted on": "Nai-post noong",
+  "Last edited": "Huling binago",
+  "Archived on": "Na-archive noong",
+  "Posted by": "Nai-post ni",
+  "Likes": "Mga Like",
+  "Message length": "Haba ng mensahe",
+  "Uploaded photo": "Na-upload na larawan",
+  "From the news link": "Mula sa link ng balita",
+  "View article": "Tingnan ang artikulo",
+  "Archived: residents can't see it.": "Naka-archive: hindi ito nakikita ng mga residente.",
+  "Shown on the residents' News page.": "Ipinapakita sa News page ng mga residente."
 };

@@ -39,3 +39,28 @@ test('Photo / News link switch shows one at a time', () => {
   expect(screen.getByLabelText('News article link')).toBeInTheDocument();
   expect(screen.queryByText('Choose a photo')).toBeNull();
 });
+
+test('what was typed is kept when the form is closed and opened again, until Start over', () => {
+  const first = render(<CreateAnnouncementView onCreated={() => {}} onCancel={() => {}} />);
+  fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Draft title' } });
+  fireEvent.change(screen.getByLabelText(/Message/), { target: { value: 'Line one\n\nLine two' } });
+  first.unmount();
+
+  render(<CreateAnnouncementView onCreated={() => {}} onCancel={() => {}} />);
+  expect(screen.getByLabelText(/Title/)).toHaveValue('Draft title');
+  expect(screen.getByLabelText(/Message/)).toHaveValue('Line one\n\nLine two');
+  expect(screen.getByText('Your unsaved draft was restored.')).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Start over' }));
+  expect(screen.getByLabelText(/Title/)).toHaveValue('');
+});
+
+test('Bold wraps the selected message text', () => {
+  render(<CreateAnnouncementView onCreated={() => {}} onCancel={() => {}} />);
+  const box = screen.getByLabelText(/Message/);
+  fireEvent.change(box, { target: { value: 'Stay safe' } });
+  box.setSelectionRange(0, 4);
+  fireEvent.click(screen.getByRole('button', { name: 'Bold' }));
+  expect(box).toHaveValue('**Stay** safe');
+  expect(screen.getByText('Stay', { selector: 'strong' })).toBeInTheDocument(); // the preview
+});

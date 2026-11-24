@@ -7,6 +7,7 @@ const Notification = require("../models/Notification");
 const { isAdminRole } = require("../utils/roles");
 const AnnouncementArchive = require("../services/announcementArchiveService");
 const live = require("../services/liveUpdates");
+const db = require("../config/db");
 
 exports.createAnnouncement = async (req, res) => {
     try {
@@ -41,8 +42,26 @@ exports.getAnnouncements = async (req, res) => {
         ]);
         const likedSet = new Set(likedIds);
 
+        // Admins' View Details shows who posted each announcement.
+        const postedBy = {};
+        if (isAdminRole(req.user?.role)) {
+            const authorIds = [...new Set(announcements.map((a) => a.created_by).filter(Boolean))];
+            if (authorIds.length) {
+                try {
+                    const [rows] = await db.query(
+                        "SELECT id, full_name FROM registered_users WHERE id IN (?)",
+                        [authorIds]
+                    );
+                    rows.forEach((r) => { postedBy[r.id] = r.full_name; });
+                } catch (err) {
+                    console.error("[announcements] author lookup failed:", err.message);
+                }
+            }
+        }
+
         const enriched = announcements.map((a) => ({
             ...a,
+            ...(postedBy[a.created_by] ? { posted_by_name: postedBy[a.created_by] } : {}),
             likeCount: likeCounts[a.id] || 0,
             commentCount: commentCounts[a.id] || 0,
             likedByMe: likedSet.has(a.id)

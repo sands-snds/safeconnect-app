@@ -9,6 +9,8 @@ import FacebookCardControl from "./FacebookCardControl";
 import { CATEGORY_COLORS } from "./constants";
 import MediaLightbox from "../../shared/media/MediaLightbox";
 import AnnouncementShareButton from "./AnnouncementShareButton";
+import AnnouncementDetailsModal from "./AnnouncementDetailsModal";
+import FormattedText, { stripFormatting } from "../../shared/FormattedText";
 import {
   fetchAnnouncements,
   deleteAnnouncement,
@@ -74,6 +76,9 @@ const AnnouncementsTable = ({
   const [showArchived, setShowArchived] = useState(false);
 
   const [popup, setPopup] = useState(null);
+  // The announcement open in View Details.
+  const [detailsFor, setDetailsFor] = useState(null);
+  const closeDetails = useCallback(() => setDetailsFor(null), []);
 
   const filterType = "announcements";
   const currentFilters = filters[filterType] || { status: "All Items", search: "" };
@@ -157,7 +162,7 @@ const AnnouncementsTable = ({
       result = result.filter((item) => {
         return [
           item.title,
-          item.message,
+          stripFormatting(item.message),
           item.category,
           item.sourceSite,
           item.date,
@@ -241,14 +246,6 @@ const AnnouncementsTable = ({
     }
   };
 
-  const truncate = (text, length = 240) => {
-    if (!text) return "";
-
-    return text.length > length
-      ? text.substring(0, length) + "..."
-      : text;
-  };
-
   const renderRow = (announcement) => {
     const image = announcement.imageUrl || announcement.sourceImage;
     // Archived: only its comments can be read (and deleted), and it can be
@@ -297,9 +294,7 @@ const AnnouncementsTable = ({
             {announcement.title}
           </h3>
 
-          <p className="announcement-admin-card-message">
-            {truncate(announcement.message)}
-          </p>
+          <FormattedText className="announcement-admin-card-message" text={announcement.message} />
 
           {announcement.sourceUrl && (
             <a
@@ -315,6 +310,15 @@ const AnnouncementsTable = ({
 
           <div className="announcement-admin-card-actions">
             <div className="announcement-admin-card-engage">
+              <button
+                type="button"
+                className="button button-soft"
+                style={{ fontSize: 12.5, padding: '8px 18px' }}
+                onClick={() => setDetailsFor(announcement.id)}
+              >
+                <i className="bi bi-eye"></i> {tx("View Details")}
+              </button>
+
               <button
                 type="button"
                 className={`button button-soft ${openComments[announcement.id] ? "is-active" : ""}`}
@@ -435,7 +439,16 @@ const AnnouncementsTable = ({
           color: #6b7280;
           line-height: 1.65;
           margin: 0 0 14px;
-          flex: 1;
+          /* A short look; View Details shows all of it. */
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 4;
+          line-clamp: 4;
+          overflow: hidden;
+        }
+
+        .announcement-admin-card-message strong {
+          color: #374151;
         }
 
         .announcement-admin-card-source {
@@ -465,6 +478,7 @@ const AnnouncementsTable = ({
 
         .announcement-admin-card-engage {
           display: flex;
+          flex-wrap: wrap;
           gap: 8px;
           margin-right: auto;
         }
@@ -560,6 +574,15 @@ const AnnouncementsTable = ({
         onClose={closeModal}
         onSaved={handleSaved}
         onArchiveToggle={handleArchiveToggle}
+      />
+
+      <AnnouncementDetailsModal
+        announcement={detailsFor != null ? data.find((a) => a.id === detailsFor) || null : null}
+        onClose={closeDetails}
+        onEdit={(a) => {
+          setDetailsFor(null);
+          if (setEditingAnnouncement) setEditingAnnouncement(a);
+        }}
       />
 
       {popup && (
