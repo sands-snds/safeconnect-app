@@ -668,5 +668,28 @@ export const ADMIN_TL = {
   "Any time": "Kahit kailan",
   "Today": "Ngayong araw",
   "This year": "Ngayong taon",
-  "Custom range": "Pumili ng petsa"
+  "Custom range": "Pumili ng petsa",
+
+  // Page Contents: landing emergency contacts; dashboard; sidebar
+  "Pending Account Verifications": "Mga Account na Naghihintay ng Beripikasyon",
+  "Switch to": "Lumipat sa",
+  "Landing Page Emergency Contacts": "Mga Emergency Contact sa Landing Page",
+  "Heading": "Pamagat",
+  "911 card": "911 card",
+  "Banner below the numbers": "Banner sa ilalim ng mga numero",
+  "Small label above the title": "Maliit na label sa itaas ng pamagat",
+  "Text under the title": "Teksto sa ilalim ng pamagat",
+  "Card heading": "Pamagat ng card",
+  "Card text": "Teksto ng card",
+  "Button": "Button",
+  "Banner title": "Pamagat ng banner",
+  "Banner text": "Teksto ng banner",
+  "Banner button": "Button ng banner",
+  "Numbers beside the 911 card": "Mga numero sa tabi ng 911 card",
+  "Show here": "Ipakita rito",
+  "Person on call": "Taong tatawagan",
+  "The \"Help is always one call away\" section of the landing page: its wording, the 911 card, and the numbers beside it. Leave a box empty to keep the built-in text (shown in English or Tagalog to match the visitor's language).": "Ang seksyong \"Help is always one call away\" ng landing page: ang mga salita nito, ang 911 card, at ang mga numero sa tabi nito. Iwanang blangko ang kahon para gamitin ang nakatakdang teksto (Ingles o Tagalog ayon sa wika ng bisita).",
+  "These are the same emergency contacts as the residents' call button (Page Contacts), so a change here shows there too. Untick \"Show here\" to leave a contact off this section only.": "Ito rin ang mga emergency contact ng call button ng mga residente (Page Contacts), kaya makikita rin doon ang pagbabago rito. Alisin ang tsek sa \"Ipakita rito\" para hindi ito ipakita sa seksyong ito lang.",
+  "To add or remove contacts, change their icon or colour, or change who is on call, use Page Contacts.": "Para magdagdag o mag-alis ng contact, magpalit ng icon o kulay, o magpalit ng taong tatawagan, gamitin ang Page Contacts.",
+  "The landing page's emergency contacts and the call button now show the updated details.": "Makikita na ang bagong detalye sa mga emergency contact ng landing page at sa call button."
 };

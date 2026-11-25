@@ -245,6 +245,8 @@ function validate(input = {}) {
         if (choices.length) entry.choices = choices;
         
         if (c.hidden === true) entry.hidden = true;
+        // Left off the landing page's Emergency Contacts section (still on the call button).
+        if (c.hideOnLanding === true) entry.hideOnLanding = true;
         emergencyContacts.push(entry);
     }
 

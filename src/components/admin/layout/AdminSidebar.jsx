@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { MAIN_LOGO } from "../../shared/logos";
 import LanguageToggle from "../../shared/LanguageToggle";
+import LanguageFlag from "../../shared/LanguageFlag";
+import { useLanguage } from "../../../i18n/LanguageContext";
 import { tx } from "../../../i18n/adminText";
 
 // Each menu item's icon (Bootstrap Icons), shown beside its name and alone
@@ -118,7 +120,15 @@ const AdminSidebar = ({
     }
   ];
 
-  const SidebarContent = ({ showProfile = false, compact = false }) => (
+  const { language, setLanguage } = useLanguage();
+  const otherLanguage = language === "tl" ? "en" : "tl";
+  const languageName = (code) => (code === "tl" ? "Filipino" : "English");
+
+  // Called as a function (not used as <SidebarContent />): a component made
+  // inside this one would be a new component on every render, so React would
+  // rebuild the whole menu each time the tab or language changes and the
+  // menu would jump back to the top. Rendered in place, it keeps its scroll.
+  const renderSidebarContent = ({ showProfile = false, compact = false }) => (
     <>
       {/* Logo */}
       <div
@@ -265,7 +275,24 @@ const AdminSidebar = ({
           </div>
         ))}
 
-        {!compact && (
+        {compact ? (
+          // Collapsed: the current language's flag; tap to switch.
+          <button
+            type="button"
+            onClick={() => setLanguage(otherLanguage)}
+            title={`${tx("Language")}: ${languageName(language)}. ${tx("Switch to")} ${languageName(otherLanguage)}`}
+            aria-label={`${tx("Language")}: ${languageName(language)}. ${tx("Switch to")} ${languageName(otherLanguage)}`}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", width: "100%",
+              padding: "10px 0", marginTop: 4, border: 0, borderRadius: 8, background: "transparent",
+              color: "inherit", cursor: "pointer"
+            }}
+          >
+            <span style={{ display: "inline-flex", borderRadius: "50%", boxShadow: "0 0 0 2px rgba(255,255,255,.55)" }}>
+              <LanguageFlag language={language} size={22} />
+            </span>
+          </button>
+        ) : (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, padding: "10px 12px", marginTop: 4 }}>
           <span style={{ fontSize: 13, opacity: 0.85 }}>{tx("Language")}</span>
           <LanguageToggle variant="light" />
@@ -309,7 +336,7 @@ const AdminSidebar = ({
     <>
       {/* Desktop */}
       <div className={`desktop-sidebar${collapsed ? " collapsed" : ""}`}>
-        <SidebarContent compact={collapsed} />
+        {renderSidebarContent({ compact: collapsed })}
       </div>
 
       {/* Mobile Overlay */}
@@ -326,7 +353,7 @@ const AdminSidebar = ({
           showMobileMenu ? "open" : ""
         }`}
       >
-        <SidebarContent showProfile />
+        {renderSidebarContent({ showProfile: true })}
       </div>
     </>
   );

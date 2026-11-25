@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
-import useSiteContent, { contactDescription } from '../shared/useSiteContent';
+import useSiteContent, { contactDescription, useSiteMedia } from '../shared/useSiteContent';
 import { formatMobile } from '../shared/EmergencyContactList';
 
 // The numbers beside the 911 card come from the same list as the resident
@@ -8,7 +8,7 @@ import { formatMobile } from '../shared/EmergencyContactList';
 // step with it, Bureau of Fire Protection included. A contact with several
 // people on call (the barangay) gets one row per person.
 const hotlineRows = (contacts, t) => contacts
-  .filter((c) => !c.hidden && c.number && String(c.number).replace(/\s/g, '') !== '911')
+  .filter((c) => !c.hidden && !c.hideOnLanding && c.number && String(c.number).replace(/\s/g, '') !== '911')
   .flatMap((c) => {
     const note = contactDescription(c, t);
     const people = Array.isArray(c.choices) ? c.choices.filter((ch) => ch && ch.number) : [];
@@ -20,6 +20,9 @@ export default function Contact() {
   const { t } = useLanguage();
   const { emergencyContacts = [] } = useSiteContent();
   const hotlines = hotlineRows(emergencyContacts, t);
+  // Wording set in Admin → Page Contents; a blank field uses the built-in text.
+  const custom = useSiteMedia()?.contactSection || {};
+  const text = (key) => (custom[key] && custom[key].trim()) || t(`contact.${key}`);
   return (
     <section id="contact" style={{ margin: 0, padding: 0 }}>
       <style>{`
@@ -138,10 +141,10 @@ export default function Contact() {
 
           <div className="ct-intro">
             <div className="ct-badge">
-              <i className="bi bi-telephone-fill" /> {t('contact.badge')}
+              <i className="bi bi-telephone-fill" /> {text('badge')}
             </div>
-            <h2>{t('contact.title')}</h2>
-            <p>{t('contact.subtitle')}</p>
+            <h2>{text('title')}</h2>
+            <p>{text('subtitle')}</p>
           </div>
 
           <div className="ct-split">
@@ -151,10 +154,10 @@ export default function Contact() {
               <div className="ct-sos-icon">
                 <i className="bi bi-telephone-fill" />
               </div>
-              <p className="ct-sos-eyebrow">{t('contact.sosEyebrow')}</p>
-              <p className="ct-sos-label">{t('contact.sosLabel')}</p>
+              <p className="ct-sos-eyebrow">{text('sosEyebrow')}</p>
+              <p className="ct-sos-label">{text('sosLabel')}</p>
               <a href="tel:911" className="ct-sos-btn">
-                <i className="bi bi-telephone-outbound-fill" /> {t('contact.sosButton')}
+                <i className="bi bi-telephone-outbound-fill" /> {text('sosButton')}
               </a>
             </div>
 
@@ -185,11 +188,11 @@ export default function Contact() {
               <i className="bi bi-phone-fill" style={{ color: '#fff', fontSize: 22 }} />
             </div>
             <div style={{ position: 'relative', zIndex: 1, flex: 1, minWidth: 200 }}>
-              <p style={{ margin: '0 0 4px', fontWeight: 800, color: '#fff', fontSize: '1rem' }}>{t('contact.bannerTitle')}</p>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: '0.85rem', lineHeight: 1.65 }}>{t('contact.bannerDesc')}</p>
+              <p style={{ margin: '0 0 4px', fontWeight: 800, color: '#fff', fontSize: '1rem' }}>{text('bannerTitle')}</p>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: '0.85rem', lineHeight: 1.65 }}>{text('bannerDesc')}</p>
             </div>
             <a href="#home" style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, background: '#fff', color: '#6B2C3E', fontWeight: 800, fontSize: '0.87rem', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' }}>
-              {t('contact.bannerCta')} <i className="bi bi-arrow-right" />
+              {text('bannerCta')} <i className="bi bi-arrow-right" />
             </a>
           </div>
 

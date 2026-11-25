@@ -99,9 +99,14 @@ test('three steps, as on Report Emergency: who and the kind of help, the details
   pick('Medical Aid');
   expect(screen.getByText('Step 2 of 3')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: /Medical Aid/ })).toBeInTheDocument();
-  expect(sectionTitles()).toEqual(['About the request', 'Photo or video (proof)']);
-  expect(screen.getByText('Photo or video (proof)').closest('.qr-lead')).toHaveTextContent('*');
-  expect(screen.getByText(/^Required. It helps the barangay verify your request/)).toBeInTheDocument();
+  expect(sectionTitles()).toEqual(['About the request']);
+  // The proof sits right under "Victim of what emergency".
+  const victimOf = screen.getByText('Victim of what emergency?').closest('.qr-lbl');
+  const proof = screen.getByText('Photo or video (proof)').closest('.qr-lbl');
+  expect(victimOf.compareDocumentPosition(proof) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(proof.compareDocumentPosition(screen.getByText('People needing help', { selector: '.qr-lbl span' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByText('Photo or video (proof)').closest('.qr-lbl')).toHaveTextContent('*');
+  expect(screen.getByText(/^Required. A photo or video of the emergency you picked above/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Take a photo/ })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Gallery/ })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Send request/ })).not.toBeInTheDocument();
@@ -258,7 +263,7 @@ test('editing a request typed under Other restores it into the Other box', async
   expect(within(screen.getByRole('group', { name: 'Victim of what emergency?' })).getByRole('button', { name: 'Other' })).toHaveAttribute('aria-pressed', 'true');
   expect($('input[name="emergencyOther"]').value).toBe('Landslide');
   expect(screen.getByText(/Attach a new file only if you want to replace/)).toBeInTheDocument();
-  expect(screen.getByText('Photo or video (proof)').closest('.qr-lead')).toHaveTextContent('(optional)'); // the photo on file counts
+  expect(screen.getByText('Photo or video (proof)').closest('.qr-lbl')).toHaveTextContent('(optional)'); // the photo on file counts
   finish();
   expect($('input[name="location"]').value).toBe('Somewhere, Sta. Fe');
   expect(screen.getByRole('button', { name: /Save changes/ })).not.toBeDisabled();

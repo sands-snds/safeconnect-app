@@ -580,6 +580,27 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
           )}
         </div>
 
+        {/* The proof sits right under the emergency it shows. */}
+        <div role="group" aria-labelledby="as-media-label">
+          <Lbl id="as-media-label" icon="bi-camera-fill" req={needsNewMedia} optional={needsNewMedia ? null : t('reportForm.optional')}>
+            {t('reportShared.proofTitle')}
+          </Lbl>
+          <p className="qr-hint" style={{ marginBottom: 8 }}>{hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}</p>
+          <MediaPicker
+            t={t}
+            id="as-media"
+            hideLabel
+            label={t('reportShared.proofTitle')}
+            required={needsNewMedia}
+            optionalText={t('reportForm.optional')}
+            media={media}
+            fileInputRef={fileInputRef}
+            onChange={handleMediaChange}
+            onRemove={clearMedia}
+            disabled={isSubmitting}
+          />
+        </div>
+
         <div>
           <Lbl id="as-people-label" icon="bi-people-fill" req as="label">{t('reportShared.people')}</Lbl>
           <div className="qr-count-row">
@@ -644,27 +665,6 @@ function ResidentAssistanceModal({ show, type, serviceId, onClose, editingReport
         </div>
       </Section>
 
-      <Section
-        id="as-media"
-        title={t('reportShared.proofTitle')}
-        req={needsNewMedia}
-        optional={needsNewMedia ? null : t('reportForm.optional')}
-        hint={hasExistingMedia ? t('reportForm.mediaHintEdit') : t('assistanceModal.proofHint')}
-      >
-        <MediaPicker
-          t={t}
-          id="as-media"
-          hideLabel
-          label={t('reportShared.proofTitle')}
-          required={needsNewMedia}
-          optionalText={t('reportForm.optional')}
-          media={media}
-          fileInputRef={fileInputRef}
-          onChange={handleMediaChange}
-          onRemove={clearMedia}
-          disabled={isSubmitting}
-        />
-      </Section>
 
     </div>
     ) : (

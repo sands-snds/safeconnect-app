@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { fetchSiteContent, updateSiteMedia, uploadSiteMedia } from "../../../Services/api";
+import { fetchSiteContent, updateSiteMedia, updateSiteContent, uploadSiteMedia } from "../../../Services/api";
 import { showPopup, confirmPopup } from "../../shared/popup";
-import { setSiteMedia, mediaSrc, hasVideo } from "../../shared/useSiteContent";
+import { setSiteMedia, setSiteContent, mediaSrc, hasVideo } from "../../shared/useSiteContent";
+import LandingContactsEditor from "./LandingContactsEditor";
 import DemoVideoPlayer from "../../shared/DemoVideoPlayer";
 import { tx } from "../../../i18n/adminText";
 
@@ -238,6 +239,10 @@ export default function SiteContentsPage() {
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  // The emergency contacts (shared with Page Contacts and the call button),
+  // edited in the landing page's Emergency Contacts section below.
+  const [savedContent, setSavedContent] = useState(null);
+  const [contentDraft, setContentDraft] = useState(null);
 
   useEffect(() => {
     fetchSiteContent()
@@ -245,11 +250,17 @@ export default function SiteContentsPage() {
         if (!result?.media) throw new Error();
         setSaved(result.media);
         setDraft(result.media);
+        if (result.content) {
+          setSavedContent(result.content);
+          setContentDraft(result.content);
+        }
       })
       .catch(() => setLoadError(true));
   }, []);
 
-  const dirty = useMemo(() => JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
+  const mediaDirty = useMemo(() => JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
+  const contentDirty = useMemo(() => JSON.stringify(savedContent) !== JSON.stringify(contentDraft), [savedContent, contentDraft]);
+  const dirty = mediaDirty || contentDirty;
 
   if (loadError) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>{tx("Couldn't load the page contents. Make sure the backend is up to date, then refresh the page.")}</div>;
   if (!draft) return <div style={{ ...card, maxWidth: 1000, margin: "0 auto" }}>{tx("Loading page contents...")}</div>;
@@ -263,6 +274,20 @@ export default function SiteContentsPage() {
     }
     setSaving(true);
     try {
+      if (contentDirty && contentDraft) {
+        const saveContacts = await updateSiteContent(contentDraft);
+        if (!saveContacts?.success) {
+          showPopup({ type: "error", title: tx("Couldn't Save"), message: saveContacts?.message || "Please check the emergency contacts and try again." });
+          return;
+        }
+        setSavedContent(saveContacts.content);
+        setContentDraft(saveContacts.content);
+        setSiteContent(saveContacts.content);
+      }
+      if (!mediaDirty) {
+        showPopup({ type: "success", title: tx("Page Contents Saved"), message: tx("The landing page's emergency contacts and the call button now show the updated details.") });
+        return;
+      }
       const result = await updateSiteMedia(draft);
       if (!result?.success) {
         showPopup({ type: "error", title: tx("Couldn't Save"), message: result?.message || "Please check the details and try again." });
@@ -293,6 +318,13 @@ export default function SiteContentsPage() {
         hint={tx("The background photos that slide behind “Stay safe, stay informed” on the resident page after signing in, in this order.")}
         slides={draft.residentCarousel}
         onChange={(fn) => setDraft((d) => ({ ...d, residentCarousel: fn(d.residentCarousel) }))}
+      />
+
+      <LandingContactsEditor
+        section={draft.contactSection || {}}
+        onSectionChange={(contactSection) => setDraft((d) => ({ ...d, contactSection }))}
+        contacts={contentDraft?.emergencyContacts || []}
+        onContactsChange={(emergencyContacts) => setContentDraft((c) => ({ ...c, emergencyContacts }))}
       />
 
       {/* ── System demo video ── */}
@@ -335,7 +367,7 @@ export default function SiteContentsPage() {
         <span style={{ marginRight: "auto", fontSize: 13, color: dirty ? "#92400e" : "#6b7280" }}>
           {dirty ? tx("You have unsaved changes. Uploaded files appear on the site only after you save.") : tx("All changes saved.")}
         </span>
-        <button type="button" className="button button-secondary" disabled={!dirty || saving} onClick={() => setDraft(saved)}>
+        <button type="button" className="button button-secondary" disabled={!dirty || saving} onClick={() => { setDraft(saved); setContentDraft(savedContent); }}>
           {tx("Discard changes")}
         </button>
         <button type="button" className="button button-soft" onClick={() => setPreviewing(true)}>

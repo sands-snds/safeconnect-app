@@ -26,7 +26,21 @@ const DEFAULT_MEDIA = {
         caption: "A short walkthrough of handling reports, posting announcements and managing the site.",
         video: { source: "none", url: "" },
         showOnSignIn: true
+    },
+    // The landing page's Emergency Contacts section (Admin → Page Contents).
+    // A blank field shows the built-in English / Tagalog wording.
+    contactSection: {
+        badge: "", title: "", subtitle: "",
+        sosEyebrow: "", sosLabel: "", sosButton: "",
+        bannerTitle: "", bannerDesc: "", bannerCta: ""
     }
+};
+
+// Longest text per field of the Emergency Contacts section.
+const CONTACT_SECTION_MAX = {
+    badge: 40, title: 120, subtitle: 300,
+    sosEyebrow: 40, sosLabel: 160, sosButton: 30,
+    bannerTitle: 100, bannerDesc: 300, bannerCta: 30
 };
 
 const MAX_SLIDES = 10;
@@ -56,7 +70,8 @@ async function getMedia() {
             carousel: Array.isArray(saved.carousel) && saved.carousel.length ? saved.carousel : DEFAULT_MEDIA.carousel,
             residentCarousel: Array.isArray(saved.residentCarousel) && saved.residentCarousel.length ? saved.residentCarousel : DEFAULT_MEDIA.residentCarousel,
             systemDemo: { ...DEFAULT_MEDIA.systemDemo, ...(saved.systemDemo || {}) },
-            adminDemo: { ...DEFAULT_MEDIA.adminDemo, ...(saved.adminDemo || {}) }
+            adminDemo: { ...DEFAULT_MEDIA.adminDemo, ...(saved.adminDemo || {}) },
+            contactSection: { ...DEFAULT_MEDIA.contactSection, ...(saved.contactSection || {}) }
         };
     } catch {
         return DEFAULT_MEDIA;
@@ -102,6 +117,10 @@ function validate(input = {}) {
     const admVideo = validateVideo(adm.video, "Admin demo");
     if (admVideo.error) return admVideo;
 
+    const cs = input.contactSection || {};
+    const contactSection = {};
+    for (const [key, max] of Object.entries(CONTACT_SECTION_MAX)) contactSection[key] = text(cs[key], max);
+
     return {
         media: {
             carousel: landing.slides,
@@ -118,7 +137,8 @@ function validate(input = {}) {
                 caption: text(adm.caption, 300),
                 video: admVideo.video,
                 showOnSignIn: Boolean(adm.showOnSignIn)
-            }
+            },
+            contactSection
         }
     };
 }

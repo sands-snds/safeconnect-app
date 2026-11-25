@@ -1,5 +1,25 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { tx } from "../../../i18n/adminText";
+import { fetchVerifications } from "../../../Services/api";
+import { useLiveEvent } from "../../shared/liveBus";
+
+// How many new accounts are waiting for Account Verification (Admins only).
+// Updates on its own when a resident signs up or an account is reviewed.
+function usePendingVerifications(enabled) {
+  const [count, setCount] = useState(null);
+  const load = useCallback(async () => {
+    if (!enabled) return;
+    try {
+      const list = await fetchVerifications();
+      setCount(list.filter((r) => r.verificationStatus === 'Pending').length);
+    } catch {
+      /* leave the last count */
+    }
+  }, [enabled]);
+  useEffect(() => { load(); }, [load]);
+  useLiveEvent(["users", "admin-notifications", "reconnected"], load, enabled);
+  return count;
+}
 
 const StatCard = ({ label, value, icon, variant, theme, onClick }) => (
   <button
@@ -35,6 +55,7 @@ const AdminStats = ({
   isSuperAdmin = false,
   compact = false
 }) => {
+  const pendingAccounts = usePendingVerifications(isSuperAdmin && !compact);
   const reports = [
     { label: 'Emergency Reports', value: emergencyReports.length, icon: 'bi-exclamation-triangle-fill', view: 'emergency-reports', theme: REPORT_THEMES.emergency },
     { label: 'Assistance Requests', value: assistanceRequests.length, icon: 'bi-box2-heart-fill', view: 'assistance-requests', theme: REPORT_THEMES.assistance },
@@ -45,7 +66,7 @@ const AdminStats = ({
 
     ...(isSuperAdmin ? [
       { label: 'Registered Users', value: registeredUsers.length, icon: 'bi-people-fill', view: 'registered-users' },
-      { label: 'Resident Sign-ins', value: signInLogs.length, icon: 'bi-box-arrow-in-right', view: 'sign-in-logs' },
+      { label: 'Pending Account Verifications', value: pendingAccounts ?? '–', icon: 'bi-person-vcard-fill', view: 'account-verification' },
       { label: 'Admins & Officials', value: adminLogs.admins?.length || 0, icon: 'bi-person-badge-fill', view: 'admin-logs' }
     ] : [])
   ];
